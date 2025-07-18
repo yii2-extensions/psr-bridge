@@ -55,7 +55,7 @@ For detailed configuration options and advanced usage.
 
 [![Latest Stable Version](https://poser.pugx.org/yii2-extensions/psr-bridge/v)](https://github.com/yii2-extensions/psr-bridge/releases)
 [![Total Downloads](https://poser.pugx.org/yii2-extensions/psr-bridge/downloads)](https://packagist.org/packages/yii2-extensions/psr-bridge)
-[![codecov](https://codecov.io/gh/yii2-extensions/psr7-bridge/graph/badge.svg?token=ZrA5d4g8jY)](https://codecov.io/gh/yii2-extensions/psr-bridge)
+[![codecov](https://codecov.io/gh/yii2-extensions/psr-bridge/graph/badge.svg?token=xDWnMuHEjS)](https://codecov.io/gh/yii2-extensions/psr-bridge)
 [![phpstan-level](https://img.shields.io/badge/PHPStan%20level-max-blue)](https://github.com/yii2-extensions/psr-bridge/actions/workflows/static.yml)
 [![StyleCI](https://github.styleci.io/repos/1019044094/shield?branch=main)](https://github.styleci.io/repos/1019044094?branch=main)
 
