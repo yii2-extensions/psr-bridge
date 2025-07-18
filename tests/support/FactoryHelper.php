@@ -102,10 +102,6 @@ final class FactoryHelper
     ): ResponseInterface {
         $response = new Response($statusCode, $headers, $body, $protocol, $reasonPhrase);
 
-        foreach ($headers as $header => $value) {
-            $response = $response->withHeader($header, $value);
-        }
-
         if ($body instanceof StreamInterface) {
             return $response->withBody($body);
         }

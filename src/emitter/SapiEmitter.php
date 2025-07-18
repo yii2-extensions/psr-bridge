@@ -65,7 +65,7 @@ final class SapiEmitter
      * be emitted even if present in the response object. {@see HttpNoBodyStatus} for the complete list.
      *
      * @param ResponseInterface $response PSR-7 response instance.
-     * @param bool $body Whether to emit the response body (default: `false`).
+     * @param bool $body Whether to emit the response with body (default: `true`).
      *
      * @throws HeadersAlreadySentException if HTTP headers have already been sent to the client.
      * @throws OutputAlreadySentException if response output has already been emitted.
@@ -76,14 +76,14 @@ final class SapiEmitter
      * $emitter->emit($response);
      * ```
      */
-    public function emit(ResponseInterface $response, bool $body = false): void
+    public function emit(ResponseInterface $response, bool $body = true): void
     {
         $this->validateOutput();
         $this->emitHeaders($response);
         $this->emitStatusLine($response);
 
         if (
-            $body === false &&
+            $body === true &&
             HttpNoBodyStatus::shouldHaveNoBody($response->getStatusCode()) === false &&
             $response->getBody()->isReadable() === true
         ) {
