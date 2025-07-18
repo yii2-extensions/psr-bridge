@@ -82,5 +82,7 @@ enabled:
   - union_type_without_spaces
 
 disabled:
-  - psr12_braces
   - function_declaration
+
+fixers:
+  psr12_braces: false
