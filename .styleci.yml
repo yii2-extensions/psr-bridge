@@ -19,7 +19,6 @@ enabled:
   - empty_loop_body_braces
   - fully_qualified_strict_types
   - function_to_constant
-  - integer_literal_case
   - is_null
   - logical_operators
   - magic_constant_casing
