@@ -39,13 +39,13 @@ final class ContentRange
      * @param ContentRangeUnit $unit Unit of measurement (for example, {@see ContentRangeUnit::BYTES}).
      * @param int $first First byte position in the range.
      * @param int $last Last byte position in the range.
-     * @param string|int $length Total length of the resource ('*' for unknown length).
+     * @param int|string $length Total length of the resource ('*' for unknown length).
      */
     public function __construct(
         public ContentRangeUnit $unit,
         public int $first,
         public int $last,
-        public string|int $length,
+        public int|string $length,
     ) {}
 
     /**
