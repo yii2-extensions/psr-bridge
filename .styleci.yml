@@ -10,7 +10,6 @@ finder:
 
 enabled:
   - alpha_ordered_traits
-  - array_indentation
   - array_push
   - combine_consecutive_issets
   - combine_consecutive_unsets
