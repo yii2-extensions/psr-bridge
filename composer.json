@@ -1,5 +1,5 @@
 {
-    "name": "yii2/psr-bridge",
+    "name": "yii2-extensions/psr-bridge",
     "type": "library",
     "description": "PSR bridge for Yii2",
     "keywords": [
