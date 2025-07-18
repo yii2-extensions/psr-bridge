@@ -82,4 +82,5 @@ enabled:
   - union_type_without_spaces
 
 disabled:
+  - allman_braces
   - function_declaration

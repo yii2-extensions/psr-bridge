@@ -46,8 +46,7 @@ final class ContentRange
         public int $first,
         public int $last,
         public int|string $length,
-    ) {
-    }
+    ) {}
 
     /**
      * Convert the 'Content-Range' to its string representation.
