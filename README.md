@@ -16,11 +16,11 @@
     <a href="https://github.com/yiisoft/yii2/tree/22.0" target="_blank">
         <img src="https://img.shields.io/badge/Yii2%20-22-blue" alt="Yii2 22.0">
     </a>
-    <a href="https://github.com/yii2-extensions/template/actions/workflows/build.yml" target="_blank">
-        <img src="https://github.com/yii2-extensions/template/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
+    <a href="https://github.com/yii2-extensions/psr-bride/actions/workflows/build.yml" target="_blank">
+        <img src="https://github.com/yii2-extensions/psr-bride/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
     </a> 
-    <a href="https://github.com/yii2-extensions/template/actions/workflows/static.yml" target="_blank">        
-        <img src="https://github.com/yii2-extensions/template/actions/workflows/static.yml/badge.svg" alt="Static Analysis">
+    <a href="https://github.com/yii2-extensions/psr-bridge/actions/workflows/static.yml" target="_blank">        
+        <img src="https://github.com/yii2-extensions/psr-bridge/actions/workflows/static.yml/badge.svg" alt="Static Analysis">
     </a>  
 </p>
 
@@ -35,7 +35,7 @@ A Yii2 extension template to create your own Yii2 extensions.
 ### Installation
 
 ```bash
-composer require github_username/github_repository-name
+composer require yii2-extensions/psr-bridge
 ```
 
 ### Basic Usage
@@ -53,11 +53,11 @@ For detailed configuration options and advanced usage.
 
 ## Quality code
 
-[![Latest Stable Version](https://poser.pugx.org/yii2-extensions/template/v)](https://github.com/yii2-extensions/template/releases)
-[![Total Downloads](https://poser.pugx.org/yii2-extensions/template/downloads)](https://packagist.org/packages/yii2-extensions/template)
-[![codecov](https://codecov.io/gh/yii2-extensions/template/graph/badge.svg?token=Upc4yA23YN)](https://codecov.io/gh/yii2-extensions/template)
-[![phpstan-level](https://img.shields.io/badge/PHPStan%20level-max-blue)](https://github.com/yii2-extensions/localeurls/actions/workflows/static.yml)
-[![StyleCI](https://github.styleci.io/repos/698621511/shield?branch=main)](https://github.styleci.io/repos/698621511?branch=main)
+[![Latest Stable Version](https://poser.pugx.org/yii2-extensions/psr-bridge/v)](https://github.com/yii2-extensions/psr-bridge/releases)
+[![Total Downloads](https://poser.pugx.org/yii2-extensions/psr-bridge/downloads)](https://packagist.org/packages/yii2-extensions/psr-bridge)
+[![codecov](https://codecov.io/gh/yii2-extensions/psr7-bridge/graph/badge.svg?token=ZrA5d4g8jY)](https://codecov.io/gh/yii2-extensions/psr-bridge)
+[![phpstan-level](https://img.shields.io/badge/PHPStan%20level-max-blue)](https://github.com/yii2-extensions/psr-bridge/actions/workflows/static.yml)
+[![StyleCI](https://github.styleci.io/repos/1019044094/shield?branch=main)](https://github.styleci.io/repos/1019044094?branch=main)
 
 ## Our social networks
 

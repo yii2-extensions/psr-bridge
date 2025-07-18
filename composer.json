@@ -1,59 +1,69 @@
 {
-    "name": "yii2/template",
+    "name": "yii2/psr-bridge",
     "type": "library",
-    "description": "_____",
+    "description": "PSR bridge for Yii2",
     "keywords": [
-        "_____"
+        "yii2",
+        "psr",
+        "bridge"
     ],
     "license": "BSD-3-Clause",
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "php": ">=8.1",
-        "yiisoft/yii2": "^2.2"
+        "psr/http-message": "^2.0",
+        "yiisoft/yii2": "^2.0.53|^22"
     },
     "require-dev": {
+        "infection/infection": "^0.27|^0.30",
+        "httpsoft/http-message": "^1.1",
         "maglnet/composer-require-checker": "^4.1",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan-strict-rules": "^2.0.3",
         "phpunit/phpunit": "^10.5",
         "rector/rector": "^2.1",
         "symplify/easy-coding-standard": "^12.5",
+        "xepozz/internal-mocker": "^1.4",
         "yii2-extensions/phpstan": "^0.3"
     },
     "autoload": {
         "psr-4": {
-            "yii\\template\\": "src"
+            "yii2\\extensions\\psrbridge\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "yii\\template\\tests\\": "tests"
+            "yii2\\extensions\\psrbridge\\tests\\": "tests"
         }
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "1.0.x-dev"
+            "dev-main": "0.1.x-dev"
         }
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
+            "infection/extension-installer": true,
             "phpstan/extension-installer": true,
             "yiisoft/yii2-composer": true
         }
     },
+    "provide": {
+        "bower-asset/inputmask": "5.0.9",
+        "bower-asset/jquery": "3.6.1",
+        "bower-asset/punycode": "^1.4",
+        "bower-asset/yii2-pjax": "~2.0.1",
+        "bower-asset/bootstrap": "^5.2"
+    },
     "scripts": {
         "check-dependencies": "./vendor/bin/composer-require-checker check",
         "ecs": "./vendor/bin/ecs --fix",
+        "mutation": "./vendor/bin/infection --threads=4 --ignore-msi-with-no-mutations --only-covered --min-msi=100 --min-covered-msi=100",
+        "mutation-static": "./vendor/bin/infection --threads=4 --ignore-msi-with-no-mutations --only-covered --min-msi=100 --min-covered-msi=100 --static-analysis-tool=phpstan",
         "rector": "./vendor/bin/rector process src",
         "static": "./vendor/bin/phpstan --memory-limit=512M",
         "tests": "./vendor/bin/phpunit"
-    },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://asset-packagist.org"
-        }
-    ]
+    }
 }
