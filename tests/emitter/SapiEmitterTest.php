@@ -547,7 +547,8 @@ final class SapiEmitterTest extends TestCase
 
     /**
      * @throws HeadersAlreadySentException if HTTP headers have already been sent to the client.
-     * @throws OutputAlreadySentException if response output has already been emitted.     */
+     * @throws OutputAlreadySentException if response output has already been emitted.
+     */
     public function testEmitResponseWithoutHeaders(): void
     {
         $response = FactoryHelper::createResponse();

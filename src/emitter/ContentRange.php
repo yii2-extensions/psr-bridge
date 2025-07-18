@@ -42,10 +42,10 @@ final class ContentRange
      * @param int|string $length Total length of the resource ('*' for unknown length).
      */
     public function __construct(
-        public ContentRangeUnit $unit,
-        public int $first,
-        public int $last,
-        public int|string $length,
+        public readonly ContentRangeUnit $unit,
+        public readonly int $first,
+        public readonly int $last,
+        public readonly string|int $length,
     ) {}
 
     /**

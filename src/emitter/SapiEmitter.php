@@ -170,7 +170,7 @@ final class SapiEmitter
     private function emitHeaders(ResponseInterface $response): void
     {
         foreach ($response->getHeaders() as $name => $values) {
-            $name = str_replace(' ', '-', ucwords(strtolower(str_replace('-', ' ', (string) $name))));
+            $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', strtolower((string) $name)), ' -'));
 
             match ($name) {
                 'Set-Cookie' => array_map(
