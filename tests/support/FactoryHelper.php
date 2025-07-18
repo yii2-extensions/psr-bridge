@@ -80,7 +80,7 @@ final class FactoryHelper
      *
      * @param int $statusCode Response status code.
      * @param array $headers Response headers.
-     * @param StreamInterface|resource|string|null $body Response body.
+     * @param resource|StreamInterface|string|null $body Response body.
      * @param string $protocol Response protocol version.
      * @param string $reasonPhrase Response reason phrase.
      *

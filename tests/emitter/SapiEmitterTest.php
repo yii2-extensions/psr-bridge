@@ -59,6 +59,7 @@ final class SapiEmitterTest extends TestCase
     {
         HTTPFunctions::reset();
     }
+
     public function setUp(): void
     {
         HTTPFunctions::reset();
@@ -340,7 +341,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithEmptySeekableStream(): void
     {
-        /** @var StreamInterface&MockObject $stream */
+        /** @var MockObject&StreamInterface $stream */
         $stream = $this->createMock(StreamInterface::class);
 
         $stream->method('isSeekable')->willReturn(true);
@@ -677,7 +678,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testThrowExceptionWhenHeadersAlreadySent(): void
     {
-        HttpFunctions::set_headers_sent(true, 'file', 123);
+        HTTPFunctions::set_headers_sent(true, 'file', 123);
 
         $this->expectException(HeadersAlreadySentException::class);
         $this->expectExceptionMessage('Unable to emit response; headers already sent.');
