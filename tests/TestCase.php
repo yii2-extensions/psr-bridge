@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests;
 
 use Yii;
+use yii\console\Application as ConsoleApplication;
 use yii\helpers\ArrayHelper;
+use yii\web\Application as WebApplication;
 use yii2\extensions\psrbridge\http\Request;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
@@ -45,7 +47,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function mockApplication($config = []): void
     {
-        new \yii\console\Application(
+        new ConsoleApplication(
             ArrayHelper::merge(
                 [
                     'id' => 'testapp',
@@ -67,7 +69,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function mockWebApplication($config = []): void
     {
-        new \yii\web\Application(
+        new WebApplication(
             ArrayHelper::merge(
                 [
                     'id' => 'testapp',
