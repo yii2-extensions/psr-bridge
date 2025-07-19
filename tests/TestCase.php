@@ -45,7 +45,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function mockApplication($config = []): void
     {
-        new Yii\console\Application(
+        new \yii\console\Application(
             ArrayHelper::merge(
                 [
                     'id' => 'testapp',
@@ -67,7 +67,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function mockWebApplication($config = []): void
     {
-        new Yii\web\Application(
+        new \yii\web\Application(
             ArrayHelper::merge(
                 [
                     'id' => 'testapp',

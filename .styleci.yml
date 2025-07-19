@@ -41,7 +41,6 @@ enabled:
   - no_unneeded_curly_braces
   - no_unneeded_final_method
   - no_unset_cast
-  - no_unused_imports
   - no_unused_lambda_imports
   - no_useless_else
   - no_useless_return
@@ -84,5 +83,6 @@ enabled:
 disabled:
   - function_declaration
   - new_with_parentheses
+  - no_unused_imports
   - psr12_braces
   - psr12_class_definition
