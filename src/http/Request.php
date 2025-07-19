@@ -13,6 +13,7 @@ final class Request extends \yii\web\Request
 {
     private CookieCollection|null $_cookies = null;
     private ServerRequestAdapter|null $adapter = null;
+    private bool $workerMode = true;
 
     /**
      * @phpstan-return array<mixed, mixed>|object
@@ -113,7 +114,7 @@ final class Request extends \yii\web\Request
     public function getScriptUrl(): string
     {
         if ($this->adapter !== null) {
-            return $this->adapter->getScriptUrl();
+            return $this->adapter->getScriptUrl($this->workerMode);
         }
 
         return parent::getScriptUrl();

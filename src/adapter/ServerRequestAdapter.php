@@ -168,12 +168,12 @@ final class ServerRequestAdapter
         return $body->getContents();
     }
 
-    public function getScriptUrl(): string
+    public function getScriptUrl(bool $workerMode): string
     {
         $serverParams = $this->psrRequest->getServerParams();
 
         // for traditional PSR-7 apps where SCRIPT_NAME is available
-        if (isset($serverParams['SCRIPT_NAME']) && is_string($serverParams['SCRIPT_NAME'])) {
+        if ($workerMode === false && isset($serverParams['SCRIPT_NAME']) && is_string($serverParams['SCRIPT_NAME'])) {
             return $serverParams['SCRIPT_NAME'];
         }
 
