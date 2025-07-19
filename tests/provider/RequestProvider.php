@@ -82,7 +82,7 @@ final class RequestProvider
     }
 
     /**
-     * @return array<int, array{array<string, string>|array<string, mixed>, array{string|null, string|null}}>
+     * @return array<int, array{array<string, mixed>|array<string, string>, array{string|null, string|null}}>
      */
     public static function getHostInfo(): array
     {

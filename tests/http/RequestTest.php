@@ -630,7 +630,6 @@ final class RequestTest extends TestCase
         $_SERVER = $original;
     }
 
-
     /**
      * @phpstan-param array<array{array<string, string>}> $server
      */

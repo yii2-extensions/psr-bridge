@@ -130,7 +130,7 @@ final class ServerRequestAdapter
         // Check for X-Http-Method-Override header
         $headers = $this->psrRequest->getHeaders();
 
-        if (isset($headers['X-Http-Method-Override']) && isset($headers['X-Http-Method-Override'][0])) {
+        if (isset($headers['X-Http-Method-Override'], $headers['X-Http-Method-Override'][0])) {
             return strtoupper($headers['X-Http-Method-Override'][0]);
         }
 

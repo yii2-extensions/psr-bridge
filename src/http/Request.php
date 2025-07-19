@@ -121,7 +121,7 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * @return array<string, UploadedFileInterface|array<string, UploadedFileInterface>>
+     * @return array<string, array<string, UploadedFileInterface>|UploadedFileInterface>
      */
     public function getUploadedFiles(): array
     {
