@@ -81,7 +81,7 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * @phpstan-return array<string, mixed>
+     * @phpstan-return array<mixed, mixed>
      */
     public function getQueryParams(): array
     {
@@ -89,7 +89,6 @@ final class Request extends \yii\web\Request
             return $this->adapter->getQueryParams();
         }
 
-        // @phpstan-ignore return.type
         return parent::getQueryParams();
     }
 

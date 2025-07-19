@@ -7,6 +7,7 @@ namespace yii2\extensions\psrbridge\adapter;
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
 use Yii;
 use yii\base\InvalidConfigException;
+use yii\helpers\Json;
 use yii\web\{Cookie, HeaderCollection};
 
 final class ServerRequestAdapter
@@ -20,7 +21,7 @@ final class ServerRequestAdapter
     {
         $parsedBody = $this->psrRequest->getParsedBody();
 
-        // Remove method parameter if present (same logic as parent)
+        // remove method parameter if present (same logic as parent)
         if (is_array($parsedBody) && isset($parsedBody[$methodParam])) {
             $bodyParams = $parsedBody;
 
@@ -33,11 +34,10 @@ final class ServerRequestAdapter
     }
 
     /**
-     * @phpstan-return array<string, string>
+     * @phpstan-return array<mixed, mixed>
      */
     public function getCookieParams(): array
     {
-        // @phpstan-ignore return.type
         return $this->psrRequest->getCookieParams();
     }
 
@@ -62,7 +62,7 @@ final class ServerRequestAdapter
                         continue;
                     }
 
-                    $data = @unserialize($data);
+                    $data = Json::decode($data, true);
 
                     if (is_array($data) && isset($data[0], $data[1]) && $data[0] === $name) {
                         $cookies[$name] = new Cookie(
@@ -114,7 +114,7 @@ final class ServerRequestAdapter
     {
         $parsedBody = $this->psrRequest->getParsedBody();
 
-        // Check for method override in body
+        // check for method override in body
         if (
             is_array($parsedBody) &&
             isset($parsedBody[$methodParam]) &&
@@ -127,31 +127,31 @@ final class ServerRequestAdapter
             }
         }
 
-        // Check for X-Http-Method-Override header
-        $headers = $this->psrRequest->getHeaders();
+        // check for X-Http-Method-Override header
+        if ($this->psrRequest->hasHeader('X-Http-Method-Override')) {
+            $overrideHeader = $this->psrRequest->getHeaderLine('X-Http-Method-Override');
 
-        if (isset($headers['X-Http-Method-Override'], $headers['X-Http-Method-Override'][0])) {
-            return strtoupper($headers['X-Http-Method-Override'][0]);
+            if ($overrideHeader !== '') {
+                return strtoupper($overrideHeader);
+            }
         }
 
         return $this->psrRequest->getMethod();
     }
 
     /**
-     * @phpstan-return array<string, mixed>|object|null
+     * @phpstan-return array<mixed, mixed>|object|null
      */
     public function getParsedBody(): array|object|null
     {
-        // @phpstan-ignore return.type
         return $this->psrRequest->getParsedBody();
     }
 
     /**
-     * @phpstan-return array<string, mixed>
+     * @phpstan-return array<mixed, mixed>
      */
     public function getQueryParams(): array
     {
-        // @phpstan-ignore return.type
         return $this->psrRequest->getQueryParams();
     }
 
@@ -183,11 +183,10 @@ final class ServerRequestAdapter
     }
 
     /**
-     * @phpstan-return array<string, mixed>
+     * @phpstan-return array<mixed, mixed>
      */
     public function getServerParams(): array
     {
-        // @phpstan-ignore return.type
         return $this->psrRequest->getServerParams();
     }
 
