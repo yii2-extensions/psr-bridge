@@ -2,6 +2,9 @@ includes:
     - phar://phpstan.phar/conf/bleedingEdge.neon
 
 parameters:
+    bootstrapFiles:
+        - tests/bootstrap.php
+
     level: max
 
     paths:
