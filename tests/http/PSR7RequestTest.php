@@ -1234,7 +1234,7 @@ final class PSR7RequestTest extends TestCase
             self::assertSame(
                 $expectedUpdloadedFiles[$name]['size'] ?? null,
                 $uploadedFile->size,
-                "Uploaded file '{$name  }' should have the expected size.",
+                "Uploaded file '{$name}' should have the expected size.",
             );
             self::assertTrue(
                 $uploadedFile->saveAs("{$runtimePath}/{$uploadedFile->name}", false),
