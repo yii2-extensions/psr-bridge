@@ -10,10 +10,14 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii\web\CookieCollection;
+use yii\web\UploadedFile;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
+
+use function dirname;
+use function filesize;
 
 #[Group('http')]
 final class PSR7RequestTest extends TestCase
@@ -949,6 +953,111 @@ final class PSR7RequestTest extends TestCase
             $scriptUrl,
             "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
         );
+    }
+
+    public function testReturnUploadedFilesWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $ds = DIRECTORY_SEPARATOR;
+
+        $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
+        $file2 = dirname(__DIR__) . '/support/stub/files/test2.php';
+        $size1 = filesize($file1);
+        $size2 = filesize($file2);
+
+        self::assertNotFalse(
+            $size1,
+            "File size for 'test1.txt' should not be 'false'.",
+        );
+        self::assertNotFalse(
+            $size2,
+            "File size for 'test2.php' should not be 'false'.",
+        );
+
+        $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1, size: $size1);
+        $uploadedFile2 = FactoryHelper::createUploadedFile('test2.php', 'application/x-php', $file2, size: $size2);
+        $psr7Request = FactoryHelper::createRequest('POST', '/upload');
+
+        $psr7Request = $psr7Request->withUploadedFiles(
+            [
+                'file1' => $uploadedFile1,
+                'file2' => $uploadedFile2,
+            ],
+        );
+
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $uploadedFiles = $request->getUploadedFiles();
+
+        $expectedNames = [
+            'file1',
+            'file2',
+        ];
+        $expectedUpdloadedFiles = [
+            'file1' => [
+                'name' => 'test1.txt',
+                'type' => 'text/plain',
+                'tempName' => $file1,
+                'error' => UPLOAD_ERR_OK,
+                'size' => $size1,
+            ],
+            'file2' => [
+                'name' => 'test2.php',
+                'type' => 'application/x-php',
+                'tempName' => $file2,
+                'error' => UPLOAD_ERR_OK,
+                'size' => $size2,
+            ],
+        ];
+        $runtimePath = dirname(__DIR__, 2) . '/runtime';
+
+        foreach ($uploadedFiles as $name => $uploadedFile) {
+            self::assertContains(
+                $name,
+                $expectedNames,
+                "Uploaded file name '{$name}' should be in the expected names list.",
+            );
+            self::assertInstanceOf(
+                UploadedFile::class,
+                $uploadedFile,
+                "Uploaded file '{$name}' should be an instance of '" . UploadedFile::class . "'.",
+            );
+            self::assertSame(
+                $expectedUpdloadedFiles[$name]['name'] ?? null,
+                $uploadedFile->name,
+                "Uploaded file '{$name}' should have the expected client filename.",
+            );
+            self::assertSame(
+                $expectedUpdloadedFiles[$name]['type'] ?? null,
+                $uploadedFile->type,
+                "Uploaded file '{$name}' should have the expected client media type.",
+            );
+            self::assertSame(
+                $expectedUpdloadedFiles[$name]['tempName'] ?? null,
+                $uploadedFile->tempName,
+                "Uploaded file '{$name}' should have the expected temporary name.",
+            );
+            self::assertSame(
+                $expectedUpdloadedFiles[$name]['error'] ?? null,
+                $uploadedFile->error,
+                "Uploaded file '{$name}' should have the expected error code.",
+            );
+            self::assertSame(
+                $expectedUpdloadedFiles[$name]['size'] ?? null,
+                $uploadedFile->size,
+                "Uploaded file '{$name  }' should have the expected size.",
+            );
+            self::assertTrue(
+                $uploadedFile->saveAs("{$runtimePath}{$ds}{$uploadedFile->name}", false),
+                "Uploaded file '{$uploadedFile->name}' should be saved to the runtime directory successfully.",
+            );
+            self::assertFileExists(
+                "{$runtimePath}{$ds}{$uploadedFile->name}",
+                "Uploaded file '{$uploadedFile->name}' should exist in the runtime directory after saving.",
+            );
+        }
     }
 
     public function testReturnValidatedCookiesWhenValidationEnabledWithValidCookies(): void

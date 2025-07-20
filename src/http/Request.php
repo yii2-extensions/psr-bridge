@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\http;
 
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
 use yii\base\InvalidConfigException;
-use yii\web\{CookieCollection, HeaderCollection};
+use yii\web\{CookieCollection, HeaderCollection, UploadedFile};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 
 final class Request extends \yii\web\Request
@@ -138,12 +138,15 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * @return array<string, array<string, UploadedFileInterface>|UploadedFileInterface>
+     * @phpstan-return array<mixed, mixed>
      */
     public function getUploadedFiles(): array
     {
-        // @phpstan-ignore return.type
-        return $this->getPsr7Request()->getUploadedFiles();
+        if ($this->adapter !== null) {
+            return $this->convertPsr7ToUploadedFiles($this->adapter->getUploadedFiles());
+        }
+
+        return [];
     }
 
     public function getUrl(): string
@@ -159,6 +162,39 @@ final class Request extends \yii\web\Request
     public function setPsr7Request(ServerRequestInterface $request): void
     {
         $this->adapter = new ServerRequestAdapter($request);
+    }
+
+    /**
+     * @phpstan-param array<mixed, mixed> $uploadedFiles
+     *
+     * @phpstan-return array<array<UploadedFile>, mixed>
+     */
+    private function convertPsr7ToUploadedFiles(array $uploadedFiles): array
+    {
+        $converted = [];
+
+        foreach ($uploadedFiles as $key => $file) {
+            if ($file instanceof UploadedFileInterface) {
+                $converted[$key] = $this->createUploadedFile($file);
+            } elseif (is_array($file)) {
+                $converted[$key] = $this->convertPsr7ToUploadedFiles($file);
+            }
+        }
+
+        return $converted;
+    }
+
+    private function createUploadedFile(UploadedFileInterface $psrFile): UploadedFile
+    {
+        return new UploadedFile(
+            [
+                'error' => $psrFile->getError(),
+                'name' => $psrFile->getClientFilename() ?? '',
+                'size' => $psrFile->getSize() ?? 0,
+                'tempName' => $psrFile->getStream()->getMetadata('uri') ?? '',
+                'type' => $psrFile->getClientMediaType() ?? '',
+            ],
+        );
     }
 
     private function getAdapter(): ServerRequestAdapter

@@ -239,7 +239,7 @@ final class RequestProvider
             [
                 [
                     'REQUEST_METHOD' => 'DEFAULT',
-                    'HTTP_X-HTTP-METHOD-OVERRIDE' => 'OVERRIDE',
+                    'HTTP_X_HTTP_METHOD_OVERRIDE' => 'OVERRIDE',
                 ],
                 'OVERRIDE',
             ],

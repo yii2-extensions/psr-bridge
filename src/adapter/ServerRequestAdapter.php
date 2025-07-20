@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\adapter;
 
-use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
+use Psr\Http\Message\{ServerRequestInterface};
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
@@ -144,22 +144,11 @@ final class ServerRequestAdapter
     }
 
     /**
-     * @phpstan-return array<
-     *   string,
-     *   array{
-     *     name: string|array<mixed>,
-     *     type: string|array<mixed>,
-     *     tmp_name: string|array<mixed>,
-     *     error: int|array<mixed>,
-     *     size: int|array<mixed>,
-     *   }
-     * >
+     * @phpstan-return array<mixed, mixed>
      */
     public function getUploadedFiles(): array
     {
-        /** @phpstan-var array<string, UploadedFileInterface|array<mixed>> $uploadedFiles */
-        $uploadedFiles = $this->psrRequest->getUploadedFiles();
-        return $this->normalizeUploadedFiles($uploadedFiles);
+        return $this->psrRequest->getUploadedFiles();
     }
 
     public function getUrl(): string
@@ -172,38 +161,6 @@ final class ServerRequestAdapter
         }
 
         return $url;
-    }
-
-    /**
-     * @phpstan-return array{name: string, type: string, tmp_name: string, error: int, size: int}
-     */
-    private function convertSingleFile(UploadedFileInterface $file): array
-    {
-        $stream = $file->getStream();
-        $streamMeta = $stream->getMetadata();
-        $tempName = '';
-
-        if (is_array($streamMeta) && isset($streamMeta['uri']) && is_string($streamMeta['uri'])) {
-            $tempName = $streamMeta['uri'];
-
-            // For in-memory streams, create a temporary file
-            if (str_starts_with($tempName, 'php://')) {
-                $tempFile = tempnam(sys_get_temp_dir(), 'upload');
-                if ($tempFile !== false) {
-                    $stream->rewind();
-                    file_put_contents($tempFile, $stream->getContents());
-                    $tempName = $tempFile;
-                }
-            }
-        }
-
-        return [
-            'name' => $file->getClientFilename() ?? '',
-            'type' => $file->getClientMediaType() ?? '',
-            'tmp_name' => $tempName,
-            'error' => $file->getError(),
-            'size' => $file->getSize() ?? 0,
-        ];
     }
 
     /**
@@ -266,83 +223,5 @@ final class ServerRequestAdapter
         }
 
         return $cookies;
-    }
-
-    /**
-     * @phpstan-param array<mixed> $fileArray
-     *
-     * @phpstan-return array{
-     *   name: array<mixed>,
-     *   type: array<mixed>,
-     *   tmp_name: array<mixed>,
-     *   error: array<mixed>,
-     *   size: array<mixed>,
-     * }
-     */
-    private function normalizeFileArray(array $fileArray): array
-    {
-        $names = [];
-        $types = [];
-        $tmpNames = [];
-        $errors = [];
-        $sizes = [];
-
-        foreach ($fileArray as $key => $file) {
-            if ($file instanceof UploadedFileInterface) {
-                $converted = $this->convertSingleFile($file);
-                $names[$key] = $converted['name'];
-                $types[$key] = $converted['type'];
-                $tmpNames[$key] = $converted['tmp_name'];
-                $errors[$key] = $converted['error'];
-                $sizes[$key] = $converted['size'];
-            } elseif (is_array($file)) {
-                // Nested array - recursively normalize
-                $nestedNormalized = $this->normalizeFileArray($file);
-                $names[$key] = $nestedNormalized['name'];
-                $types[$key] = $nestedNormalized['type'];
-                $tmpNames[$key] = $nestedNormalized['tmp_name'];
-                $errors[$key] = $nestedNormalized['error'];
-                $sizes[$key] = $nestedNormalized['size'];
-            }
-        }
-
-        return [
-            'name' => $names,
-            'type' => $types,
-            'tmp_name' => $tmpNames,
-            'error' => $errors,
-            'size' => $sizes,
-        ];
-    }
-
-    /**
-     * @phpstan-param array<string, UploadedFileInterface|array<mixed>> $uploadedFiles
-     *
-     * @phpstan-return array<
-     *   string,
-     *   array{
-     *     name: string|array<mixed>,
-     *     type: string|array<mixed>,
-     *     tmp_name: string|array<mixed>,
-     *     error: int|array<mixed>,
-     *     size: int|array<mixed>,
-     *   }
-     * >
-     */
-    private function normalizeUploadedFiles(array $uploadedFiles): array
-    {
-        $normalized = [];
-
-        foreach ($uploadedFiles as $fieldName => $fileData) {
-            if ($fileData instanceof UploadedFileInterface) {
-                // Single file
-                $normalized[$fieldName] = $this->convertSingleFile($fileData);
-            } elseif (is_array($fileData)) {
-                // Multiple files or nested structure
-                $normalized[$fieldName] = $this->normalizeFileArray($fileData);
-            }
-        }
-
-        return $normalized;
     }
 }
