@@ -284,6 +284,27 @@ final class RequestProvider
     }
 
     /**
+     * @phpstan-return array<string, array{string, string}>
+     */
+    public static function getUrl(): array
+    {
+        return [
+            'complexQueryString' => [
+                '/search?q=hello+world&category=books&price[min]=10&price[max]=50',
+                '/search?q=hello+world&category=books&price%5Bmin%5D=10&price%5Bmax%5D=50',
+            ],
+            'rootPath' => [
+                '/',
+                '/',
+            ],
+            'withoutQueryString' => [
+                '/search?q=hello%20world&path=%2Fsome%2Fpath',
+                '/search?q=hello%20world&path=%2Fsome%2Fpath',
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return array<array{array<string, string>, string}>
      */
     public static function getUserIP(): array

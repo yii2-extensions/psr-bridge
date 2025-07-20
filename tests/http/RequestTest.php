@@ -870,6 +870,46 @@ final class RequestTest extends TestCase
         );
     }
 
+    public function testGetUploadedFiles(): void
+    {
+        $request = new Request();
+
+        self::assertEmpty(
+            $request->getUploadedFiles(),
+            "'getUploadedFiles()' should return an empty array when not set up for PSR7 request handling.",
+        );
+    }
+
+    public function testGetUrlWhenRequestUriIsSet(): void
+    {
+        $_SERVER['REQUEST_URI'] = '/search?q=hello+world&category=books&price[min]=10&price[max]=50';
+
+        $request = new Request();
+
+        self::assertSame(
+            '/search?q=hello+world&category=books&price[min]=10&price[max]=50',
+            $request->getUrl(),
+            'URL should match the value of \'REQUEST_URI\' when it is set.',
+        );
+
+        unset($_SERVER['REQUEST_URI']);
+    }
+
+    public function testGetUrlWithRootPath(): void
+    {
+        $_SERVER['REQUEST_URI'] = '/';
+
+        $request = new Request();
+
+        self::assertSame(
+            '/',
+            $request->getUrl(),
+            "URL should return 'root' path when 'REQUEST_URI' is set to 'root'.",
+        );
+
+        unset($_SERVER['REQUEST_URI']);
+    }
+
     /**
      * @phpstan-param array<array{array<string, string>}> $server
      * @phpstan-param string $expected
@@ -1451,6 +1491,18 @@ final class RequestTest extends TestCase
             $request->getHostName(),
             "'getHostName()' should return the host name extracted from the value set by 'setHostInfo()'.",
         );
+    }
+
+    public function testThrowExceptionWhenRequestUriIsMissing(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('Unable to determine the request URI.');
+
+        $request->getUrl();
     }
 
     /**

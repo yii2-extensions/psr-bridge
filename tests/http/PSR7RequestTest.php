@@ -711,6 +711,28 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnParentUrlWhenAdapterIsNull(): void
+    {
+        $_SERVER['REQUEST_URI'] = '/legacy/path?param=value';
+
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        // ensure adapter is 'null' (default state)
+        $request->reset();
+
+        $url = $request->getUrl();
+
+        self::assertSame(
+            '/legacy/path?param=value',
+            $url,
+            "URL should return parent implementation result when adapter is 'null'.",
+        );
+
+        unset($_SERVER['REQUEST_URI']);
+    }
+
     public function testReturnParsedBodyArrayWhenAdapterIsSet(): void
     {
         $this->mockWebApplication();
@@ -1061,6 +1083,24 @@ final class PSR7RequestTest extends TestCase
         }
     }
 
+    #[DataProviderExternal(RequestProvider::class, 'getUrl')]
+    public function testReturnUrlFromAdapterWhenAdapterIsSet(string $url, string $expectedUrl): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', $url);
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $url = $request->getUrl();
+
+        self::assertSame(
+            $expectedUrl,
+            $url,
+            "URL should match the expected value for: {$url}.",
+        );
+    }
+
     public function testReturnValidatedCookiesWhenValidationEnabledWithValidCookies(): void
     {
         $this->mockWebApplication();
@@ -1113,17 +1153,5 @@ final class PSR7RequestTest extends TestCase
             $cookies->has('invalid_cookie'),
             "'CookieCollection' should not contain invalid cookies when validation is enabled.",
         );
-    }
-
-    public function testThrowExceptionWhenGetParsedBodyCalledWithoutAdapter(): void
-    {
-        $this->mockWebApplication();
-
-        $request = new Request();
-
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('PSR-7 request adapter is not set.');
-
-        $request->getParsedBody();
     }
 }

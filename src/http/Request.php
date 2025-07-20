@@ -9,6 +9,8 @@ use yii\base\InvalidConfigException;
 use yii\web\{CookieCollection, HeaderCollection, UploadedFile};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 
+use function is_array;
+
 final class Request extends \yii\web\Request
 {
     public bool $workerMode = true;
@@ -73,12 +75,20 @@ final class Request extends \yii\web\Request
      */
     public function getParsedBody(): array|object|null
     {
-        return $this->getAdapter()->getParsedBody();
+        if ($this->adapter !== null) {
+            return $this->adapter->getParsedBody();
+        }
+
+        return parent::getBodyParams();
     }
 
     public function getPsr7Request(): ServerRequestInterface
     {
-        return $this->getAdapter()->psrRequest;
+        if ($this->adapter === null) {
+            throw new InvalidConfigException('PSR-7 request adapter is not set.');
+        }
+
+        return $this->adapter->psrRequest;
     }
 
     /**
@@ -151,7 +161,11 @@ final class Request extends \yii\web\Request
 
     public function getUrl(): string
     {
-        return $this->getAdapter()->getUrl();
+        if ($this->adapter !== null) {
+            return $this->adapter->getUrl();
+        }
+
+        return parent::getUrl();
     }
 
     public function reset(): void
@@ -195,14 +209,5 @@ final class Request extends \yii\web\Request
                 'type' => $psrFile->getClientMediaType() ?? '',
             ],
         );
-    }
-
-    private function getAdapter(): ServerRequestAdapter
-    {
-        if ($this->adapter === null) {
-            throw new InvalidConfigException('PSR-7 request adapter is not set.');
-        }
-
-        return $this->adapter;
     }
 }
