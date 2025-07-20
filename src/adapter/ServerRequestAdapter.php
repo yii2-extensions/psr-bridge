@@ -125,12 +125,12 @@ final class ServerRequestAdapter
     {
         $serverParams = $this->psrRequest->getServerParams();
 
-        // for traditional PSR-7 apps where SCRIPT_NAME is available
+        // for traditional 'PSR-7' apps where 'SCRIPT_NAME' is available
         if ($workerMode === false && isset($serverParams['SCRIPT_NAME']) && is_string($serverParams['SCRIPT_NAME'])) {
             return $serverParams['SCRIPT_NAME'];
         }
 
-        // for PSR-7 workers (RoadRunner, Franken, etc.) where no script file exists
+        // for 'PSR-7' workers (RoadRunner, FrankenPHP, etc.) where no script file exists
         // return empty to prevent URL duplication as routing is handled internally
         return '';
     }

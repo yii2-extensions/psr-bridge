@@ -18,6 +18,27 @@ use yii2\extensions\psrbridge\tests\TestCase;
 #[Group('http')]
 final class PSR7RequestTest extends TestCase
 {
+    public function testCallParentGetScriptUrlWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        // ensure adapter is 'null' (default state)
+        $request->reset();
+
+        $_SERVER['SCRIPT_NAME'] = '/test.php';
+        $_SERVER['SCRIPT_FILENAME'] = '/path/to/test.php';
+
+        $scriptUrl = $request->getScriptUrl();
+
+        // kust verify the method executes without throwing exception when adapter is 'null'
+        self::assertSame(
+            '/test.php',
+            $scriptUrl,
+            "'getScriptUrl()' should return 'SCRIPT_NAME' when adapter is 'null'.",
+        );
+    }
     public function testResetCookieCollectionAfterReset(): void
     {
         $this->mockWebApplication();
@@ -409,6 +430,39 @@ final class PSR7RequestTest extends TestCase
         $result = $request->getQueryString();
 
         self::assertEmpty($result, 'Query string should be empty when no query parameters are present.');
+    }
+
+    public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test', [], null, []);
+        $request = new Request(['workerMode' => false]);
+
+        $request->setPsr7Request($psr7Request);
+        $scriptUrl = $request->getScriptUrl();
+
+        self::assertEmpty(
+            $scriptUrl,
+            "Script URL should be empty when adapter is set in traditional mode without 'SCRIPT_NAME'.",
+        );
+    }
+
+    public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $scriptUrl = $request->getScriptUrl();
+
+        self::assertSame(
+            '',
+            $scriptUrl,
+            'Script URL should be empty when adapter is set in worker mode (default).',
+        );
     }
 
     public function testReturnHttpMethodFromAdapterWhenAdapterIsSet(): void
@@ -869,6 +923,31 @@ final class PSR7RequestTest extends TestCase
         self::assertEmpty(
             $result,
             "Raw body should return empty string when 'PSR-7' request has no body content.",
+        );
+    }
+
+    public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
+    {
+        $this->mockWebApplication();
+
+        $expectedScriptName = '/app/public/index.php';
+
+        $psr7Request = FactoryHelper::createRequest(
+            'GET',
+            '/test',
+            [],
+            null,
+            ['SCRIPT_NAME' => $expectedScriptName],
+        );
+        $request = new Request(['workerMode' => false]);
+
+        $request->setPsr7Request($psr7Request);
+        $scriptUrl = $request->getScriptUrl();
+
+        self::assertSame(
+            $expectedScriptName,
+            $scriptUrl,
+            "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
         );
     }
 

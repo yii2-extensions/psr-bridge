@@ -11,8 +11,8 @@ use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 
 final class Request extends \yii\web\Request
 {
+    public bool $workerMode = true;
     private ServerRequestAdapter|null $adapter = null;
-    private bool $workerMode = true;
 
     /**
      * @phpstan-return array<mixed, mixed>|object
