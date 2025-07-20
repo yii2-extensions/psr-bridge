@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\support;
 
-use HttpSoft\Message\{Response, ResponseFactory, ServerRequest, Stream, StreamFactory, Uri};
+use HttpSoft\Message\{Response, ResponseFactory, ServerRequest, Stream, StreamFactory, UploadedFile, Uri};
 use Psr\Http\Message\{
     ResponseFactoryInterface,
     ResponseInterface,
     ServerRequestInterface,
     StreamFactoryInterface,
     StreamInterface,
+    UploadedFileInterface,
     UriInterface,
 };
 
@@ -159,6 +160,32 @@ final class FactoryHelper
     public static function createStreamFactory(): StreamFactoryInterface
     {
         return new StreamFactory();
+    }
+
+    /**
+     * Creates a PSR-7 {@see UploadedFile} instance.
+     *
+     * @param string $name Client filename.
+     * @param string $type Client media type.
+     * @param string $tmpName Temporary file name.
+     * @param int $error Upload error code.
+     * @param int $size File size.
+     *
+     * @return UploadedFileInterface PSR-7 uploaded file instance.
+     *
+     * Usage example:
+     * ```php
+     * FactoryHelper::createUploadedFile($name, $type, $tmpName, $error, $size);
+     * ```
+     */
+    public static function createUploadedFile(
+        string $name = '',
+        string $type = '',
+        string $tmpName = '',
+        int $error = 0,
+        int $size = 0,
+    ): UploadedFileInterface {
+        return new UploadedFile($tmpName, $size, $error, $name, $type);
     }
 
     /**
