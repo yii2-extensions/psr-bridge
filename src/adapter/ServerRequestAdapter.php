@@ -46,52 +46,9 @@ final class ServerRequestAdapter
      */
     public function getCookies(bool $enableValidation = false, string $validationKey = ''): array
     {
-        $cookies = [];
-        $cookieParams = $this->psrRequest->getCookieParams();
-
-        if ($enableValidation) {
-            if ($validationKey === '') {
-                throw new InvalidConfigException('Cookie validation key must be provided.');
-            }
-
-            foreach ($cookieParams as $name => $value) {
-                if (is_string($value) && $value !== '') {
-                    $data = Yii::$app->getSecurity()->validateData($value, $validationKey);
-
-                    if (is_string($data) === false) {
-                        continue;
-                    }
-
-                    $data = Json::decode($data, true);
-
-                    if (is_array($data) && isset($data[0], $data[1]) && $data[0] === $name) {
-                        $cookies[$name] = new Cookie(
-                            [
-                                'name' => $name,
-                                'value' => $data[1],
-                                'expire' => null,
-                            ],
-                        );
-                    }
-                }
-            }
-        } else {
-            foreach ($cookieParams as $name => $value) {
-                if ($value === '') {
-                    continue;
-                }
-
-                $cookies[$name] = new Cookie(
-                    [
-                        'name' => $name,
-                        'value' => $value,
-                        'expire' => null,
-                    ],
-                );
-            }
-        }
-
-        return $cookies;
+        return $enableValidation
+            ? $this->getValidatedCookies($validationKey)
+            : $this->getSimpleCookies();
     }
 
     public function getHeaders(): HeaderCollection
@@ -251,6 +208,69 @@ final class ServerRequestAdapter
             'error' => $file->getError(),
             'size' => $file->getSize() ?? 0,
         ];
+    }
+
+    /**
+     * @phpstan-return array<Cookie>
+     */
+    private function getSimpleCookies(): array
+    {
+        $cookies = [];
+        $cookieParams = $this->psrRequest->getCookieParams();
+
+        foreach ($cookieParams as $name => $value) {
+            if ($value !== '') {
+                $cookies[$name] = new Cookie(
+                    [
+                        'name' => $name,
+                        'value' => $value,
+                        'expire' => null,
+                    ],
+                );
+            }
+        }
+
+        return $cookies;
+    }
+
+    /**
+     * @phpstan-return array<Cookie>
+     */
+    private function getValidatedCookies(string $validationKey): array
+    {
+        if ($validationKey === '') {
+            throw new InvalidConfigException('Cookie validation key must be provided.');
+        }
+
+        $cookies = [];
+        $cookieParams = $this->psrRequest->getCookieParams();
+
+        foreach ($cookieParams as $name => $value) {
+            if (is_string($value) && $value !== '') {
+                $data = Yii::$app->getSecurity()->validateData($value, $validationKey);
+
+                if (is_string($data) === false) {
+                    continue;
+                }
+
+                $decodedData = Json::decode($data, true);
+
+                if (is_array($decodedData) &&
+                    isset($decodedData[0], $decodedData[1]) &&
+                    $decodedData[0] === $name) {
+
+                    $cookies[$name] = new Cookie(
+                        [
+                            'name' => $name,
+                            'value' => $decodedData[1],
+                            'expire' => null,
+                        ],
+                    );
+                }
+            }
+        }
+
+        return $cookies;
     }
 
     /**

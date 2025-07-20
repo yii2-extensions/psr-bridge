@@ -11,7 +11,6 @@ use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 
 final class Request extends \yii\web\Request
 {
-    private CookieCollection|null $_cookies = null;
     private ServerRequestAdapter|null $adapter = null;
     private bool $workerMode = true;
 
@@ -27,17 +26,15 @@ final class Request extends \yii\web\Request
         return parent::getBodyParams();
     }
 
-    public function getCookies()
+    public function getCookies(): CookieCollection
     {
-        if ($this->_cookies === null) {
-            $cookies = $this->adapter !== null
-                ? $this->adapter->getCookies($this->enableCookieValidation, $this->cookieValidationKey)
-                : parent::loadCookies();
+        if ($this->adapter !== null) {
+            $cookies = $this->adapter->getCookies($this->enableCookieValidation, $this->cookieValidationKey);
 
-            $this->_cookies = new CookieCollection($cookies, ['readOnly' => true]);
+            return new CookieCollection($cookies, ['readOnly' => true]);
         }
 
-        return $this->_cookies;
+        return parent::getCookies();
     }
 
     public function getCsrfTokenFromHeader(): string|null
@@ -134,18 +131,11 @@ final class Request extends \yii\web\Request
         return $this->getAdapter()->getUrl();
     }
 
-    /**
-     * Reset para workers
-     */
     public function reset(): void
     {
         $this->adapter = null;
-        $this->_cookies = null;
     }
 
-    /**
-     * Establece la request PSR-7
-     */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
         $this->adapter = new ServerRequestAdapter($request);
