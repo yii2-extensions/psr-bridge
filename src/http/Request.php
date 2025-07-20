@@ -62,7 +62,7 @@ final class Request extends \yii\web\Request
     public function getMethod(): string
     {
         if ($this->adapter !== null) {
-            return $this->adapter->getMethodWithOverride($this->methodParam);
+            return $this->adapter->getMethod($this->methodParam);
         }
 
         return parent::getMethod();

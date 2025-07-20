@@ -62,12 +62,7 @@ final class ServerRequestAdapter
         return $headerCollection;
     }
 
-    public function getMethod(): string
-    {
-        return $this->psrRequest->getMethod();
-    }
-
-    public function getMethodWithOverride(string $methodParam = '_method'): string
+    public function getMethod(string $methodParam = '_method'): string
     {
         $parsedBody = $this->psrRequest->getParsedBody();
 
@@ -84,7 +79,7 @@ final class ServerRequestAdapter
             }
         }
 
-        // check for X-Http-Method-Override header
+        // check for 'X-Http-Method-Override' header
         if ($this->psrRequest->hasHeader('X-Http-Method-Override')) {
             $overrideHeader = $this->psrRequest->getHeaderLine('X-Http-Method-Override');
 

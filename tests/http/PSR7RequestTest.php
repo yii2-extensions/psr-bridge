@@ -380,6 +380,113 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnHttpMethodFromAdapterWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('POST', '/test');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $method = $request->getMethod();
+
+        self::assertSame(
+            'POST',
+            $method,
+            'HTTP method should be returned from adapter when adapter is set.',
+        );
+    }
+
+    public function testReturnHttpMethodWithBodyOverrideWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest(
+            'POST',
+            '/test',
+            ['Content-Type' => 'application/x-www-form-urlencoded'],
+            [
+                '_method' => 'PUT',
+                'data' => 'value',
+            ],
+        );
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $method = $request->getMethod();
+
+        self::assertSame(
+            'PUT',
+            $method,
+            'HTTP method should be overridden by body parameter when adapter is set.',
+        );
+    }
+
+    public function testReturnHttpMethodWithCustomMethodParamWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest(
+            'POST',
+            '/test',
+            ['Content-Type' => 'application/x-www-form-urlencoded'],
+            [
+                'custom_method' => 'PATCH',
+                'data' => 'value',
+            ],
+        );
+        $request = new Request();
+
+        $request->methodParam = 'custom_method';
+
+        $request->setPsr7Request($psr7Request);
+        $method = $request->getMethod();
+
+        self::assertSame(
+            'PATCH',
+            $method,
+            'HTTP method should be overridden by custom method parameter when adapter is set.',
+        );
+    }
+
+    public function testReturnHttpMethodWithHeaderOverrideWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest(
+            'POST',
+            '/test',
+            ['X-Http-Method-Override' => 'DELETE'],
+        );
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $method = $request->getMethod();
+
+        self::assertSame(
+            'DELETE',
+            $method,
+            'HTTP method should be overridden by header when adapter is set.',
+        );
+    }
+
+    public function testReturnHttpMethodWithoutOverrideWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $method = $request->getMethod();
+
+        self::assertSame(
+            'GET',
+            $method,
+            'HTTP method should return original method when no override is present and adapter is set.',
+        );
+    }
+
     public function testReturnNewCookieCollectionInstanceOnEachCall(): void
     {
         $this->mockWebApplication();
@@ -455,6 +562,22 @@ final class PSR7RequestTest extends TestCase
         self::assertNull(
             $result,
             "'CSRF' token from header should return parent implementation result when adapter is 'null'.",
+        );
+    }
+
+    public function testReturnParentHttpMethodWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        // ensure adapter is 'null' (default state)
+        $request->reset();
+        $method = $request->getMethod();
+
+        self::assertNotEmpty(
+            $method,
+            'HTTP method should not be empty when adapter is null.',
         );
     }
 
