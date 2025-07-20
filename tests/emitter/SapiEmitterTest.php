@@ -9,8 +9,8 @@ use PHPUnit\Framework\MockObject\{Exception, MockObject};
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\{ResponseInterface, StreamInterface};
 use yii\base\InvalidArgumentException;
-use yii2\extensions\psrbridge\emitter\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
 use yii2\extensions\psrbridge\emitter\SapiEmitter;
+use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
 use yii2\extensions\psrbridge\tests\provider\EmitterProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
@@ -682,7 +682,7 @@ final class SapiEmitterTest extends TestCase
         HTTPFunctions::set_headers_sent(true, 'file', 123);
 
         $this->expectException(HeadersAlreadySentException::class);
-        $this->expectExceptionMessage('Unable to emit response; headers already sent.');
+        $this->expectExceptionMessage(Message::UNABLE_TO_EMIT_RESPONSE_HEADERS_ALREADY_SENT->getMessage());
 
         (new SapiEmitter())->emit(FactoryHelper::createResponse());
     }
@@ -700,7 +700,7 @@ final class SapiEmitterTest extends TestCase
 
         $this->expectOutputString('Contents');
         $this->expectException(OutputAlreadySentException::class);
-        $this->expectExceptionMessage('Unable to emit response; output has been emitted previously.');
+        $this->expectExceptionMessage(Message::UNABLE_TO_EMIT_OUTPUT_HAS_BEEN_EMITTED->getMessage());
 
         (new SapiEmitter())->emit($response);
     }

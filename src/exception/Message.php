@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\emitter\exception;
+namespace yii2\extensions\psrbridge\exception;
 
 /**
  * Represents standardized error messages for HTTP exceptions.
