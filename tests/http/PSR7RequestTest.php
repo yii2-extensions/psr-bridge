@@ -647,6 +647,7 @@ final class PSR7RequestTest extends TestCase
             "Parsed body should return empty array when 'PSR-7' request has no parsed body and adapter is 'null'.",
         );
     }
+
     public function testReturnParentGetScriptUrlWhenAdapterIsNull(): void
     {
         $this->mockWebApplication();
