@@ -7,11 +7,11 @@ namespace yii2\extensions\psrbridge\tests\http;
 use PHPUnit\Framework\Attributes\Group;
 use Yii;
 use yii\base\InvalidConfigException;
+use yii\helpers\Json;
 use yii\web\CookieCollection;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
-use yii\helpers\Json;
 
 #[Group('http')]
 final class PSR7RequestTest extends TestCase
