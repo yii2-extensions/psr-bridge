@@ -381,6 +381,22 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnEmptyQueryParamsWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/products');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $queryParams = $request->getQueryParams();
+
+        self::assertEmpty(
+            $queryParams,
+            "Query parameters should be empty when 'PSR-7' request has no query string.",
+        );
+    }
+
     public function testReturnHttpMethodFromAdapterWhenAdapterIsSet(): void
     {
         $this->mockWebApplication();
@@ -578,7 +594,23 @@ final class PSR7RequestTest extends TestCase
 
         self::assertNotEmpty(
             $method,
-            'HTTP method should not be empty when adapter is null.',
+            "HTTP method should not be empty when adapter is 'null'.",
+        );
+    }
+
+    public function testReturnParentQueryParamsWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        // ensure adapter is 'null' (default state)
+        $request->reset();
+        $queryParams = $request->getQueryParams();
+
+        self::assertEmpty(
+            $queryParams,
+            "Query parameters should be empty when 'PSR-7' request has no query string.",
         );
     }
 
@@ -615,7 +647,7 @@ final class PSR7RequestTest extends TestCase
         self::assertArrayHasKey(
             'name',
             $result,
-            'Parsed body should contain the name field.',
+            "Parsed body should contain the 'name' field.",
         );
         self::assertSame(
             'John',
@@ -667,22 +699,22 @@ final class PSR7RequestTest extends TestCase
 
         self::assertIsObject(
             $result,
-            "Parsed body should return an 'object' when 'PSR-7' request contains object data.",
+            "Parsed body should return an 'object' when 'PSR-7' request contains 'object' data.",
         );
         self::assertSame(
             $parsedBodyObject,
             $result,
-            "Parsed body object should match the original object from 'PSR-7' request.",
+            "Parsed body 'object' should match the original 'object' from 'PSR-7' request.",
         );
         self::assertSame(
             'Test Article',
             $result->title,
-            'Object title property should match the expected value.',
+            "Object 'title' property should match the expected value.",
         );
         self::assertSame(
             'Article content',
             $result->content,
-            'Object content property should match the expected value.',
+            "Object 'content' property should match the expected value.",
         );
     }
 
@@ -700,6 +732,48 @@ final class PSR7RequestTest extends TestCase
             $request->getPsr7Request(),
             "'getPsr7Request()' should return a '" . ServerRequestInterface::class . "' instance when the 'PSR-7' " .
             'adapter is set.',
+        );
+    }
+
+    public function testReturnQueryParamsWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/products?category=electronics&price=500&sort=desc');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $queryParams = $request->getQueryParams();
+
+        self::assertArrayHasKey(
+            'category',
+            $queryParams,
+            "Query parameters should contain the key 'category' when present in the 'PSR-7' request URI.",
+        );
+        self::assertSame(
+            'electronics',
+            $queryParams['category'] ?? null,
+            "Query parameter 'category' should have the expected value from the 'PSR-7' request URI.",
+        );
+        self::assertArrayHasKey(
+            'price',
+            $queryParams,
+            "Query parameters should contain the key 'price' when present in the 'PSR-7' request URI.",
+        );
+        self::assertSame(
+            '500',
+            $queryParams['price'] ?? null,
+            "Query parameter 'price' should have the expected value from the 'PSR-7' request URI.",
+        );
+        self::assertArrayHasKey(
+            'sort',
+            $queryParams,
+            "Query parameters should contain the key 'sort' when present in the 'PSR-7' request URI.",
+        );
+        self::assertSame(
+            'desc',
+            $queryParams['sort'] ?? null,
+            "Query parameter 'sort' should have the expected value from the 'PSR-7' request URI.",
         );
     }
 
