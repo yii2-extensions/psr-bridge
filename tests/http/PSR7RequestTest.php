@@ -582,6 +582,110 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnParsedBodyArrayWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $parsedBodyData = [
+            'name' => 'John',
+            'email' => 'john@example.com',
+            'age' => 30,
+        ];
+
+        $psr7Request = FactoryHelper::createRequest(
+            'POST',
+            '/api/users',
+            ['Content-Type' => 'application/json'],
+            $parsedBodyData,
+        );
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getParsedBody();
+
+        self::assertIsArray(
+            $result,
+            "Parsed body should return an array when 'PSR-7' request contains array data.",
+        );
+        self::assertSame(
+            $parsedBodyData,
+            $result,
+            "Parsed body should match the original data from 'PSR-7' request.",
+        );
+        self::assertArrayHasKey(
+            'name',
+            $result,
+            'Parsed body should contain the name field.',
+        );
+        self::assertSame(
+            'John',
+            $result['name'],
+            'Name field should match the expected value.',
+        );
+    }
+
+    public function testReturnParsedBodyNullWhenAdapterIsSetWithNullBody(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest(
+            'GET',
+            '/api/users',
+            [],
+            null,
+        );
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getParsedBody();
+
+        self::assertNull(
+            $result,
+            "Parsed body should return 'null' when 'PSR-7' request has no parsed body.",
+        );
+    }
+
+    public function testReturnParsedBodyObjectWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $parsedBodyObject = (object) [
+            'title' => 'Test Article',
+            'content' => 'Article content',
+        ];
+
+        $psr7Request = FactoryHelper::createRequest(
+            'PUT',
+            '/api/articles/1',
+            ['Content-Type' => 'application/json'],
+            $parsedBodyObject,
+        );
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getParsedBody();
+
+        self::assertIsObject(
+            $result,
+            "Parsed body should return an 'object' when 'PSR-7' request contains object data.",
+        );
+        self::assertSame(
+            $parsedBodyObject,
+            $result,
+            "Parsed body object should match the original object from 'PSR-7' request.",
+        );
+        self::assertSame(
+            'Test Article',
+            $result->title,
+            'Object title property should match the expected value.',
+        );
+        self::assertSame(
+            'Article content',
+            $result->content,
+            'Object content property should match the expected value.',
+        );
+    }
+
     public function testReturnPsr7RequestInstanceWhenAdapterIsSet(): void
     {
         $this->mockWebApplication();
@@ -651,5 +755,17 @@ final class PSR7RequestTest extends TestCase
             $cookies->has('invalid_cookie'),
             "'CookieCollection' should not contain invalid cookies when validation is enabled.",
         );
+    }
+
+    public function testThrowExceptionWhenGetParsedBodyCalledWithoutAdapter(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('PSR-7 request adapter is not set.');
+
+        $request->getParsedBody();
     }
 }

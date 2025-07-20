@@ -68,7 +68,10 @@ final class Request extends \yii\web\Request
         return parent::getMethod();
     }
 
-    public function getParsedBody(): mixed
+    /**
+     * @phpstan-return array<mixed, mixed>|object|null
+     */
+    public function getParsedBody(): array|object|null
     {
         return $this->getAdapter()->getParsedBody();
     }
