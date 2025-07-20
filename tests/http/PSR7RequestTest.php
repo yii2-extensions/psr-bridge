@@ -22,28 +22,6 @@ use function filesize;
 #[Group('http')]
 final class PSR7RequestTest extends TestCase
 {
-    public function testCallParentGetScriptUrlWhenAdapterIsNull(): void
-    {
-        $this->mockWebApplication();
-
-        $request = new Request();
-
-        // ensure adapter is 'null' (default state)
-        $request->reset();
-
-        $_SERVER['SCRIPT_NAME'] = '/test.php';
-        $_SERVER['SCRIPT_FILENAME'] = '/path/to/test.php';
-
-        $scriptUrl = $request->getScriptUrl();
-
-        // kust verify the method executes without throwing exception when adapter is 'null'
-        self::assertSame(
-            '/test.php',
-            $scriptUrl,
-            "'getScriptUrl()' should return 'SCRIPT_NAME' when adapter is 'null'.",
-        );
-    }
-
     public function testResetCookieCollectionAfterReset(): void
     {
         $this->mockWebApplication();
@@ -652,6 +630,42 @@ final class PSR7RequestTest extends TestCase
         self::assertNull(
             $result,
             "'CSRF' token from header should return parent implementation result when adapter is 'null'.",
+        );
+    }
+
+    public function testReturnParentGetParsedBodyWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        // ensure adapter is 'null' (default state)
+        $request->reset();
+
+        self::assertEmpty(
+            $request->getParsedBody(),
+            "Parsed body should return empty array when 'PSR-7' request has no parsed body and adapter is 'null'.",
+        );
+    }
+    public function testReturnParentGetScriptUrlWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        // ensure adapter is 'null' (default state)
+        $request->reset();
+
+        $_SERVER['SCRIPT_NAME'] = '/test.php';
+        $_SERVER['SCRIPT_FILENAME'] = '/path/to/test.php';
+
+        $scriptUrl = $request->getScriptUrl();
+
+        // kust verify the method executes without throwing exception when adapter is 'null'
+        self::assertSame(
+            '/test.php',
+            $scriptUrl,
+            "'getScriptUrl()' should return 'SCRIPT_NAME' when adapter is 'null'.",
         );
     }
 

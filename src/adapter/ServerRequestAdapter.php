@@ -34,14 +34,6 @@ final class ServerRequestAdapter
     }
 
     /**
-     * @phpstan-return array<mixed, mixed>
-     */
-    public function getCookieParams(): array
-    {
-        return $this->psrRequest->getCookieParams();
-    }
-
-    /**
      * @phpstan-return array<Cookie>
      */
     public function getCookies(bool $enableValidation = false, string $validationKey = ''): array
@@ -133,14 +125,6 @@ final class ServerRequestAdapter
         // for 'PSR-7' workers (RoadRunner, FrankenPHP, etc.) where no script file exists
         // return empty to prevent URL duplication as routing is handled internally
         return '';
-    }
-
-    /**
-     * @phpstan-return array<mixed, mixed>
-     */
-    public function getServerParams(): array
-    {
-        return $this->psrRequest->getServerParams();
     }
 
     /**

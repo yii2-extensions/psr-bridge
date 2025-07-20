@@ -1497,6 +1497,16 @@ final class RequestTest extends TestCase
         );
     }
 
+    public function testThrowExceptionWhenAdapterPSR7IsNotSet(): void
+    {
+        $request = new Request();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('PSR-7 request adapter is not set.');
+
+        $request->getPsr7Request();
+    }
+
     public function testThrowExceptionWhenRequestUriIsMissing(): void
     {
         $this->mockWebApplication();
