@@ -37,6 +37,13 @@ enum Message: string
     case BUFFER_LENGTH_INVALID = 'Buffer length for `%s` must be greater than zero; received `%d`.';
 
     /**
+     * Error when the cookie validation key is missing.
+     *
+     * Format: "Cookie validation key must be provided."
+     */
+    case COOKIE_VALIDATION_KEY_REQUIRED = 'Cookie validation key must be provided.';
+
+    /**
      * Error when the request body can’t be parsed.
      *
      * Format: "Unable to parse request body; %s"

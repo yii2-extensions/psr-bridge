@@ -13,6 +13,7 @@ use yii\helpers\Json;
 use yii\web\Cookie;
 use yii\web\CookieCollection;
 use yii\web\UploadedFile;
+use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -349,7 +350,7 @@ final class PSR7RequestTest extends TestCase
         $request->cookieValidationKey = '';
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Cookie validation key must be provided.');
+        $this->expectExceptionMessage(Message::COOKIE_VALIDATION_KEY_REQUIRED->getMessage());
 
         $request->setPsr7Request($psr7Request);
         $request->getCookies();
