@@ -93,6 +93,23 @@ final class Request extends \yii\web\Request
         return parent::getQueryParams();
     }
 
+    /**
+     * Retrieves the query string from the current request.
+     *
+     * Returns the query string portion of the request URI, which contains parameters sent via GET method.
+     *
+     * When using PSR-7 adapter, the query string is extracted from the PSR-7 request URI. Otherwise, falls back
+     * to the parent implementation which typically reads from $_SERVER['QUERY_STRING'].
+     *
+     * The query string includes all parameters after the '?' character in the URL, without the leading '?'.
+     *
+     * @return string Query string without leading '?' character, or empty string if no query parameters exist.
+     *
+     * Usage example:
+     * ```php
+     * $queryString = $request->getQueryString(); // Returns 'page=1&limit=10'
+     * ```
+     */
     public function getQueryString()
     {
         if ($this->adapter !== null) {

@@ -40,21 +40,9 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertSame(
-            $expectedRemoteAddress,
-            $request->remoteIP,
-            'Remote IP fail!.',
-        );
-        self::assertSame(
-            $expectedUserIp,
-            $request->userIP,
-            'User IP fail!.',
-        );
-        self::assertSame(
-            $expectedIsSecureConnection,
-            $request->isSecureConnection,
-            'Secure connection fail!.',
-        );
+        self::assertSame($expectedRemoteAddress, $request->remoteIP, 'Remote IP fail!.');
+        self::assertSame($expectedUserIp, $request->userIP, 'User IP fail!.');
+        self::assertSame($expectedIsSecureConnection, $request->isSecureConnection, 'Secure connection fail!.');
     }
 
     public function testCsrfHeaderValidation(): void
@@ -771,6 +759,51 @@ final class RequestTest extends TestCase
             $request->getOrigin(),
             "'getOrigin()' should return 'null' when 'HTTP_ORIGIN' is not set.",
         );
+    }
+
+    public function testGetQueryStringWhenEmpty(): void
+    {
+        $_SERVER['QUERY_STRING'] = '';
+
+        $request = new Request();
+
+        self::assertEmpty(
+            $request->getQueryString(),
+            'Query string should be empty when \'$_SERVER[\'QUERY_STRING\']\' is empty.',
+        );
+
+        unset($_SERVER['QUERY_STRING']);
+    }
+
+    public function testGetQueryStringWhenNotSet(): void
+    {
+        unset($_SERVER['QUERY_STRING']);
+
+        $request = new Request();
+
+        self::assertEmpty(
+            $request->getQueryString(),
+            'Query string should be empty when \'$_SERVER[\'QUERY_STRING\']\' is not set.',
+        );
+    }
+
+    /**
+     * @phpstan-param string $expectedString
+     */
+    #[DataProviderExternal(RequestProvider::class, 'getQueryString')]
+    public function testGetQueryStringWithVariousParams(string $queryString, string $expectedString): void
+    {
+        $_SERVER['QUERY_STRING'] = $queryString;
+
+        $request = new Request();
+
+        self::assertSame(
+            $expectedString,
+            $request->getQueryString(),
+            "Query string should match the expected value for: '{$queryString}'.",
+        );
+
+        unset($_SERVER['QUERY_STRING']);
     }
 
     public function testGetScriptFileWithEmptyServer(): void

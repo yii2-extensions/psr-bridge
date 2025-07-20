@@ -251,6 +251,39 @@ final class RequestProvider
     }
 
     /**
+     * @phpstan-return array<string, array{string, string}>
+     */
+    public static function getQueryString(): array
+    {
+        return [
+            'complexQuery' => [
+                'filters%5Btype%5D=article&filters%5Bstatus%5D=published&tags%5B%5D=php&tags%5B%5D=web',
+                'filters%5Btype%5D=article&filters%5Bstatus%5D=published&tags%5B%5D=php&tags%5B%5D=web',
+            ],
+            'emptyQuery' => [
+                '',
+                '',
+            ],
+            'encodedParameters' => [
+                'search=hello%20world&category=tech%26science',
+                'search=hello%20world&category=tech%26science',
+            ],
+            'multipleParameters' => [
+                'page=1&limit=10&sort=name',
+                'page=1&limit=10&sort=name',
+            ],
+            'parameterWithoutValue' => [
+                'debug&verbose=1',
+                'debug&verbose=1',
+            ],
+            'singleParameter' => [
+                'page=1',
+                'page=1',
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return array<array{array<string, string>, string}>
      */
     public static function getUserIP(): array

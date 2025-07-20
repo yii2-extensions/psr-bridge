@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ServerRequestInterface;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii\web\CookieCollection;
 use yii2\extensions\psrbridge\http\Request;
+use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -397,6 +398,19 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnEmptyQueryStringWhenAdapterIsSetWithNoQuery(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getQueryString();
+
+        self::assertEmpty($result, 'Query string should be empty when no query parameters are present.');
+    }
+
     public function testReturnHttpMethodFromAdapterWhenAdapterIsSet(): void
     {
         $this->mockWebApplication();
@@ -592,10 +606,7 @@ final class PSR7RequestTest extends TestCase
         $request->reset();
         $method = $request->getMethod();
 
-        self::assertNotEmpty(
-            $method,
-            "HTTP method should not be empty when adapter is 'null'.",
-        );
+        self::assertNotEmpty($method, "HTTP method should not be empty when adapter is 'null'.");
     }
 
     public function testReturnParentQueryParamsWhenAdapterIsNull(): void
@@ -608,9 +619,20 @@ final class PSR7RequestTest extends TestCase
         $request->reset();
         $queryParams = $request->getQueryParams();
 
+        self::assertEmpty($queryParams, "Query parameters should be empty when 'PSR-7' request has no query string.");
+    }
+
+    public function testReturnParentQueryStringWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        $queryString = $request->getQueryString();
+
         self::assertEmpty(
-            $queryParams,
-            "Query parameters should be empty when 'PSR-7' request has no query string.",
+            $queryString,
+            "Query string should be empty when 'PSR-7' request has no query string and adapter is 'null'.",
         );
     }
 
@@ -671,10 +693,7 @@ final class PSR7RequestTest extends TestCase
         $request->setPsr7Request($psr7Request);
         $result = $request->getParsedBody();
 
-        self::assertNull(
-            $result,
-            "Parsed body should return 'null' when 'PSR-7' request has no parsed body.",
-        );
+        self::assertNull($result, "Parsed body should return 'null' when 'PSR-7' request has no parsed body.");
     }
 
     public function testReturnParsedBodyObjectWhenAdapterIsSet(): void
@@ -774,6 +793,27 @@ final class PSR7RequestTest extends TestCase
             'desc',
             $queryParams['sort'] ?? null,
             "Query parameter 'sort' should have the expected value from the 'PSR-7' request URI.",
+        );
+    }
+
+    /**
+     * @phpstan-param string $expectedString
+     */
+    #[DataProviderExternal(RequestProvider::class, 'getQueryString')]
+    public function testReturnQueryStringWhenAdapterIsSet(string $queryString, string $expectedString): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', "/test?{$queryString}");
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getQueryString();
+
+        self::assertSame(
+            $expectedString,
+            $result,
+            "Query string should match the expected value for: '{$queryString}'.",
         );
     }
 
