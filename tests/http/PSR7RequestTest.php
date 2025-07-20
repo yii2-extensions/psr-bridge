@@ -287,6 +287,57 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnCookieWithCorrectNamePropertyWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $cookieName = 'session_id';
+        $cookieValue = 'abc123';
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+
+        $psr7Request = $psr7Request->withCookieParams([$cookieName => $cookieValue]);
+
+        $request = new Request();
+
+        $request->enableCookieValidation = false;
+        $request->cookieValidationKey = 'test-validation-key-32-characters';
+
+        $request->setPsr7Request($psr7Request);
+        $cookies = $request->getCookies();
+
+        $cookie = $cookies[$cookieName] ?? null;
+
+        if ($cookie === null) {
+            foreach ($cookies as $cookieObj) {
+                if ($cookieObj->value === $cookieValue) {
+                    $cookie = $cookieObj;
+                    break;
+                }
+            }
+        }
+
+        self::assertNotNull(
+            $cookie,
+            'Cookie should be found in the collection.',
+        );
+        self::assertInstanceOf(
+            Cookie::class,
+            $cookie,
+            'Should be a Cookie instance.',
+        );
+        self::assertSame(
+            $cookieName,
+            $cookie->name,
+            "Cookie 'name' property should match the original cookie 'name' from PSR-7 request.",
+        );
+        self::assertSame(
+            $cookieValue,
+            $cookie->value,
+            "Cookie 'value' property should match the original cookie 'value' from PSR-7 request.",
+        );
+    }
+
     public function testReturnCsrfTokenFromHeaderWhenAdapterIsSet(): void
     {
         $this->mockWebApplication();
