@@ -636,6 +636,22 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnParentRawBodyWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        // ensure adapter is 'null' (default state)
+        $request->reset();
+        $result = $request->getRawBody();
+
+        self::assertEmpty(
+            $result,
+            "Raw body should return empty string when 'PSR-7' request has no body content and adapter is 'null'.",
+        );
+    }
+
     public function testReturnParsedBodyArrayWhenAdapterIsSet(): void
     {
         $this->mockWebApplication();
@@ -814,6 +830,45 @@ final class PSR7RequestTest extends TestCase
             $expectedString,
             $result,
             "Query string should match the expected value for: '{$queryString}'.",
+        );
+    }
+
+    public function testReturnRawBodyFromAdapterWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $bodyContent = '{"name":"John","email":"john@example.com","message":"Hello World"}';
+
+        $stream = FactoryHelper::createStream('php://temp', 'wb+');
+
+        $stream->write($bodyContent);
+
+        $psr7Request = FactoryHelper::createRequest('POST', '/api/contact')->withBody($stream);
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getRawBody();
+
+        self::assertSame(
+            $bodyContent,
+            $result,
+            "Raw body should return the exact content from the 'PSR-7' request body when adapter is set.",
+        );
+    }
+
+    public function testReturnRawBodyWhenAdapterIsSetWithEmptyBody(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getRawBody();
+
+        self::assertEmpty(
+            $result,
+            "Raw body should return empty string when 'PSR-7' request has no body content.",
         );
     }
 

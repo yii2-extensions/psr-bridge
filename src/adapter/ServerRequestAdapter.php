@@ -115,6 +115,7 @@ final class ServerRequestAdapter
     public function getRawBody(): string
     {
         $body = $this->psrRequest->getBody();
+
         $body->rewind();
 
         return $body->getContents();
