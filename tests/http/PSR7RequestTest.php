@@ -25,6 +25,33 @@ use function filesize;
 #[Group('http')]
 final class PSR7RequestTest extends TestCase
 {
+    public function testGetCsrfTokenFromHeaderUsesAdapterWhenAdapterIsNotNull(): void
+    {
+        $this->mockWebApplication();
+
+        $expectedToken = 'adapter-csrf-token-123';
+        $csrfHeaderName = 'X-CSRF-Token';
+
+        $psr7Request = FactoryHelper::createRequest(
+            'POST',
+            '/test',
+            [$csrfHeaderName => $expectedToken],
+        );
+
+        $request = new Request();
+
+        $request->csrfHeader = $csrfHeaderName;
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getCsrfTokenFromHeader();
+
+        self::assertSame(
+            $expectedToken,
+            $result,
+            "Should return CSRF token from adapter headers when adapter is not 'null'",
+        );
+    }
+
     public function testResetCookieCollectionAfterReset(): void
     {
         $this->mockWebApplication();

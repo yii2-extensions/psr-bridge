@@ -510,6 +510,24 @@ final class RequestTest extends TestCase
         );
     }
 
+    public function testGetCsrfTokenFromHeaderUsesParentWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $_SERVER['HTTP_X_CSRF_TOKEN'] = 'parent-csrf-token-456';
+
+        $request = new Request();
+
+        $request->csrfHeader = 'X-CSRF-Token';
+
+        $request->reset();
+        $result = $request->getCsrfTokenFromHeader();
+
+        self::assertNotNull($result, "Should return result from parent when adapter is 'null'.");
+
+        unset($_SERVER['HTTP_X_CSRF_TOKEN']);
+    }
+
     /**
      * @phpstan-param array<int, array{array<string, string>|array<string, mixed>}> $server
      * @phpstan-param array<array{string|null, string|null}> $expected

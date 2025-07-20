@@ -39,13 +39,12 @@ final class Request extends \yii\web\Request
         return parent::getCookies();
     }
 
+    /**
+     * @phpstan-ignore return.unusedType
+     */
     public function getCsrfTokenFromHeader(): string|null
     {
-        if ($this->adapter !== null) {
-            return $this->getHeaders()->get($this->csrfHeader);
-        }
-
-        return parent::getCsrfTokenFromHeader();
+        return $this->getHeaders()->get($this->csrfHeader);
     }
 
     public function getHeaders(): HeaderCollection
