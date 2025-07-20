@@ -7,8 +7,10 @@ namespace yii2\extensions\psrbridge\tests\http;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ServerRequestInterface;
 use Yii;
+use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
+use yii\web\Cookie;
 use yii\web\CookieCollection;
 use yii\web\UploadedFile;
 use yii2\extensions\psrbridge\http\Request;
@@ -965,6 +967,46 @@ final class PSR7RequestTest extends TestCase
         self::assertEmpty(
             $result,
             "Raw body should return empty string when 'PSR-7' request has no body content.",
+        );
+    }
+
+    public function testReturnReadOnlyCookieCollectionWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+
+        $psr7Request = $psr7Request->withCookieParams(
+            [
+                'another_cookie' => 'another_value',
+                'test_cookie' => 'test_value',
+            ],
+        );
+
+        $request = new Request();
+
+        $request->enableCookieValidation = false;
+        $request->cookieValidationKey = 'test-validation-key-32-characters';
+
+        $request->setPsr7Request($psr7Request);
+        $cookies = $request->getCookies();
+
+        self::assertInstanceOf(
+            CookieCollection::class,
+            $cookies,
+            "Cookies should return a 'CookieCollection' instance when adapter is set.",
+        );
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage('The cookie collection is read only.');
+
+        $cookies->add(
+            new Cookie(
+                [
+                    'name' => 'new_cookie',
+                    'value' => 'new_value',
+                ],
+            ),
         );
     }
 
