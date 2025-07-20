@@ -39,6 +39,7 @@ final class PSR7RequestTest extends TestCase
             "'getScriptUrl()' should return 'SCRIPT_NAME' when adapter is 'null'.",
         );
     }
+
     public function testResetCookieCollectionAfterReset(): void
     {
         $this->mockWebApplication();
