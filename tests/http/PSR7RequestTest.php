@@ -468,6 +468,31 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnHttpMethodWithBodyOverrideAndLowerCaseMethodsWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest(
+            'post',
+            '/test',
+            ['Content-Type' => 'application/x-www-form-urlencoded'],
+            [
+                '_method' => 'put',
+                'data' => 'value',
+            ],
+        );
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $method = $request->getMethod();
+
+        self::assertSame(
+            'PUT',
+            $method,
+            'HTTP method should be overridden by body parameter when adapter is set.',
+        );
+    }
+
     public function testReturnHttpMethodWithBodyOverrideWhenAdapterIsSet(): void
     {
         $this->mockWebApplication();
