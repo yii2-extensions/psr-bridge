@@ -103,7 +103,7 @@ final class ServerRequestAdapter
      * This method ensures compatibility with Yii2 Cookie validation mechanism, supporting secure extraction of cookies
      * for use in Yii2 Application.
      *
-     * @param bool $enableValidation Whether to enable Yii2 Cookie style validation (default: `false`).
+     * @param bool $enableValidation Whether to enable Yii2 Cookie style validation.
      * @param string $validationKey Validation key used for cookie validation (required if validation is enabled).
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
@@ -117,7 +117,7 @@ final class ServerRequestAdapter
      * $cookies = $adapter->getCookies(true, 'my-validation-key');
      * ```
      */
-    public function getCookies(bool $enableValidation = false, string $validationKey = ''): array
+    public function getCookies(bool $enableValidation, string $validationKey = ''): array
     {
         return $enableValidation
             ? $this->getValidatedCookies($validationKey)
@@ -428,19 +428,15 @@ final class ServerRequestAdapter
             if (is_string($value) && $value !== '') {
                 $data = Yii::$app->getSecurity()->validateData($value, $validationKey);
 
-                if (is_string($data) === false) {
-                    continue;
+                if (is_string($data)) {
+                    $data = Json::decode($data);
                 }
 
-                $decodedData = Json::decode($data);
-
-                if (is_array($decodedData) &&
-                    isset($decodedData[0], $decodedData[1]) &&
-                    $decodedData[0] === $name) {
+                if (is_array($data) && isset($data[0], $data[1]) && $data[0] === $name) {
                     $cookies[$name] = new Cookie(
                         [
                             'name' => $name,
-                            'value' => $decodedData[1],
+                            'value' => $data[1],
                             'expire' => null,
                         ],
                     );
