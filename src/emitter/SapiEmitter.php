@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\emitter;
 
 use Psr\Http\Message\{ResponseInterface, StreamInterface};
 use yii\base\InvalidArgumentException;
-use yii2\extensions\psrbridge\emitter\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
+use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
 
 use function implode;
 use function ob_get_length;
