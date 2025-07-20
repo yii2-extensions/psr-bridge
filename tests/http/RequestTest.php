@@ -1091,6 +1091,8 @@ final class RequestTest extends TestCase
 
     public function testIssue15317(): void
     {
+        $originalCookie = $_COOKIE;
+
         $this->mockWebApplication();
 
         $_COOKIE[(new Request())->csrfParam] = '';
@@ -1110,6 +1112,8 @@ final class RequestTest extends TestCase
             $request->getCsrfToken(),
             "'getCsrfToken()' should return a non-empty value after an empty 'CSRF' token is validated.",
         );
+
+        $_COOKIE = $originalCookie;
     }
 
     public function testNoCsrfTokenCsrfHeaderValidation(): void
