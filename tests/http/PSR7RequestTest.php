@@ -67,7 +67,6 @@ final class PSR7RequestTest extends TestCase
                 'key2' => 'value2',
             ],
         );
-
         $request = new Request();
 
         $request->setPsr7Request($psr7Request);
@@ -111,7 +110,6 @@ final class PSR7RequestTest extends TestCase
                 '_method' => 'PUT',
             ],
         );
-
         $request = new Request();
 
         $request->setPsr7Request($psr7Request);
@@ -209,7 +207,6 @@ final class PSR7RequestTest extends TestCase
         $this->mockWebApplication();
 
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
-
         $request = new Request();
 
         $request->enableCookieValidation = false;
@@ -278,6 +275,55 @@ final class PSR7RequestTest extends TestCase
             'compact',
             $cookies->getValue('preferences'),
             "Cookie 'preferences' should have the expected value when validation is disabled.",
+        );
+    }
+
+    public function testReturnCsrfTokenFromHeaderWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $csrfToken = 'test-csrf-token-value';
+
+        $psr7Request = FactoryHelper::createRequest(
+            'POST',
+            '/test',
+            ['X-CSRF-Token' => $csrfToken],
+        );
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getCsrfTokenFromHeader();
+
+        self::assertSame(
+            $csrfToken,
+            $result,
+            "'CSRF' token from header should match the value provided in the 'PSR-7' request header 'X-CSRF-Token'.",
+        );
+    }
+
+    public function testReturnCsrfTokenFromHeaderWithCustomHeaderWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $customHeaderName = 'X-Custom-CSRF';
+        $csrfToken = 'custom-csrf-token-value';
+
+        $psr7Request = FactoryHelper::createRequest(
+            'PUT',
+            '/api/resource',
+            [$customHeaderName => $csrfToken],
+        );
+        $request = new Request();
+
+        $request->csrfHeader = $customHeaderName;
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getCsrfTokenFromHeader();
+
+        self::assertSame(
+            $csrfToken,
+            $result,
+            "'CSRF' token from header should match the value provided in the custom 'PSR-7' request header.",
         );
     }
 
@@ -355,6 +401,60 @@ final class PSR7RequestTest extends TestCase
             $cookies1,
             $cookies2,
             "Each call to 'getCookies()' should return a new 'CookieCollection' instance, not a cached one.",
+        );
+    }
+
+    public function testReturnNullFromHeaderWhenCsrfHeaderEmptyAndAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest(
+            'PATCH',
+            '/api/update',
+            ['X-CSRF-Token' => ''],
+        );
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getCsrfTokenFromHeader();
+
+        self::assertSame(
+            '',
+            $result,
+            "'CSRF' token from header should return empty string when 'CSRF' header is present but empty in the " .
+            "'PSR-7' request.",
+        );
+    }
+
+    public function testReturnNullFromHeaderWhenCsrfHeaderNotPresentAndAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('DELETE', '/api/resource');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $result = $request->getCsrfTokenFromHeader();
+
+        self::assertNull(
+            $result,
+            "'CSRF' token from header should return 'null' when no 'CSRF' header is present in the 'PSR-7' request.",
+        );
+    }
+
+    public function testReturnParentCsrfTokenFromHeaderWhenAdapterIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $request = new Request();
+
+        // ensure adapter is null (default state)
+        $request->reset();
+        $result = $request->getCsrfTokenFromHeader();
+
+        self::assertNull(
+            $result,
+            "'CSRF' token from header should return parent implementation result when adapter is 'null'.",
         );
     }
 
