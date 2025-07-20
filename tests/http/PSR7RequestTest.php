@@ -287,6 +287,57 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnCookieWithCorrectNamePropertyWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $cookieName = 'session_id';
+        $cookieValue = 'abc123';
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+
+        $psr7Request = $psr7Request->withCookieParams([$cookieName => $cookieValue]);
+
+        $request = new Request();
+
+        $request->enableCookieValidation = false;
+        $request->cookieValidationKey = 'test-validation-key-32-characters';
+
+        $request->setPsr7Request($psr7Request);
+        $cookies = $request->getCookies();
+
+        $cookie = $cookies[$cookieName] ?? null;
+
+        if ($cookie === null) {
+            foreach ($cookies as $cookieObj) {
+                if ($cookieObj->value === $cookieValue) {
+                    $cookie = $cookieObj;
+                    break;
+                }
+            }
+        }
+
+        self::assertNotNull(
+            $cookie,
+            'Cookie should be found in the collection.',
+        );
+        self::assertInstanceOf(
+            Cookie::class,
+            $cookie,
+            'Should be a Cookie instance.',
+        );
+        self::assertSame(
+            $cookieName,
+            $cookie->name,
+            "Cookie 'name' property should match the original cookie 'name' from PSR-7 request.",
+        );
+        self::assertSame(
+            $cookieValue,
+            $cookie->value,
+            "Cookie 'value' property should match the original cookie 'value' from PSR-7 request.",
+        );
+    }
+
     public function testReturnCsrfTokenFromHeaderWhenAdapterIsSet(): void
     {
         $this->mockWebApplication();
@@ -1342,6 +1393,63 @@ final class PSR7RequestTest extends TestCase
         self::assertFalse(
             $cookies->has('invalid_cookie'),
             "'CookieCollection' should not contain invalid cookies when validation is enabled.",
+        );
+    }
+
+    public function testReturnValidatedCookieWithCorrectNamePropertyWhenValidationEnabled(): void
+    {
+        $this->mockWebApplication();
+
+        $validationKey = 'test-validation-key-32-characters';
+        $cookieName = 'validated_session';
+        $cookieValue = 'secure_session_value';
+        $data = [$cookieName, $cookieValue];
+
+        $signedCookieValue = Yii::$app->getSecurity()->hashData(Json::encode($data), $validationKey);
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+
+        $psr7Request = $psr7Request->withCookieParams([$cookieName => $signedCookieValue]);
+
+        $request = new Request();
+
+        $request->enableCookieValidation = true;
+        $request->cookieValidationKey = $validationKey;
+
+        $request->setPsr7Request($psr7Request);
+        $cookies = $request->getCookies();
+
+        $cookie = null;
+
+        foreach ($cookies as $cookieObj) {
+            if ($cookieObj->value === $cookieValue) {
+                $cookie = $cookieObj;
+                break;
+            }
+        }
+
+        self::assertNotNull(
+            $cookie,
+            'Validated cookie should be found in the collection.',
+        );
+        self::assertInstanceOf(
+            Cookie::class,
+            $cookie,
+            'Should be a Cookie instance.',
+        );
+        self::assertSame(
+            $cookieName,
+            $cookie->name,
+            "Validated cookie 'name' property should match the original cookie 'name' from PSR-7 request",
+        );
+        self::assertSame(
+            $cookieValue,
+            $cookie->value,
+            "Validated cookie 'value' property should match the decrypted cookie 'value'",
+        );
+        self::assertNull(
+            $cookie->expire,
+            "Validated cookie 'expire' property should be 'null' as set in the constructor",
         );
     }
 }
