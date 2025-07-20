@@ -51,6 +51,7 @@ final class PSR7RequestTest extends TestCase
             "Should return CSRF token from adapter headers when adapter is not 'null'",
         );
     }
+
     public function testResetCookieCollectionAfterReset(): void
     {
         $this->mockWebApplication();
