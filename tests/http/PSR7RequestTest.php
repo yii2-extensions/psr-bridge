@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\Group;
+use Psr\Http\Message\ServerRequestInterface;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
@@ -578,6 +579,23 @@ final class PSR7RequestTest extends TestCase
         self::assertNotEmpty(
             $method,
             'HTTP method should not be empty when adapter is null.',
+        );
+    }
+
+    public function testReturnPsr7RequestInstanceWhenAdapterIsSet(): void
+    {
+        $this->mockWebApplication();
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+
+        self::assertInstanceOf(
+            ServerRequestInterface::class,
+            $request->getPsr7Request(),
+            "'getPsr7Request()' should return a '" . ServerRequestInterface::class . "' instance when the 'PSR-7' " .
+            'adapter is set.',
         );
     }
 
