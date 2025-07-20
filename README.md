@@ -2,7 +2,7 @@
     <a href="https://github.com/yii2-extensions/template" target="_blank">
         <img src="https://www.yiiframework.com/image/yii_logo_light.svg" alt="Yii Framework">
     </a>
-    <h1 align="center">Extension template</h1>
+    <h1 align="center">PSR bridge</h1>
     <br>
 </p>
 
@@ -19,6 +19,9 @@
     <a href="https://github.com/yii2-extensions/psr-bride/actions/workflows/build.yml" target="_blank">
         <img src="https://github.com/yii2-extensions/psr-bride/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
     </a> 
+    <a href="https://dashboard.stryker-mutator.io/reports/github.com/yii2-extensions/psr-bridge/main" target="_blank">
+        <img src="https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fyii2-extensions%2Fpsr-bridge%2Fmain" alt="Mutation Testing">
+    </a>    
     <a href="https://github.com/yii2-extensions/psr-bridge/actions/workflows/static.yml" target="_blank">        
         <img src="https://github.com/yii2-extensions/psr-bridge/actions/workflows/static.yml/badge.svg" alt="Static Analysis">
     </a>  
