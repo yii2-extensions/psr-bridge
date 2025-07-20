@@ -54,6 +54,7 @@ final class PSR7RequestTest extends TestCase
             "New cookie 'new_cookie' should have the expected value after reset.",
         );
     }
+
     public function testReturnBodyParamsWhenPsr7RequestHasFormData(): void
     {
         $psr7Request = FactoryHelper::createRequest(
@@ -367,7 +368,7 @@ final class PSR7RequestTest extends TestCase
         $cookieValue = 'abc123session';
         $data = [$cookieName, $cookieValue];
 
-        $signedCookieValue = Yii::$app->getSecurity()->hashData(\yii\helpers\Json::encode($data), $validationKey);
+        $signedCookieValue = Yii::$app->getSecurity()->hashData(Yii\helpers\Json::encode($data), $validationKey);
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(

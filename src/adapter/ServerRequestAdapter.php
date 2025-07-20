@@ -258,7 +258,6 @@ final class ServerRequestAdapter
                 if (is_array($decodedData) &&
                     isset($decodedData[0], $decodedData[1]) &&
                     $decodedData[0] === $name) {
-
                     $cookies[$name] = new Cookie(
                         [
                             'name' => $name,
