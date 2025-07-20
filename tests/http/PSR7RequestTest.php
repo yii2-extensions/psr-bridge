@@ -661,6 +661,77 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnMultipleValidatedCookiesWhenValidationEnabledWithMultipleValidCookies(): void
+    {
+        $this->mockWebApplication();
+
+        $validationKey = 'test-validation-key-32-characters';
+
+        $cookies = [
+            'session_id' => 'session_value_123',
+            'user_pref' => 'preference_value_456',
+            'theme' => 'dark_theme_789',
+            'language' => 'en_US_012',
+        ];
+
+        $signedCookies = [];
+
+        foreach ($cookies as $name => $value) {
+            $data = [$name, $value];
+            $signedCookies[$name] = Yii::$app->getSecurity()->hashData(Json::encode($data), $validationKey);
+        }
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+
+        $psr7Request = $psr7Request->withCookieParams($signedCookies);
+
+        $request = new Request();
+
+        $request->enableCookieValidation = true;
+        $request->cookieValidationKey = $validationKey;
+
+        $request->setPsr7Request($psr7Request);
+        $cookieCollection = $request->getCookies();
+
+        self::assertCount(
+            4,
+            $cookieCollection,
+            "Should return all '4' validated cookies, not just one.",
+        );
+
+        foreach ($cookies as $expectedName => $expectedValue) {
+            self::assertTrue(
+                $cookieCollection->has($expectedName),
+                "Cookie collection should contain '{$expectedName}'",
+            );
+            self::assertSame(
+                $expectedValue,
+                $cookieCollection->getValue($expectedName),
+                "Cookie '{$expectedName}' should have the correct decrypted value",
+            );
+        }
+
+        $cookieNames = [];
+
+        foreach ($cookieCollection as $cookie) {
+            $cookieNames[] = $cookie->name;
+        }
+
+        self::assertCount(
+            4,
+            $cookieNames,
+            "Should have exactly '4' cookie names",
+        );
+
+        foreach (array_keys($cookies) as $expectedName) {
+            self::assertContains(
+                $expectedName,
+                $cookieNames,
+                "Cookie name '{$expectedName}' should be present in the collection",
+            );
+        }
+    }
+
     public function testReturnNewCookieCollectionInstanceOnEachCall(): void
     {
         $this->mockWebApplication();
