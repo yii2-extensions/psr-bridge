@@ -10,6 +10,13 @@ use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii\web\{Cookie, Response};
 
+use function get_class;
+use function gmdate;
+use function is_int;
+use function max;
+use function time;
+use function urlencode;
+
 final class ResponseAdapter
 {
     public function __construct(
@@ -96,18 +103,21 @@ final class ResponseAdapter
 
         // add expiration
         if (is_int($cookie->expire) && $cookie->expire !== 0) {
-            $header .= '; Expires=' . gmdate('D, d-M-Y H:i:s T', $cookie->expire);
-            $header .= '; Max-Age=' . max(0, $cookie->expire - time());
+            $expires = gmdate('D, d-M-Y H:i:s T', $cookie->expire);
+            $maxAge = max(0, $cookie->expire - time());
+
+            $header .= "; Expires={$expires}";
+            $header .= "; Max-Age={$maxAge}";
         }
 
         // add path
         if ($cookie->path !== '') {
-            $header .= '; Path=' . $cookie->path;
+            $header .= "; Path={$cookie->path}";
         }
 
         // add domain
         if ($cookie->domain !== '') {
-            $header .= '; Domain=' . $cookie->domain;
+            $header .= "; Domain={$cookie->domain}";
         }
 
         // Add secure flag
@@ -122,7 +132,7 @@ final class ResponseAdapter
 
         // add sameSite attribute
         if ($cookie->sameSite !== null) {
-            $header .= '; SameSite=' . $cookie->sameSite;
+            $header .= "; SameSite={$cookie->sameSite}";
         }
 
         return $header;
