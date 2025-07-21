@@ -25,16 +25,23 @@ final class Response extends BaseResponse
         $this->trigger(self::EVENT_AFTER_PREPARE);
 
         $session = Yii::$app->getSession();
+        $sessionCookie = $session->getCookieParams();
 
-        $this->cookies->add(
-            new Cookie(
-                [
-                    'name' => $session->getName(),
-                    'value' => $session->id,
-                    'path' => ini_get('session.cookie_path'),
-                ],
-            ),
-        );
+        if ($session->getIsActive()) {
+            $this->cookies->add(
+                new Cookie(
+                    [
+                        'name' => $session->getName(),
+                        'value' => $session->id,
+                        'path' => $sessionCookie['path'],
+                        'domain' => $sessionCookie['domain'],
+                        'secure' => $sessionCookie['secure'],
+                        'httpOnly' => $sessionCookie['httponly'],
+                        'sameSite' => $sessionCookie['samesite'] ?? null,
+                    ],
+                ),
+            );
+        }
 
         $session->close();
 
