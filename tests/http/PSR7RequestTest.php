@@ -7,12 +7,9 @@ namespace yii2\extensions\psrbridge\tests\http;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ServerRequestInterface;
 use Yii;
-use yii\base\InvalidCallException;
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidCallException, InvalidConfigException};
 use yii\helpers\Json;
-use yii\web\Cookie;
-use yii\web\CookieCollection;
-use yii\web\UploadedFile;
+use yii\web\{Cookie, CookieCollection, UploadedFile};
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
@@ -1512,6 +1509,62 @@ final class PSR7RequestTest extends TestCase
                 "Uploaded file '{$uploadedFile->name}' should exist in the runtime directory after saving.",
             );
         }
+    }
+
+    public function testReturnUploadedFileWithZeroSizeWhenPsr7FileSizeIsNull(): void
+    {
+        $this->mockWebApplication();
+
+        $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
+
+        $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1);
+        $psr7Request = FactoryHelper::createRequest('POST', '/upload');
+
+        $psr7Request = $psr7Request->withUploadedFiles(['test_file' => $uploadedFile1]);
+
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $uploadedFiles = $request->getUploadedFiles();
+
+        self::assertArrayHasKey(
+            'test_file',
+            $uploadedFiles,
+            "Uploaded files array should contain the 'test_file' key.",
+        );
+
+        $uploadedFile = $uploadedFiles['test_file'] ?? null;
+
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $uploadedFile,
+            "Value for 'test_file' should be an instance of 'UploadedFile'.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $uploadedFile->error,
+            "'UploadedFile' 'error' property should be 'UPLOAD_ERR_OK'.",
+        );
+        self::assertSame(
+            'test1.txt',
+            $uploadedFile->name,
+            "'UploadedFile' 'name' property should match the original filename.",
+        );
+        self::assertSame(
+            0,
+            $uploadedFile->size,
+            "'UploadedFile' 'size' should default to 0 when PSR-7 file 'getSize()' returns 'null'.",
+        );
+        self::assertSame(
+            $file1,
+            $uploadedFile->tempName,
+            "'UploadedFile' 'tempName' should match the original file path.",
+        );
+        self::assertSame(
+            'text/plain',
+            $uploadedFile->type,
+            "'UploadedFile' 'type' should match the original MIME type.",
+        );
     }
 
     #[DataProviderExternal(RequestProvider::class, 'getUrl')]

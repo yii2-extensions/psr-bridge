@@ -203,7 +203,7 @@ final class Request extends \yii\web\Request
             [
                 'error' => $psrFile->getError(),
                 'name' => $psrFile->getClientFilename() ?? '',
-                'size' => $psrFile->getSize() ?? 0,
+                'size' => $psrFile->getSize() ?? null,
                 'tempName' => $psrFile->getStream()->getMetadata('uri') ?? '',
                 'type' => $psrFile->getClientMediaType() ?? '',
             ],
