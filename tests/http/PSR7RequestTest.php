@@ -661,6 +661,98 @@ final class PSR7RequestTest extends TestCase
         );
     }
 
+    public function testReturnMultipleUploadedFilesWithDifferentStructures(): void
+    {
+        $this->mockWebApplication();
+
+        $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
+        $file2 = dirname(__DIR__) . '/support/stub/files/test2.php';
+        $size1 = filesize($file1);
+        $size2 = filesize($file2);
+
+        self::assertNotFalse(
+            $size1,
+            "File size for 'test1.txt' should not be 'false'.",
+        );
+        self::assertNotFalse(
+            $size2,
+            "File size for 'test2.php' should not be 'false'.",
+        );
+
+        $uploadedFiles = [
+            'simple1' => FactoryHelper::createUploadedFile('simple1.txt', 'text/plain', $file1, size: $size1),
+            'simple2' => FactoryHelper::createUploadedFile('simple2.php', 'application/x-php', $file2, size: $size2),
+            'nested' => [
+                'level1' => FactoryHelper::createUploadedFile('nested1.txt', 'text/plain', $file1, size: $size1),
+                'level2' => FactoryHelper::createUploadedFile('nested2.php', 'application/x-php', $file2, size: $size2),
+            ],
+            'array_files' => [
+                FactoryHelper::createUploadedFile('array1.txt', 'text/plain', $file1, size: $size1),
+                FactoryHelper::createUploadedFile('array2.php', 'application/x-php', $file2, size: $size2),
+            ],
+        ];
+
+        $psr7Request = FactoryHelper::createRequest('POST', '/upload')->withUploadedFiles($uploadedFiles);
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $convertedFiles = $request->getUploadedFiles();
+
+        self::assertCount(
+            4,
+            $convertedFiles,
+            "Should return all '4' top-level items in the 'UploadedFiles' array, matching the original structure.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $convertedFiles['simple1'] ?? null,
+            "'simple1' should be an instance of 'UploadedFile', representing a single uploaded file.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $convertedFiles['simple2'] ?? null,
+            "'simple2' should be an instance of 'UploadedFile', representing a single uploaded file.",
+        );
+        self::assertIsArray(
+            $convertedFiles['nested'] ?? null,
+            "'nested' should be an array, representing a nested structure of uploaded files.",
+        );
+        self::assertCount(
+            2,
+            $convertedFiles['nested'],
+            "'nested' array should contain exactly '2' items: 'level1' and 'level2'.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $convertedFiles['nested']['level1'] ?? null,
+            "'nested['level1']' should be an instance of 'UploadedFile', representing a nested uploaded file.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $convertedFiles['nested']['level2'] ?? null,
+            "'nested['level2']' should be an instance of 'UploadedFile', representing a nested uploaded file.",
+        );
+        self::assertIsArray(
+            $convertedFiles['array_files'] ?? null,
+            "'array_files' should be an array, representing a list of uploaded files.",
+        );
+        self::assertCount(
+            2,
+            $convertedFiles['array_files'],
+            "'array_files' should contain exactly '2' items, each representing an uploaded file.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $convertedFiles['array_files'][0] ?? null,
+            "'array_files[0]' should be an instance of 'UploadedFile', representing the first file in the array.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $convertedFiles['array_files'][1] ?? null,
+            "'array_files[1]' should be an instance of 'UploadedFile', representing the second file in the array.",
+        );
+    }
+
     public function testReturnMultipleValidatedCookiesWhenValidationEnabledWithMultipleValidCookies(): void
     {
         $this->mockWebApplication();
