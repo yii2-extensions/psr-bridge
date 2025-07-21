@@ -9,6 +9,7 @@ use stdClass;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\web\JsonParser;
+use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -1520,7 +1521,7 @@ final class RequestTest extends TestCase
         $request = new Request();
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('PSR-7 request adapter is not set.');
+        $this->expectExceptionMessage(Message::PSR7_REQUEST_ADAPTER_NOT_SET->getMessage());
 
         $request->getPsr7Request();
     }
