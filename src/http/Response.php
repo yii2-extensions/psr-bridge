@@ -7,9 +7,10 @@ namespace yii2\extensions\psrbridge\http;
 use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
 use Yii;
 use yii\web\Cookie;
+use yii\web\Response as BaseResponse;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 
-final class Response extends Yii\web\Response
+final class Response extends BaseResponse
 {
     public function getPsr7Response(): ResponseInterface
     {
