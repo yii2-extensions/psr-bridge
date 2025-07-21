@@ -51,6 +51,13 @@ enum Message: string
     case FAIL_PARSING_REQUEST_BODY = 'Unable to parse request body; %s';
 
     /**
+     * Error when the PSR-7 request adapter is not set.
+     *
+     * Format: "PSR-7 request adapter is not set."
+     */
+    case PSR7_REQUEST_ADAPTER_NOT_SET = 'PSR-7 request adapter is not set.';
+
+    /**
      * Error when output has already been emitted.
      *
      * Format: "Unable to emit response; output has been emitted previously."
