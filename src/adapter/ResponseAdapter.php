@@ -38,9 +38,7 @@ final class ResponseAdapter
 
         // Add body
         $body = $this->streamFactory->createStream($this->response->content ?? '');
-        $psr7Response = $psr7Response->withBody($body);
-
-        return $psr7Response;
+        return $psr7Response->withBody($body);
     }
 
     /**

@@ -9,7 +9,7 @@ use Yii;
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 
-final class Response extends \yii\web\Response
+final class Response extends Yii\web\Response
 {
     public function getPsr7Response(): ResponseInterface
     {
