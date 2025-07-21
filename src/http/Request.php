@@ -200,15 +200,11 @@ final class Request extends \yii\web\Request
 
     private function createUploadedFile(UploadedFileInterface $psrFile): UploadedFile
     {
-        if ($psrFile->getSize() < 0) {
-            throw new InvalidArgumentException(Message::UPLOADED_FILE_SIZE_NEGATIVE->getMessage($psrFile->getSize()));
-        }
-
         return new UploadedFile(
             [
                 'error' => $psrFile->getError(),
                 'name' => $psrFile->getClientFilename() ?? '',
-                'size' => $psrFile->getSize() ?? 0,
+                'size' => $psrFile->getSize() ?? null,
                 'tempName' => $psrFile->getStream()->getMetadata('uri') ?? '',
                 'type' => $psrFile->getClientMediaType() ?? '',
             ],

@@ -1699,25 +1699,4 @@ final class PSR7RequestTest extends TestCase
             "Validated cookie 'expire' property should be 'null' as set in the constructor",
         );
     }
-
-    public function testThrowExceptionWhenUploadedFileSizeIsNegative(): void
-    {
-        $this->mockWebApplication();
-
-        $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
-
-        $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1, size: -1);
-        $psr7Request = FactoryHelper::createRequest('POST', '/upload');
-
-        $psr7Request = $psr7Request->withUploadedFiles(['test_file' => $uploadedFile1]);
-
-        $request = new Request();
-
-        $request->setPsr7Request($psr7Request);
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::UPLOADED_FILE_SIZE_NEGATIVE->getMessage(-1));
-
-        $request->getUploadedFiles();
-    }
 }
