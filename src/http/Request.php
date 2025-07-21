@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\http;
 
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidArgumentException, InvalidConfigException};
 use yii\web\{CookieCollection, HeaderCollection, UploadedFile};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
+use yii2\extensions\psrbridge\exception\Message;
 
 use function is_array;
 
@@ -199,6 +200,10 @@ final class Request extends \yii\web\Request
 
     private function createUploadedFile(UploadedFileInterface $psrFile): UploadedFile
     {
+        if ($psrFile->getSize() < 0) {
+            throw new InvalidArgumentException(Message::UPLOADED_FILE_SIZE_NEGATIVE->getMessage($psrFile->getSize()));
+        }
+
         return new UploadedFile(
             [
                 'error' => $psrFile->getError(),

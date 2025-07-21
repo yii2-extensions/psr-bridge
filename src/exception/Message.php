@@ -65,6 +65,13 @@ enum Message: string
     case UNABLE_TO_EMIT_RESPONSE_HEADERS_ALREADY_SENT = 'Unable to emit response; headers already sent.';
 
     /**
+     * Error when the uploaded file size is negative.
+     *
+     * Format: "Uploaded file size must not be negative; received `%d`."
+     */
+    case UPLOADED_FILE_SIZE_NEGATIVE = 'Uploaded file size must not be negative; received `%d`.';
+
+    /**
      * Returns the formatted message string for the error case.
      *
      * Retrieves the raw message string associated with this error case without parameter interpolation.
