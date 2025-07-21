@@ -7,6 +7,7 @@ namespace yii2\extensions\psrbridge\adapter;
 use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
 use Yii;
 use yii\base\InvalidConfigException;
+use yii\helpers\Json;
 use yii\web\{Cookie, Response};
 
 final class ResponseAdapter
@@ -80,30 +81,34 @@ final class ResponseAdapter
     /**
      * Format a single cookie as HTTP header
      */
-    private function formatCookieHeader(Cookie $cookie, bool $enableValidation, ?string $validationKey): string
+    private function formatCookieHeader(Cookie $cookie, bool $enableValidation, string|null $validationKey): string
     {
         $value = $cookie->value;
 
-        // Apply validation if enabled and not a delete cookie
-        if ($enableValidation && $validationKey !== null && $cookie->expire !== 1) {
-            $value = Yii::$app->getSecurity()->hashData(serialize([$cookie->name, $cookie->value]), $validationKey);
+        // apply validation if enabled and not a delete cookie
+        if (
+            $enableValidation &&
+            $validationKey !== null &&
+            ($cookie->value === '' || ($cookie->expire !== 0 && $cookie->expire < time()))
+        ) {
+            $value = Yii::$app->getSecurity()->hashData(Json::encode([$cookie->name, $cookie->value]), $validationKey);
         }
 
-        // Build cookie header
+        // build cookie header
         $header = urlencode($cookie->name) . '=' . urlencode($value);
 
-        // Add expiration
+        // add expiration
         if (is_int($cookie->expire) && $cookie->expire !== 0) {
             $header .= '; Expires=' . gmdate('D, d-M-Y H:i:s T', $cookie->expire);
             $header .= '; Max-Age=' . max(0, $cookie->expire - time());
         }
 
-        // Add path
+        // add path
         if ($cookie->path !== '') {
             $header .= '; Path=' . $cookie->path;
         }
 
-        // Add domain
+        // add domain
         if ($cookie->domain !== '') {
             $header .= '; Domain=' . $cookie->domain;
         }
@@ -113,12 +118,12 @@ final class ResponseAdapter
             $header .= '; Secure';
         }
 
-        // Add httpOnly flag
+        // add httpOnly flag
         if ($cookie->httpOnly) {
             $header .= '; HttpOnly';
         }
 
-        // Add sameSite attribute
+        // add sameSite attribute
         if ($cookie->sameSite !== null) {
             $header .= '; SameSite=' . $cookie->sameSite;
         }

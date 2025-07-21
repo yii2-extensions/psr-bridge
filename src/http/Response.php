@@ -24,6 +24,16 @@ final class Response extends BaseResponse
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
 
+        if (Yii::$app->has('session') === false) {
+            $response = $adapter->toPsr7();
+
+            $this->trigger(self::EVENT_AFTER_SEND);
+
+            $this->isSent = true;
+
+            return $response;
+        }
+
         $session = Yii::$app->getSession();
         $cookieParams = $session->getCookieParams();
 
