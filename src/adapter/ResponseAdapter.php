@@ -78,9 +78,6 @@ final class ResponseAdapter
         return $headers;
     }
 
-    /**
-     * Format a single cookie as HTTP header
-     */
     private function formatCookieHeader(Cookie $cookie, bool $enableValidation, string|null $validationKey): string
     {
         $value = $cookie->value;
