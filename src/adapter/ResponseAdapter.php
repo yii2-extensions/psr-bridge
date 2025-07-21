@@ -1,0 +1,130 @@
+<?php
+
+declare(strict_types=1);
+
+namespace yii2\extensions\psrbridge\adapter;
+
+use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
+use Yii;
+use yii\base\InvalidConfigException;
+use yii\web\{Cookie, Response};
+
+final class ResponseAdapter
+{
+    public function __construct(
+        private Response $response,
+        private ResponseFactoryInterface $responseFactory,
+        private StreamFactoryInterface $streamFactory,
+    ) {}
+
+    public function toPsr7(): ResponseInterface
+    {
+        // Create base response
+        $psr7Response = $this->responseFactory->createResponse(
+            $this->response->getStatusCode(),
+            $this->response->statusText,
+        );
+
+        // Add headers
+        foreach ($this->response->getHeaders() as $name => $values) {
+            // @phpstan-ignore-next-line
+            $psr7Response = $psr7Response->withHeader($name, $values);
+        }
+
+        // Add cookies with proper formatting
+        foreach ($this->buildCookieHeaders() as $cookieHeader) {
+            $psr7Response = $psr7Response->withAddedHeader('Set-Cookie', $cookieHeader);
+        }
+
+        // Add body
+        $body = $this->streamFactory->createStream($this->response->content ?? '');
+        $psr7Response = $psr7Response->withBody($body);
+
+        return $psr7Response;
+    }
+
+    /**
+     * Build cookie headers with proper formatting and validation
+     *
+     * @phpstan-return string[] Array of formatted cookie headers.
+     */
+    private function buildCookieHeaders(): array
+    {
+        $headers = [];
+        $request = Yii::$app->getRequest();
+
+        // Check if cookie validation is enabled
+        $enableValidation = $request->enableCookieValidation;
+        $validationKey = null;
+
+        if ($enableValidation) {
+            $validationKey = $request->cookieValidationKey;
+
+            if ($validationKey === '') {
+                throw new InvalidConfigException(
+                    get_class($request) . '::cookieValidationKey must be configured with a secret key.',
+                );
+            }
+        }
+
+        foreach ($this->response->getCookies() as $cookie) {
+            // Skip cookies with empty values
+            if ($cookie->value === null || $cookie->value === '') {
+                continue;
+            }
+
+            $headers[] = $this->formatCookieHeader($cookie, $enableValidation, $validationKey);
+        }
+
+        return $headers;
+    }
+
+    /**
+     * Format a single cookie as HTTP header
+     */
+    private function formatCookieHeader(Cookie $cookie, bool $enableValidation, ?string $validationKey): string
+    {
+        $value = $cookie->value;
+
+        // Apply validation if enabled and not a delete cookie
+        if ($enableValidation && $validationKey !== null && $cookie->expire !== 1) {
+            $value = Yii::$app->getSecurity()->hashData(serialize([$cookie->name, $cookie->value]), $validationKey);
+        }
+
+        // Build cookie header
+        $header = urlencode($cookie->name) . '=' . urlencode($value);
+
+        // Add expiration
+        if (is_int($cookie->expire) && $cookie->expire !== 0) {
+            $header .= '; Expires=' . gmdate('D, d-M-Y H:i:s T', $cookie->expire);
+            $header .= '; Max-Age=' . max(0, $cookie->expire - time());
+        }
+
+        // Add path
+        if ($cookie->path !== '') {
+            $header .= '; Path=' . $cookie->path;
+        }
+
+        // Add domain
+        if ($cookie->domain !== '') {
+            $header .= '; Domain=' . $cookie->domain;
+        }
+
+        // Add secure flag
+        if ($cookie->secure) {
+            $header .= '; Secure';
+        }
+
+        // Add httpOnly flag
+        if ($cookie->httpOnly) {
+            $header .= '; HttpOnly';
+        }
+
+        // Add sameSite attribute
+        if ($cookie->sameSite !== null) {
+            $header .= '; SameSite=' . $cookie->sameSite;
+        }
+
+        return $header;
+    }
+}
