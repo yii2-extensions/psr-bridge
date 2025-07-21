@@ -18,7 +18,6 @@ enabled:
   - declare_strict_types
   - dir_constant
   - empty_loop_body_braces
-  - fully_qualified_strict_types
   - function_to_constant
   - hash_to_slash_comment
   - integer_literal_case
