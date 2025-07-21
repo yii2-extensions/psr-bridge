@@ -75,11 +75,9 @@ final class ResponseAdapter
 
         foreach ($this->response->getCookies() as $cookie) {
             // Skip cookies with empty values
-            if ($cookie->value === null || $cookie->value === '') {
-                continue;
+            if ($cookie->value !== null && $cookie->value !== '') {
+                $headers[] = $this->formatCookieHeader($cookie, $enableValidation, $validationKey);
             }
-
-            $headers[] = $this->formatCookieHeader($cookie, $enableValidation, $validationKey);
         }
 
         return $headers;
