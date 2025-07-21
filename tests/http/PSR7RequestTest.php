@@ -1695,4 +1695,90 @@ final class PSR7RequestTest extends TestCase
             "Validated cookie 'expire' property should be 'null' as set in the constructor",
         );
     }
+
+    public function testSecureHeadersAreFilteredWhenNotFromTrustedHost(): void
+    {
+        $this->mockWebApplication();
+
+        $_SERVER['REMOTE_ADDR'] = '192.168.1.100';
+        $securityHeaders = [
+            'X-Forwarded-For' => '10.0.0.1',
+            'X-Forwarded-Proto' => 'https',
+            'X-Forwarded-Host' => 'malicious-host.com',
+            'X-Forwarded-Port' => '443',
+            'Front-End-Https' => 'on',
+            'X-Real-IP' => '8.8.8.8',
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer token123',
+            'User-Agent' => 'Test-Agent/1.0',
+        ];
+
+        $psr7Request = FactoryHelper::createRequest('GET', '/test', $securityHeaders);
+
+        $request = new Request(
+            [
+                'trustedHosts' => [
+                    '10.0.0.0/24',
+                ],
+                'secureHeaders' => [
+                    'X-Forwarded-For',
+                    'X-Forwarded-Proto',
+                    'X-Forwarded-Host',
+                    'X-Forwarded-Port',
+                    'Front-End-Https',
+                    'X-Real-IP',
+                ],
+            ],
+        );
+
+        $request->setPsr7Request($psr7Request);
+
+        $headerCollection = $request->getHeaders();
+
+        self::assertSame(
+            null,
+            $headerCollection->get('X-Forwarded-For'),
+            "'X-Forwarded-For' header should be filtered out when request is not from trusted host.",
+        );
+        self::assertSame(
+            null,
+            $headerCollection->get('X-Forwarded-Proto'),
+            "'X-Forwarded-Proto' header should be filtered out when request is not from trusted host.",
+        );
+        self::assertSame(
+            null,
+            $headerCollection->get('X-Forwarded-Host'),
+            'X-Forwarded-Host header should be filtered out when request is not from trusted host.',
+        );
+        self::assertSame(
+            null,
+            $headerCollection->get('X-Forwarded-Port'),
+            "'X-Forwarded-Port' header should be filtered out when request is not from trusted host.",
+        );
+        self::assertSame(
+            null,
+            $headerCollection->get('Front-End-Https'),
+            "'Front-End-Https' header should be filtered out when request is not from trusted host.",
+        );
+        self::assertSame(
+            null,
+            $headerCollection->get('X-Real-IP'),
+            "'X-Real-IP' header should be filtered out when request is not from trusted host.",
+        );
+        self::assertSame(
+            'application/json',
+            $headerCollection->get('Content-Type'),
+            'Content-Type header should NOT be filtered as it is not a secure header.',
+        );
+        self::assertSame(
+            'Bearer token123',
+            $headerCollection->get('Authorization'),
+            'Authorization header should NOT be filtered as it is not a secure header.',
+        );
+        self::assertSame(
+            'Test-Agent/1.0',
+            $headerCollection->get('User-Agent'),
+            'User-Agent header should NOT be filtered as it is not a secure header.',
+        );
+    }
 }
