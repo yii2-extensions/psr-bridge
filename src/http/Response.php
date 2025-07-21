@@ -51,9 +51,9 @@ final class Response extends BaseResponse
                     ],
                 ),
             );
-        }
 
-        $session->close();
+            $session->close();
+        }
 
         $response = $adapter->toPsr7();
 
