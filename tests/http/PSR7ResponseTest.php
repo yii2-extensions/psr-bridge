@@ -64,6 +64,7 @@ final class PSR7ResponseTest extends TestCase
             "Second 'Set-Cookie' header must contain the correct 'name' and 'value' for 'cookie2'.",
         );
     }
+
     public function testCookieHeaderSkipEmptyValueCookies(): void
     {
         $this->mockWebApplication();
@@ -108,6 +109,7 @@ final class PSR7ResponseTest extends TestCase
             "'Set-Cookie' header should contain the valid cookie with a non-empty value.",
         );
     }
+
     public function testCookieHeaderWithAllAttributes(): void
     {
         $this->mockWebApplication();
@@ -185,6 +187,7 @@ final class PSR7ResponseTest extends TestCase
             "'Set-Cookie' header should contain the specified 'SameSite=Strict' attribute.",
         );
     }
+
     public function testCookieHeaderWithBasicCookie(): void
     {
         $this->mockWebApplication();
