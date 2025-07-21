@@ -7,7 +7,6 @@ namespace yii2\extensions\psrbridge\tests\http;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ServerRequestInterface;
 use Yii;
-use yii\base\InvalidArgumentException;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
