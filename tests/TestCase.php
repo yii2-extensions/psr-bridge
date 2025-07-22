@@ -26,7 +26,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $logger->flush();
 
         // Close the session if it was started
-        Yii::$app->getSession()->close();
+        if (Yii::$app->has('session')) {
+            Yii::$app->getSession()->close();
+        }
     }
 
     protected function setUp(): void
