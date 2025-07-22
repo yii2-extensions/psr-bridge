@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\adapter;
 
+use DateTimeInterface;
 use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
 use Yii;
 use yii\base\InvalidConfigException;
@@ -12,7 +13,6 @@ use yii\web\{Cookie, Response};
 
 use function get_class;
 use function gmdate;
-use function is_int;
 use function max;
 use function time;
 use function urlencode;
@@ -86,51 +86,46 @@ final class ResponseAdapter
     private function formatCookieHeader(Cookie $cookie, bool $enableValidation, string|null $validationKey): string
     {
         $value = $cookie->value;
+        $expire = $cookie->expire;
 
-        // apply validation if enabled and not a delete cookie
-        if (
-            $enableValidation &&
-            $validationKey !== null &&
-            ($cookie->value === '' || ($cookie->expire !== 0 && $cookie->expire < time()))
-        ) {
+        if (is_numeric($expire)) {
+            $expire = (int) $expire;
+        }
+
+        if (is_string($expire)) {
+            $expire = (int) strtotime($expire);
+        }
+
+        if ($expire instanceof DateTimeInterface) {
+            $expire = $expire->getTimestamp();
+        }
+
+        if ($enableValidation && $validationKey !== null && $expire !== 1) {
             $value = Yii::$app->getSecurity()->hashData(Json::encode([$cookie->name, $cookie->value]), $validationKey);
         }
 
-        // build cookie header
         $header = urlencode($cookie->name) . '=' . urlencode($value);
 
-        // add expiration
-        if (is_int($cookie->expire) && $cookie->expire !== 0) {
-            $expires = gmdate('D, d-M-Y H:i:s T', $cookie->expire);
-            $maxAge = max(0, $cookie->expire - time());
+        if ($expire !== null && $expire !== 0) {
+            $expires = gmdate('D, d-M-Y H:i:s T', $expire);
+            $maxAge = max(0, $expire - time());
 
             $header .= "; Expires={$expires}";
             $header .= "; Max-Age={$maxAge}";
         }
 
-        // add path
-        if ($cookie->path !== '') {
-            $header .= "; Path={$cookie->path}";
-        }
+        $attributes = [
+            'Path' => $cookie->path !== '' ? $cookie->path : null,
+            'Domain' => $cookie->domain !== '' ? $cookie->domain : null,
+            'Secure' => $cookie->secure ? 'Secure' : null,
+            'HttpOnly' => $cookie->httpOnly ? '' : null,
+            'SameSite' => $cookie->sameSite !== null ? $cookie->sameSite : null,
+        ];
 
-        // add domain
-        if ($cookie->domain !== '') {
-            $header .= "; Domain={$cookie->domain}";
-        }
-
-        // Add secure flag
-        if ($cookie->secure) {
-            $header .= '; Secure';
-        }
-
-        // add httpOnly flag
-        if ($cookie->httpOnly) {
-            $header .= '; HttpOnly';
-        }
-
-        // add sameSite attribute
-        if ($cookie->sameSite !== null) {
-            $header .= "; SameSite={$cookie->sameSite}";
+        foreach ($attributes as $key => $val) {
+            if ($val !== null) {
+                $header .= "; $key" . ($val !== '' ? "=$val" : '');
+            }
         }
 
         return $header;
