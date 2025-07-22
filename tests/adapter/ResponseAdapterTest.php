@@ -1078,6 +1078,7 @@ final class ResponseAdapterTest extends TestCase
             "Cookies with same value but different names should produce different hashes ('name' is included in hash).",
         );
     }
+
     public function testProduceMultipleCookieHeadersWhenAddingCookies(): void
     {
         $this->mockWebApplication();
