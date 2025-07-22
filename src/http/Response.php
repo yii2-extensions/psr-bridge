@@ -23,39 +23,30 @@ final class Response extends \yii\web\Response
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
 
-        if (Yii::$app->has('session') === false) {
-            $response = $adapter->toPsr7();
+        if (Yii::$app->has('session') && ($session = Yii::$app->getSession())->getIsActive()) {
+            $cookieParams = $session->getCookieParams();
 
-            $this->trigger(self::EVENT_AFTER_SEND);
+            $cookieConfig = [
+                'name' => $session->getName(),
+                'value' => $session->getId(),
+                'path' => $cookieParams['path'] ?? '/',
+                'domain' => $cookieParams['domain'] ?? '',
+                'sameSite' => $cookieParams['samesite'] ?? Cookie::SAME_SITE_LAX,
+            ];
 
-            $this->isSent = true;
+            if (isset($cookieParams['secure'])) {
+                $cookieConfig['secure'] = $cookieParams['secure'];
+            }
 
-            return $response;
-        }
+            if (isset($cookieParams['httponly'])) {
+                $cookieConfig['httpOnly'] = $cookieParams['httponly'];
+            }
 
-        $session = Yii::$app->getSession();
-        $cookieParams = $session->getCookieParams();
-
-        if ($session->getIsActive()) {
-            $this->cookies->add(
-                new Cookie(
-                    [
-                        'name' => $session->getName(),
-                        'value' => $session->getId(),
-                        'path' => $cookieParams['path'] ?? '/',
-                        'domain' => $cookieParams['domain'] ?? '',
-                        'secure' => $cookieParams['secure'] ?? false,
-                        'httpOnly' => $cookieParams['httponly'] ?? true,
-                        'sameSite' => $cookieParams['samesite'] ?? null,
-                    ],
-                ),
-            );
-
+            $this->cookies->add(new Cookie($cookieConfig));
             $session->close();
         }
 
         $response = $adapter->toPsr7();
-
         $this->trigger(self::EVENT_AFTER_SEND);
 
         $this->isSent = true;
