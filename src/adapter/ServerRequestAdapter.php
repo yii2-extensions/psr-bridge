@@ -272,7 +272,9 @@ final class ServerRequestAdapter
     {
         $body = $this->psrRequest->getBody();
 
-        $body->rewind();
+        if ($body->isSeekable()) {
+            $body->rewind();
+        }
 
         return $body->getContents();
     }
