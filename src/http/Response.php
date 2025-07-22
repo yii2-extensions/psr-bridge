@@ -16,7 +16,7 @@ final class Response extends \yii\web\Response
         $adapter = new ResponseAdapter(
             $this,
             Yii::$container->get(ResponseFactoryInterface::class),
-            Yii::$container->get(StreamFactoryInterface::class)
+            Yii::$container->get(StreamFactoryInterface::class),
         );
 
         $this->trigger(self::EVENT_BEFORE_SEND);
