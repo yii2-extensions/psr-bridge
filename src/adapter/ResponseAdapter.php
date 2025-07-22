@@ -10,8 +10,8 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii\web\{Cookie, Response};
+use yii2\extensions\psrbridge\exception\Message;
 
-use function get_class;
 use function gmdate;
 use function max;
 use function time;
@@ -68,7 +68,7 @@ final class ResponseAdapter
 
             if ($validationKey === '') {
                 throw new InvalidConfigException(
-                    get_class($request) . '::cookieValidationKey must be configured with a secret key.',
+                    Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage($request::class),
                 );
             }
         }

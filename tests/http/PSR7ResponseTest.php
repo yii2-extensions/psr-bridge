@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
 use yii\web\{Cookie, Response};
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
+use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -432,7 +433,7 @@ final class PSR7ResponseTest extends TestCase
         $response->cookies->add($cookie);
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('::cookieValidationKey must be configured with a secret key.');
+        $this->expectExceptionMessage(Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage(Request::class));
 
         $adapter->toPsr7();
     }

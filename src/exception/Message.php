@@ -37,6 +37,13 @@ enum Message: string
     case BUFFER_LENGTH_INVALID = 'Buffer length for `%s` must be greater than zero; received `%d`.';
 
     /**
+     * Error when the cookie validation key is not configured for a specific class.
+     *
+     * Format: "%s::cookieValidationKey must be configured with a secret key."
+     */
+    case COOKIE_VALIDATION_KEY_NOT_CONFIGURED = '%s::cookieValidationKey must be configured with a secret key.';
+
+    /**
      * Error when the cookie validation key is missing.
      *
      * Format: "Cookie validation key must be provided."
