@@ -15,25 +15,25 @@ use function is_array;
 /**
  * HTTP Request extension with PSR-7 bridge and worker mode support.
  *
- * Provides a drop-in replacement for {@see \yii\web\Request} that integrates PSR-7 ServerRequest handling, enabling
- * seamless interoperability with PSR-7 compatible HTTP stacks and modern PHP runtimes.
+ * Provides a drop-in replacement for {@see \yii\web\Request} that integrates PSR-7 ServerRequestInterface handling,
+ * enabling seamless interoperability with PSR-7 compatible HTTP stacks and modern PHP runtimes.
  *
  * This class delegates request data access (body, headers, cookies, files, etc.) to a {@see ServerRequestAdapter}
- * when a PSR-7 request is set, supporting both traditional SAPI and worker-based environments (such as RoadRunner,
- * FrankenPHP, or similar).
+ * when a PSR-7 ServerRequestInterface is set, supporting both traditional SAPI and worker-based environments (such as
+ * RoadRunner, FrankenPHP, or similar).
  *
  * All methods transparently fall back to the parent implementation if no PSR-7 adapter is present, ensuring
  * compatibility with legacy Yii2 workflows.
  *
- * The class also provides conversion utilities for PSR-7 uploaded files and exposes the underlying PSR-7 request for
- * advanced use cases.
+ * The class also provides conversion utilities for PSR-7 {@see UploadedFileInterface} and exposes the underlying PSR-7
+ * ServerRequestInterface for advanced use cases.
  *
  * Key features:
  * - Automatic fallback to Yii2 parent methods when no adapter is set.
- * - Conversion utilities for PSR-7 uploaded files to Yii2 format.
- * - Full compatibility with Yii2's cookie validation and CSRF protection.
+ * - Conversion utilities for PSR-7 UploadedFileInterface to Yii2 format.
+ * - Full compatibility with Yii2 Cookie validation and CSRF protection.
  * - Immutable, type-safe access to request data (body, headers, cookies, files, query, etc.).
- * - PSR-7 ServerRequest integration via {@see setPsr7Request()} and {@see getPsr7Request()}.
+ * - PSR-7 ServerRequestAdapter integration via {@see setPsr7Request()} and {@see getPsr7Request()}.
  * - Worker mode support for modern runtimes (see {@see $workerMode}).
  *
  * @see ServerRequestAdapter for PSR-7 to Yii2 Request adapter.
@@ -49,18 +49,18 @@ final class Request extends \yii\web\Request
     public bool $workerMode = true;
 
     /**
-     * PSR-7 request adapter for bridging PSR-7 ServerRequest with Yii2 Request component.
+     * PSR-7 ServerRequestAdapter for bridging PSR-7 ServerRequestInterface with Yii2 Request component.
      *
-     * Adapter allows the Request class to access PSR-7 request data while maintaining compatibility with Yii2 Request
-     * component.
+     * Adapter allows the Request class to access PSR-7 ServerRequestInterface data while maintaining compatibility with
+     * Yii2 Request component.
      */
     private ServerRequestAdapter|null $adapter = null;
 
     /**
      * Retrieves the request body parameters, excluding the HTTP method override parameter if present.
      *
-     * Returns the parsed body parameters from the PSR-7 request, removing the specified method override parameter (such
-     * as '_method') if it exists.
+     * Returns the parsed body parameters from the PSR-7 ServerRequestInterface, removing the specified method override
+     * parameter (such as '_method') if it exists.
      *
      * If the PSR-7 adapter is not set, it falls back to the parent implementation.
      *
@@ -90,8 +90,8 @@ final class Request extends \yii\web\Request
     /**
      * Retrieves cookies from the current request, supporting PSR-7 and Yii2 validation.
      *
-     * Returns a {@see CookieCollection} containing cookies extracted from the PSR-7 request if the adapter is set,
-     * applying Yii2 style validation when enabled.
+     * Returns a {@see CookieCollection} containing cookies extracted from the PSR-7 ServerRequestInterface if the
+     * adapter is set, applying Yii2 style validation when enabled.
      *
      * If no adapter is present, falls back to the parent implementation.
      *
@@ -144,8 +144,8 @@ final class Request extends \yii\web\Request
     /**
      * Retrieves HTTP headers from the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns a {@see HeaderCollection} containing all HTTP headers extracted from the PSR-7 request if the adapter is
-     * set.
+     * Returns a {@see HeaderCollection} containing all HTTP headers extracted from the PSR-7 ServerRequestInterface if
+     * the adapter is set.
      *
      * Applies internal header filtering for compatibility with Yii2 expectations.
      *
@@ -229,7 +229,7 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves the underlying PSR-7 ServerRequest instance from the adapter.
+     * Retrieves the underlying PSR-7 ServerRequestInterface instance from the adapter.
      *
      * Returns the PSR-7 {@see ServerRequestInterface} associated with this request via the internal adapter.
      *
@@ -241,7 +241,7 @@ final class Request extends \yii\web\Request
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return ServerRequestInterface PSR-7 ServerRequest instance from the adapter.
+     * @return ServerRequestInterface PSR-7 ServerRequestInterface instance from the adapter.
      *
      * Usage example:
      * ```php
@@ -419,10 +419,10 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Reset the PSR-7 request adapter to its initial state.
+     * Reset the PSR-7 ServerRequestInterface adapter to its initial state.
      *
-     * Sets the internal adapter property to `null`, removing any previously set PSR-7 ServerRequest adapter and
-     * restoring the default behavior of the request component.
+     * Sets the internal adapter property to `null`, removing any previously set PSR-7 ServerRequestInterface adapter
+     * and restoring the default behavior of the request component.
      *
      * This method is used to clear the PSR-7 bridge in worker mode, ensuring that subsequent request operations fall
      * back to the parent Yii2 implementation.
@@ -438,7 +438,7 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Sets the PSR-7 ServerRequest instance for the current request.
+     * Sets the PSR-7 ServerRequestInterface instance for the current request.
      *
      * Assigns a new {@see ServerRequestAdapter} wrapping the provided PSR-7 {@see ServerRequestInterface} to enable
      * PSR-7 interoperability for the Yii2 Request component.
@@ -446,7 +446,7 @@ final class Request extends \yii\web\Request
      * This method is used to bridge PSR-7 compatible HTTP stacks with Yii2, allowing request data to be accessed via
      * the adapter.
      *
-     * Once set, all request operations will use the PSR-7 request until {@see reset()} is called.
+     * Once set, all request operations will use the PSR-7 ServerRequestInterface until {@see reset()} is called.
      *
      * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to bridge.
      *
@@ -462,7 +462,7 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Converts an array of PSR-7 uploaded files to Yii2 UploadedFile instances recursively.
+     * Converts an array of PSR-7 UploadedFileInterface to Yii2 UploadedFile instances recursively.
      *
      * Iterates through the provided array of uploaded files, converting each {@see UploadedFileInterface} instance
      * to a Yii2 {@see UploadedFile} object.
@@ -496,17 +496,17 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Creates a new {@see UploadedFile} instance from a PSR-7 uploaded file.
+     * Creates a new {@see UploadedFile} instance from a PSR-7 UploadedFileInterface.
      *
      * Converts a {@see UploadedFileInterface} object to a Yii2 {@see UploadedFile} instance by extracting the error
-     * code, client filename, file size, temporary file path, and media type from the PSR-7 file.
+     * code, client filename, file size, temporary file path, and media type from the PSR-7 UploadedFileInterface.
      *
-     * This method is used internally to bridge PSR-7 uploaded files with Yii2's file upload handling, ensuring
-     * compatibility between modern HTTP stacks and Yii2's expected file structure.
+     * This method is used internally to bridge PSR-7 UploadedFileInterface with Yii2 file upload handling, ensuring
+     * compatibility between modern HTTP stacks and Yii2 expected file structure.
      *
-     * @param UploadedFileInterface $psrFile PSR-7 uploaded file instance to convert.
+     * @param UploadedFileInterface $psrFile PSR-7 UploadedFileInterface instance to convert.
      *
-     * @return UploadedFile Yii2 UploadedFile instance created from the PSR-7 file.
+     * @return UploadedFile Yii2 UploadedFile instance created from the PSR-7 UploadedFileInterface.
      */
     private function createUploadedFile(UploadedFileInterface $psrFile): UploadedFile
     {

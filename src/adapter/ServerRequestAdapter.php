@@ -18,10 +18,10 @@ use function is_string;
 use function strtoupper;
 
 /**
- * Adapter for PSR-7 ServerRequest to Yii2 Request component.
+ * Adapter for PSR-7 ServerRequestInterface to Yii2 Request component.
  *
- * Provides a bridge between PSR-7 ServerRequestInterface and Yii2 Request component, enabling seamless integration
- * of PSR-7 compatible HTTP stacks with Yii2 applications.
+ * Provides a bridge between PSR-7 {@see ServerRequestInterface} and Yii2 {@see Request} component, enabling seamless
+ * integration of PSR-7 compatible HTTP stacks with Yii2 Application.
  *
  * This adapter exposes methods to access request data such as body parameters, cookies, headers, HTTP method, query
  * parameters, uploaded files, and URL information in a format compatible with Yii2 expectations.
@@ -32,14 +32,14 @@ use function strtoupper;
  * All returned data is immutable and designed for safe, read-only access.
  *
  * Key features.
- * - Cookie extraction with optional Yii2-style validation.
+ * - Cookie extraction with optional Yii2 style validation.
  * - Fluent, exception-safe API for request inspection.
  * - HTTP method override support via body and headers.
  * - Immutable, type-safe access to request data and metadata.
  * - PSR-7 to Yii2 Request component for seamless interoperability.
  * - Worker mode compatibility for modern PHP runtimes.
  *
- * @see ServerRequestInterface for PSR-7 request contract.
+ * @see ServerRequestInterface for PSR-7 ServerRequestInterface contract.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -51,20 +51,20 @@ final class ServerRequestAdapter
      *
      * @param ServerRequestInterface $psrRequest PSR-7 ServerRequestInterface instance to adapt.
      */
-    public function __construct(public ServerRequestInterface $psrRequest) {}
+    public function __construct(public readonly ServerRequestInterface $psrRequest) {}
 
     /**
      * Retrieves the request body parameters, excluding the HTTP method override parameter if present.
      *
-     * Returns the parsed body parameters from the PSR-7 request, removing the specified method override parameter (such
-     * as '_method') if it exists.
+     * Returns the parsed body parameters from the PSR-7 ServerRequestInterface, removing the specified method override
+     * parameter (such as '_method') if it exists.
      *
      * This ensures that the method override value does not appear in the Yii2 Controller action parameters, maintaining
      * compatibility with Yii2 Request component logic.
      *
      * - If the parsed body is not an array or the method parameter is not present, the original parsed body is
      *   returned.
-     * - If the parsed body is null, an empty array is returned for consistency.
+     * - If the parsed body is `null`, an empty array is returned for consistency.
      *
      * @param string $methodParam Name of the HTTP method override parameter to exclude (for example, '_method').
      *
@@ -108,7 +108,7 @@ final class ServerRequestAdapter
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return array Array of {@see Cookie} objects extracted from the PSR-7 request.
+     * @return array Array of {@see Cookie} objects extracted from the PSR-7 ServerRequestInterface.
      *
      * @phpstan-return array<Cookie>
      *
@@ -125,12 +125,12 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Retrieves all HTTP headers from the PSR-7 request as a Yii2 {@see HeaderCollection} instance.
+     * Retrieves all HTTP headers from the PSR-7 ServerRequestInterface as a Yii2 {@see HeaderCollection} instance.
      *
-     * Iterates over each header in the PSR-7 ServerRequest and adds it to a new {@see HeaderCollection} instance,
-     * concatenating multiple values with a comma and space, as expected by Yii2.
+     * Iterates over each header in the PSR-7 ServerRequestInterface and adds it to a new {@see HeaderCollection}
+     * instance, concatenating multiple values with a comma and space, as expected by Yii2.
      *
-     * @return HeaderCollection Collection of HTTP headers from the PSR-7 request.
+     * @return HeaderCollection Collection of HTTP headers from the PSR-7 ServerRequestInterface.
      *
      * Usage example:
      * ```php
@@ -156,7 +156,7 @@ final class ServerRequestAdapter
      * 'X-Http-Method-Override' header.
      *
      * - If a valid override is found and is not one of 'GET', 'HEAD', or 'OPTIONS', it is returned in uppercase.
-     * - Otherwise, the original method from the PSR-7 request is returned.
+     * - Otherwise, the original method from the PSR-7 ServerRequestInterface is returned.
      *
      * This method enables support for HTTP method spoofing in environments where certain HTTP verbs are not natively
      * supported by clients or proxies, ensuring compatibility with RESTful routing and Yii2 Controller actions.
@@ -200,7 +200,7 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Retrieves the parsed body parameters from the PSR-7 request.
+     * Retrieves the parsed body parameters from the PSR-7 ServerRequestInterface.
      *
      * @return array|object|null Parsed body parameters as `array`, `object`, or `null` if not present.
      *
@@ -217,7 +217,7 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Retrieves query parameters from the PSR-7 request.
+     * Retrieves query parameters from the PSR-7 ServerRequestInterface.
      *
      * Returns the query parameters as an associative array, providing direct access to all values present in the
      * request URI.
@@ -237,7 +237,7 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Retrieves the raw query string from the PSR-7 request URI.
+     * Retrieves the raw query string from the PSR-7 ServerRequestInterface URI.
      *
      * @return string Raw query string from the request URI, or an empty string if not present.
      *
@@ -252,7 +252,7 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Retrieves the raw body content from the PSR-7 request stream.
+     * Retrieves the raw body content from the PSR-7 ServerRequestInterface stream.
      *
      * Returns the entire contents of the underlying stream as a string, rewinding first if the stream is seekable.
      *
@@ -261,7 +261,7 @@ final class ServerRequestAdapter
      *
      * The stream is rewound before reading (if seekable) to ensure the full content is returned from the beginning.
      *
-     * @return string Raw body content from the PSR-7 request stream.
+     * @return string Raw body content from the PSR-7 ServerRequestInterface stream.
      *
      * Usage example:
      * ```php
@@ -282,7 +282,7 @@ final class ServerRequestAdapter
     /**
      * Retrieves the script URL from server parameters, supporting both SAPI and worker environments.
      *
-     * Returns the value of 'SCRIPT_NAME' from server parameters for traditional SAPI-based PSR-7 applications.
+     * Returns the value of 'SCRIPT_NAME' from server parameters for traditional SAPI-based PSR-7 Application.
      *
      * For worker-based environments (such as RoadRunner, FrankenPHP), returns an empty string to prevent URL
      * duplication, as routing is handled internally and no script file exists.
@@ -303,25 +303,25 @@ final class ServerRequestAdapter
     {
         $serverParams = $this->psrRequest->getServerParams();
 
-        // for traditional 'PSR-7' apps where 'SCRIPT_NAME' is available
+        // for traditional PSR-7 apps where 'SCRIPT_NAME' is available
         if ($workerMode === false && isset($serverParams['SCRIPT_NAME']) && is_string($serverParams['SCRIPT_NAME'])) {
             return $serverParams['SCRIPT_NAME'];
         }
 
-        // for 'PSR-7' workers (RoadRunner, FrankenPHP, etc.) where no script file exists
+        // for PSR-7 workers (RoadRunner, FrankenPHP, etc.) where no script file exists
         // return empty to prevent URL duplication as routing is handled internally
         return '';
     }
 
     /**
-     * Retrieves uploaded files from the PSR-7 request.
+     * Retrieves uploaded files from the PSR-7 ServerRequestInterface.
      *
-     * Returns the uploaded files as provided by the underlying PSR-7 ServerRequest instance.
+     * Returns the uploaded files as provided by the underlying PSR-7 ServerRequestInterface instance.
      *
      * This method exposes the raw uploaded files array, enabling direct access to all files sent with the request
      * in a format compatible with PSR-7 expectations.
      *
-     * @return array Uploaded files from the PSR-7 request.
+     * @return array Uploaded files from the PSR-7 ServerRequestInterface.
      *
      * @phpstan-return array<mixed, mixed>
      *
@@ -365,16 +365,16 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Extracts cookies from the PSR-7 request without validation.
+     * Extracts cookies from the PSR-7 ServerRequestInterface without validation.
      *
-     * Iterates over the cookie parameters provided by the PSR-7 ServerRequest and creates a {@see Cookie} instance for
+     * Iterates over the cookie parameters provided by the PSR-7 ServerRequestInterface and creates a {@see Cookie} instance for
      * each non-empty value.
      *
      * This method returns all cookies as-is, without applying Yii2 style validation or decoding.
      *
      * It is intended for use in cases where cookie integrity is not enforced by a validation key.
      *
-     * @return array Array of {@see Cookie} objects extracted from the PSR-7 request.
+     * @return array Array of {@see Cookie} objects extracted from the PSR-7 ServerRequestInterface.
      *
      * @phpstan-return array<Cookie>
      */
@@ -399,15 +399,15 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Extracts and validates cookies from the PSR-7 request using Yii2 style validation.
+     * Extracts and validates cookies from the PSR-7 ServerRequestInterface using Yii2 style validation.
      *
-     * Iterates over the cookie parameters provided by the PSR-7 ServerRequest and validates each value using the
+     * Iterates over the cookie parameters provided by the PSR-7 ServerRequestInterface and validates each value using the
      * specified validation key.
      *
      * Only cookies that pass validation and decoding are included in the result.
      *
-     * This ensures that only cookies with integrity verified by Yii2's security component are returned, supporting
-     * secure cookie extraction for Yii2 applications.
+     * This ensures that only cookies with integrity verified by Yii2 Security component are returned, supporting
+     * secure cookie extraction for Yii2 Application.
      *
      * @param string $validationKey Validation key used for Yii2 Cookie validation.
      *
