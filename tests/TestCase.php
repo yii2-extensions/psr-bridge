@@ -21,8 +21,12 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::tearDownAfterClass();
 
+        // Ensure the logger is flushed after all tests
         $logger = Yii::getLogger();
         $logger->flush();
+
+        // Close the session if it was started
+        Yii::$app->getSession()->close();
     }
 
     protected function setUp(): void
