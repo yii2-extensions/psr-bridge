@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\tests\http;
+namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ServerRequestInterface;
@@ -20,7 +20,7 @@ use function dirname;
 use function filesize;
 
 #[Group('http')]
-final class PSR7RequestTest extends TestCase
+final class ServerRequestAdapterTest extends TestCase
 {
     public function testGetCsrfTokenFromHeaderUsesAdapterWhenAdapterIsNotNull(): void
     {
