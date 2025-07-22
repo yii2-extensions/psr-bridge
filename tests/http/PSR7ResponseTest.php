@@ -79,6 +79,67 @@ final class PSR7ResponseTest extends TestCase
         );
     }
 
+    public function testCookieHashingIncludesCookieName(): void
+    {
+        $this->mockWebApplication(
+            [
+                'components' => [
+                    'request' => [
+                        'class' => Request::class,
+                        'enableCookieValidation' => true,
+                        'cookieValidationKey' => 'test-validation-key-32-characters',
+                    ],
+                ],
+            ],
+        );
+
+        $response1 = new Response();
+        $response2 = new Response();
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+        $adapter1 = new ResponseAdapter($response1, $responseFactory, $streamFactory);
+        $adapter2 = new ResponseAdapter($response2, $responseFactory, $streamFactory);
+        $cookie1 = new Cookie(
+            [
+                'name' => 'cookie_name_a',
+                'value' => 'same_value',
+            ],
+        );
+        $cookie2 = new Cookie(
+            [
+                'name' => 'cookie_name_b',
+                'value' => 'same_value',
+            ],
+        );
+
+        $response1->cookies->add($cookie1);
+        $response2->cookies->add($cookie2);
+        $psr7Response1 = $adapter1->toPsr7();
+        $psr7Response2 = $adapter2->toPsr7();
+        $cookieHeader1 = $psr7Response1->getHeader('Set-Cookie')[0] ?? '';
+        $cookieHeader2 = $psr7Response2->getHeader('Set-Cookie')[0] ?? '';
+
+        preg_match('/^[^=]+=([^;]+)/', $cookieHeader1, $matches1);
+        preg_match('/^[^=]+=([^;]+)/', $cookieHeader2, $matches2);
+
+        $hashedValue1 = $matches1[1] ?? '';
+        $hashedValue2 = $matches2[1] ?? '';
+
+        self::assertNotEmpty(
+            $hashedValue1,
+            'First cookie should have a hashed value.',
+        );
+        self::assertNotEmpty(
+            $hashedValue2,
+            'Second cookie should have a hashed value.',
+        );
+        self::assertNotSame(
+            $hashedValue1,
+            $hashedValue2,
+            'Cookies with same value but different names should produce different hashes (name is included in hash).',
+        );
+    }
+
     public function testCookieHeaderSkipEmptyValueCookies(): void
     {
         $this->mockWebApplication();
@@ -505,6 +566,63 @@ final class PSR7ResponseTest extends TestCase
         );
     }
 
+    public function testCookieHeaderWithExpireExactlyAtCurrentTime(): void
+    {
+        $this->mockWebApplication(
+            [
+                'components' => [
+                    'request' => [
+                        'class' => Request::class,
+                        'enableCookieValidation' => true,
+                        'cookieValidationKey' => 'test-validation-key-32-characters',
+                    ],
+                ],
+            ],
+        );
+
+        $currentTime = time();
+
+        $response = new Response();
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+        $cookie = new Cookie(
+            [
+                'name' => 'current_time_cookie',
+                'value' => 'current_time_value',
+                'expire' => $currentTime, // Exactly current time
+            ],
+        );
+
+        $response->cookies->add($cookie);
+        $psr7Response = $adapter->toPsr7();
+        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
+
+        self::assertCount(
+            1,
+            $setCookieHeaders,
+            "Exactly one 'Set-Cookie' header present in the response when a cookie expires at current time.",
+        );
+
+        $cookieHeader = $setCookieHeaders[0] ?? '';
+
+        self::assertStringStartsWith(
+            urlencode('current_time_cookie') . '=',
+            $cookieHeader,
+            "'Set-Cookie' header should start with the encoded cookie 'name'.",
+        );
+        self::assertStringStartsNotWith(
+            urlencode('current_time_cookie') . '=' . urlencode('current_time_value'),
+            $cookieHeader,
+            'Cookie should be hashed when expire equals current time (validation applies).',
+        );
+        self::assertStringContainsString(
+            '; Max-Age=0',
+            $cookieHeader,
+            "'Set-Cookie' header should have 'Max-Age=0' when cookie expires at current time.",
+        );
+    }
+
     public function testCookieHeaderWithExpireSetToOne(): void
     {
         $this->mockWebApplication(
@@ -644,6 +762,48 @@ final class PSR7ResponseTest extends TestCase
             '; Max-Age=' . max(0, $futureTime - time()),
             $cookieHeader,
             "'Set-Cookie' header must include the correctly calculated 'Max-Age' value for the future expiration.",
+        );
+    }
+
+    public function testCookieHeaderWithNegativeMaxAge(): void
+    {
+        $this->mockWebApplication();
+
+        $pastTime = time() - 3600; // 1 hour ago
+
+        $response = new Response();
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+        $cookie = new Cookie(
+            [
+                'name' => 'expired_cookie',
+                'value' => 'expired_value',
+                'expire' => $pastTime,
+            ],
+        );
+
+        $response->cookies->add($cookie);
+        $psr7Response = $adapter->toPsr7();
+        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
+
+        self::assertCount(
+            1,
+            $setCookieHeaders,
+            "Exactly one 'Set-Cookie' header should be present for an expired cookie.",
+        );
+
+        $cookieHeader = $setCookieHeaders[0] ?? '';
+
+        self::assertStringContainsString(
+            '; Max-Age=0',
+            $cookieHeader,
+            "'Max-Age' should be '0' (not negative) for expired cookies due to 'max(0, ...)' function.",
+        );
+        self::assertStringNotContainsString(
+            '; Max-Age=-',
+            $cookieHeader,
+            "'Max-Age' should never be negative.",
         );
     }
 
@@ -944,6 +1104,53 @@ final class PSR7ResponseTest extends TestCase
             '; Expires=' . gmdate('D, d-M-Y H:i:s T', $futureTime),
             $cookieHeader,
             "'Set-Cookie' header should contain the correct 'Expires' attribute for the future cookie.",
+        );
+    }
+
+    public function testCookieHeaderWithZeroMaxAge(): void
+    {
+        $this->mockWebApplication();
+
+        $currentTime = time();
+
+        $response = new Response();
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+        $cookie = new Cookie(
+            [
+                'name' => 'zero_max_age_cookie',
+                'value' => 'zero_max_age_value',
+                'expire' => $currentTime,
+            ],
+        );
+
+        $response->cookies->add($cookie);
+        $psr7Response = $adapter->toPsr7();
+        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
+
+        self::assertCount(
+            1,
+            $setCookieHeaders,
+            "Exactly one 'Set-Cookie' header should be present.",
+        );
+
+        $cookieHeader = $setCookieHeaders[0] ?? '';
+
+        self::assertMatchesRegularExpression(
+            '/; Max-Age=0(?:;|$)/',
+            $cookieHeader,
+            "'Max-Age' should be exactly '0' when expire time equals current time.",
+        );
+
+        preg_match('/; Max-Age=(\d+)/', $cookieHeader, $matches);
+
+        $maxAge = $matches[1] ?? null;
+
+        self::assertSame(
+            '0',
+            $maxAge,
+            "'Max-Age' must be exactly '0' (string) when cookie expires at current time.",
         );
     }
 }
