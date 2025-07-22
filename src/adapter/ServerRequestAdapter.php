@@ -254,12 +254,12 @@ final class ServerRequestAdapter
     /**
      * Retrieves the raw body content from the PSR-7 request stream.
      *
-     * Rewinds the underlying stream and returns its entire contents as a string.
+     * Returns the entire contents of the underlying stream as a string, rewinding first if the stream is seekable.
      *
      * This method provides direct access to the unparsed request body, which is useful for processing raw payloads such
      * as JSON, XML, or binary data.
      *
-     * The stream is always rewound before reading to ensure the full content is returned from the beginning.
+     * The stream is rewound before reading (if seekable) to ensure the full content is returned from the beginning.
      *
      * @return string Raw body content from the PSR-7 request stream.
      *
@@ -272,7 +272,9 @@ final class ServerRequestAdapter
     {
         $body = $this->psrRequest->getBody();
 
-        $body->rewind();
+        if ($body->isSeekable()) {
+            $body->rewind();
+        }
 
         return $body->getContents();
     }
