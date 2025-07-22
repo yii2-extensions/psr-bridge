@@ -905,6 +905,65 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    public function testFormatCookieWithValidationEnabledFutureExpiration(): void
+    {
+        $this->mockWebApplication(
+            [
+                'components' => [
+                    'request' => [
+                        'class' => Request::class,
+                        'enableCookieValidation' => true,
+                        'cookieValidationKey' => 'test-validation-key-32-characters',
+                    ],
+                ],
+            ],
+        );
+
+        $futureTime = time() + 3600; // 1 hour in the future
+
+        $response = new Response();
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+        $cookie = new Cookie(
+            [
+                'name' => 'valid_cookie',
+                'value' => 'valid_value',
+                'expire' => $futureTime,
+            ],
+        );
+
+        $response->cookies->add($cookie);
+        $psr7Response = $adapter->toPsr7();
+        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
+
+        self::assertCount(
+            1,
+            $setCookieHeaders,
+            "Exactly one 'Set-Cookie' header present in the response when a valid cookie is added with validation " .
+            'enabled.',
+        );
+
+        $cookieHeader = $setCookieHeaders[0] ?? '';
+
+        self::assertStringStartsWith(
+            urlencode('valid_cookie') . '=',
+            $cookieHeader,
+            "'Set-Cookie' header should start with the encoded cookie 'name' when validation is enabled.",
+        );
+        self::assertStringStartsNotWith(
+            urlencode('valid_cookie') . '=' . urlencode('valid_value'),
+            $cookieHeader,
+            "'Set-Cookie' header should not contain the plain cookie 'value' when validation is enabled for a " .
+            'valid (non-expired) cookie.',
+        );
+        self::assertStringContainsString(
+            '; Expires=' . gmdate('D, d-M-Y H:i:s T', $futureTime),
+            $cookieHeader,
+            "'Set-Cookie' header should contain the correct 'Expires' attribute for the future cookie.",
+        );
+    }
+
     public function testFormatCookieWithZeroMaxAge(): void
     {
         $this->mockWebApplication();
@@ -1216,64 +1275,5 @@ final class ResponseAdapterTest extends TestCase
         $this->expectExceptionMessage(Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage(Request::class));
 
         $adapter->toPsr7();
-    }
-
-    public function ttestFormatCookieWithValidationEnabledFutureExpiration(): void
-    {
-        $this->mockWebApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'class' => Request::class,
-                        'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
-                    ],
-                ],
-            ],
-        );
-
-        $futureTime = time() + 3600; // 1 hour in the future
-
-        $response = new Response();
-        $responseFactory = FactoryHelper::createResponseFactory();
-        $streamFactory = FactoryHelper::createStreamFactory();
-        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'valid_cookie',
-                'value' => 'valid_value',
-                'expire' => $futureTime,
-            ],
-        );
-
-        $response->cookies->add($cookie);
-        $psr7Response = $adapter->toPsr7();
-        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
-
-        self::assertCount(
-            1,
-            $setCookieHeaders,
-            "Exactly one 'Set-Cookie' header present in the response when a valid cookie is added with validation " .
-            'enabled.',
-        );
-
-        $cookieHeader = $setCookieHeaders[0] ?? '';
-
-        self::assertStringStartsWith(
-            urlencode('valid_cookie') . '=',
-            $cookieHeader,
-            "'Set-Cookie' header should start with the encoded cookie 'name' when validation is enabled.",
-        );
-        self::assertStringStartsNotWith(
-            urlencode('valid_cookie') . '=' . urlencode('valid_value'),
-            $cookieHeader,
-            "'Set-Cookie' header should not contain the plain cookie 'value' when validation is enabled for a " .
-            'valid (non-expired) cookie.',
-        );
-        self::assertStringContainsString(
-            '; Expires=' . gmdate('D, d-M-Y H:i:s T', $futureTime),
-            $cookieHeader,
-            "'Set-Cookie' header should contain the correct 'Expires' attribute for the future cookie.",
-        );
     }
 }
