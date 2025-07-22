@@ -419,4 +419,65 @@ final class ResponseTest extends TestCase
             'Session cookie should be found with default parameters.',
         );
     }
+
+    public function testPrepareMethodIsCalledDuringPsr7Conversion(): void
+    {
+        $this->mockWebApplication();
+
+        $response = new Response();
+
+        $response->format = Response::FORMAT_JSON;
+
+        $response->data = [
+            'status' => 'success',
+            'message' => 'Test data',
+            'timestamp' => time(),
+        ];
+
+        Yii::$container->set(ResponseFactoryInterface::class, FactoryHelper::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, FactoryHelper::createStreamFactory());
+
+        $psr7Response = $response->getPsr7Response();
+
+        self::assertInstanceOf(
+            ResponseInterface::class,
+            $psr7Response,
+            "'getPsr7Response()' should return a PSR-7 'ResponseInterface'.",
+        );
+
+        $body = (string) $psr7Response->getBody();
+        $decodedData = json_decode($body, true);
+
+        self::assertIsArray(
+            $decodedData,
+            'Response body should be valid JSON after preparation.',
+        );
+        self::assertSame(
+            'success',
+            $decodedData['status'] ?? null,
+            'JSON response should contain the correct status.',
+        );
+        self::assertSame(
+            'Test data',
+            $decodedData['message'] ?? null,
+            'JSON response should contain the correct message.',
+        );
+
+        $contentTypeHeaders = $psr7Response->getHeader('Content-Type');
+
+        self::assertNotEmpty(
+            $contentTypeHeaders,
+            "'Content-Type' header should be set after 'prepare()' is called.",
+        );
+        self::assertStringContainsString(
+            'application/json',
+            $contentTypeHeaders[0] ?? '',
+            "'Content-Type' should be 'application/json' for JSON format responses.",
+        );
+
+        self::assertTrue(
+            $response->isSent,
+            "Response should be marked as sent after 'getPsr7Response()'.",
+        );
+    }
 }
