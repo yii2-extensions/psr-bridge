@@ -100,7 +100,12 @@ final class ResponseAdapter
             $expire = $expire->getTimestamp();
         }
 
-        if ($enableValidation && $validationKey !== null && $expire !== 1) {
+        if (
+            $enableValidation &&
+            $validationKey !== null &&
+            $expire !== 1 &&
+            ($expire === 0 || $expire >= time())
+        ) {
             $value = Yii::$app->getSecurity()->hashData(Json::encode([$cookie->name, $cookie->value]), $validationKey);
         }
 

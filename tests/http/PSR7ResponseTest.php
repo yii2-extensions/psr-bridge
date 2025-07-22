@@ -837,14 +837,9 @@ final class PSR7ResponseTest extends TestCase
         $cookieHeader = $setCookieHeaders[0] ?? '';
 
         self::assertStringStartsWith(
-            urlencode('expired_cookie') . '=',
-            $cookieHeader,
-            "'Set-Cookie' header should start with the encoded cookie 'name' when validation is enabled.",
-        );
-        self::assertStringStartsNotWith(
             urlencode('expired_cookie') . '=' . urlencode('expired_value'),
             $cookieHeader,
-            "'Set-Cookie' header should not contain the plain cookie 'value' when validation is enabled.",
+            "'Set-Cookie' header should start with the encoded cookie 'name' when validation is enabled.",
         );
         self::assertStringContainsString(
             '; Expires=' . gmdate('D, d-M-Y H:i:s T', $pastTime),
