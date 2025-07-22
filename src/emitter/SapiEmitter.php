@@ -8,6 +8,7 @@ use Psr\Http\Message\{ResponseInterface, StreamInterface};
 use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
 
+use function array_map;
 use function implode;
 use function ob_get_length;
 use function ob_get_level;
@@ -18,11 +19,12 @@ use function strtolower;
 use function ucwords;
 
 /**
- * SAPI (Server API) Response Emitter.
+ * SAPI (Server API) ResponseInterface Emitter.
  *
- * This class is responsible for emitting PSR-7 Response objects to the output buffer using PHP's Server API. It handles
- * the emission of headers, status line, and response body while supporting features like content range and buffered
- * output.
+ * This class is responsible for emitting PSR-7 ResponseInterface objects to the output buffer using PHP's Server API.
+ *
+ * It handles the emission of headers, status line, and response body while supporting features like content range and
+ * buffered output.
  *
  * According to 'HTTP/1.1' specifications, certain status codes MUST NOT include a message body:
  * - '1xx' (Informational): '100' Continue, '101' Switching Protocols, '102' Processing, '103' Early Hints.
@@ -64,7 +66,7 @@ final class SapiEmitter
      * ('100' - '103', '204', '205', '304') MUSTN'T include a message body. For these status codes, the body will not
      * be emitted even if present in the response object. {@see HttpNoBodyStatus} for the complete list.
      *
-     * @param ResponseInterface $response PSR-7 response instance.
+     * @param ResponseInterface $response PSR-7 ResponseInterface instance.
      * @param bool $body Whether to emit the response with body (default: `true`).
      *
      * @throws HeadersAlreadySentException if HTTP headers have already been sent to the client.
@@ -97,7 +99,7 @@ final class SapiEmitter
      * Handles the emission of the response body, supporting both buffered and unbuffered output, also supports content
      * range responses for partial content delivery.
      *
-     * @param ResponseInterface $response PSR-7 response instance.
+     * @param ResponseInterface $response PSR-7 ResponseInterface instance.
      */
     private function emitBody(ResponseInterface $response): void
     {
@@ -165,7 +167,7 @@ final class SapiEmitter
      * Iterates through the response headers and emits each one. Special handling is provided for the 'Set-Cookie'
      * header to ensure multiple cookies are handled correctly.
      *
-     * @param ResponseInterface $response PSR-7 response instance.
+     * @param ResponseInterface $response PSR-7 ResponseInterface instance.
      */
     private function emitHeaders(ResponseInterface $response): void
     {
@@ -187,7 +189,7 @@ final class SapiEmitter
      *
      * Emits the HTTP protocol version, status code, and reason phrase.
      *
-     * @param ResponseInterface $response PSR-7 response instance.
+     * @param ResponseInterface $response PSR-7 ResponseInterface instance.
      */
     private function emitStatusLine(ResponseInterface $response): void
     {
