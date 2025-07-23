@@ -39,7 +39,6 @@ final class ErrorHandler extends \yii\web\ErrorHandler
         return $response;
     }
 
-
     protected function handleFallbackExceptionMessage($exception, $previousException): Response
     {
         $response = new Response();
@@ -81,7 +80,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
             }
         } elseif ($response->format === Response::FORMAT_HTML) {
             if ($this->shouldRenderSimpleHtml()) {
-                $response->data = '<pre>' . $this->htmlEncode(static::convertExceptionToString($exception)) . '</pre>';
+                $response->data = '<pre>' . $this->htmlEncode(self::convertExceptionToString($exception)) . '</pre>';
             } else {
                 if (YII_DEBUG) {
                     ini_set('display_errors', 'true');
@@ -92,7 +91,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
                 $response->data = $this->renderFile($file, ['exception' => $exception]);
             }
         } elseif ($response->format === Response::FORMAT_RAW) {
-            $response->data = static::convertExceptionToString($exception);
+            $response->data = self::convertExceptionToString($exception);
         } else {
             $response->data = $this->convertExceptionToArray($exception);
         }
