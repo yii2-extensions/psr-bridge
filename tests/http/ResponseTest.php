@@ -7,9 +7,9 @@ namespace yii2\extensions\psrbridge\tests\http;
 use PHPUnit\Framework\Attributes\Group;
 use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use Yii;
-use yii\web\{Cookie, Session};
 use yii\base\InvalidConfigException;
 use yii\di\NotInstantiableException;
+use yii\web\{Cookie, Session};
 use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -17,8 +17,8 @@ use yii2\extensions\psrbridge\tests\TestCase;
 use function count;
 use function json_decode;
 use function str_contains;
-use function urlencode;
 use function time;
+use function urlencode;
 
 #[Group('http')]
 final class ResponseTest extends TestCase
