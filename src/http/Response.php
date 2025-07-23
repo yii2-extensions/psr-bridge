@@ -49,7 +49,6 @@ final class Response extends \yii\web\Response
      * The conversion process includes.
      * - Converting the response to a PSR-7 ResponseInterface instance.
      * - Preparing the response and injecting the session cookie if the session is active.
-     * - Triggering the after send event and marking the response as sent.
      * - Triggering the before send and after prepare events.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
