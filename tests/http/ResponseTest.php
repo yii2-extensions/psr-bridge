@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\Group;
-use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
+use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use Yii;
 use yii\web\{Cookie, Session};
 use yii\base\InvalidConfigException;
