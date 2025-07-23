@@ -74,7 +74,7 @@ final class ResponseAdapterTest extends TestCase
 
         self::assertIsResource(
             $handle,
-           'File handle should be a valid resource.',
+            'File handle should be a valid resource.',
         );
 
         $response = new Response();
@@ -119,7 +119,7 @@ final class ResponseAdapterTest extends TestCase
 
         self::assertIsResource(
             $handle,
-           'File handle should be a valid resource.',
+            'File handle should be a valid resource.',
         );
 
         $begin = 1000;
