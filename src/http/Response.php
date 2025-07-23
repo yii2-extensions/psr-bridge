@@ -74,6 +74,7 @@ final class Response extends \yii\web\Response
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
 
+
         if (Yii::$app->has('session') && ($session = Yii::$app->getSession())->getIsActive()) {
             $cookieParams = $session->getCookieParams();
 
@@ -97,11 +98,6 @@ final class Response extends \yii\web\Response
             $session->close();
         }
 
-        $response = $adapter->toPsr7();
-        $this->trigger(self::EVENT_AFTER_SEND);
-
-        $this->isSent = true;
-
-        return $response;
+        return $adapter->toPsr7();
     }
 }
