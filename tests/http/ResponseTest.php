@@ -5,16 +5,28 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\Group;
-use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
+use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use Yii;
+use yii\base\InvalidConfigException;
+use yii\di\NotInstantiableException;
 use yii\web\{Cookie, Session};
 use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function count;
+use function json_decode;
+use function str_contains;
+use function time;
+use function urlencode;
+
 #[Group('http')]
 final class ResponseTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
     public function testConvertResponseWithActiveSession(): void
     {
         $this->mockWebApplication(
@@ -79,11 +91,6 @@ final class ResponseTest extends TestCase
         );
         $psr7Response = $response->getPsr7Response();
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $psr7Response,
-            "'getPsr7Response()' should return a PSR-7 'ResponseInterface'.",
-        );
         self::assertSame(
             201,
             $psr7Response->getStatusCode(),
@@ -116,7 +123,7 @@ final class ResponseTest extends TestCase
         $sessionCookieFound = false;
 
         foreach ($setCookieHeaders as $cookieHeader) {
-            if (strpos($cookieHeader, 'PHPSESSID=') !== false) {
+            if (str_contains($cookieHeader, 'PHPSESSID=')) {
                 $sessionCookieFound = true;
 
                 self::assertStringStartsWith(
@@ -171,14 +178,14 @@ final class ResponseTest extends TestCase
             $eventsBefore,
             "'EVENT_AFTER_PREPARE' should be triggered.",
         );
-        self::assertContains(
+        self::assertNotContains(
             'EVENT_AFTER_SEND',
             $eventsAfter,
-            "'EVENT_AFTER_SEND' should be triggered.",
+            "'EVENT_AFTER_SEND' should NOT be triggered during conversion.",
         );
-        self::assertTrue(
+        self::assertFalse(
             $response->isSent,
-            "Response should be marked as sent after 'getPsr7Response()'.",
+            "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
         );
         self::assertFalse(
             $session->getIsActive(),
@@ -186,6 +193,10 @@ final class ResponseTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
     public function testConvertResponseWithInactiveSession(): void
     {
         $this->mockWebApplication(
@@ -215,11 +226,6 @@ final class ResponseTest extends TestCase
 
         $psr7Response = $response->getPsr7Response();
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $psr7Response,
-            "'getPsr7Response()' should return a PSR-7 'ResponseInterface'.",
-        );
         self::assertSame(
             'Test content with inactive session',
             (string) $psr7Response->getBody(),
@@ -230,7 +236,7 @@ final class ResponseTest extends TestCase
         $sessionCookieFound = false;
 
         foreach ($setCookieHeaders as $cookieHeader) {
-            if (strpos($cookieHeader, 'TESTSESSID=') !== false) {
+            if (str_contains($cookieHeader, 'TESTSESSID=')) {
                 $sessionCookieFound = true;
             }
         }
@@ -239,12 +245,16 @@ final class ResponseTest extends TestCase
             $sessionCookieFound,
             "No session cookie should be added when session is 'not active'.",
         );
-        self::assertTrue(
+        self::assertFalse(
             $response->isSent,
-            "Response should be marked as sent after 'getPsr7Response()'.",
+            "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
     public function testConvertResponseWithoutSession(): void
     {
         $this->mockWebApplication();
@@ -295,11 +305,6 @@ final class ResponseTest extends TestCase
 
         $psr7Response = $response->getPsr7Response();
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $psr7Response,
-            "'getPsr7Response()' should return a PSR-7 'ResponseInterface'.",
-        );
         self::assertSame(
             200,
             $psr7Response->getStatusCode(),
@@ -338,17 +343,21 @@ final class ResponseTest extends TestCase
             $eventsBefore,
             "'EVENT_AFTER_PREPARE' should be triggered.",
         );
-        self::assertContains(
+        self::assertNotContains(
             'EVENT_AFTER_SEND',
             $eventsAfter,
-            "'EVENT_AFTER_SEND' should be triggered.",
+            "'EVENT_AFTER_SEND' should NOT be triggered during conversion.",
         );
-        self::assertTrue(
+        self::assertFalse(
             $response->isSent,
-            "Response should be marked as sent after 'getPsr7Response()'.",
+            "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
     public function testFormatSessionCookieWithDefaultParams(): void
     {
         $this->mockWebApplication(
@@ -378,7 +387,7 @@ final class ResponseTest extends TestCase
         $sessionCookieFound = false;
 
         foreach ($setCookieHeaders as $cookieHeader) {
-            if (strpos($cookieHeader, 'DEFAULTSESS=') !== false) {
+            if (str_contains($cookieHeader, 'DEFAULTSESS=')) {
                 $sessionCookieFound = true;
 
                 self::assertStringContainsString(
@@ -420,6 +429,10 @@ final class ResponseTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
     public function testPrepareMethodIsCalledDuringPsr7Conversion(): void
     {
         $this->mockWebApplication();
@@ -438,13 +451,6 @@ final class ResponseTest extends TestCase
         Yii::$container->set(StreamFactoryInterface::class, FactoryHelper::createStreamFactory());
 
         $psr7Response = $response->getPsr7Response();
-
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $psr7Response,
-            "'getPsr7Response()' should return a PSR-7 'ResponseInterface'.",
-        );
-
         $body = (string) $psr7Response->getBody();
         $decodedData = json_decode($body, true);
 
@@ -474,10 +480,9 @@ final class ResponseTest extends TestCase
             $contentTypeHeaders[0] ?? '',
             "'Content-Type' should be 'application/json' for JSON format responses.",
         );
-
-        self::assertTrue(
+        self::assertFalse(
             $response->isSent,
-            "Response should be marked as sent after 'getPsr7Response()'.",
+            "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
         );
     }
 }

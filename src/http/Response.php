@@ -49,7 +49,6 @@ final class Response extends \yii\web\Response
      * The conversion process includes.
      * - Converting the response to a PSR-7 ResponseInterface instance.
      * - Preparing the response and injecting the session cookie if the session is active.
-     * - Triggering the after send event and marking the response as sent.
      * - Triggering the before send and after prepare events.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
@@ -74,6 +73,7 @@ final class Response extends \yii\web\Response
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
 
+
         if (Yii::$app->has('session') && ($session = Yii::$app->getSession())->getIsActive()) {
             $cookieParams = $session->getCookieParams();
 
@@ -97,11 +97,6 @@ final class Response extends \yii\web\Response
             $session->close();
         }
 
-        $response = $adapter->toPsr7();
-        $this->trigger(self::EVENT_AFTER_SEND);
-
-        $this->isSent = true;
-
-        return $response;
+        return $adapter->toPsr7();
     }
 }
