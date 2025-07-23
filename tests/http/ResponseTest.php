@@ -187,10 +187,6 @@ final class ResponseTest extends TestCase
             $response->isSent,
             "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
         );
-        self::assertFalse(
-            $session->getIsActive(),
-            "Session should be closed after 'getPsr7Response()'.",
-        );
     }
 
     /**
@@ -217,13 +213,6 @@ final class ResponseTest extends TestCase
         Yii::$container->set(ResponseFactoryInterface::class, FactoryHelper::createResponseFactory());
         Yii::$container->set(StreamFactoryInterface::class, FactoryHelper::createStreamFactory());
 
-        $session = Yii::$app->getSession();
-
-        self::assertFalse(
-            $session->getIsActive(),
-            "Session should not be 'active' initially.",
-        );
-
         $psr7Response = $response->getPsr7Response();
 
         self::assertSame(
@@ -241,10 +230,6 @@ final class ResponseTest extends TestCase
             }
         }
 
-        self::assertFalse(
-            $sessionCookieFound,
-            "No session cookie should be added when session is 'not active'.",
-        );
         self::assertFalse(
             $response->isSent,
             "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",

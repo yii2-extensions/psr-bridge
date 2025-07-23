@@ -63,21 +63,12 @@ final class Response extends \yii\web\Response
      */
     public function getPsr7Response(): ResponseInterface
     {
-        $adapter = new ResponseAdapter(
-            $this,
-            Yii::$container->get(ResponseFactoryInterface::class),
-            Yii::$container->get(StreamFactoryInterface::class),
-        );
-
-        $this->trigger(self::EVENT_BEFORE_SEND);
-        $this->prepare();
-        $this->trigger(self::EVENT_AFTER_PREPARE);
-
+        $sessionCookie = [];
 
         if (Yii::$app->has('session') && ($session = Yii::$app->getSession())->getIsActive()) {
             $cookieParams = $session->getCookieParams();
 
-            $cookieConfig = [
+            $sessionCookie = [
                 'name' => $session->getName(),
                 'value' => $session->getId(),
                 'path' => $cookieParams['path'] ?? '/',
@@ -86,16 +77,24 @@ final class Response extends \yii\web\Response
             ];
 
             if (isset($cookieParams['secure'])) {
-                $cookieConfig['secure'] = $cookieParams['secure'];
+                $sessionCookie['secure'] = $cookieParams['secure'];
             }
 
             if (isset($cookieParams['httponly'])) {
-                $cookieConfig['httpOnly'] = $cookieParams['httponly'];
+                $sessionCookie['httpOnly'] = $cookieParams['httponly'];
             }
-
-            $this->cookies->add(new Cookie($cookieConfig));
-            $session->close();
         }
+
+        $adapter = new ResponseAdapter(
+            $this,
+            Yii::$container->get(ResponseFactoryInterface::class),
+            Yii::$container->get(StreamFactoryInterface::class),
+            $sessionCookie,
+        );
+
+        $this->trigger(self::EVENT_BEFORE_SEND);
+        $this->prepare();
+        $this->trigger(self::EVENT_AFTER_PREPARE);
 
         return $adapter->toPsr7();
     }

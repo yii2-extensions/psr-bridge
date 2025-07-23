@@ -33,16 +33,16 @@ use function urlencode;
  * This adapter exposes methods to convert Yii2 Response objects to PSR-7 ResponseInterface, including header and cookie
  * translation, body stream creation, and support for Yii2 Cookie validation mechanism.
  *
- * All conversions are immutable and type-safe, ensuring compatibility with both legacy Yii2 workflows and modern PSR-7
- * middleware stacks.
+ * The adapter follows immutable principles, ensuring the original Response object is never modified during conversion.
+ * Multiple conversions of the same Response will produce consistent results without side effects.
  *
  * Key features.
- * - File streaming support with HTTP range handling.
+ * - File streaming support with HTTP range handling (without closing handles).
  * - Handles cookie formatting and validation key enforcement.
- * - Immutable, fluent conversion for safe usage in middleware pipelines.
+ * - Immutable conversion preserving original Response state.
  * - PSR-7 to Yii2 Response component for seamless interoperability.
+ * - Session cookie handling without mutating session state.
  * - Supports custom status text and content body.
- * - Translates headers and cookies, including Yii2 Cookie validation.
  *
  * @see ResponseInterface for PSR-7 ResponseInterface contract.
  *
@@ -57,11 +57,15 @@ final class ResponseAdapter
      * @param Response $response Yii2 Response instance to adapt.
      * @param ResponseFactoryInterface $responseFactory PSR-7 ResponseFactoryInterface instance for response creation.
      * @param StreamFactoryInterface $streamFactory PSR-7 StreamFactoryInterface instance for body stream creation.
+     * @param array $sessionCookie Optional session cookie data to include in the PSR-7 response.
+     *
+     * @phpstan-param array<string, mixed> $sessionCookie
      */
     public function __construct(
         private readonly Response $response,
         private readonly ResponseFactoryInterface $responseFactory,
         private readonly StreamFactoryInterface $streamFactory,
+        private readonly array $sessionCookie = [],
     ) {}
 
     /**
@@ -120,9 +124,8 @@ final class ResponseAdapter
      * Iterates over all cookies in the Yii2 Response component and generates an array of formatted cookie header
      * strings suitable for use as 'Set-Cookie' headers in a PSR-7 ResponseInterface.
      *
-     * - Each cookie is formatted using {@see formatCookieHeader()}.
-     * - If cookie validation is enabled, each cookie value is validated using the configured validation key.
-     * - Only non-empty cookie values are included in the result.
+     * If a session cookie is provided, it is included in the headers without modifying the original Response cookie
+     * collection, maintaining immutable conversion principles.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
@@ -146,9 +149,19 @@ final class ResponseAdapter
             }
         }
 
+        // add existing cookies from Response (without modifying original)
         foreach ($this->response->getCookies() as $cookie) {
             if ($cookie->value !== null && $cookie->value !== '') {
                 $headers[] = $this->formatCookieHeader($cookie, $enableValidation, $validationKey);
+            }
+        }
+
+        // add session cookie if provided (immutable - doesn't modify original Response)
+        if ($this->sessionCookie !== []) {
+            $sessionCookie = new Cookie($this->sessionCookie);
+
+            if ($sessionCookie->value !== null && $sessionCookie->value !== '') {
+                $headers[] = $this->formatCookieHeader($sessionCookie, $enableValidation, $validationKey);
             }
         }
 
