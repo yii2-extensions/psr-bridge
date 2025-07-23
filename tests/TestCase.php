@@ -41,9 +41,11 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function tearDown(): void
     {
-        $_SERVER = $this->originalServer;
-        $_POST = [];
         $_COOKIE = [];
+        $_FILES = [];
+        $_GET = [];
+        $_POST = [];
+        $_SERVER = $this->originalServer;
 
         parent::tearDown();
     }

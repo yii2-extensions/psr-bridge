@@ -32,16 +32,16 @@ enum Message: string
     /**
      * Error when buffer length is invalid.
      *
-     * Format: "Buffer length for `%s` must be greater than zero; received `%d`."
+     * Format: "Buffer length for '%s' must be greater than zero; received '%d'."
      */
-    case BUFFER_LENGTH_INVALID = 'Buffer length for `%s` must be greater than zero; received `%d`.';
+    case BUFFER_LENGTH_INVALID = "Buffer length for '%s' must be greater than zero; received '%d'.";
 
     /**
      * Error when the cookie validation key is not configured for a specific class.
      *
-     * Format: "%s::cookieValidationKey must be configured with a secret key."
+     * Format: "'%s::cookieValidationKey' must be configured with a secret key."
      */
-    case COOKIE_VALIDATION_KEY_NOT_CONFIGURED = '%s::cookieValidationKey must be configured with a secret key.';
+    case COOKIE_VALIDATION_KEY_NOT_CONFIGURED = "'%s::cookieValidationKey' must be configured with a secret key.";
 
     /**
      * Error when the cookie validation key is missing.
@@ -53,9 +53,9 @@ enum Message: string
     /**
      * Error when the request body can’t be parsed.
      *
-     * Format: "Unable to parse request body; %s"
+     * Format: "Unable to parse request body; '%s'"
      */
-    case FAIL_PARSING_REQUEST_BODY = 'Unable to parse request body; %s';
+    case FAIL_PARSING_REQUEST_BODY = "Unable to parse request body; '%s'.";
 
     /**
      * Error when the PSR-7 request adapter is not set.
@@ -63,6 +63,29 @@ enum Message: string
      * Format: "PSR-7 request adapter is not set."
      */
     case PSR7_REQUEST_ADAPTER_NOT_SET = 'PSR-7 request adapter is not set.';
+
+    /**
+     * Error when the response stream is not in the expected format.
+     *
+     * Format: "Response stream must be an array with exactly 3 elements: [handle, begin, end]."
+     */
+    case RESPONSE_STREAM_FORMAT_INVALID = "Response stream must be an array with exactly '3' elements: " .
+    "['handle', 'begin', 'end'].";
+
+    /**
+     * Error when the response stream handle is invalid.
+     *
+     * Format: "Stream handle must be a valid resource."
+     */
+    case RESPONSE_STREAM_HANDLE_INVALID = 'Stream handle must be a valid resource.';
+
+    /**
+     * Error when the response stream range values are invalid.
+     *
+     * Format: "Response stream range values must be valid: 'begin' >= '0' and 'end' >= 'begin'."
+     */
+    case RESPONSE_STREAM_RANGE_INVALID = 'Response stream range values must be valid: ' .
+    "('begin' >= '0' and 'end' >= 'begin'). Received: (begin='%d', end='%d'.)";
 
     /**
      * Error when output has already been emitted.

@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\adapter;
 
 use DateTimeInterface;
-use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
+use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface, StreamInterface};
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii\web\{Cookie, Response};
 use yii2\extensions\psrbridge\exception\Message;
 
+use function fclose;
+use function fseek;
 use function gmdate;
 use function is_numeric;
+use function is_resource;
 use function is_string;
 use function max;
+use function stream_get_contents;
 use function strtotime;
 use function time;
 use function urlencode;
@@ -33,6 +37,7 @@ use function urlencode;
  * middleware stacks.
  *
  * Key features.
+ * - File streaming support with HTTP range handling.
  * - Handles cookie formatting and validation key enforcement.
  * - Immutable, fluent conversion for safe usage in middleware pipelines.
  * - PSR-7 to Yii2 Response component for seamless interoperability.
@@ -67,7 +72,8 @@ final class ResponseAdapter
      *
      * - All headers are transferred to the PSR-7 ResponseInterface, with multiple values preserved.
      * - Cookies are formatted and added as separate 'Set-Cookie' headers.
-     * - Response body is created from the Yii2 Response content using the PSR-7 StreamFactoryInterface.
+     * - File streaming is supported with HTTP range handling for efficient large file downloads.
+     * - Response body is created from the Yii2 Response content or stream using the PSR-7 StreamFactoryInterface.
      *
      * This method enables seamless interoperability between Yii2 and PSR-7 compatible HTTP stacks by providing a fully
      * constructed PSR-7 ResponseInterface based on the Yii2 Response state.
@@ -102,8 +108,8 @@ final class ResponseAdapter
             $psr7Response = $psr7Response->withAddedHeader('Set-Cookie', $cookieHeader);
         }
 
-        // create body stream from response content
-        $body = $this->streamFactory->createStream($this->response->content ?? '');
+        // create body stream from response content or stream
+        $body = $this->createBodyStream();
 
         return $psr7Response->withBody($body);
     }
@@ -150,11 +156,90 @@ final class ResponseAdapter
     }
 
     /**
+     * Creates a PSR-7 body stream from the Yii2 Response content or file stream.
+     *
+     * Handles both regular content and file streaming scenarios.
+     *
+     * - If Yii2 Response component contains a file stream, this method delegates to {@see createStreamFromFileHandle()}
+     * to generate a stream for the specified file range.
+     * - Otherwise, it creates a stream from the response content using the configured PSR-7 StreamFactoryInterface.
+     *
+     * This method ensures compatibility with both standard content responses and efficient file downloads in PSR-7
+     * middleware pipelines.
+     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
+     * @return StreamInterface PSR-7 StreamInterface containing the response body content or file data.
+     */
+    private function createBodyStream(): StreamInterface
+    {
+        // handle file streaming case (sendFile/sendStreamAsFile)
+        if ($this->response->stream !== null) {
+            return $this->createStreamFromFileHandle();
+        }
+
+        // handle regular content case
+        return $this->streamFactory->createStream($this->response->content ?? '');
+    }
+
+    /**
+     * Creates a PSR-7 stream from a file handle and byte range defined in the Yii2 Response component.
+     *
+     * Reads the specified byte range from the file handle provided by the Yii2 Response stream property and return a
+     * new PSR-7 StreamInterface containing the file data.
+     *
+     * This method validates the stream format, range, and handle before reading, ensuring type safety and correct
+     * operation for file streaming scenarios.
+     *
+     * - Ensures the byte range is valid and the handle is a resource.
+     * - Reads the requested range and closes the file handle after reading.
+     * - Returns a new PSR-7 stream containing the file content for the specified range.
+     * - Validates that the stream is a three-element array: [resource, int $begin, int $end].
+     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
+     * @return StreamInterface PSR-7 StreamInterface containing the file data for the specified range.
+     */
+    private function createStreamFromFileHandle(): StreamInterface
+    {
+        $stream = $this->response->stream;
+
+        if (
+            is_array($stream) === false ||
+            count($stream) !== 3 ||
+            isset($stream[0]) === false ||
+            isset($stream[1]) === false || is_int($stream[1]) === false ||
+            isset($stream[2]) === false || is_int($stream[2]) === false
+        ) {
+            throw new InvalidConfigException(Message::RESPONSE_STREAM_FORMAT_INVALID->getMessage());
+        }
+
+        [$handle, $begin, $end] = $stream;
+
+        if ($begin < 0 || $end < $begin) {
+            throw new InvalidConfigException(Message::RESPONSE_STREAM_RANGE_INVALID->getMessage($begin, $end));
+        }
+
+        if (is_resource($handle) === false) {
+            throw new InvalidConfigException(Message::RESPONSE_STREAM_HANDLE_INVALID->getMessage());
+        }
+
+        // read the specified range from the file
+        fseek($handle, $begin);
+
+        $content = stream_get_contents($handle, $end - $begin + 1);
+
+        fclose($handle);
+
+        return $this->streamFactory->createStream($content);
+    }
+
+    /**
      * Formats a {@see Cookie} object as a 'Set-Cookie' header string for PSR-7 ResponseInterface.
      *
-     * Converts the provided {@see Cookie} instance into a properly formatted 'Set-Cookie' header string, applying Yii2
-     * Cookie validation if enabled and including all standard cookie attributes (expires, max-age, path, domain,
-     * secure, httponly, samesite) as required.
+     * Converts the provided {@see Cookie} instance into a formatted 'Set-Cookie' header string, applying Yii2 Cookie
+     * validation if enabled and including all standard cookie attributes (expires, max-age, path, domain, secure,
+     * httponly, samesite) as required.
      *
      * - If cookie validation is enabled and a validation key is provided, the cookie value is hashed using Yii2
      *   Security component for integrity protection.
