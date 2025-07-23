@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\adapter;
 
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Group;
+use RuntimeException;
 use yii\base\InvalidConfigException;
 use yii\web\{Cookie, Response};
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
@@ -13,37 +15,367 @@ use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function dirname;
+use function fclose;
+use function fopen;
+use function fwrite;
 use function gmdate;
 use function max;
 use function preg_match;
+use function str_repeat;
+use function strlen;
+use function substr;
+use function tempnam;
 use function time;
+use function unlink;
 use function urlencode;
 
 #[Group('http')]
 final class ResponseAdapterTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testConvertResponseWithContentFallsBackToRegularStream(): void
+    {
+        $this->mockWebApplication();
+
+        $response = new Response();
+
+        $response->content = null; // explicitly no content
+
+        $response->setStatusCode(200);
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $psr7Response = $adapter->toPsr7();
+        $body = (string) $psr7Response->getBody();
+
+        self::assertEmpty(
+            $body,
+            'PSR-7 response should fall back to regular content stream when no file stream is configured',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testConvertResponseWithFileStreamFullRange(): void
+    {
+        $this->mockWebApplication();
+
+        $content = 'This is test content for streaming';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $response = new Response();
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $response->setStatusCode(200);
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $psr7Response = $adapter->toPsr7();
+
+        self::assertSame(
+            200,
+            $psr7Response->getStatusCode(),
+            'PSR-7 response should maintain the original status code',
+        );
+
+        $body = (string) $psr7Response->getBody();
+
+        self::assertSame(
+            $content,
+            $body,
+            'PSR-7 response body should contain the complete file content when streaming full range',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testConvertResponseWithFileStreamLargeRange(): void
+    {
+        $this->mockWebApplication();
+
+        // create content larger than typical buffer sizes
+        $content = str_repeat('0123456789ABCDEF', 1000); // 16KB
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $begin = 1000;
+        $end = 5000;
+
+        $expectedContent = substr($content, $begin, $end - $begin + 1);
+
+        $response = new Response();
+
+        $response->stream = [$handle, $begin, $end];
+
+        $response->setStatusCode(206, 'Partial Content');
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $psr7Response = $adapter->toPsr7();
+        $body = (string) $psr7Response->getBody();
+
+        self::assertSame(
+            $expectedContent,
+            $body,
+            'PSR-7 response body should handle large range requests correctly.',
+        );
+        self::assertSame(
+            $end - $begin + 1,
+            strlen($body),
+            'PSR-7 response body length should match the large range size.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testConvertResponseWithFileStreamPartialRange(): void
+    {
+        $this->mockWebApplication();
+
+        $content = 'This is a longer test content for range streaming tests';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $begin = 5;
+        $end = 15;
+
+        $expectedContent = substr($content, $begin, $end - $begin + 1);
+
+        $response = new Response();
+
+        $response->stream = [$handle, $begin, $end];
+
+        $response->setStatusCode(206, 'Partial Content');
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $psr7Response = $adapter->toPsr7();
+
+        self::assertSame(
+            206,
+            $psr7Response->getStatusCode(),
+            'PSR-7 response should maintain the partial content status code.',
+        );
+
+        $body = (string) $psr7Response->getBody();
+
+        self::assertSame(
+            $expectedContent,
+            $body,
+            'PSR-7 response body should contain only the requested range content.',
+        );
+        self::assertSame(
+            strlen($expectedContent),
+            strlen($body),
+            'PSR-7 response body length should match the range size.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testConvertResponseWithFileStreamPreservesHeaders(): void
+    {
+        $this->mockWebApplication();
+
+        $content = 'Content with headers preserved';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $response = new Response();
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $response->setStatusCode(200);
+        $response->headers->set('Content-Type', 'application/octet-stream');
+        $response->headers->set('Content-Disposition', 'attachment; filename="test.txt"');
+        $response->headers->set('X-Custom-Header', 'streaming-test');
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $psr7Response = $adapter->toPsr7();
+
+        self::assertSame(
+            ['application/octet-stream'],
+            $psr7Response->getHeader('Content-Type'),
+            "'Content-Type' header should be preserved when streaming files.",
+        );
+        self::assertSame(
+            ['attachment; filename="test.txt"'],
+            $psr7Response->getHeader('Content-Disposition'),
+            "'Content-Disposition' header should be preserved when streaming files.",
+        );
+        self::assertSame(
+            ['streaming-test'],
+            $psr7Response->getHeader('X-Custom-Header'),
+            'Custom headers should be preserved when streaming files.',
+        );
+
+        $body = (string) $psr7Response->getBody();
+
+        self::assertSame(
+            $content,
+            $body,
+            'File content should be streamed correctly while preserving headers,',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testConvertResponseWithFileStreamSingleByte(): void
+    {
+        $this->mockWebApplication();
+
+        $content = 'ABCDEFGHIJKLMNOP';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource($handle, 'File handle should be a valid resource.');
+
+        // extract single byte at position 7: "H"
+        $begin = 7;
+        $end = 7;
+
+        $expectedContent = substr($content, $begin, 1);
+
+        $response = new Response();
+
+        $response->stream = [$handle, $begin, $end];
+
+        $response->setStatusCode(206, 'Partial Content');
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $psr7Response = $adapter->toPsr7();
+        $body = (string) $psr7Response->getBody();
+
+        self::assertSame($expectedContent, $body, "PSR-7 response body should contain the single requested 'byte'.");
+        self::assertSame(1, strlen($body), "PSR-7 response body should contain exactly one 'byte'.");
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testFileStreamTakesPrecedenceOverContent(): void
+    {
+        $this->mockWebApplication();
+
+        $fileContent = 'File stream content';
+        $responseContent = 'Response content that should be ignored';
+
+        $tempFile = $this->createTempFileWithContent($fileContent);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $response = new Response();
+
+        $response->content = $responseContent; // this should be ignored
+        $response->stream = [$handle, 0, strlen($fileContent) - 1];
+
+        $response->setStatusCode(200);
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $psr7Response = $adapter->toPsr7();
+        $body = (string) $psr7Response->getBody();
+
+        self::assertSame(
+            $fileContent,
+            $body,
+            'File stream should take precedence over response content property.',
+        );
+        self::assertNotSame(
+            $responseContent,
+            $body,
+            'Response content property should be ignored when file stream is present.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithAllAttributes(): void
     {
         $this->mockWebApplication();
 
         $futureTime = time() + 3600;
 
+        $cookieConfig = [
+            'name' => 'full_cookie',
+            'value' => 'full_value',
+            'expire' => $futureTime,
+            'path' => '/test/path',
+            'domain' => 'example.com',
+            'secure' => true,
+            'httpOnly' => true,
+            'sameSite' => 'Strict',
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'full_cookie',
-                'value' => 'full_value',
-                'expire' => $futureTime,
-                'path' => '/test/path',
-                'domain' => 'example.com',
-                'secure' => true,
-                'httpOnly' => true,
-                'sameSite' => 'Strict',
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -105,20 +437,25 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithBasicAttributes(): void
     {
         $this->mockWebApplication();
 
+        $cookieConfig = [
+            'name' => 'test_cookie',
+            'value' => 'test_value',
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'test_cookie',
-                'value' => 'test_value',
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -159,6 +496,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithDateTimeImmutableExpire(): void
     {
         $this->mockWebApplication(
@@ -173,21 +513,23 @@ final class ResponseAdapterTest extends TestCase
             ],
         );
 
-        $pastDateTime = new \DateTimeImmutable('-1 hour');
+        $pastDateTime = new DateTimeImmutable('-1 hour');
 
         $pastTimestamp = $pastDateTime->getTimestamp();
 
+        $cookieConfig = [
+            'name' => 'immutable_expire_cookie',
+            'value' => 'immutable_expire_value',
+            'expire' => $pastDateTime,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'immutable_expire_cookie',
-                'value' => 'immutable_expire_value',
-                'expire' => $pastDateTime,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -219,20 +561,25 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithDefaultValidation(): void
     {
         $this->mockWebApplication();
 
+        $cookieConfig = [
+            'name' => 'test_cookie',
+            'value' => 'test_value',
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'test_cookie',
-                'value' => 'test_value',
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -258,25 +605,30 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithEmptyOptionalAttributes(): void
     {
         $this->mockWebApplication();
 
+        $cookieConfig = [
+            'name' => 'minimal_cookie',
+            'value' => 'minimal_value',
+            'path' => '',
+            'domain' => '',
+            'secure' => false,
+            'httpOnly' => false,
+            'sameSite' => null,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'minimal_cookie',
-                'value' => 'minimal_value',
-                'path' => '',
-                'domain' => '',
-                'secure' => false,
-                'httpOnly' => false,
-                'sameSite' => null,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -327,22 +679,26 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithExpirationZero(): void
     {
         $this->mockWebApplication();
 
+        $cookieConfig = [
+            'name' => 'session_cookie',
+            'value' => 'session_value',
+            'expire' => 0,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
-        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
 
-        $cookie = new Cookie(
-            [
-                'name' => 'session_cookie',
-                'value' => 'session_value',
-                'expire' => 0,
-            ],
-        );
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -393,6 +749,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithExpireAtCurrentTime(): void
     {
         $this->mockWebApplication(
@@ -409,17 +768,19 @@ final class ResponseAdapterTest extends TestCase
 
         $currentTime = time();
 
+        $cookieConfig = [
+            'name' => 'current_time_cookie',
+            'value' => 'current_time_value',
+            'expire' => $currentTime, // Exactly current time
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'current_time_cookie',
-                'value' => 'current_time_value',
-                'expire' => $currentTime, // Exactly current time
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -450,23 +811,28 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithExpiredMaxAge(): void
     {
         $this->mockWebApplication();
 
         $pastTime = time() - 3600; // 1 hour ago
 
+        $cookieConfig = [
+            'name' => 'expired_cookie',
+            'value' => 'expired_value',
+            'expire' => $pastTime,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'expired_cookie',
-                'value' => 'expired_value',
-                'expire' => $pastTime,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -492,6 +858,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithExpireSetToOne(): void
     {
         $this->mockWebApplication(
@@ -506,17 +875,19 @@ final class ResponseAdapterTest extends TestCase
             ],
         );
 
+        $cookieConfig = [
+            'name' => 'special_cookie',
+            'value' => 'special_value',
+            'expire' => 1, // Special case in Yii2 - no validation
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'special_cookie',
-                'value' => 'special_value',
-                'expire' => 1, // Special case in Yii2 - no validation
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -542,23 +913,28 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithFutureMaxAge(): void
     {
         $this->mockWebApplication();
 
         $futureTime = time() + 7200; // 2 hours from now
 
+        $cookieConfig = [
+            'name' => 'future_cookie',
+            'value' => 'future_value',
+            'expire' => $futureTime,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'future_cookie',
-                'value' => 'future_value',
-                'expire' => $futureTime,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -584,20 +960,25 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithSpecialCharacters(): void
     {
         $this->mockWebApplication();
 
+        $cookieConfig = [
+            'name' => 'special cookie!',
+            'value' => 'special value@#$%',
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'special cookie!',
-                'value' => 'special value@#$%',
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -639,6 +1020,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithStringExpire(): void
     {
         $this->mockWebApplication(
@@ -657,22 +1041,24 @@ final class ResponseAdapterTest extends TestCase
         $futureTimeString = date('Y-m-d H:i:s', $futureTime);
         $futureStrToTime = strtotime($futureTimeString);
 
+        $cookieConfig = [
+            'name' => 'string_expire_cookie',
+            'value' => 'string_expire_value',
+            'expire' => $futureTimeString,
+        ];
+
         self::assertNotFalse(
             $futureStrToTime,
             "Future time string '$futureTimeString' should be a valid 'date/time' format.",
         );
 
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'string_expire_cookie',
-                'value' => 'string_expire_value',
-                'expire' => $futureTimeString,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -708,6 +1094,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithStringExpireOne(): void
     {
         $this->mockWebApplication(
@@ -722,17 +1111,19 @@ final class ResponseAdapterTest extends TestCase
             ],
         );
 
+        $cookieConfig = [
+            'name' => 'string_expire_cookie',
+            'value' => 'string_expire_value',
+            'expire' => '1', // String '1' should also bypass validation due to !== comparison
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'string_expire_cookie',
-                'value' => 'string_expire_value',
-                'expire' => '1', // String '1' should also bypass validation due to !== comparison
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -759,6 +1150,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithValidationDisabled(): void
     {
         $this->mockWebApplication([
@@ -773,17 +1167,19 @@ final class ResponseAdapterTest extends TestCase
 
         $pastTime = time() - 3600; // 1 hour ago (expired cookie)
 
+        $cookieConfig = [
+            'name' => 'past_cookie',
+            'value' => 'past_value',
+            'expire' => $pastTime,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'past_cookie',
-                'value' => 'past_value',
-                'expire' => $pastTime,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -811,6 +1207,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithValidationDisabledNoKey(): void
     {
         $this->mockWebApplication([
@@ -822,16 +1221,18 @@ final class ResponseAdapterTest extends TestCase
             ],
         ]);
 
+        $cookieConfig = [
+            'name' => 'test_cookie',
+            'value' => 'test_value',
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'test_cookie',
-                'value' => 'test_value',
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -852,6 +1253,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithValidationEnabled(): void
     {
         $this->mockWebApplication(
@@ -868,17 +1272,19 @@ final class ResponseAdapterTest extends TestCase
 
         $pastTime = time() - 3600; // 1 hour ago (expired cookie)
 
+        $cookieConfig = [
+            'name' => 'expired_cookie',
+            'value' => 'expired_value',
+            'expire' => $pastTime,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'expired_cookie',
-                'value' => 'expired_value',
-                'expire' => $pastTime,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -905,6 +1311,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithValidationEnabledFutureExpiration(): void
     {
         $this->mockWebApplication(
@@ -921,17 +1330,19 @@ final class ResponseAdapterTest extends TestCase
 
         $futureTime = time() + 3600; // 1 hour in the future
 
+        $cookieConfig = [
+            'name' => 'valid_cookie',
+            'value' => 'valid_value',
+            'expire' => $futureTime,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'valid_cookie',
-                'value' => 'valid_value',
-                'expire' => $futureTime,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -964,23 +1375,28 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithZeroMaxAge(): void
     {
         $this->mockWebApplication();
 
         $currentTime = time();
 
+        $cookieConfig = [
+            'name' => 'zero_max_age_cookie',
+            'value' => 'zero_max_age_value',
+            'expire' => $currentTime,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'zero_max_age_cookie',
-                'value' => 'zero_max_age_value',
-                'expire' => $currentTime,
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -1011,9 +1427,17 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatResponseWithCustomStatusAndCookie(): void
     {
         $this->mockWebApplication();
+
+        $cookieConfig = [
+            'name' => 'test',
+            'value' => 'value',
+        ];
 
         $response = new Response();
 
@@ -1025,13 +1449,9 @@ final class ResponseAdapterTest extends TestCase
 
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'test',
-                'value' => 'value',
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
         $psr7Response = $adapter->toPsr7();
@@ -1069,7 +1489,6 @@ final class ResponseAdapterTest extends TestCase
             $setCookieHeaders[0] ?? '',
             "'Set-Cookie' header should contain the cookie name.",
         );
-        // Should be hashed, not plain value
         self::assertStringNotContainsString(
             'test=value',
             $setCookieHeaders[0] ?? '',
@@ -1077,6 +1496,9 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testHashCookieValueIncludingName(): void
     {
         $this->mockWebApplication(
@@ -1091,24 +1513,25 @@ final class ResponseAdapterTest extends TestCase
             ],
         );
 
+        $cookieConfig1 = [
+            'name' => 'cookie_name_a',
+            'value' => 'same_value',
+        ];
+        $cookieConfig2 = [
+            'name' => 'cookie_name_b',
+            'value' => 'same_value',
+        ];
+
         $response1 = new Response();
         $response2 = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter1 = new ResponseAdapter($response1, $responseFactory, $streamFactory);
         $adapter2 = new ResponseAdapter($response2, $responseFactory, $streamFactory);
-        $cookie1 = new Cookie(
-            [
-                'name' => 'cookie_name_a',
-                'value' => 'same_value',
-            ],
-        );
-        $cookie2 = new Cookie(
-            [
-                'name' => 'cookie_name_b',
-                'value' => 'same_value',
-            ],
-        );
+        $cookie1 = new Cookie($cookieConfig1);
+        $cookie2 = new Cookie($cookieConfig2);
 
         $response1->cookies->add($cookie1);
         $response2->cookies->add($cookie2);
@@ -1138,26 +1561,30 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testProduceMultipleCookieHeadersWhenAddingCookies(): void
     {
         $this->mockWebApplication();
 
+        $cookieConfig1 = [
+            'name' => 'cookie1',
+            'value' => 'value1',
+        ];
+        $cookieConfig2 = [
+            'name' => 'cookie2',
+            'value' => 'value2',
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie1 = new Cookie(
-            [
-                'name' => 'cookie1',
-                'value' => 'value1',
-            ],
-        );
-        $cookie2 = new Cookie(
-            [
-                'name' => 'cookie2',
-                'value' => 'value2',
-            ],
-        );
+        $cookie1 = new Cookie($cookieConfig1);
+        $cookie2 = new Cookie($cookieConfig2);
 
         $response->cookies->add($cookie1);
         $response->cookies->add($cookie2);
@@ -1194,32 +1621,35 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testSkipCookieHeaderWhenValueEmpty(): void
     {
         $this->mockWebApplication();
 
+        $validCookieConfig = [
+            'name' => 'valid',
+            'value' => 'value',
+        ];
+        $emptyCookieConfig = [
+            'name' => 'empty',
+            'value' => '',
+        ];
+        $nullCookieConfig = [
+            'name' => 'null',
+            'value' => null,
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $validCookie = new Cookie(
-            [
-                'name' => 'valid',
-                'value' => 'value',
-            ],
-        );
-        $emptyCookie = new Cookie(
-            [
-                'name' => 'empty',
-                'value' => '',
-            ],
-        );
-        $nullCookie = new Cookie(
-            [
-                'name' => 'null',
-                'value' => null,
-            ],
-        );
+        $validCookie = new Cookie($validCookieConfig);
+        $emptyCookie = new Cookie($emptyCookieConfig);
+        $nullCookie = new Cookie($nullCookieConfig);
 
         $response->cookies->add($validCookie);
         $response->cookies->add($emptyCookie);
@@ -1244,6 +1674,103 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    public function testThrowExceptionWhenStreamFormatIsInvalid(): void
+    {
+        $this->mockWebApplication();
+
+        $tempFile = $this->createTempFileWithContent('test');
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource($handle, 'File handle should be a valid resource.');
+
+        $response = new Response();
+
+        $response->stream = [$handle, 0]; // Missing end parameter
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(Message::RESPONSE_STREAM_FORMAT_INVALID->getMessage());
+
+        $adapter->toPsr7();
+    }
+
+    public function testThrowExceptionWhenStreamHandleIsInvalid(): void
+    {
+        $this->mockWebApplication();
+
+        $response = new Response();
+
+        $response->stream = ['not-a-resource', 0, 100];
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(Message::RESPONSE_STREAM_HANDLE_INVALID->getMessage());
+
+        $adapter->toPsr7();
+    }
+
+    public function testThrowExceptionWhenStreamRangeIsInvalid(): void
+    {
+        $this->mockWebApplication();
+
+        $content = 'Test content';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource($handle, 'File handle should be a valid resource.');
+
+        // empty range: begin == end + 1 (invalid range, but testing edge case)
+        $begin = 5;
+        $end = 4; // invalid: end < begin
+
+        $response = new Response();
+
+        $response->stream = [$handle, $begin, $end];
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(Message::RESPONSE_STREAM_RANGE_INVALID->getMessage($begin, $end));
+
+        $adapter->toPsr7()->getBody()->getContents();
+    }
+
+    public function testThrowExceptionWhenStreamRangeIsInvalidWithNegativeBegin(): void
+    {
+        $this->mockWebApplication();
+
+        $tempFile = $this->createTempFileWithContent('test content');
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource($handle, 'File handle should be a valid resource.');
+
+        $response = new Response();
+
+        $response->stream = [$handle, -1, 10]; // negative begin
+
+        $responseFactory = FactoryHelper::createResponseFactory();
+        $streamFactory = FactoryHelper::createStreamFactory();
+
+        $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(Message::RESPONSE_STREAM_RANGE_INVALID->getMessage(-1, 10));
+
+        $adapter->toPsr7();
+    }
+
     public function testThrowExceptionWhenValidationKeyEmpty(): void
     {
         $this->mockWebApplication(
@@ -1258,16 +1785,18 @@ final class ResponseAdapterTest extends TestCase
             ],
         );
 
+        $cookieConfig = [
+            'name' => 'test_cookie',
+            'value' => 'test_value',
+        ];
+
         $response = new Response();
+
         $responseFactory = FactoryHelper::createResponseFactory();
         $streamFactory = FactoryHelper::createStreamFactory();
+
         $adapter = new ResponseAdapter($response, $responseFactory, $streamFactory);
-        $cookie = new Cookie(
-            [
-                'name' => 'test_cookie',
-                'value' => 'test_value',
-            ],
-        );
+        $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
 
@@ -1275,5 +1804,41 @@ final class ResponseAdapterTest extends TestCase
         $this->expectExceptionMessage(Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage(Request::class));
 
         $adapter->toPsr7();
+    }
+
+    /**
+     * Creates a temporary file with the specified content for testing.
+     *
+     * @param string $content Content to write to the temporary file.
+     *
+     * @return string Path to the created temporary file.
+     */
+    private function createTempFileWithContent(string $content): string
+    {
+        $runtime = dirname(__DIR__, 2) . '/runtime';
+        $tempFile = tempnam($runtime, 'psr_bridge_test_');
+
+        if ($tempFile === false) {
+            throw new RuntimeException('Unable to create temporary file.');
+        }
+
+        $handle = fopen($tempFile, 'wb');
+
+        if ($handle === false) {
+            unlink($tempFile);
+
+            throw new RuntimeException('Unable to open temporary file for writing.');
+        }
+
+        $bytesWritten = fwrite($handle, $content);
+        fclose($handle);
+
+        if ($bytesWritten === false || $bytesWritten !== strlen($content)) {
+            unlink($tempFile);
+
+            throw new RuntimeException('Unable to write content to temporary file.');
+        }
+
+        return $tempFile;
     }
 }
