@@ -53,9 +53,8 @@ final class ErrorHandler extends \yii\web\ErrorHandler
 
         if (YII_DEBUG) {
             $response->data = '<pre>' . htmlspecialchars($msg, ENT_QUOTES, Yii::$app->charset) . '</pre>';
+            $response->data .= "\n\$_SERVER = " . VarDumper::export($_SERVER);
         }
-
-        $response->data .= "\n\$_SERVER = " . VarDumper::export($_SERVER);
 
         error_log($response->data);
 
