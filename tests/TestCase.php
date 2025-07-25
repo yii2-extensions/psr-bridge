@@ -122,7 +122,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $this->tmpFile3 = tmpfile();
 
         if ($this->tmpFile3 === false || $this->tmpFile3 === null) {
-            throw new RuntimeException('Failed to create temporary file two.');
+            throw new RuntimeException('Failed to create temporary file three.');
         }
 
         return $this->tmpFile3;

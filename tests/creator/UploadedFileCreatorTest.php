@@ -820,6 +820,29 @@ final class UploadedFileCreatorTest extends TestCase
         $creator->createFromArray($fileSpec);
     }
 
+    public function testThrowExceptionWhenTmpFileDoesNotExist(): void
+    {
+        $nonExistentPath = '/tmp/non_existent_file_' . uniqid();
+
+        $fileSpec = [
+            'tmp_name' => $nonExistentPath,
+            'size' => 1024,
+            'error' => UPLOAD_ERR_OK,
+            'name' => 'test.txt',
+            'type' => 'text/plain',
+        ];
+
+        $creator = new UploadedFileCreator(
+            FactoryHelper::createUploadedFileFactory(),
+            FactoryHelper::createStreamFactory(),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(Message::FAILED_CREATE_STREAM_FROM_TMP_FILE->getMessage($nonExistentPath));
+
+        $creator->createFromArray($fileSpec);
+    }
+
     public function testThrowExceptionWhenTmpNameIsNotString(): void
     {
         $fileSpec = [

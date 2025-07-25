@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\creator;
 
 use Psr\Http\Message\{StreamFactoryInterface, UploadedFileFactoryInterface, UploadedFileInterface};
+use Throwable;
 use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\exception\Message;
 
@@ -114,7 +115,13 @@ final class UploadedFileCreator
     {
         $this->validateFileSpec($file);
 
-        $stream = $this->streamFactory->createStreamFromFile($file['tmp_name']);
+        try {
+            $stream = $this->streamFactory->createStreamFromFile($file['tmp_name']);
+        } catch (Throwable $e) {
+            throw new InvalidArgumentException(
+                Message::FAILED_CREATE_STREAM_FROM_TMP_FILE->getMessage($file['tmp_name']),
+            );
+        }
 
         return $this->uploadedFileFactory->createUploadedFile(
             $stream,

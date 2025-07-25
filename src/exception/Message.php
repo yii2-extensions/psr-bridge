@@ -67,6 +67,13 @@ enum Message: string
     case FAIL_PARSING_REQUEST_BODY = "Unable to parse request body; '%s'.";
 
     /**
+     * Error when a stream cannot be created from a temporary file.
+     *
+     * Format: "Failed to create stream from temporary file '%s'."
+     */
+    case FAILED_CREATE_STREAM_FROM_TMP_FILE = "Failed to create stream from temporary file '%s'.";
+
+    /**
      * Error when an optional array is invalid in multiple file specification.
      *
      * Format: "Invalid optional '%s' array in multiple file specification for '%s'. Expected 'array' or 'null'."
