@@ -726,6 +726,7 @@ final class UploadedFileCreatorTest extends TestCase
         // @phpstan-ignore-next-line
         $creator->createFromArray($fileSpec);
     }
+
     public function testThrowExceptionWhenMissingTmpNameInFileSpec(): void
     {
         $fileSpec = [
