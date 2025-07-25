@@ -68,7 +68,7 @@ final class StatelessApplication extends \yii\web\Application implements Request
 
         $usage = memory_get_usage(true);
 
-        return $usage >= $bound ? true : false;
+        return $usage >= $bound;
     }
 
     /**
