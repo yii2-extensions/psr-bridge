@@ -82,6 +82,13 @@ enum Message: string
     "Expected 'array' or 'null'.";
 
     /**
+     * Error when the maximum nesting depth for file uploads is exceeded.
+     *
+     * Format: "Maximum nesting depth exceeded for file uploads (limit: '%d')."
+     */
+    case MAXIMUM_NESTING_DEPTH_EXCEEDED = "Maximum nesting depth exceeded for file uploads (limit: '%d').";
+
+    /**
      * Error when the array structure for errors does not match the expected format.
      *
      * Format: "Mismatched array structure for 'errors' at key '%s'."

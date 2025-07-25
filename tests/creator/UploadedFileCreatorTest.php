@@ -17,6 +17,9 @@ use function stream_get_meta_data;
 #[Group('http')]
 #[Group('creator')]
 
+/**
+ * @phpstan-type FileSpec array{tmp_name: string, size: int, error: int, name?: string|null, type?: string|null}
+ */
 final class UploadedFileCreatorTest extends TestCase
 {
     public function testCreateFromArrayWithMinimalFileSpec(): void
@@ -585,6 +588,36 @@ final class UploadedFileCreatorTest extends TestCase
         );
     }
 
+    public function testSuccessWithMaximumAllowedRecursionDepth(): void
+    {
+        $tempPath = stream_get_meta_data($this->getTmpFile1())['uri'];
+
+        $maxDepthFiles = $this->createDeeplyNestedFileStructure($tempPath, 10);
+
+        $creator = new UploadedFileCreator(
+            FactoryHelper::createUploadedFileFactory(),
+            FactoryHelper::createStreamFactory(),
+        );
+
+        $finalFile = $this->navigateToDeepestFile($creator->createFromGlobals($maxDepthFiles), 10);
+
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $finalFile,
+            'Should successfully process file at maximum allowed depth of 10 levels.',
+        );
+        self::assertSame(
+            'deep_file_level_10.txt',
+            $finalFile->getClientFilename(),
+            'Should preserve client filename at maximum depth.',
+        );
+        self::assertSame(
+            1024,
+            $finalFile->getSize(),
+            'Should preserve file size at maximum depth.',
+        );
+    }
+
     public function testThrowExceptionInBuildFileTreeRecursion(): void
     {
         $tempPath = stream_get_meta_data($this->getTmpFile1())['uri'];
@@ -798,6 +831,23 @@ final class UploadedFileCreatorTest extends TestCase
         $creator->createFromArray($fileSpec);
     }
 
+    public function testThrowExceptionWhenRecursionDepthExceeded(): void
+    {
+        $tempPath = stream_get_meta_data($this->getTmpFile1())['uri'];
+
+        $deeplyNestedFiles = $this->createDeeplyNestedFileStructure($tempPath, 15);
+
+        $creator = new UploadedFileCreator(
+            FactoryHelper::createUploadedFileFactory(),
+            FactoryHelper::createStreamFactory(),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Maximum nesting depth exceeded for file uploads');
+
+        $creator->createFromGlobals($deeplyNestedFiles);
+    }
+
     public function testThrowExceptionWhenSizeIsNotInteger(): void
     {
         $tempPath = stream_get_meta_data($this->getTmpFile1())['uri'];
@@ -980,5 +1030,94 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         $creator->createFromGlobals($files);
+    }
+
+    /**
+     * Create deeply nested file structures for testing recursion limits.
+     *
+     * @param string $tempPath Path to temporary file.
+     * @param int $depth Desired nesting depth.
+     *
+     * @return array Nested file structure.
+     *
+     * @phpstan-return array<array<mixed>|UploadedFileInterface>
+     */
+    private function createDeeplyNestedFileStructure(string $tempPath, int $depth): array
+    {
+        return [
+            'deep' => $this->createSingleDeeplyNestedFileSpec($tempPath, $depth),
+        ];
+    }
+
+    /**
+     * Create a single deeply nested file specification.
+     *
+     * @param string $tempPath Path to temporary file.
+     * @param int $depth Desired nesting depth.
+     *
+     * @return array Nested file specification matching PHP $_FILES structure.
+     *
+     * @phpstan-return array<
+     *   string,
+     *   array<string, array<string, array<string, array<string, int|string>|int|string>|string>|int|string>|int|string
+     * >
+     */
+    private function createSingleDeeplyNestedFileSpec(string $tempPath, int $depth): array
+    {
+        $tmpName = $tempPath;
+        $size = 1024;
+        $error = UPLOAD_ERR_OK;
+        $name = "deep_file_level_{$depth}.txt";
+        $type = 'text/plain';
+
+        for ($i = $depth; $i > 0; $i--) {
+            $tmpName = ["level_{$i}" => $tmpName];
+            $size = ["level_{$i}" => $size];
+            $error = ["level_{$i}" => $error];
+            $name = ["level_{$i}" => $name];
+            $type = ["level_{$i}" => $type];
+        }
+
+        return [
+            'tmp_name' => $tmpName,
+            'size' => $size,
+            'error' => $error,
+            'name' => $name,
+            'type' => $type,
+        ];
+    }
+
+    /**
+     * Navigate to the deepest file in a nested structure.
+     *
+     * @param array $result Processed file structure.
+     * @param int $expectedDepth Expected depth to navigate.
+     * @param string $rootKey Root key to start navigation from.
+     *
+     * @return mixed Deepest file found.
+     *
+     * @phpstan-param array<array<mixed>|UploadedFileInterface> $result
+     */
+    private function navigateToDeepestFile(array $result, int $expectedDepth, string $rootKey = 'deep'): mixed
+    {
+        $current = $result[$rootKey] ?? null;
+
+        for ($i = 1; $i <= $expectedDepth; $i++) {
+            $levelKey = "level_{$i}";
+
+            self::assertIsArray(
+                $current,
+                "Should be array at level {$i}",
+            );
+            self::assertArrayHasKey(
+                $levelKey,
+                $current,
+                "Should have '{$levelKey}' key at level {$i}",
+            );
+
+            $current = $current[$levelKey] ?? null;
+        }
+
+        return $current;
     }
 }

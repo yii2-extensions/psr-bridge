@@ -198,17 +198,28 @@ final class UploadedFileCreator
         array $errors,
         array $names = [],
         array $types = [],
+        int $depth = 0,
     ): array {
+        if ($depth > 10) {
+            throw new InvalidArgumentException(
+                Message::MAXIMUM_NESTING_DEPTH_EXCEEDED->getMessage($depth),
+            );
+        }
+
         $tree = [];
 
         foreach ($tmpNames as $key => $tmpName) {
             if (is_array($tmpName)) {
                 if (array_key_exists($key, $sizes) === false || is_array($sizes[$key]) === false) {
-                    throw new InvalidArgumentException(Message::MISMATCHED_ARRAY_STRUCTURE_SIZES->getMessage($key));
+                    throw new InvalidArgumentException(
+                        Message::MISMATCHED_ARRAY_STRUCTURE_SIZES->getMessage($key),
+                    );
                 }
 
                 if (array_key_exists($key, $errors) === false || is_array($errors[$key]) === false) {
-                    throw new InvalidArgumentException(Message::MISMATCHED_ARRAY_STRUCTURE_ERRORS->getMessage($key));
+                    throw new InvalidArgumentException(
+                        Message::MISMATCHED_ARRAY_STRUCTURE_ERRORS->getMessage($key),
+                    );
                 }
 
                 /** @phpstan-var TmpName $subTmpNames */
@@ -222,7 +233,14 @@ final class UploadedFileCreator
                 /** @phpstan-var Type $subTypes */
                 $subTypes = array_key_exists($key, $types) && is_array($types[$key]) ? $types[$key] : [];
 
-                $tree[$key] = $this->buildFileTree($subTmpNames, $subSizes, $subErrors, $subNames, $subTypes);
+                $tree[$key] = $this->buildFileTree(
+                    $subTmpNames,
+                    $subSizes,
+                    $subErrors,
+                    $subNames,
+                    $subTypes,
+                    $depth + 1,
+                );
             } else {
                 if (array_key_exists($key, $sizes) === false || is_int($sizes[$key]) === false) {
                     throw new InvalidArgumentException(
