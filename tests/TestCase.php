@@ -4,14 +4,37 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests;
 
+use RuntimeException;
 use Yii;
-use yii\console\Application as ConsoleApplication;
 use yii\helpers\ArrayHelper;
-use yii\web\Application as WebApplication;
 use yii2\extensions\psrbridge\http\Request;
+
+use function fclose;
+use function tmpfile;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * Temporary file one used in tests.
+     *
+     * @phpstan-var resource|false|null
+     */
+    protected $tmpFile1 = null;
+
+    /**
+     * Temporary file two in tests.
+     *
+     * @phpstan-var resource|false|null
+     */
+    protected $tmpFile2 = null;
+
+    /**
+     * Temporary file two in tests.
+     *
+     * @phpstan-var resource|false|null
+     */
+    protected $tmpFile3 = null;
+
     /**
      * @phpstan-var array<mixed, mixed>
      */
@@ -36,6 +59,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         parent::setUp();
 
         $this->originalServer = $_SERVER;
+
         $_SERVER = [];
     }
 
@@ -47,7 +71,61 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $_POST = [];
         $_SERVER = $this->originalServer;
 
+        if ($this->tmpFile1 !== null && $this->tmpFile1 !== false) {
+            fclose($this->tmpFile1);
+        }
+
+        if ($this->tmpFile2 !== null && $this->tmpFile2 !== false) {
+            fclose($this->tmpFile2);
+        }
+
+        if ($this->tmpFile3 !== null && $this->tmpFile3 !== false) {
+            fclose($this->tmpFile3);
+        }
+
         parent::tearDown();
+    }
+
+    /**
+     * @phpstan-return resource
+     */
+    protected function getTmpFile1()
+    {
+        $this->tmpFile1 = tmpfile();
+
+        if ($this->tmpFile1 === false || $this->tmpFile1 === null) {
+            throw new RuntimeException('Failed to create temporary file one.');
+        }
+
+        return $this->tmpFile1;
+    }
+
+    /**
+     * @phpstan-return resource
+     */
+    protected function getTmpFile2()
+    {
+        $this->tmpFile2 = tmpfile();
+
+        if ($this->tmpFile2 === false || $this->tmpFile2 === null) {
+            throw new RuntimeException('Failed to create temporary file two.');
+        }
+
+        return $this->tmpFile2;
+    }
+
+    /**
+     * @phpstan-return resource
+     */
+    protected function getTmpFile3()
+    {
+        $this->tmpFile3 = tmpfile();
+
+        if ($this->tmpFile3 === false || $this->tmpFile3 === null) {
+            throw new RuntimeException('Failed to create temporary file two.');
+        }
+
+        return $this->tmpFile3;
     }
 
     /**
@@ -55,7 +133,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function mockApplication($config = []): void
     {
-        new ConsoleApplication(
+        new \yii\console\Application(
             ArrayHelper::merge(
                 [
                     'id' => 'testapp',
@@ -77,7 +155,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function mockWebApplication($config = []): void
     {
-        new WebApplication(
+        new \yii\web\Application(
             ArrayHelper::merge(
                 [
                     'id' => 'testapp',
