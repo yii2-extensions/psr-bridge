@@ -82,7 +82,8 @@ final class ServerRequestCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithComplexScenario(): void
     {
-        $tempPath = stream_get_meta_data($this->getTmpFile1())['uri'];
+        $tmpFile = $this->createTmpFile();
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
 
         $_SERVER = [
             'REQUEST_METHOD' => 'PUT',
@@ -97,10 +98,10 @@ final class ServerRequestCreatorTest extends TestCase
         $_GET['force'] = 'true';
         $_FILES = [
             'photo' => [
-                'error' => UPLOAD_ERR_OK,
+                'error' => \UPLOAD_ERR_OK,
                 'name' => 'avatar.png',
                 'size' => 1500,
-                'tmp_name' => $tempPath,
+                'tmp_name' => $tmpPath,
                 'type' => 'image/png',
             ],
         ];
@@ -299,8 +300,11 @@ final class ServerRequestCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithMultipleUploadedFiles(): void
     {
-        $tempPath1 = stream_get_meta_data($this->getTmpFile1())['uri'];
-        $tempPath2 = stream_get_meta_data($this->getTmpFile2())['uri'];
+        $tmpFile1 = $this->createTmpFile();
+        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
+
+        $tmpFile2 = $this->createTmpFile();
+        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
 
         $_FILES = [
             'documents' => [
@@ -313,8 +317,8 @@ final class ServerRequestCreatorTest extends TestCase
                     'text/plain',
                 ],
                 'tmp_name' => [
-                    $tempPath1,
-                    $tempPath2,
+                    $tmpPath1,
+                    $tmpPath2,
                 ],
                 'error' => [
                     \UPLOAD_ERR_OK,
@@ -541,13 +545,14 @@ final class ServerRequestCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithSingleUploadedFile(): void
     {
-        $tempPath = stream_get_meta_data($this->getTmpFile1())['uri'];
+        $tmpFile = $this->createTmpFile();
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
 
         $_FILES['avatar'] = [
             'name' => 'profile.jpg',
             'type' => 'image/jpeg',
-            'tmp_name' => $tempPath,
-            'error' => UPLOAD_ERR_OK,
+            'tmp_name' => $tmpPath,
+            'error' => \UPLOAD_ERR_OK,
             'size' => 1024,
         ];
 
@@ -595,7 +600,7 @@ final class ServerRequestCreatorTest extends TestCase
             'Should preserve file size from \'$_FILES\'.',
         );
         self::assertSame(
-            UPLOAD_ERR_OK,
+            \UPLOAD_ERR_OK,
             $uploadedFile->getError(),
             'Should preserve error code from \'$_FILES\'.',
         );

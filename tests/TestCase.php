@@ -15,30 +15,16 @@ use function tmpfile;
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
     /**
-     * Temporary file one used in tests.
-     *
-     * @phpstan-var resource|false|null
-     */
-    protected $tmpFile1 = null;
-
-    /**
-     * Temporary file two in tests.
-     *
-     * @phpstan-var resource|false|null
-     */
-    protected $tmpFile2 = null;
-
-    /**
-     * Temporary file two in tests.
-     *
-     * @phpstan-var resource|false|null
-     */
-    protected $tmpFile3 = null;
-
-    /**
      * @phpstan-var array<mixed, mixed>
      */
     private array $originalServer = [];
+
+    /**
+     * Temporary file resources used during tests.
+     *
+     * @phpstan-var array<resource>
+     */
+    private array $tmpFiles = [];
 
     public static function tearDownAfterClass(): void
     {
@@ -71,61 +57,39 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $_POST = [];
         $_SERVER = $this->originalServer;
 
-        if ($this->tmpFile1 !== null && $this->tmpFile1 !== false) {
-            fclose($this->tmpFile1);
-        }
-
-        if ($this->tmpFile2 !== null && $this->tmpFile2 !== false) {
-            fclose($this->tmpFile2);
-        }
-
-        if ($this->tmpFile3 !== null && $this->tmpFile3 !== false) {
-            fclose($this->tmpFile3);
-        }
+        $this->closeTmpFile(...$this->tmpFiles);
 
         parent::tearDown();
     }
 
     /**
-     * @phpstan-return resource
+     * Closes the temporary file resource if it is a valid resource.
+     *
+     * @param resource ...$tmpFile The temporary file resources to close.
      */
-    protected function getTmpFile1()
+    protected function closeTmpFile(...$tmpFile): void
     {
-        $this->tmpFile1 = tmpfile();
-
-        if ($this->tmpFile1 === false || $this->tmpFile1 === null) {
-            throw new RuntimeException('Failed to create temporary file one.');
+        foreach ($tmpFile as $file) {
+            if (is_resource($file)) {
+                fclose($file);
+            }
         }
-
-        return $this->tmpFile1;
     }
 
     /**
      * @phpstan-return resource
      */
-    protected function getTmpFile2()
+    protected function createTmpFile()
     {
-        $this->tmpFile2 = tmpfile();
+        $tmpFile = tmpfile();
 
-        if ($this->tmpFile2 === false || $this->tmpFile2 === null) {
-            throw new RuntimeException('Failed to create temporary file two.');
+        if ($tmpFile === false) {
+            throw new RuntimeException('Failed to create temporary file.');
         }
 
-        return $this->tmpFile2;
-    }
+        $this->tmpFiles[] = $tmpFile;
 
-    /**
-     * @phpstan-return resource
-     */
-    protected function getTmpFile3()
-    {
-        $this->tmpFile3 = tmpfile();
-
-        if ($this->tmpFile3 === false || $this->tmpFile3 === null) {
-            throw new RuntimeException('Failed to create temporary file three.');
-        }
-
-        return $this->tmpFile3;
+        return $tmpFile;
     }
 
     /**
