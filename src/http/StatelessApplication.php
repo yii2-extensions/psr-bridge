@@ -23,7 +23,7 @@ use function strtoupper;
 
 final class StatelessApplication extends \yii\web\Application implements RequestHandlerInterface
 {
-    public string $version = 'wprker-0.1.0';
+    public string $version = '0.1.0';
 
     /**
      * @phpstan-var array<string, mixed>
@@ -218,6 +218,12 @@ final class StatelessApplication extends \yii\web\Application implements Request
     {
         if ($this->memoryLimit === null || $this->memoryLimit <= 0) {
             $limit = ini_get('memory_limit');
+
+            if ($limit === '-1') {
+                $this->memoryLimit = PHP_INT_MAX;
+
+                return $this->memoryLimit;
+            }
 
             sscanf($limit, '%u%c', $number, $suffix);
 
