@@ -4,13 +4,24 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\support;
 
-use HttpSoft\Message\{Response, ResponseFactory, ServerRequest, Stream, StreamFactory, UploadedFile, Uri};
+use HttpSoft\Message\{
+    Response,
+    ResponseFactory,
+    ServerRequest,
+    ServerRequestFactory,
+    Stream,
+    StreamFactory,
+    UploadedFile,
+    UploadedFileFactory,
+    Uri,
+};
 use Psr\Http\Message\{
     ResponseFactoryInterface,
     ResponseInterface,
     ServerRequestInterface,
     StreamFactoryInterface,
     StreamInterface,
+    UploadedFileFactoryInterface,
     UploadedFileInterface,
     UriInterface,
 };
@@ -130,6 +141,21 @@ final class FactoryHelper
     }
 
     /**
+     * Creates a PSR-17 {@see ServerRequestFactory} instance.
+     *
+     * @return ServerRequestFactory PSR-17 server request factory instance.
+     *
+     * Usage example:
+     * ```php
+     * FactoryHelper::createServerRequestFactory();
+     * ```
+     */
+    public static function createServerRequestFactory(): ServerRequestFactory
+    {
+        return new ServerRequestFactory();
+    }
+
+    /**
      * Creates a PSR-7 {@see StreamInterface} instance.
      *
      * @param string $stream Stream content.
@@ -186,6 +212,21 @@ final class FactoryHelper
         int $size = 0,
     ): UploadedFileInterface {
         return new UploadedFile($tmpName, $size, $error, $name, $type);
+    }
+
+    /**
+     * Creates a PSR-17 {@see UploadedFileFactoryInterface} instance.
+     *
+     * @return UploadedFileFactoryInterface PSR-17 uploaded file factory instance.
+     *
+     * Usage example:
+     * ```php
+     * FactoryHelper::createUploadedFileFactory();
+     * ```
+     */
+    public static function createUploadedFileFactory(): UploadedFileFactoryInterface
+    {
+        return new UploadedFileFactory();
     }
 
     /**
