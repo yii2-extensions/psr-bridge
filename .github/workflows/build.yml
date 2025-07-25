@@ -22,5 +22,3 @@ jobs:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      extensions: uopz-7.1.1

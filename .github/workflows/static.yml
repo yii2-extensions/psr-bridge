@@ -20,5 +20,3 @@ name: static analysis
 jobs:
   phpstan:
     uses: php-forge/actions/.github/workflows/phpstan.yml@main
-    with:
-      extensions: uopz

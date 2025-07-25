@@ -18,7 +18,6 @@
         "yiisoft/yii2": "^2.0.53|^22"
     },
     "require-dev": {
-        "ext-uopz": "*",
         "infection/infection": "^0.27|^0.30",
         "httpsoft/http-message": "^1.1",
         "maglnet/composer-require-checker": "^4.1",
@@ -29,6 +28,9 @@
         "symplify/easy-coding-standard": "^12.5",
         "xepozz/internal-mocker": "^1.4",
         "yii2-extensions/phpstan": "^0.3"
+    },
+    "suggest": {
+        "ext-uopz": "*"
     },
     "autoload": {
         "psr-4": {
