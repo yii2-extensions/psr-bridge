@@ -23,4 +23,4 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      extensions: uopz
+      extensions: uopz-7.1.1
