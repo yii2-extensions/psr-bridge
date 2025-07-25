@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\errorhandler;
+namespace yii2\extensions\psrbridge\http;
 
 use Throwable;
 use Yii;
+use yii\base\InvalidRouteException;
 use yii\base\UserException;
+use yii\console\Exception;
 use yii\helpers\VarDumper;
-use yii2\extensions\psrbridge\http\Response;
 
 final class ErrorHandler extends \yii\web\ErrorHandler
 {
@@ -45,9 +46,9 @@ final class ErrorHandler extends \yii\web\ErrorHandler
 
         $msg = "An Error occurred while handling another error:\n";
 
-        $msg .= (string) $exception;
+        $msg .= $exception;
         $msg .= "\nPrevious exception:\n";
-        $msg .= (string) $previousException;
+        $msg .= $previousException;
 
         $response->data = 'An internal server error occurred.';
 
@@ -56,11 +57,13 @@ final class ErrorHandler extends \yii\web\ErrorHandler
             $response->data .= "\n\$_SERVER = " . VarDumper::export($_SERVER);
         }
 
-        error_log($response->data);
-
         return $response;
     }
 
+    /**
+     * @throws Exception
+     * @throws InvalidRouteException
+     */
     protected function renderException($exception): Response
     {
         $response = new Response();

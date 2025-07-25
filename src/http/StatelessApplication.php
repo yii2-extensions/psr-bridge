@@ -10,39 +10,85 @@ use Throwable;
 use Yii;
 use yii\base\Event;
 use yii\base\InvalidConfigException;
-use yii\web\Response as WebResponse;
-use yii\web\{Session, UploadedFile, User};
-use yii2\extensions\psrbridge\errorhandler\ErrorHandler;
+use yii\di\NotInstantiableException;
+use yii\web\{Application, Session, UploadedFile, User};
 
 use function array_merge;
+use function array_reverse;
+use function dirname;
+use function function_exists;
 use function gc_collect_cycles;
 use function ini_get;
+use function ini_set;
+use function is_string;
 use function memory_get_usage;
+use function method_exists;
+use function microtime;
 use function sscanf;
 use function strtoupper;
+use function uopz_redefine;
 
-final class StatelessApplication extends \yii\web\Application implements RequestHandlerInterface
+/**
+ * Stateless Yii2 Application with PSR-7 RequestHandler integration for worker and SAPI environments.
+ *
+ * Provides a Yii2 application implementation designed for stateless operation and seamless interoperability with PSR-7
+ * compatible HTTP stacks and modern PHP runtimes.
+ *
+ * This class implements {@see RequestHandlerInterface} to support direct handling of PSR-7 ServerRequestInterface
+ * instances, enabling integration with worker-based environments and SAPI.
+ *
+ * It manages the full application lifecycle, including request/response handling, event tracking, session management,
+ * and error handling, while maintaining strict type safety and immutability throughout the process.
+ *
+ * Key features.
+ * - Event tracking and cleanup for robust lifecycle management.
+ * - Exception-safe error handling and response conversion.
+ * - Immutable, type-safe application state management.
+ * - PSR-7 RequestHandlerInterface implementation for direct PSR-7 integration.
+ * - Session and user management from PSR-7 cookies.
+ * - Stateless, repeatable request handling for worker and SAPI runtimes.
+ *
+ * @see RequestHandlerInterface for PSR-7 request handling contract.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
+final class StatelessApplication extends Application implements RequestHandlerInterface
 {
+    /**
+     * Version of the StatelessApplication.
+     */
     public string $version = '0.1.0';
 
     /**
+     * Configuration for the StatelessApplication.
+     *
      * @phpstan-var array<string, mixed>
      */
     private array $config = [];
 
     /**
+     * Event handler for tracking events.
+     *
      * @phpstan-var callable(Event $event): void
      */
     private $eventHandler;
 
+    /**
+     * Memory limit for the StatelessApplication.
+     */
     private int|null $memoryLimit = null;
 
     /**
+     * Registered events during the application lifecycle.
+     *
      * @phpstan-var array<Event>
      */
     private array $registeredEvents = [];
 
     /**
+     * Creates a new instance of the {@see StatelessApplication} class.
+     *
      * @phpstan-param array<string, mixed> $config
      *
      * @phpstan-ignore constructor.missingParentCall
@@ -51,14 +97,33 @@ final class StatelessApplication extends \yii\web\Application implements Request
     {
         $this->config = $config;
 
-        // this is necessary to get \yii\web\Session to work properly.
+        // this is necessary to get \yii\web\Session to work
         ini_set('use_cookies', 'false');
         ini_set('use_only_cookies', 'true');
 
         $this->memoryLimit = $this->getMemoryLimit();
+
         $this->initEventTracking();
     }
 
+    /**
+     * Performs memory cleanup and checks if memory usage exceeds the configured threshold.
+     *
+     * Invokes garbage collection cycles and compares the current memory usage against 90% of the configured memory
+     * limit.
+     *
+     * This method is used to determine if the application should be recycled or restarted based on memory consumption,
+     * supporting stateless operation in worker and SAPI environments.
+     *
+     * @return bool `true` if memory usage is greater than or equal to 90% of the memory limit, `false` otherwise.
+     *
+     * Usage example:
+     * ```php
+     * if ($app->clean()) {
+     *     // trigger worker recycle or restart
+     * }
+     * ```
+     */
     public function clean(): bool
     {
         gc_collect_cycles();
@@ -72,7 +137,22 @@ final class StatelessApplication extends \yii\web\Application implements Request
     }
 
     /**
+     * Returns the core components configuration for the {@see StatelessApplication}.
+     *
+     * Provides the array of core Yii2 components required for stateless operation, including error handler, request,
+     * response, session, and user components.
+     *
+     * This configuration ensures that the application is initialized with PSR-7 bridge support and compatible with
+     * worker and SAPI environments.
+     *
+     * @return array Array of core component configurations for the application.
+     *
      * @phpstan-return array<mixed, mixed>
+     *
+     * Usage example:
+     * ```php
+     * $components = $app->coreComponents();
+     * ```
      */
     public function coreComponents(): array
     {
@@ -98,6 +178,28 @@ final class StatelessApplication extends \yii\web\Application implements Request
         );
     }
 
+    /**
+     * Handles a PSR-7 ServerRequestInterface and returns a PSR-7 ResponseInterface.
+     *
+     * Processes the full Yii2 application lifecycle for a stateless request, including event triggering, request
+     * handling, and error management.
+     *
+     * This method resets the application state, triggers lifecycle events, executes the request, and converts the
+     * result to a PSR-7 ResponseInterface.
+     *
+     * If an exception occurs during processing, it is handled and converted to a PSR-7 response.
+     *
+     * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to handle.
+     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
+     * @return ResponseInterface PSR-7 ResponseInterface instance representing the result of the handled request.
+     *
+     * Usage example:
+     * ```php
+     * $psrResponse = $app->handle($psrRequest);
+     * ```
+     */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         try {
@@ -109,7 +211,8 @@ final class StatelessApplication extends \yii\web\Application implements Request
 
             $this->state = self::STATE_HANDLING_REQUEST;
 
-            $response = $this->handleRequest($this->getRequest());
+            /** @phpstan-var Response $response */
+            $response = $this->handleRequest($this->request);
 
             $this->state = self::STATE_AFTER_REQUEST;
 
@@ -123,11 +226,36 @@ final class StatelessApplication extends \yii\web\Application implements Request
         }
     }
 
+    /**
+     * Initializes the StatelessApplication state to 'STATE_INIT'.
+     *
+     * Sets the internal application state to {@see self::STATE_INIT}, preparing the application for initialization and
+     * lifecycle event tracking.
+     *
+     * This method is called during the application bootstrap process to ensure the application state is initialized
+     * before handling requests or triggering events.
+     *
+     * Usage example:
+     * ```php
+     * $app->init();
+     * ```
+     */
     public function init(): void
     {
         $this->state = self::STATE_INIT;
     }
 
+    /**
+     * Bootstraps the StatelessApplication by setting core path aliases and invoking parent bootstrap logic.
+     *
+     * Sets the '@webroot' and '@web' path aliases based on the current request, ensuring correct path resolution for
+     * asset management and routing in stateless and worker environments.
+     *
+     * This method prepares the application for request handling by configuring essential Yii2 path aliases before
+     * delegating to the parent bootstrap implementation.
+     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     protected function bootstrap(): void
     {
         $request = $this->getRequest();
@@ -138,11 +266,26 @@ final class StatelessApplication extends \yii\web\Application implements Request
         parent::bootstrap();
     }
 
+    /**
+     * Resets the StatelessApplication state and prepares the Yii2 environment for handling a PSR-7 request.
+     *
+     * Performs a full reinitialization of the application state, including event tracking, error handler cleanup,
+     * session management, and PSR-7 request injection.
+     *
+     * This method ensures that the application is ready to process a new stateless request in worker or SAPI
+     * environments, maintaining strict type safety and compatibility with Yii2 core components.
+     *
+     * This method is called internally before each request is handled to guarantee stateless, repeatable operation.
+     *
+     * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to inject into the application.
+     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     protected function reset(ServerRequestInterface $request): void
     {
-        // override YII_BEGIN_TIME if possible for yii2-debug and other modules that depend on it
-        if (\function_exists('uopz_redefine')) {
-            \uopz_redefine('YII_BEGIN_TIME', microtime(true));
+        // override 'YII_BEGIN_TIME' if possible for yii2-debug and other modules that depend on it
+        if (function_exists('uopz_redefine')) {
+            uopz_redefine('YII_BEGIN_TIME', microtime(true));
         }
 
         $this->startEventTracking();
@@ -160,14 +303,12 @@ final class StatelessApplication extends \yii\web\Application implements Request
         $this->requestedAction = null;
         $this->requestedParams = [];
 
-        if ($this->getRequest() instanceof Request) {
-            $this->getRequest()->setPsr7Request($request);
-        }
+        $this->request->setPsr7Request($request);
 
         $this->session->close();
         $sessionId = $request->getCookieParams()[$this->session->getName()] ?? null;
 
-        if ($sessionId !== null && is_string($sessionId)) {
+        if (is_string($sessionId)) {
             $this->session->setId($sessionId);
         }
 
@@ -180,7 +321,22 @@ final class StatelessApplication extends \yii\web\Application implements Request
         $this->session->close();
     }
 
-    protected function terminate(WebResponse $response): ResponseInterface
+    /**
+     * Finalizes the application lifecycle and converts the Yii2 Response to a PSR-7 ResponseInterface.
+     *
+     * Cleans up registered events, resets uploaded files, flushes the logger, and resets the request state.
+     *
+     * This method ensures that all application resources are released and the response is converted to a PSR-7
+     * ResponseInterface for interoperability with PSR-7 compatible HTTP stacks.
+     *
+     * @param Response $response Response instance to convert and finalize.
+     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     *
+     * @return ResponseInterface PSR-7 ResponseInterface instance representing the finalized response.
+     */
+    protected function terminate(Response $response): ResponseInterface
     {
         $this->cleanupEvents();
 
@@ -188,17 +344,25 @@ final class StatelessApplication extends \yii\web\Application implements Request
 
         Yii::getLogger()->flush(true);
 
-        if ($this->getRequest() instanceof Request) {
-            $this->getRequest()->reset();
-        }
-
-        if ($response instanceof Response === false) {
-            throw new InvalidConfigException('Response must be an instance of: ' . Response::class);
-        }
+        $this->request->reset();
 
         return $response->getPsr7Response();
     }
 
+    /**
+     * Cleans up all registered events and resets event tracking for the application lifecycle.
+     *
+     * Removes all event handlers registered during the application lifecycle, including global and sender-specific
+     * events, ensuring that no lingering event listeners remain after request processing.
+     *
+     * This method iterates over all registered events in reverse order, detaching each from its sender if possible, and
+     * clears the internal event registry.
+     *
+     * This cleanup is essential for stateless operation in worker and SAPI environments, preventing memory leaks and
+     * ensuring repeatable request handling.
+     *
+     * After all events are removed, global event tracking is reset to maintain a clean application state.
+     */
     private function cleanupEvents(): void
     {
         Event::off('*', '*', $this->eventHandler);
@@ -214,6 +378,19 @@ final class StatelessApplication extends \yii\web\Application implements Request
         Event::offAll();
     }
 
+    /**
+     * Retrieves and parses the configured PHP memory limit for the application.
+     *
+     * Determines the memory limit by reading the 'memory_limit' value from the PHP configuration, parsing the value and
+     * converting it to an integer representing the number of bytes.
+     *
+     * Supports suffixes for kilobytes (K), megabytes (M), and gigabytes (G), and returns 'PHP_INT_MAX' if unlimited.
+     *
+     * This method is used to set the internal memory limit for the application, enabling memory usage checks and
+     * recycling logic in worker and SAPI environments.
+     *
+     * @return int Memory limit in bytes as configured in PHP, or 'PHP_INT_MAX' if unlimited.
+     */
     private function getMemoryLimit(): int
     {
         if ($this->memoryLimit === null || $this->memoryLimit <= 0) {
@@ -241,15 +418,22 @@ final class StatelessApplication extends \yii\web\Application implements Request
         return $this->memoryLimit;
     }
 
+    /**
+     * Handles application errors and returns a Yii2 Response instance.
+     *
+     * Invokes the configured error handler to process the exception and generate a response, then triggers the
+     * {@see self::EVENT_AFTER_REQUEST} event and sets the application state to {@see self::STATE_END}.
+     *
+     * This method ensures that all errors are handled consistently and the application lifecycle is finalized after
+     * an exception occurs.
+     *
+     * @param Throwable $exception Exception instance to handle.
+     *
+     * @return Response Response instance generated by the error handler.
+     */
     private function handleError(Throwable $exception): Response
     {
-        $errorHandler = $this->getErrorHandler();
-
-        if ($errorHandler instanceof ErrorHandler === false) {
-            throw new InvalidConfigException('Error handler must be an instance of: ' . ErrorHandler::class);
-        }
-
-        $response = $errorHandler->handleException($exception);
+        $response = $this->errorHandler->handleException($exception);
 
         $this->trigger(self::EVENT_AFTER_REQUEST);
 
@@ -258,6 +442,16 @@ final class StatelessApplication extends \yii\web\Application implements Request
         return $response;
     }
 
+    /**
+     * Initializes the event tracking handler for the application lifecycle.
+     *
+     * Sets up the internal event handler used to register events during the application lifecycle.
+     *
+     * The handler appends each triggered {@see Event} instance to the internal registry for later cleanup.
+     *
+     * This method ensures that all events are tracked and can be detached after request processing, supporting
+     * stateless operation and preventing memory leaks in worker and SAPI environments.
+     */
     private function initEventTracking(): void
     {
         $this->eventHandler = function (Event $event): void {
@@ -265,6 +459,15 @@ final class StatelessApplication extends \yii\web\Application implements Request
         };
     }
 
+    /**
+     * Registers the global event handler for application lifecycle event tracking.
+     *
+     * Attaches the internal event handler to all events and senders using Yii2 global event registration, enabling the
+     * application to track every triggered event during the request lifecycle.
+     *
+     * This method ensures that all events are captured and appended to the internal registry for later cleanup,
+     * supporting stateless operation and preventing memory leaks in worker and SAPI environments.
+     */
     private function startEventTracking(): void
     {
         Event::on('*', '*', $this->eventHandler);
