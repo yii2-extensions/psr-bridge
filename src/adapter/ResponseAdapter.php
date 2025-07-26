@@ -11,6 +11,7 @@ use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii\web\{Cookie, Response};
 use yii2\extensions\psrbridge\exception\Message;
+use yii2\extensions\psrbridge\http\Request;
 
 use function fclose;
 use function fseek;
@@ -141,7 +142,7 @@ final class ResponseAdapter
 
             if ($validationKey === '') {
                 throw new InvalidConfigException(
-                    Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage($request::class),
+                    Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage(Request::class),
                 );
             }
         }
