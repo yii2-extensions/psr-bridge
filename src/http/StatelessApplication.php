@@ -19,7 +19,6 @@ use function dirname;
 use function function_exists;
 use function gc_collect_cycles;
 use function ini_get;
-use function ini_set;
 use function is_string;
 use function memory_get_usage;
 use function method_exists;
@@ -96,10 +95,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     public function __construct(array $config = [])
     {
         $this->config = $config;
-
-        // this is necessary to get \yii\web\Session to work
-        ini_set('use_cookies', 'false');
-        ini_set('use_only_cookies', 'true');
 
         $this->memoryLimit = $this->getMemoryLimit();
 
