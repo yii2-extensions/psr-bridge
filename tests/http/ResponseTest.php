@@ -23,13 +23,20 @@ use function urlencode;
 #[Group('http')]
 final class ResponseTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        $this->closeApplication();
+
+        parent::tearDown();
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
      */
     public function testConvertResponseWithActiveSession(): void
     {
-        $this->mockWebApplication(
+        $this->webApplication(
             [
                 'components' => [
                     'session' => [
@@ -199,7 +206,7 @@ final class ResponseTest extends TestCase
      */
     public function testConvertResponseWithInactiveSession(): void
     {
-        $this->mockWebApplication(
+        $this->webApplication(
             [
                 'components' => [
                     'session' => [
@@ -257,7 +264,7 @@ final class ResponseTest extends TestCase
      */
     public function testConvertResponseWithoutSession(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $eventsBefore = [];
         $eventsAfter = [];
@@ -360,7 +367,7 @@ final class ResponseTest extends TestCase
      */
     public function testFormatSessionCookieWithDefaultParams(): void
     {
-        $this->mockWebApplication(
+        $this->webApplication(
             [
                 'components' => [
                     'session' => [
@@ -435,7 +442,7 @@ final class ResponseTest extends TestCase
      */
     public function testPrepareMethodIsCalledDuringPsr7Conversion(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $response = new Response();
 
