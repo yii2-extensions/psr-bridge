@@ -27,7 +27,7 @@ use function is_string;
  *
  * The creation process includes.
  * - Building nested file trees for multiple file uploads.
- * - Creating PSR-7 {@see UploadedFileInterface} instances from file arrays and global variables.
+ * - Creating PSR-7 UploadedFileInterface instances from file arrays and global variables.
  * - Exception-safe conversion and validation of file input structures.
  * - Immutable, type-safe file creation from PHP globals and arrays.
  * - Validating file specification arrays for required and optional keys.
@@ -93,7 +93,7 @@ final class UploadedFileCreator
      * @param array $file File specification array containing required keys ('tmp_name', 'size', 'error') and optional
      * keys ('name', 'type').
      *
-     * @return UploadedFileInterface PSR-7 {@see UploadedFileInterface} instance created from the file specification
+     * @return UploadedFileInterface PSR-7 UploadedFileInterface instance created from the file specification
      * array.
      *
      * @phpstan-param FileSpec $file
@@ -137,13 +137,13 @@ final class UploadedFileCreator
      *
      * Iterates over the provided files array and processes each entry using {@see processFileInput},
      *
-     * This method enables seamless conversion of PHP global file structures to PSR-7 {@see UploadedFileInterface}
-     * objects, supporting both single and multiple file uploads in SAPI and worker environments.
+     * This method enables seamless conversion of PHP global file structures to PSR-7 UploadedFileInterface objects,
+     * supporting both single and multiple file uploads in SAPI and worker environments.
      *
-     * @param array $files Array of uploaded file specifications or PSR-7 {@see UploadedFileInterface} instances.
+     * @param array $files Array of uploaded file specifications or PSR-7 UploadedFileInterface instances.
      *
-     * @return array Array of processed uploaded files as PSR-7 {@see UploadedFileInterface} instances or nested file
-     * trees as appropriate.
+     * @return array Array of processed uploaded files as PSR-7 UploadedFileInterface instances or nested file trees as
+     * appropriate.
      *
      * @phpstan-param FilesArray $files
      *
@@ -168,7 +168,7 @@ final class UploadedFileCreator
      * Builds a nested file tree from PHP file specification arrays for multiple file uploads.
      *
      * Iterates recursively over the provided file specification arrays ('tmp_name', 'size', 'error', 'name', 'type'),
-     * constructing a tree of PSR-7 {@see UploadedFileInterface} instances or nested arrays for each file input.
+     * constructing a tree of PSR-7 UploadedFileInterface instances or nested arrays for each file input.
      *
      * This method validates the structure and types of each input array, ensuring strict type safety and consistency
      * when handling both single and multiple file uploads. For array values, it recurses into subtrees; for scalar
@@ -182,7 +182,7 @@ final class UploadedFileCreator
      *
      * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
      *
-     * @return array Nested array of PSR-7 {@see UploadedFileInterface} instances or file trees.
+     * @return array Nested array of PSR-7 UploadedFileInterface instances or file trees.
      *
      * @phpstan-param TmpName $tmpNames
      * @phpstan-param TmpSize $sizes
@@ -268,18 +268,18 @@ final class UploadedFileCreator
     }
 
     /**
-     * Builds a nested tree of PSR-7 {@see UploadedFileInterface} instances for multiple file uploads.
+     * Builds a nested tree of PSR-7 UploadedFileInterface instances for multiple file uploads.
      *
      * Validates the provided multi-file specification array and delegates the construction of the file tree to
      * {@see buildFileTree}, ensuring strict type safety and consistency for both single and multiple file uploads.
      *
      * This method is used to process PHP file arrays containing nested structures for multiple uploaded files,
-     * returning a tree of PSR-7 {@see UploadedFileInterface} instances or nested arrays as appropriate.
+     * returning a tree of PSR-7 UploadedFileInterface instances or nested arrays as appropriate.
      *
      * @param array $files Multi-file specification array containing 'tmp_name', 'size', 'error', and optional 'name',
      * 'type' keys.
      *
-     * @return array Nested array of PSR-7 {@see UploadedFileInterface} instances or file trees.
+     * @return array Nested array of PSR-7 UploadedFileInterface instances or file trees.
      *
      * @phpstan-param MultiFileSpec $files
      *
@@ -304,7 +304,7 @@ final class UploadedFileCreator
     }
 
     /**
-     * Creates a PSR-7 {@see UploadedFileInterface} instance from single file specification arrays.
+     * Creates a PSR-7 UploadedFileInterface instance from single file specification arrays.
      *
      * Validates that the provided temporary file name is a string and delegates the creation of the uploaded file
      * to the configured PSR-7 factories.
@@ -318,7 +318,7 @@ final class UploadedFileCreator
      * @param string|null $name Optional original file name as provided by the client.
      * @param string|null $type Optional media type of the uploaded file as provided by the client.
      *
-     * @return UploadedFileInterface PSR-7 {@see UploadedFileInterface} instance created from the file specification.
+     * @return UploadedFileInterface PSR-7 UploadedFileInterface instance created from the file specification.
      */
     private function createSingleFileFromArrays(
         string $tmpName,
@@ -368,7 +368,7 @@ final class UploadedFileCreator
      * produced by PHP for input fields with the 'multiple' attribute.
      *
      * This method is used to distinguish between single and multiple file upload specifications, ensuring correct
-     * processing and conversion to PSR-7 {@see UploadedFileInterface} instances.
+     * processing and conversion to PSR-7 UploadedFileInterface instances.
      *
      * @param array $file File specification array to check for multiple file upload structure.
      *
@@ -382,15 +382,14 @@ final class UploadedFileCreator
     }
 
     /**
-     * Processes a file input and returns a PSR-7 {@see UploadedFileInterface} instance or a nested array of uploaded
-     * files.
+     * Processes a file input and returns a PSR-7 UploadedFileInterface instance or a nested array of uploaded files.
      *
      * Determines the type of file input and delegate processing to the appropriate creation method.
      *
      * - If the input is already an {@see UploadedFileInterface} instance, it is returned as-is.
      * - If required keys are missing, the input is treated as a global files array and processed recursively.
      * - For multiple file uploads, the input is converted to a nested array of uploaded files. For single file
-     *   specifications, a PSR-7 {@see UploadedFileInterface} instance is created.
+     *   specifications, a PSR-7 UploadedFileInterface instance is created.
      *
      * This method ensures strict type safety and immutability when converting PHP file arrays to PSR-7 uploaded file
      * objects, supporting both single and multiple file uploads in SAPI and worker environments.
@@ -398,8 +397,7 @@ final class UploadedFileCreator
      * @param array|UploadedFileInterface $file File input to process, which may be a file specification array or an
      * uploaded file instance.
      *
-     * @return array|UploadedFileInterface PSR-7 {@see UploadedFileInterface} instance or nested array of uploaded
-     * files.
+     * @return array|UploadedFileInterface PSR-7 UploadedFileInterface instance or nested array of uploaded files.
      *
      * @phpstan-param UnknownFileInput|UploadedFileInterface $file
      *
