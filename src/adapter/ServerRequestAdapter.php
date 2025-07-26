@@ -20,8 +20,8 @@ use function strtoupper;
 /**
  * Adapter for PSR-7 ServerRequestInterface to Yii2 Request component.
  *
- * Provides a bridge between PSR-7 {@see ServerRequestInterface} and Yii2 {@see Request} component, enabling seamless
- * integration of PSR-7 compatible HTTP stacks with Yii2 Application.
+ * Provides a bridge between PSR-7 ServerRequestInterface and Yii2 Request component, enabling seamless integration of
+ * PSR-7 compatible HTTP stacks with Yii2 Application.
  *
  * This adapter exposes methods to access request data such as body parameters, cookies, headers, HTTP method, query
  * parameters, uploaded files, and URL information in a format compatible with Yii2 expectations.
@@ -125,7 +125,7 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Retrieves all HTTP headers from the PSR-7 ServerRequestInterface as a Yii2 {@see HeaderCollection} instance.
+     * Retrieves all HTTP headers from the PSR-7 ServerRequestInterface as a Yii2 HeaderCollection instance.
      *
      * Iterates over each header in the PSR-7 ServerRequestInterface and adds it to a new {@see HeaderCollection}
      * instance, concatenating multiple values with a comma and space, as expected by Yii2.
@@ -367,8 +367,8 @@ final class ServerRequestAdapter
     /**
      * Extracts cookies from the PSR-7 ServerRequestInterface without validation.
      *
-     * Iterates over the cookie parameters provided by the PSR-7 ServerRequestInterface and creates a {@see Cookie} instance for
-     * each non-empty value.
+     * Iterates over the cookie parameters provided by the PSR-7 ServerRequestInterface and creates a {@see Cookie}
+     * instance for each non-empty value.
      *
      * This method returns all cookies as-is, without applying Yii2 style validation or decoding.
      *
