@@ -62,7 +62,7 @@ final class ResponseAdapterTest extends TestCase
 
         self::assertEmpty(
             $body,
-            "Expected empty response body for 'ResponseAdapter::toPsr7' when 'content' is null."
+            "Expected empty response body for 'ResponseAdapter::toPsr7' when 'content' is null.",
         );
     }
 
@@ -108,7 +108,7 @@ final class ResponseAdapterTest extends TestCase
         self::assertSame(
             $content,
             $body,
-            "Expected streamed file content to match for 'ResponseAdapter::toPsr7'."
+            "Expected streamed file content to match for 'ResponseAdapter::toPsr7'.",
         );
     }
 
@@ -152,7 +152,7 @@ final class ResponseAdapterTest extends TestCase
         self::assertSame(
             $expectedContent,
             $body,
-            "Expected partial file stream content from position '{$begin}' to '{$end}'."
+            "Expected partial file stream content from position '{$begin}' to '{$end}'.",
         );
         self::assertSame(
             $end - $begin + 1,
@@ -208,7 +208,7 @@ final class ResponseAdapterTest extends TestCase
         self::assertSame(
             $expectedContent,
             $body,
-            "Expected partial file stream content from position '{$begin}' to '{$end}'."
+            "Expected partial file stream content from position '{$begin}' to '{$end}'.",
         );
         self::assertSame(
             strlen($expectedContent),
@@ -272,7 +272,7 @@ final class ResponseAdapterTest extends TestCase
         self::assertSame(
             $content,
             $body,
-            "Expected streamed file content to match for 'ResponseAdapter::toPsr7'."
+            "Expected streamed file content to match for 'ResponseAdapter::toPsr7'.",
         );
     }
 
@@ -314,7 +314,7 @@ final class ResponseAdapterTest extends TestCase
         self::assertSame(
             $expectedContent,
             $body,
-            "Expected single byte stream content at position '{$begin}'."
+            "Expected single byte stream content at position '{$begin}'.",
         );
         self::assertSame(
             1,
