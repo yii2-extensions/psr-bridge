@@ -27,8 +27,8 @@ use function urlencode;
 /**
  * Adapter for PSR-7 ResponseInterface to Yii2 Response component.
  *
- * Provides a bridge between Yii2 {@see Response} and PSR-7 {@see ResponseInterface}, enabling seamless interoperability
- * with PSR-7 compatible HTTP stacks in Yii2 Application.
+ * Provides a bridge between Yii2 Response and PSR-7 ResponseInterface, enabling seamless interoperability with PSR-7
+ * compatible HTTP stacks in Yii2 Application.
  *
  * This adapter exposes methods to convert Yii2 Response objects to PSR-7 ResponseInterface, including header and cookie
  * translation, body stream creation, and support for Yii2 Cookie validation mechanism.
@@ -65,7 +65,7 @@ final class ResponseAdapter
     ) {}
 
     /**
-     * Converts the Yii2 {@see Response} instance to a PSR-7 {@see ResponseInterface}.
+     * Converts the Yii2 Response instance to a PSR-7 ResponseInterface.
      *
      * Creates a new PSR-7 ResponseInterface using the configured response and stream factories, copying status code,
      * status text, headers, cookies, and body content from the Yii2 Response component.
