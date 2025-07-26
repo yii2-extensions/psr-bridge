@@ -13,6 +13,9 @@ parameters:
 
     tmpDir: %currentWorkingDirectory%/runtime
 
+    yii2:
+        config_path: %currentWorkingDirectory%/tests/phpstan-config.php
+
     # Enable strict advanced checks
     checkImplicitMixed: true
     checkBenevolentUnionTypes: true

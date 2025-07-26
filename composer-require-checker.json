@@ -1,0 +1,6 @@
+{
+    "symbol-whitelist": [
+        "uopz_redefine",
+        "YII_DEBUG"
+    ]
+}
