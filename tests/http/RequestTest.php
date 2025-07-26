@@ -17,6 +17,13 @@ use yii2\extensions\psrbridge\tests\TestCase;
 #[Group('http')]
 final class RequestTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        $this->closeApplication();
+
+        parent::tearDown();
+    }
+
     /**
      * @phpstan-param string[] $trustedHosts
      */
@@ -30,9 +37,11 @@ final class RequestTest extends TestCase
         string $expectedUserIp,
         bool $expectedIsSecureConnection,
     ): void {
-        $_SERVER['REMOTE_ADDR'] = $remoteAddress;
-        $_SERVER['HTTP_X_FORWARDED_FOR'] = $xForwardedFor;
-        $_SERVER['HTTP_X_FORWARDED_PROTO'] = $xForwardedProto;
+        $_SERVER = [
+            'HTTP_X_FORWARDED_FOR' => $xForwardedFor,
+            'HTTP_X_FORWARDED_PROTO' => $xForwardedProto,
+            'REMOTE_ADDR' => $remoteAddress,
+        ];
 
         $request = new Request(
             [
@@ -41,14 +50,26 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertSame($expectedRemoteAddress, $request->remoteIP, 'Remote IP fail!.');
-        self::assertSame($expectedUserIp, $request->userIP, 'User IP fail!.');
-        self::assertSame($expectedIsSecureConnection, $request->isSecureConnection, 'Secure connection fail!.');
+        self::assertSame(
+            $expectedRemoteAddress,
+            $request->remoteIP,
+            'Remote IP fail!.',
+        );
+        self::assertSame(
+            $expectedUserIp,
+            $request->userIP,
+            'User IP fail!.',
+        );
+        self::assertSame(
+            $expectedIsSecureConnection,
+            $request->isSecureConnection,
+            'Secure connection fail!.',
+        );
     }
 
     public function testCsrfHeaderValidation(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -90,7 +111,7 @@ final class RequestTest extends TestCase
      */
     public function testCsrfTokenContainsASCIIOnly(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -114,7 +135,7 @@ final class RequestTest extends TestCase
      */
     public function testCsrfTokenHeader(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -165,7 +186,7 @@ final class RequestTest extends TestCase
      */
     public function testCsrfTokenPost(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -208,7 +229,7 @@ final class RequestTest extends TestCase
 
     public function testCsrfTokenValidation(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -274,9 +295,10 @@ final class RequestTest extends TestCase
 
     public function testCustomHeaderCsrfHeaderValidation(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
+
         $request->csrfHeader = 'X-JGURDA';
         $request->validateCsrfHeaderOnly = true;
         $request->enableCsrfValidation = true;
@@ -303,7 +325,7 @@ final class RequestTest extends TestCase
 
     public function testCustomSafeMethodsCsrfTokenValidation(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -360,7 +382,7 @@ final class RequestTest extends TestCase
 
     public function testCustomUnsafeMethodsCsrfHeaderValidation(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -405,12 +427,14 @@ final class RequestTest extends TestCase
 
     public function testForwardedNotTrusted(): void
     {
-        $_SERVER['REMOTE_ADDR'] = '192.168.10.10';
-        $_SERVER['HTTP_HOST'] = 'example.com';
-        $_SERVER['HTTP_FORWARDED'] = 'for=8.8.8.8;host=spoofed.host;proto=https';
-        $_SERVER['HTTP_X_FORWARDED_FOR'] = '10.0.0.1';
-        $_SERVER['HTTP_X_FORWARDED_HOST'] = 'yiiframework.com';
-        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
+        $_SERVER = [
+            'HTTP_FORWARDED' => 'for=8.8.8.8;host=spoofed.host;proto=https',
+            'HTTP_HOST' => 'example.com',
+            'HTTP_X_FORWARDED_FOR' => '10.0.0.1',
+            'HTTP_X_FORWARDED_HOST' => 'yiiframework.com',
+            'HTTP_X_FORWARDED_PROTO' => 'http',
+            'REMOTE_ADDR' => '192.168.10.10',
+        ];
 
         $request = new Request(
             [
@@ -426,8 +450,16 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertSame('10.0.0.1', $request->userIP, 'User IP fail!.');
-        self::assertSame('http://yiiframework.com', $request->hostInfo, 'Host info fail!.');
+        self::assertSame(
+            '10.0.0.1',
+            $request->userIP,
+            'User IP fail!.',
+        );
+        self::assertSame(
+            'http://yiiframework.com',
+            $request->hostInfo,
+            'Host info fail!.',
+        );
     }
 
     public function testGetBodyParam(): void
@@ -513,7 +545,7 @@ final class RequestTest extends TestCase
 
     public function testGetCsrfTokenFromHeaderUsesParentWhenAdapterIsNull(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $_SERVER['HTTP_X_CSRF_TOKEN'] = 'parent-csrf-token-456';
 
@@ -1112,7 +1144,7 @@ final class RequestTest extends TestCase
     {
         $originalCookie = $_COOKIE;
 
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $_COOKIE[(new Request())->csrfParam] = '';
         $request = new Request();
@@ -1137,7 +1169,7 @@ final class RequestTest extends TestCase
 
     public function testNoCsrfTokenCsrfHeaderValidation(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -1191,9 +1223,11 @@ final class RequestTest extends TestCase
         string $expectedHostInfo,
         string $expectedUserIp,
     ): void {
-        $_SERVER['REMOTE_ADDR'] = $remoteAddress;
-        $_SERVER['HTTP_HOST'] = 'example.com';
-        $_SERVER['HTTP_FORWARDED'] = $forwardedHeader;
+        $_SERVER = [
+            'HTTP_FORWARDED' => $forwardedHeader,
+            'HTTP_HOST' => 'example.com',
+            'REMOTE_ADDR' => $remoteAddress,
+        ];
 
         $request = new Request(
             [
@@ -1224,7 +1258,7 @@ final class RequestTest extends TestCase
 
     public function testPreferredLanguage(): void
     {
-        $this->mockApplication(
+        $this->webApplication(
             [
                 'language' => 'en',
             ],
@@ -1345,7 +1379,7 @@ final class RequestTest extends TestCase
 
     public function testResolve(): void
     {
-        $this->mockWebApplication(
+        $this->webApplication(
             [
                 'components' => [
                     'urlManager' => [
@@ -1528,7 +1562,7 @@ final class RequestTest extends TestCase
 
     public function testThrowExceptionWhenRequestUriIsMissing(): void
     {
-        $this->mockWebApplication();
+        $this->webApplication();
 
         $request = new Request();
 
@@ -1552,8 +1586,10 @@ final class RequestTest extends TestCase
         array $trustedHosts,
         string $expectedUserIp,
     ): void {
-        $_SERVER['REMOTE_ADDR'] = $remoteAddress;
-        $_SERVER['HTTP_X_FORWARDED_FOR'] = $xForwardedFor;
+        $_SERVER = [
+            'HTTP_X_FORWARDED_FOR' => $xForwardedFor,
+            'REMOTE_ADDR' => $remoteAddress,
+        ];
         $params = ['trustedHosts' => $trustedHosts];
 
         if ($ipHeaders !== null) {
