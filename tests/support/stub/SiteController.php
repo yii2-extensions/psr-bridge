@@ -61,6 +61,7 @@ final class SiteController extends Controller
 
         return $this->response->sendFile($tmpFilePath, 'testfile.txt', ['mimeType' => 'text/plain']);
     }
+
     public function actionGet(): mixed
     {
         $this->response->format = Response::FORMAT_JSON;
@@ -91,6 +92,7 @@ final class SiteController extends Controller
 
         return $this->request->post();
     }
+
     public function actionRedirect(): void
     {
         $this->response->redirect('/site/index');
