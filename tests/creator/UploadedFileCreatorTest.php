@@ -679,13 +679,13 @@ final class UploadedFileCreatorTest extends TestCase
             FactoryHelper::createStreamFactory(),
         );
 
-        // this should succeed because depth starts at 0, reaching exactly depth = 10
+        // this should succeed because depth starts at 0, reaching exactly 'depth' = '10'
         $result = $creator->createFromGlobals($files);
 
         self::assertArrayHasKey(
             'level_test',
             $result,
-            'Should successfully process structure that reaches exactly depth = 10.',
+            "Should successfully process structure that reaches exactly 'depth' = '10'.",
         );
 
         // navigate through the structure to verify it was processed
@@ -712,6 +712,41 @@ final class UploadedFileCreatorTest extends TestCase
         );
     }
 
+    public function testDepthParameterStartsAtZeroNotOne(): void
+    {
+        $tmpFile = $this->createTmpFile();
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+
+        $tenLevelFiles = $this->createDeeplyNestedFileStructure($tmpPath, 11);
+
+        $creator = new UploadedFileCreator(
+            FactoryHelper::createUploadedFileFactory(),
+            FactoryHelper::createStreamFactory(),
+        );
+
+        // this should succeed without throwing an exception if 'depth' starts at '0'
+        $result = $creator->createFromGlobals($tenLevelFiles);
+
+        // navigate to the deepest file to verify it was processed correctly
+        $finalFile = $this->navigateToDeepestFile($result, 11);
+
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $finalFile,
+            "Should successfully process exactly '10' levels when 'depth' parameter starts at '0', not '1'.",
+        );
+        self::assertSame(
+            'deep_file_level_11.txt',
+            $finalFile->getClientFilename(),
+            "Should preserve 'client filename' at exactly '10' levels when 'depth' starts at '0'.",
+        );
+        self::assertSame(
+            1024,
+            $finalFile->getSize(),
+            "Should preserve 'file size' at exactly '10' levels when 'depth' starts at '0'.",
+        );
+    }
+
     public function testSuccessWithMaximumAllowedRecursionDepth(): void
     {
         $tmpFile = $this->createTmpFile();
@@ -729,17 +764,17 @@ final class UploadedFileCreatorTest extends TestCase
         self::assertInstanceOf(
             UploadedFileInterface::class,
             $finalFile,
-            'Should successfully process file at maximum allowed depth of 10 levels.',
+            "Should successfully process file at maximum allowed 'depth' of '10' levels.",
         );
         self::assertSame(
             'deep_file_level_10.txt',
             $finalFile->getClientFilename(),
-            'Should preserve client filename at maximum depth.',
+            "Should preserve 'client filename' at maximum 'depth'.",
         );
         self::assertSame(
             1024,
             $finalFile->getSize(),
-            'Should preserve file size at maximum depth.',
+            "Should preserve 'file size' at maximum 'depth'.",
         );
     }
 
