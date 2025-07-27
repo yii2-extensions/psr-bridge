@@ -154,9 +154,9 @@ final class FactoryHelper
     public static function createServerRequestCreator(): ServerRequestCreator
     {
         return new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            self::createServerRequestFactory(),
+            self::createStreamFactory(),
+            self::createUploadedFileFactory(),
         );
     }
 
