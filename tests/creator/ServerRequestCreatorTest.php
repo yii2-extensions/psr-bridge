@@ -19,6 +19,56 @@ use function stream_get_meta_data;
 #[Group('creator')]
 final class ServerRequestCreatorTest extends TestCase
 {
+    public function testCreateFromGlobalsWithBasicHttpHeaders(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'Bearer token123',
+            'HTTP_CONTENT_TYPE' => 'application/json',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/api/test',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertArrayHasKey(
+            'Authorization',
+            $headers,
+            "Should extract 'Authorization' header from 'HTTP_AUTHORIZATION'.",
+        );
+        self::assertSame(
+            'Bearer token123',
+            $headers['Authorization'][0] ?? '',
+            "Should preserve 'Authorization' header value.",
+        );
+        self::assertArrayHasKey(
+            'Content-Type',
+            $headers,
+            "Should extract 'Content-Type' header from 'HTTP_CONTENT_TYPE'.",
+        );
+        self::assertSame(
+            'application/json',
+            $headers['Content-Type'][0] ?? '',
+            "Should preserve 'Content-Type' header value.",
+        );
+        self::assertArrayHasKey(
+            'User-Agent',
+            $headers,
+            "Should extract 'User-Agent' header from 'HTTP_USER_AGENT'.",
+        );
+        self::assertSame(
+            'Mozilla/5.0',
+            $headers['User-Agent'][0] ?? '',
+            "Should preserve 'User-Agent' header value.",
+        );
+    }
+
     public function testCreateFromGlobalsWithBodyStream(): void
     {
         $creator = new ServerRequestCreator(
@@ -77,6 +127,107 @@ final class ServerRequestCreatorTest extends TestCase
             StreamInterface::class,
             $request->getBody(),
             "Should return a valid 'body' stream even if creation fails.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithCaseInsensitiveHttpPrefix(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'Bearer token123',
+            'http_content_type' => 'application/json',
+            'Http_User_Agent' => 'Mozilla/5.0',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/test',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertArrayHasKey(
+            'Authorization',
+            $headers,
+            "Should extract header with uppercase 'HTTP_' prefix.",
+        );
+        self::assertArrayNotHasKey(
+            'Content-Type',
+            $headers,
+            "Should not extract header with lowercase 'http_' prefix.",
+        );
+        self::assertArrayNotHasKey(
+            'User-Agent',
+            $headers,
+            "Should not extract header with mixed case 'Http_' prefix.",
+        );
+        self::assertCount(
+            1,
+            $headers,
+            "Should only extract headers with exact 'HTTP_' prefix.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithComplexHeaderNames(): void
+    {
+        $_SERVER = [
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9',
+            'HTTP_CACHE_CONTROL' => 'no-cache',
+            'HTTP_X_CUSTOM_HEADER' => 'custom-value',
+            'HTTP_X_FORWARDED_FOR' => '192.168.1.1',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/test',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertArrayHasKey(
+            'X-Custom-Header',
+            $headers,
+            "Should normalize 'HTTP_X_CUSTOM_HEADER' to 'X-Custom-Header'.",
+        );
+        self::assertSame(
+            'custom-value',
+            $headers['X-Custom-Header'][0] ?? '',
+            "Should preserve 'X-Custom-Header' value.",
+        );
+        self::assertArrayHasKey(
+            'X-Forwarded-For',
+            $headers,
+            "Should normalize 'HTTP_X_FORWARDED_FOR' to 'X-Forwarded-For'.",
+        );
+        self::assertSame(
+            '192.168.1.1',
+            $headers['X-Forwarded-For'][0] ?? '',
+            "Should preserve 'X-Forwarded-For' value.",
+        );
+        self::assertArrayHasKey(
+            'Accept-Language',
+            $headers,
+            "Should normalize 'HTTP_ACCEPT_LANGUAGE' to 'Accept-Language'.",
+        );
+        self::assertSame(
+            'en-US,en;q=0.9',
+            $headers['Accept-Language'][0] ?? '',
+            "Should preserve 'Accept-Language' value.",
+        );
+        self::assertArrayHasKey(
+            'Cache-Control',
+            $headers,
+            "Should normalize 'HTTP_CACHE_CONTROL' to 'Cache-Control'.",
+        );
+        self::assertSame(
+            'no-cache',
+            $headers['Cache-Control'][0] ?? '',
+            "Should preserve 'Cache-Control' value.",
         );
     }
 
@@ -260,6 +411,131 @@ final class ServerRequestCreatorTest extends TestCase
         );
     }
 
+    public function testCreateFromGlobalsWithEmptyHeaderValues(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => '',
+            'HTTP_CONTENT_TYPE' => '',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/test',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $request = $creator->createFromGlobals();
+        $headers = $request->getHeaders();
+
+        self::assertArrayHasKey(
+            'Authorization',
+            $headers,
+            'Should include header even with empty value.',
+        );
+        self::assertSame(
+            '',
+            $headers['Authorization'][0] ?? '',
+            "Should preserve empty 'Authorization' header value.",
+        );
+        self::assertArrayHasKey(
+            'Content-Type',
+            $headers,
+            "Should include 'Content-Type' header even with empty value.",
+        );
+        self::assertSame(
+            '',
+            $headers['Content-Type'][0] ?? '',
+            "Should preserve empty 'Content-Type' header value.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithHeadersContainingNumbers(): void
+    {
+        $_SERVER = [
+            'HTTP_X_API_VERSION' => 'v2',
+            'HTTP_X_REQUEST_ID' => '12345',
+            'HTTP_X_RPC_VERSION' => '1.0',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/test',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertArrayHasKey(
+            'X-Api-Version',
+            $headers,
+            "Should normalize 'HTTP_X_API_VERSION' to 'X-Api-Version'.",
+        );
+        self::assertSame(
+            'v2',
+            $headers['X-Api-Version'][0] ?? '',
+            "Should preserve 'X-Api-Version' value.",
+        );
+        self::assertArrayHasKey(
+            'X-Request-Id',
+            $headers,
+            "Should normalize 'HTTP_X_REQUEST_ID' to 'X-Request-Id'.",
+        );
+        self::assertSame(
+            '12345',
+            $headers['X-Request-Id'][0] ?? '',
+            "Should preserve 'X-Request-Id' value.",
+        );
+        self::assertArrayHasKey(
+            'X-Rpc-Version',
+            $headers,
+            "Should normalize 'HTTP_X_RPC_VERSION' to 'X-Rpc-Version'.",
+        );
+        self::assertSame(
+            '1.0',
+            $headers['X-Rpc-Version'][0] ?? '',
+            "Should preserve 'X-Rpc-Version' value.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithHeadersSpecialCharacters(): void
+    {
+        $_SERVER = [
+            'HTTP_ACCEPT' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'HTTP_AUTHORIZATION' => 'Basic dXNlcjpwYXNzd29yZA==',
+            'HTTP_CONTENT_TYPE' => 'application/x-www-form-urlencoded; charset=UTF-8',
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_URI' => '/form-submit',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertSame(
+            'Basic dXNlcjpwYXNzd29yZA==',
+            $headers['Authorization'][0] ?? '',
+            "Should preserve 'Authorization' header with base64 encoded value.",
+        );
+        self::assertSame(
+            'application/x-www-form-urlencoded; charset=UTF-8',
+            $headers['Content-Type'][0] ?? '',
+            "Should preserve 'Content-Type' header with charset parameter.",
+        );
+        self::assertSame(
+            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            $headers['Accept'][0] ?? '',
+            "Should preserve 'Accept' header with multiple media types and quality values.",
+        );
+    }
+
     public function testCreateFromGlobalsWithInvalidRequestMethod(): void
     {
         $_SERVER['REQUEST_METHOD'] = null;
@@ -295,6 +571,116 @@ final class ServerRequestCreatorTest extends TestCase
             '/',
             (string) $request->getUri(),
             "Should default to root 'URI' when 'REQUEST_URI' is not a string.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithMixedServerValues(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'Bearer token123',
+            'HTTP_HOST' => 'example.com',
+            'NON_HTTP_HEADER' => 'should-not-be-included',
+            'QUERY_STRING' => 'foo=bar',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/api/test',
+            'SCRIPT_NAME' => '/index.php',
+            'SERVER_NAME' => 'example.com',
+            123 => 'numeric-key',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertArrayHasKey(
+            'Authorization',
+            $headers,
+            "Should extract 'Authorization' header from 'HTTP_AUTHORIZATION'.",
+        );
+        self::assertArrayHasKey(
+            'Host',
+            $headers,
+            "Should extract 'Host' header from 'HTTP_HOST'.",
+        );
+        self::assertArrayNotHasKey(
+            'Server-Name',
+            $headers,
+            "Should not extract 'SERVER_NAME' as it doesn't start with 'HTTP_'.",
+        );
+        self::assertArrayNotHasKey(
+            'Script-Name',
+            $headers,
+            "Should not extract 'SCRIPT_NAME' as it doesn't start with 'HTTP_'.",
+        );
+        self::assertArrayNotHasKey(
+            'Non-Http-Header',
+            $headers,
+            "Should not extract 'NON_HTTP_HEADER' as it doesn't start with 'HTTP_'.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithMultipleUnderscoreHeaders(): void
+    {
+        $_SERVER = [
+            'HTTP_CONTENT_SECURITY_POLICY' => "default-src 'self'",
+            'HTTP_X_FORWARDED_PROTO' => 'https',
+            'HTTP_X_REAL_IP' => '203.0.113.195',
+            'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/test',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertArrayHasKey(
+            'X-Forwarded-Proto',
+            $headers,
+            "Should normalize 'HTTP_X_FORWARDED_PROTO' to 'X-Forwarded-Proto'.",
+        );
+        self::assertSame(
+            'https',
+            $headers['X-Forwarded-Proto'][0] ?? '',
+            "Should preserve 'X-Forwarded-Proto' value.",
+        );
+        self::assertArrayHasKey(
+            'X-Real-Ip',
+            $headers,
+            "Should normalize 'HTTP_X_REAL_IP' to 'X-Real-Ip'.",
+        );
+        self::assertSame(
+            '203.0.113.195',
+            $headers['X-Real-Ip'][0] ?? '',
+            "Should preserve 'X-Real-Ip' value.",
+        );
+        self::assertArrayHasKey(
+            'X-Requested-With',
+            $headers,
+            "Should normalize 'HTTP_X_REQUESTED_WITH' to 'X-Requested-With'.",
+        );
+        self::assertSame(
+            'XMLHttpRequest',
+            $headers['X-Requested-With'][0] ?? '',
+            "Should preserve 'X-Requested-With' value.",
+        );
+        self::assertArrayHasKey(
+            'Content-Security-Policy',
+            $headers,
+            "Should normalize 'HTTP_CONTENT_SECURITY_POLICY' to 'Content-Security-Policy'.",
+        );
+        self::assertSame(
+            "default-src 'self'",
+            $headers['Content-Security-Policy'][0] ?? '',
+            "Should preserve 'Content-Security-Policy' value.",
         );
     }
 
@@ -407,6 +793,109 @@ final class ServerRequestCreatorTest extends TestCase
             512,
             $secondFile->getSize(),
             "Should preserve second file 'size'.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithNoHttpHeaders(): void
+    {
+        $_SERVER = [
+            'QUERY_STRING' => 'foo=bar',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/test',
+            'SCRIPT_NAME' => '/index.php',
+            'SERVER_NAME' => 'example.com',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        self::assertEmpty(
+            $creator->createFromGlobals()->getHeaders(),
+            "Should have empty headers array when no 'HTTP_*' entries in '\$_SERVER'.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithNonStringHeaderKeys(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'Bearer token123',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/test',
+            123 => 'numeric-key-value',
+            null => 'null-key-value',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertArrayHasKey(
+            'Authorization',
+            $headers,
+            "Should extract 'Authorization' header when key is valid string.",
+        );
+        self::assertSame(
+            'Bearer token123',
+            $headers['Authorization'][0] ?? '',
+            "Should preserve 'Authorization' header value.",
+        );
+        self::assertCount(
+            1,
+            $headers,
+            "Should only extract headers with valid string keys starting with 'HTTP_'.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithNonStringHeaderValues(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'Bearer token123',
+            'HTTP_CONTENT_LENGTH' => 1024,
+            'HTTP_X_CUSTOM_HEADER' => [],
+            'HTTP_X_RATE_LIMIT' => null,
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_URI' => '/api/test',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $headers = $creator->createFromGlobals()->getHeaders();
+
+        self::assertArrayHasKey(
+            'Authorization',
+            $headers,
+            "Should extract 'Authorization' header when value is string.",
+        );
+        self::assertSame(
+            'Bearer token123',
+            $headers['Authorization'][0] ?? '',
+            "Should preserve string 'Authorization' header value.",
+        );
+        self::assertArrayNotHasKey(
+            'Content-Length',
+            $headers,
+            "Should not extract 'HTTP_CONTENT_LENGTH' when value is not string.",
+        );
+        self::assertArrayNotHasKey(
+            'X-Rate-Limit',
+            $headers,
+            "Should not extract 'HTTP_X_RATE_LIMIT' when value is null.",
+        );
+        self::assertArrayNotHasKey(
+            'X-Custom-Header',
+            $headers,
+            "Should not extract 'HTTP_X_CUSTOM_HEADER' when value is array.",
         );
     }
 
