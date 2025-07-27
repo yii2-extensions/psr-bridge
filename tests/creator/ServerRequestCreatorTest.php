@@ -13,7 +13,11 @@ use yii2\extensions\psrbridge\creator\ServerRequestCreator;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function fclose;
+use function is_resource;
 use function stream_get_meta_data;
+
+use const UPLOAD_ERR_OK;
 
 #[Group('http')]
 #[Group('creator')]
@@ -128,6 +132,50 @@ final class ServerRequestCreatorTest extends TestCase
             $request->getBody(),
             "Should return a valid 'body' stream even if creation fails.",
         );
+    }
+
+    public function testCreateFromGlobalsWithBodyStreamSuccessfulAttachment(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/test-body-attachment';
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $request = $creator->createFromGlobals();
+        $body = $request->getBody();
+
+        self::assertTrue(
+            $body->isReadable(),
+            'Body stream should be readable when successfully attached.',
+        );
+
+        $streamResource = $body->detach();
+
+        if ($streamResource !== null) {
+            $metadata = stream_get_meta_data($streamResource);
+
+            self::assertSame(
+                'php://input',
+                $metadata['uri'],
+                "Body stream should have 'php://input' as URI when successfully attached from globals.",
+            );
+
+            self::assertSame(
+                'rb',
+                $metadata['mode'],
+                "Body stream should have 'rb' mode when successfully attached from php://input.",
+            );
+
+            if (is_resource($streamResource)) {
+                fclose($streamResource);
+            }
+        } else {
+            self::fail("Body stream should have a valid resource when successfully attached from 'php://input'.");
+        }
     }
 
     public function testCreateFromGlobalsWithCaseInsensitiveHttpPrefix(): void
@@ -249,7 +297,7 @@ final class ServerRequestCreatorTest extends TestCase
         $_GET['force'] = 'true';
         $_FILES = [
             'photo' => [
-                'error' => \UPLOAD_ERR_OK,
+                'error' => UPLOAD_ERR_OK,
                 'name' => 'avatar.png',
                 'size' => 1500,
                 'tmp_name' => $tmpPath,
@@ -707,8 +755,8 @@ final class ServerRequestCreatorTest extends TestCase
                     $tmpPath2,
                 ],
                 'error' => [
-                    \UPLOAD_ERR_OK,
-                    \UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
                 ],
                 'size' => [
                     2048,
@@ -936,7 +984,10 @@ final class ServerRequestCreatorTest extends TestCase
 
         $request = $creator->createFromGlobals();
 
-        self::assertEmpty($request->getUploadedFiles(), "Should have empty 'uploaded files' when '\$_FILES' is empty.");
+        self::assertEmpty(
+            $request->getUploadedFiles(),
+            "Should have empty 'uploaded files' when '\$_FILES' is empty.",
+        );
     }
 
     public function testCreateFromGlobalsWithParsedBody(): void
@@ -956,11 +1007,30 @@ final class ServerRequestCreatorTest extends TestCase
         $request = $creator->createFromGlobals();
         $parsedBody = $request->getParsedBody();
 
-        self::assertIsArray($parsedBody, "Should return 'parsed body' as array when '\$_POST' contains data.");
-        self::assertCount(3, $parsedBody, "Should have all fields from '\$_POST'.");
-        self::assertSame('30', $parsedBody['age'] ?? '', "Should preserve 'age' from '\$_POST'.");
-        self::assertSame('john@example.com', $parsedBody['email'] ?? '', "Should preserve 'email' from '\$_POST'.");
-        self::assertSame('john_doe', $parsedBody['username'] ?? '', "Should preserve 'username' from '\$_POST'.");
+        self::assertIsArray(
+            $parsedBody,
+            "Should return 'parsed body' as array when '\$_POST' contains data.",
+        );
+        self::assertCount(
+            3,
+            $parsedBody,
+            "Should have all fields from '\$_POST'.",
+        );
+        self::assertSame(
+            '30',
+            $parsedBody['age'] ?? '',
+            "Should preserve 'age' from '\$_POST'.",
+        );
+        self::assertSame(
+            'john@example.com',
+            $parsedBody['email'] ?? '',
+            "Should preserve 'email' from '\$_POST'.",
+        );
+        self::assertSame(
+            'john_doe',
+            $parsedBody['username'] ?? '',
+            "Should preserve 'username' from '\$_POST'.",
+        );
     }
 
     public function testCreateFromGlobalsWithQueryParams(): void
@@ -981,11 +1051,31 @@ final class ServerRequestCreatorTest extends TestCase
         $request = $creator->createFromGlobals();
         $queryParams = $request->getQueryParams();
 
-        self::assertCount(4, $queryParams, "Should have all 'query parameters' from '\$_GET'.");
-        self::assertSame('electronics', $queryParams['category'] ?? '', "Should preserve 'category' query parameter.");
-        self::assertSame('500', $queryParams['price_max'] ?? '', "Should preserve 'price_max' query parameter.");
-        self::assertSame('100', $queryParams['price_min'] ?? '', "Should preserve 'price_min' query parameter.");
-        self::assertSame('price_asc', $queryParams['sort'] ?? '', "Should preserve 'sort' query parameter.");
+        self::assertCount(
+            4,
+            $queryParams,
+            "Should have all 'query parameters' from '\$_GET'.",
+        );
+        self::assertSame(
+            'electronics',
+            $queryParams['category'] ?? '',
+            "Should preserve 'category' query parameter.",
+        );
+        self::assertSame(
+            '500',
+            $queryParams['price_max'] ?? '',
+            "Should preserve 'price_max' query parameter.",
+        );
+        self::assertSame(
+            '100',
+            $queryParams['price_min'] ?? '',
+            "Should preserve 'price_min' query parameter.",
+        );
+        self::assertSame(
+            'price_asc',
+            $queryParams['sort'] ?? '',
+            "Should preserve 'sort' query parameter.",
+        );
     }
 
     public function testCreateFromGlobalsWithServerValues(): void
@@ -1041,7 +1131,7 @@ final class ServerRequestCreatorTest extends TestCase
             'name' => 'profile.jpg',
             'type' => 'image/jpeg',
             'tmp_name' => $tmpPath,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
             'size' => 1024,
         ];
 
@@ -1089,7 +1179,7 @@ final class ServerRequestCreatorTest extends TestCase
             'Should preserve file size from \'$_FILES\'.',
         );
         self::assertSame(
-            \UPLOAD_ERR_OK,
+            UPLOAD_ERR_OK,
             $uploadedFile->getError(),
             'Should preserve error code from \'$_FILES\'.',
         );
