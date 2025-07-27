@@ -14,6 +14,8 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function stream_get_meta_data;
 
+use const UPLOAD_ERR_OK;
+
 #[Group('http')]
 #[Group('creator')]
 final class UploadedFileCreatorTest extends TestCase
@@ -26,7 +28,7 @@ final class UploadedFileCreatorTest extends TestCase
         $fileSpec = [
             'tmp_name' => $tmpPath,
             'size' => 512,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
         ];
 
         $creator = new UploadedFileCreator(
@@ -50,7 +52,7 @@ final class UploadedFileCreatorTest extends TestCase
             "Should preserve 'file size' from minimal specification.",
         );
         self::assertSame(
-            \UPLOAD_ERR_OK,
+            UPLOAD_ERR_OK,
             $uploadedFile->getError(),
             "Should preserve 'error code' from minimal specification.",
         );
@@ -64,7 +66,7 @@ final class UploadedFileCreatorTest extends TestCase
         $fileSpec = [
             'tmp_name' => $tmpPath,
             'size' => 256,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
             'name' => null,
             'type' => null,
         ];
@@ -99,7 +101,7 @@ final class UploadedFileCreatorTest extends TestCase
         $fileSpec = [
             'tmp_name' => $tmpPath,
             'size' => 1024,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
             'name' => 'test.txt',
             'type' => 'text/plain',
         ];
@@ -127,7 +129,7 @@ final class UploadedFileCreatorTest extends TestCase
             "Should preserve 'file size' from file specification.",
         );
         self::assertSame(
-            \UPLOAD_ERR_OK,
+            UPLOAD_ERR_OK,
             $uploadedFile->getError(),
             "Should preserve 'error code' from file specification.",
         );
@@ -152,7 +154,7 @@ final class UploadedFileCreatorTest extends TestCase
             'existing.txt',
             'text/plain',
             '/tmp/existing',
-            \UPLOAD_ERR_OK,
+            UPLOAD_ERR_OK,
             1024,
         );
 
@@ -194,7 +196,7 @@ final class UploadedFileCreatorTest extends TestCase
             'single' => [
                 'tmp_name' => $tmpPath1,
                 'size' => 1024,
-                'error' => \UPLOAD_ERR_OK,
+                'error' => UPLOAD_ERR_OK,
                 'name' => 'single.txt',
                 'type' => 'text/plain',
             ],
@@ -208,8 +210,8 @@ final class UploadedFileCreatorTest extends TestCase
                     1536,
                 ],
                 'error' => [
-                    \UPLOAD_ERR_OK,
-                    \UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
                 ],
                 'name' => [
                     'multi1.pdf',
@@ -321,8 +323,8 @@ final class UploadedFileCreatorTest extends TestCase
                     1536,
                 ],
                 'error' => [
-                    \UPLOAD_ERR_OK,
-                    \UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
                 ],
                 'name' => [
                     'doc1.txt',
@@ -425,7 +427,7 @@ final class UploadedFileCreatorTest extends TestCase
                 'level1' => [
                     'tmp_name' => $tmpPath1,
                     'size' => 1024,
-                    'error' => \UPLOAD_ERR_OK,
+                    'error' => UPLOAD_ERR_OK,
                     'name' => 'nested1.txt',
                     'type' => 'text/plain',
                 ],
@@ -433,7 +435,7 @@ final class UploadedFileCreatorTest extends TestCase
                     'level3' => [
                         'tmp_name' => [$tmpPath2],
                         'size' => [512],
-                        'error' => [\UPLOAD_ERR_OK],
+                        'error' => [UPLOAD_ERR_OK],
                         'name' => ['nested2.jpg'],
                         'type' => ['image/jpeg'],
                     ],
@@ -551,7 +553,7 @@ final class UploadedFileCreatorTest extends TestCase
             'upload' => [
                 'tmp_name' => $tmpPath,
                 'size' => 1024,
-                'error' => \UPLOAD_ERR_OK,
+                'error' => UPLOAD_ERR_OK,
                 'name' => 'document.pdf',
                 'type' => 'application/pdf',
             ],
@@ -596,6 +598,117 @@ final class UploadedFileCreatorTest extends TestCase
             1024,
             $uploadedFile->getSize(),
             "Should preserve 'file size' from 'upload' file.",
+        );
+    }
+
+    public function testDepthParameterStartsAtZeroForRecursionValidation(): void
+    {
+        $tmpFile = $this->createTmpFile();
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+
+        $files = [
+            'level_test' => [
+                'tmp_name' => [
+                    'l1' => [
+                        'l2' => [
+                            'l3' => [
+                                'l4' => [
+                                    'l5' => [
+                                        'l6' => [
+                                            'l7' => [
+                                                'l8' => [
+                                                    'l9' => [
+                                                        'l10' => $tmpPath,
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'size' => [
+                    'l1' => [
+                        'l2' => [
+                            'l3' => [
+                                'l4' => [
+                                    'l5' => [
+                                        'l6' => [
+                                            'l7' => [
+                                                'l8' => [
+                                                    'l9' => [
+                                                        'l10' => 1024,
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'error' => [
+                    'l1' => [
+                        'l2' => [
+                            'l3' => [
+                                'l4' => [
+                                    'l5' => [
+                                        'l6' => [
+                                            'l7' => [
+                                                'l8' => [
+                                                    'l9' => [
+                                                        'l10' => UPLOAD_ERR_OK,
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $creator = new UploadedFileCreator(
+            FactoryHelper::createUploadedFileFactory(),
+            FactoryHelper::createStreamFactory(),
+        );
+
+        // this should succeed because depth starts at 0, reaching exactly depth = 10
+        $result = $creator->createFromGlobals($files);
+
+        self::assertArrayHasKey(
+            'level_test',
+            $result,
+            'Should successfully process structure that reaches exactly depth = 10.',
+        );
+
+        // navigate through the structure to verify it was processed
+        $current = $result['level_test'] ?? null;
+
+        for ($i = 1; $i <= 10; $i++) {
+            self::assertIsArray(
+                $current,
+                "Should be array at level {$i}.",
+            );
+            self::assertArrayHasKey(
+                "l{$i}",
+                $current,
+                "Should have key l{$i}.",
+            );
+
+            $current = $current["l{$i}"] ?? null;
+        }
+
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $current,
+            "Should create 'UploadedFileInterface' at the deepest level when 'depth' starts at '0'.",
         );
     }
 
@@ -647,7 +760,7 @@ final class UploadedFileCreatorTest extends TestCase
                 ],
                 'error' => [
                     'category' => [
-                        'subcategory' => \UPLOAD_ERR_OK,
+                        'subcategory' => UPLOAD_ERR_OK,
                     ],
                 ],
             ],
@@ -680,7 +793,7 @@ final class UploadedFileCreatorTest extends TestCase
                     'level1' => [1024],
                 ],
                 'error' => [
-                    'level1' => \UPLOAD_ERR_OK,
+                    'level1' => UPLOAD_ERR_OK,
                 ],
             ],
         ];
@@ -712,7 +825,7 @@ final class UploadedFileCreatorTest extends TestCase
                     'level1' => 1024,
                 ],
                 'error' => [
-                    'level1' => [\UPLOAD_ERR_OK],
+                    'level1' => [UPLOAD_ERR_OK],
                 ],
             ],
         ];
@@ -760,7 +873,7 @@ final class UploadedFileCreatorTest extends TestCase
 
         $fileSpec = [
             'tmp_name' => $tmpPath,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
         ];
 
         $creator = new UploadedFileCreator(
@@ -781,7 +894,7 @@ final class UploadedFileCreatorTest extends TestCase
     {
         $fileSpec = [
             'size' => 1024,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
         ];
 
         $creator = new UploadedFileCreator(
@@ -817,8 +930,8 @@ final class UploadedFileCreatorTest extends TestCase
                     1536,
                 ],
                 'error' => [
-                    \UPLOAD_ERR_OK,
-                    \UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
                 ],
                 'name' => 'not_array', // should be array or 'null' when 'tmp_name' is array
             ],
@@ -845,7 +958,7 @@ final class UploadedFileCreatorTest extends TestCase
         $fileSpec = [
             'tmp_name' => $tmpPath,
             'size' => 1024,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
             'name' => 123,
         ];
 
@@ -887,7 +1000,7 @@ final class UploadedFileCreatorTest extends TestCase
         $fileSpec = [
             'tmp_name' => $tmpPath,
             'size' => 'invalid',
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
         ];
 
         $creator = new UploadedFileCreator(
@@ -909,7 +1022,7 @@ final class UploadedFileCreatorTest extends TestCase
         $fileSpec = [
             'tmp_name' => $nonExistentPath,
             'size' => 1024,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
             'name' => 'test.txt',
             'type' => 'text/plain',
         ];
@@ -930,7 +1043,7 @@ final class UploadedFileCreatorTest extends TestCase
         $fileSpec = [
             'tmp_name' => 123,
             'size' => 1024,
-            'error' => \UPLOAD_ERR_OK,
+            'error' => UPLOAD_ERR_OK,
         ];
 
         $creator = new UploadedFileCreator(
@@ -984,7 +1097,7 @@ final class UploadedFileCreatorTest extends TestCase
                     2048,
                     1536,
                 ],
-                'error' => [\UPLOAD_ERR_OK], // missing 'error code' for second file
+                'error' => [UPLOAD_ERR_OK], // missing 'error code' for second file
             ],
         ];
 
@@ -1015,8 +1128,8 @@ final class UploadedFileCreatorTest extends TestCase
                 ],
                 'size' => [2048], // missing 'size' for second file
                 'error' => [
-                    \UPLOAD_ERR_OK,
-                    \UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
+                    UPLOAD_ERR_OK,
                 ],
             ],
         ];
@@ -1085,7 +1198,7 @@ final class UploadedFileCreatorTest extends TestCase
             'invalid' => [
                 'tmp_name' => [$tmpPath],
                 'size' => 'not_array', // should be array when 'tmp_name' is array
-                'error' => [\UPLOAD_ERR_OK],
+                'error' => [UPLOAD_ERR_OK],
             ],
         ];
 
