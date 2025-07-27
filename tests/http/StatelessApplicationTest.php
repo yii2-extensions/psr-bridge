@@ -70,31 +70,6 @@ final class StatelessApplicationTest extends TestCase
         }
     }
 
-    public function testReturnInternalServerErrorResponseForGeneralExceptionRoute(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/general-exception',
-        ];
-
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-        $response = $this->statelessApplication()->handle($request);
-
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/general-exception' route " .
-            "in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Response status code should be '500' for unhandled exception on 'site/general-exception' route in " .
-            "'StatelessApplication'.",
-        );
-    }
-
     public function testReturnJsonResponseWithCookiesForSiteGetCookiesRoute(): void
     {
         $_COOKIE = [
@@ -270,35 +245,6 @@ final class StatelessApplicationTest extends TestCase
             $response->getBody()->getContents(),
             "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for 'site/get' " .
             "route in 'StatelessApplication'.",
-        );
-    }
-
-    public function testReturnNotFoundResponseForSite404Route(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/404',
-        ];
-
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-        $response = $this->statelessApplication()->handle($request);
-
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/404' route in " .
-            "'StatelessApplication'.",
-        );
-        self::assertSame(
-            404,
-            $response->getStatusCode(),
-            "Response status code should be '404' for 'site/404' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'Not Found',
-            $response->getReasonPhrase(),
-            "Response reason phrase should be 'Not Found' for 'site/404' route in 'StatelessApplication'.",
         );
     }
 

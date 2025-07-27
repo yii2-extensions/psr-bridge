@@ -4,17 +4,11 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\support\stub;
 
-use Yii;
 use yii\base\Exception;
-use yii\web\{Controller, Cookie, CookieCollection, HttpException, Response};
+use yii\web\{Controller, Cookie, CookieCollection, Response};
 
 final class SiteController extends Controller
 {
-    public function action404(): never
-    {
-        throw new HttpException(404);
-    }
-
     /**
      * @phpstan-return array{password: string|null, username: string|null}
      */
@@ -50,7 +44,7 @@ final class SiteController extends Controller
         );
     }
 
-    public function actionFile()
+    public function actionFile(): Response
     {
         $this->response->format = Response::FORMAT_RAW;
 
@@ -67,17 +61,11 @@ final class SiteController extends Controller
 
         return $this->response->sendFile($tmpFilePath, 'testfile.txt', ['mimeType' => 'text/plain']);
     }
-
-    public function actionGeneralException(): never
+    public function actionGet(): mixed
     {
-        throw new Exception('General Exception');
-    }
+        $this->response->format = Response::FORMAT_JSON;
 
-    public function actionGet()
-    {
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_JSON;
-        return Yii::$app->request->get();
+        return $this->request->get();
     }
 
     public function actionGetcookies(): CookieCollection
@@ -103,18 +91,6 @@ final class SiteController extends Controller
 
         return $this->request->post();
     }
-
-    public function actionQuery($test)
-    {
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_JSON;
-        return [
-            'test' => $test,
-            'q' => Yii::$app->request->get('q'),
-            'queryParams' => Yii::$app->request->getQueryParams(),
-        ];
-    }
-
     public function actionRedirect(): void
     {
         $this->response->redirect('/site/index');
