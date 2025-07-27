@@ -120,7 +120,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                                         'info',
                                         'warning',
                                     ],
-                                    'logFile' => '@runtime/logs/app.log',
+                                    'logFile' => '@runtime/log/app.log',
                                 ],
                             ],
                         ],
@@ -136,6 +136,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                         ],
                         'response' => [
                             'charset' => 'UTF-8',
+                        ],
+                        'user' => [
+                            'enableAutoLogin' => false,
                         ],
                         'urlManager' => [
                             'showScriptName' => false,
