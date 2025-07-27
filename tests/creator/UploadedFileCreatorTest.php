@@ -1032,6 +1032,26 @@ final class UploadedFileCreatorTest extends TestCase
         $creator->createFromGlobals($files);
     }
 
+    public function testThrowsExceptionForDepthValidation(): void
+    {
+        $tmpFile = $this->createTmpFile();
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+
+        $elevenLevelFiles = $this->createDeeplyNestedFileStructure($tmpPath, 12);
+
+        $creator = new UploadedFileCreator(
+            FactoryHelper::createUploadedFileFactory(),
+            FactoryHelper::createStreamFactory(),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            Message::MAXIMUM_NESTING_DEPTH_EXCEEDED->getMessage(11),
+        );
+
+        $creator->createFromGlobals($elevenLevelFiles);
+    }
+
     public function testThrowsExceptionWhenMissingError(): void
     {
         $tmpFile = $this->createTmpFile();
