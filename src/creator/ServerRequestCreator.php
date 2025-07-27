@@ -13,8 +13,15 @@ use Psr\Http\Message\{
 };
 use Throwable;
 
+use function array_map;
+use function explode;
 use function fopen;
+use function implode;
 use function is_string;
+use function str_replace;
+use function str_starts_with;
+use function strtolower;
+use function substr;
 
 /**
  * PSR-7 ServerRequest creator for SAPI and worker environments.
@@ -88,8 +95,17 @@ final class ServerRequestCreator
             ? $_SERVER['REQUEST_URI']
             : '/';
 
-        $request = $this->serverRequestFactory
-            ->createServerRequest($method, $uri, $_SERVER)
+        // extract HTTP headers from '$_SERVER'
+        $headers = $this->extractHeaders($_SERVER);
+
+        $request = $this->serverRequestFactory->createServerRequest($method, $uri, $_SERVER);
+
+        // manually add headers since PSR7 doesn't extract them automatically
+        foreach ($headers as $name => $value) {
+            $request = $request->withHeader($name, $value);
+        }
+
+        $request = $request
             ->withCookieParams($_COOKIE)
             ->withParsedBody($_POST)
             ->withQueryParams($_GET);
@@ -104,6 +120,60 @@ final class ServerRequestCreator
         }
 
         return $this->withBodyStream($request);
+    }
+
+    /**
+     * Extracts HTTP headers from the provided server array in SAPI or worker environments.
+     *
+     * Iterates over the input server array and collects all entries whose keys start with 'HTTP_'.
+     *
+     * Each header is normalized to standard HTTP header format using {@see normalizeHeaderName()} and added to the
+     * result array.
+     *
+     * This method ensures compatibility with PSR-7 header expectations by converting server variable names to proper
+     * HTTP header names.
+     *
+     * @param array $server Input server array, typically $_SERVER globals.
+     *
+     * @return array Array of normalized HTTP headers extracted from the server array.
+     *
+     * @phpstan-param array<mixed, mixed> $server
+     *
+     * @phpstan-return array<string, string>
+     */
+    private function extractHeaders(array $server): array
+    {
+        $headers = [];
+
+        foreach ($server as $key => $value) {
+            if (is_string($key) && is_string($value) && str_starts_with($key, 'HTTP_')) {
+                $headerName = $this->normalizeHeaderName(substr($key, 5));
+
+                $headers[$headerName] = $value;
+            }
+        }
+
+        return $headers;
+    }
+
+    /**
+     * Normalizes a server header name to standard HTTP header format.
+     *
+     * Converts a header name from server variable format (for example, 'CONTENT_TYPE' or 'HTTP_X_CUSTOM_HEADER') to
+     * standard HTTP header format (for example, 'Content-Type' or 'X-Custom-Header').
+     *
+     * This method replaces underscores with hyphens, lowercases the name, and capitalizes each segment for
+     * compatibility with PSR-7 header expectations and interoperability with HTTP stacks.
+     *
+     * @param string $name Header name in server variable format (for example, 'CONTENT_TYPE').
+     *
+     * @return string Normalized HTTP header name (for example, 'Content-Type').
+     */
+    private function normalizeHeaderName(string $name): string
+    {
+        $name = str_replace('_', '-', strtolower($name));
+
+        return implode('-', array_map('ucfirst', explode('-', $name)));
     }
 
     /**
