@@ -606,73 +606,7 @@ final class UploadedFileCreatorTest extends TestCase
         $tmpFile = $this->createTmpFile();
         $tmpPath = stream_get_meta_data($tmpFile)['uri'];
 
-        $files = [
-            'level_test' => [
-                'tmp_name' => [
-                    'l1' => [
-                        'l2' => [
-                            'l3' => [
-                                'l4' => [
-                                    'l5' => [
-                                        'l6' => [
-                                            'l7' => [
-                                                'l8' => [
-                                                    'l9' => [
-                                                        'l10' => $tmpPath,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                'size' => [
-                    'l1' => [
-                        'l2' => [
-                            'l3' => [
-                                'l4' => [
-                                    'l5' => [
-                                        'l6' => [
-                                            'l7' => [
-                                                'l8' => [
-                                                    'l9' => [
-                                                        'l10' => 1024,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                'error' => [
-                    'l1' => [
-                        'l2' => [
-                            'l3' => [
-                                'l4' => [
-                                    'l5' => [
-                                        'l6' => [
-                                            'l7' => [
-                                                'l8' => [
-                                                    'l9' => [
-                                                        'l10' => UPLOAD_ERR_OK,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
+        $files = $this->createDeeplyNestedFileStructure($tmpPath, 10);
 
         $creator = new UploadedFileCreator(
             FactoryHelper::createUploadedFileFactory(),
@@ -683,31 +617,16 @@ final class UploadedFileCreatorTest extends TestCase
         $result = $creator->createFromGlobals($files);
 
         self::assertArrayHasKey(
-            'level_test',
+            'deep',
             $result,
             "Should successfully process structure that reaches exactly 'depth' = '10'.",
         );
 
-        // navigate through the structure to verify it was processed
-        $current = $result['level_test'] ?? null;
-
-        for ($i = 1; $i <= 10; $i++) {
-            self::assertIsArray(
-                $current,
-                "Should be array at level {$i}.",
-            );
-            self::assertArrayHasKey(
-                "l{$i}",
-                $current,
-                "Should have key l{$i}.",
-            );
-
-            $current = $current["l{$i}"] ?? null;
-        }
+        $finalFile = $this->navigateToDeepestFile($result, 10);
 
         self::assertInstanceOf(
             UploadedFileInterface::class,
-            $current,
+            $finalFile,
             "Should create 'UploadedFileInterface' at the deepest level when 'depth' starts at '0'.",
         );
     }
