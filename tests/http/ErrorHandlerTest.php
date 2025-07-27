@@ -88,6 +88,7 @@ final class ErrorHandlerTest extends TestCase
             "Should set response data even for 'Exception' with empty message.",
         );
     }
+
     public function testHandleExceptionWithGenericException(): void
     {
         $errorHandler = new ErrorHandler();
