@@ -25,6 +25,7 @@ use Psr\Http\Message\{
     UploadedFileInterface,
     UriInterface,
 };
+use yii2\extensions\psrbridge\creator\ServerRequestCreator;
 
 use function parse_str;
 
@@ -138,6 +139,25 @@ final class FactoryHelper
     public static function createResponseFactory(): ResponseFactoryInterface
     {
         return new ResponseFactory();
+    }
+
+    /**
+     * Creates a PSR-17 {@see ServerRequestCreator} instance.
+     *
+     * @return ServerRequestCreator PSR-17 server request creator instance.
+     *
+     * Usage example:
+     * ```php
+     * FactoryHelper::createServerRequestCreator();
+     * ```
+     */
+    public static function createServerRequestCreator(): ServerRequestCreator
+    {
+        return new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
     }
 
     /**

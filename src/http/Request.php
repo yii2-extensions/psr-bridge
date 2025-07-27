@@ -44,6 +44,12 @@ use function is_array;
 final class Request extends \yii\web\Request
 {
     /**
+     * @var string A secret key used for cookie validation. This property must be set if {@see enableCookieValidation}
+     * is 'true'.
+     */
+    public $cookieValidationKey = '';
+
+    /**
      * Whether the request is in worker mode.
      */
     public bool $workerMode = true;
