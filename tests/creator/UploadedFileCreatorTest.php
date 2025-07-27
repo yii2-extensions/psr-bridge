@@ -601,36 +601,6 @@ final class UploadedFileCreatorTest extends TestCase
         );
     }
 
-    public function testDepthParameterStartsAtZeroForRecursionValidation(): void
-    {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
-        $files = $this->createDeeplyNestedFileStructure($tmpPath, 10);
-
-        $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
-        );
-
-        // this should succeed because depth starts at 0, reaching exactly 'depth' = '10'
-        $result = $creator->createFromGlobals($files);
-
-        self::assertArrayHasKey(
-            'deep',
-            $result,
-            "Should successfully process structure that reaches exactly 'depth' = '10'.",
-        );
-
-        $finalFile = $this->navigateToDeepestFile($result, 10);
-
-        self::assertInstanceOf(
-            UploadedFileInterface::class,
-            $finalFile,
-            "Should create 'UploadedFileInterface' at the deepest level when 'depth' starts at '0'.",
-        );
-    }
-
     public function testDepthParameterStartsAtZeroNotOne(): void
     {
         $tmpFile = $this->createTmpFile();
@@ -678,7 +648,16 @@ final class UploadedFileCreatorTest extends TestCase
             FactoryHelper::createStreamFactory(),
         );
 
-        $finalFile = $this->navigateToDeepestFile($creator->createFromGlobals($maxDepthFiles), 10);
+        // this should succeed because depth starts at 0, reaching exactly 'depth' = '10'
+        $result = $creator->createFromGlobals($maxDepthFiles);
+
+        self::assertArrayHasKey(
+            'deep',
+            $result,
+            "Should successfully process structure that reaches exactly 'depth' = '10'.",
+        );
+
+        $finalFile = $this->navigateToDeepestFile($result, 10);
 
         self::assertInstanceOf(
             UploadedFileInterface::class,
