@@ -63,6 +63,75 @@ final class Request extends \yii\web\Request
     private ServerRequestAdapter|null $adapter = null;
 
     /**
+     * Retrieves HTTP Basic authentication credentials from the current request.
+     *
+     * Returns an array containing the username and password sent via HTTP authentication, supporting both standard PHP
+     * SAPI variables and the 'Authorization' header for environments where credentials are not passed directly.
+     *
+     * The method first checks for credentials in the PHP_AUTH_USER and PHP_AUTH_PW server variables. If not present, it
+     * attempts to extract and decode credentials from the 'Authorization' header, handling Apache php-cgi scenarios and
+     * validating the decoded data for UTF-8 encoding and proper format.
+     *
+     * Usage example:
+     * ```php
+     * [$username, $password] = $request->getAuthCredentials();
+     * ```
+     *
+     * @return array Contains exactly two elements.
+     *   - 0: username sent via HTTP authentication, `null` if the username is not given.
+     *   - 1: password sent via HTTP authentication, `null` if the password is not given.
+     *
+     * @phpstan-return array{0: string|null, 1: string|null}
+     */
+    public function getAuthCredentials(): array
+    {
+        $username = isset($_SERVER['PHP_AUTH_USER']) && is_string($_SERVER['PHP_AUTH_USER'])
+            ? $_SERVER['PHP_AUTH_USER']
+            : null;
+        $password = isset($_SERVER['PHP_AUTH_PW']) && is_string($_SERVER['PHP_AUTH_PW'])
+            ? $_SERVER['PHP_AUTH_PW']
+            : null;
+
+        if ($username !== null || $password !== null) {
+            return [$username, $password];
+        }
+
+        /**
+         * Apache with php-cgi does not pass HTTP Basic authentication to PHP by default.
+         * To make it work, add one of the following lines to to your .htaccess file:
+         *
+         * SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
+         * --OR--
+         * RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+         */
+        $auth_token = $this->getHeaders()->get('Authorization');
+
+        /** @phpstan-ignore-next-line */
+        if ($auth_token !== null && strncasecmp($auth_token, 'basic', 5) === 0) {
+            $encoded = mb_substr($auth_token, 6);
+            $decoded = base64_decode($encoded, true); // strict mode
+
+            // validate decoded data
+            if ($decoded === false || !mb_check_encoding($decoded, 'UTF-8')) {
+                return [null, null]; // return null for malformed credentials
+            }
+
+            $parts = explode(':', $decoded, 2);
+
+            if (count($parts) < 2) {
+                return [strlen($parts[0]) === 0 ? null : $parts[0], null];
+            }
+
+            return [
+                strlen($parts[0]) === 0 ? null : $parts[0],
+                (isset($parts[1]) && strlen($parts[1]) !== 0) ? $parts[1] : null,
+            ];
+        }
+
+        return [null, null];
+    }
+
+    /**
      * Retrieves the request body parameters, excluding the HTTP method override parameter if present.
      *
      * Returns the parsed body parameters from the PSR-7 ServerRequestInterface, removing the specified method override

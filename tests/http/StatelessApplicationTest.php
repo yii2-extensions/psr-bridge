@@ -70,6 +70,31 @@ final class StatelessApplicationTest extends TestCase
         }
     }
 
+    public function testReturnInternalServerErrorResponseForGeneralExceptionRoute(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/general-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response = $this->statelessApplication()->handle($request);
+
+        self::assertInstanceOf(
+            ResponseInterface::class,
+            $response,
+            "Response should be an instance of 'ResponseInterface' when handling 'site/general-exception' route " .
+            "in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response status code should be '500' for unhandled exception on 'site/general-exception' route in " .
+            "'StatelessApplication'.",
+        );
+    }
+
     public function testReturnJsonResponseWithCookiesForSiteGetCookiesRoute(): void
     {
         $_COOKIE = [
@@ -105,6 +130,73 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    public function testReturnJsonResponseWithCredentialsForSiteAuthRoute(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode('admin:admin'),
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response = $this->statelessApplication()->handle($request);
+
+        self::assertInstanceOf(
+            ResponseInterface::class,
+            $response,
+            "Response should be an instance of 'ResponseInterface' when handling 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response status code should be '200' for 'site/auth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            <<<JSON
+            {"username":"admin","password":"admin"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Response body should match expected JSON string '{\"username\":\"admin\",\"password\":\"admin\"}' " .
+            "for 'site/auth' route in 'StatelessApplication'.",
+        );
+    }
+
+    public function testReturnJsonResponseWithNullCredentialsForMalformedAuthorizationHeader(): void
+    {
+        $_SERVER = [
+            'HTTP_authorization' => 'Basic foo:bar',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response = $this->statelessApplication()->handle($request);
+
+        self::assertInstanceOf(
+            ResponseInterface::class,
+            $response,
+            "Response should be an instance of 'ResponseInterface' when handling 'site/auth' route with malformed " .
+            "authorization header in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response status code should be '200' for 'site/auth' route with malformed authorization header in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            <<<JSON
+            {"username":null,"password":null}
+            JSON,
+            $response->getBody()->getContents(),
+            "Response body should match expected JSON string '{\"username\":null,\"password\":null}' for malformed " .
+            "authorization header on 'site/auth' route in 'StatelessApplication'.",
+        );
+    }
+
     public function testReturnJsonResponseWithPostParametersForSitePostRoute(): void
     {
         $_POST = [
@@ -134,7 +226,9 @@ final class StatelessApplicationTest extends TestCase
             "Response status code should be '200' for 'site/post' route in 'StatelessApplication'.",
         );
         self::assertSame(
-            '{"foo":"bar","a":{"b":"c"}}',
+            <<<JSON
+            {"foo":"bar","a":{"b":"c"}}
+            JSON,
             $response->getBody()->getContents(),
             "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for 'site/post'" .
             "route in 'StatelessApplication'.",
@@ -170,10 +264,120 @@ final class StatelessApplicationTest extends TestCase
             "Response status code should be '200' for 'site/get' route in 'StatelessApplication'.",
         );
         self::assertSame(
-            '{"foo":"bar","a":{"b":"c"}}',
+            <<<JSON
+            {"foo":"bar","a":{"b":"c"}}
+            JSON,
             $response->getBody()->getContents(),
             "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for 'site/get' " .
             "route in 'StatelessApplication'.",
+        );
+    }
+
+    public function testReturnNotFoundResponseForSite404Route(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/404',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response = $this->statelessApplication()->handle($request);
+
+        self::assertInstanceOf(
+            ResponseInterface::class,
+            $response,
+            "Response should be an instance of 'ResponseInterface' when handling 'site/404' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            404,
+            $response->getStatusCode(),
+            "Response status code should be '404' for 'site/404' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'Not Found',
+            $response->getReasonPhrase(),
+            "Response reason phrase should be 'Not Found' for 'site/404' route in 'StatelessApplication'.",
+        );
+    }
+
+    public function testReturnPlainTextFileResponseForSiteFileRoute(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/file',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response = $this->statelessApplication()->handle($request);
+
+        self::assertInstanceOf(
+            ResponseInterface::class,
+            $response,
+            "Response should be an instance of 'ResponseInterface' when handling 'site/file' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response status code should be '200' for 'site/file' route in 'StatelessApplication'.",
+        );
+
+        $body = $response->getBody()->getContents();
+
+        self::assertSame(
+            'text/plain',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/plain' for 'site/file' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'This is a test file content.',
+            $body,
+            "Response body should match expected plain text 'This is a test file content.' for 'site/file' route " .
+            "in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'attachment; filename="testfile.txt"',
+            $response->getHeaders()['content-disposition'][0] ?? '',
+            "Response 'content-disposition' should be 'attachment; filename=\"testfile.txt\"' for 'site/file' route " .
+            "in 'StatelessApplication'.",
+        );
+    }
+
+    public function testReturnPlainTextResponseWithFileContentForSiteStreamRoute(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/stream',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response = $this->statelessApplication()->handle($request);
+
+        self::assertInstanceOf(
+            ResponseInterface::class,
+            $response,
+            "Response should be an instance of 'ResponseInterface' when handling 'site/stream' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response status code should be '200' for 'site/stream' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'text/plain',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/plain' for 'site/stream' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'This is a test file content.',
+            $response->getBody()->getContents(),
+            "Response body should match expected plain text 'This is a test file content.' for 'site/stream' route " .
+            "in 'StatelessApplication'.",
         );
     }
 
@@ -262,7 +466,9 @@ final class StatelessApplicationTest extends TestCase
         $body = $response->getBody()->getContents();
 
         self::assertSame(
-            '{"hello":"world"}',
+            <<<JSON
+            {"hello":"world"}
+            JSON,
             $body,
             'Response body should match expected JSON string "{\"hello\":\"world\"}".',
         );

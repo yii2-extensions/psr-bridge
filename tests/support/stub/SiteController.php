@@ -5,22 +5,26 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\support\stub;
 
 use Yii;
+use yii\base\Exception;
 use yii\web\{Controller, Cookie, CookieCollection, HttpException, Response};
 
 final class SiteController extends Controller
 {
-    public function action404()
+    public function action404(): never
     {
         throw new HttpException(404);
     }
 
-    public function actionAuth()
+    /**
+     * @phpstan-return array{password: string|null, username: string|null}
+     */
+    public function actionAuth(): array
     {
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_JSON;
+        $this->response->format = Response::FORMAT_JSON;
+
         return [
-            'username' => Yii::$app->request->getAuthUser(),
-            'password' => Yii::$app->request->getAuthPassword(),
+            'username' => $this->request->getAuthUser(),
+            'password' => $this->request->getAuthPassword(),
         ];
     }
 
@@ -48,16 +52,25 @@ final class SiteController extends Controller
 
     public function actionFile()
     {
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_RAW;
-        return $response->sendFile(__DIR__ . '/../.rr.yaml', '.rr.yaml', [
-            'mimeType' => 'text/yaml',
-        ]);
+        $this->response->format = Response::FORMAT_RAW;
+
+        $tmpFile = tmpfile();
+
+        if ($tmpFile === false) {
+            throw new Exception('Failed to create temporary file');
+        }
+
+        fwrite($tmpFile, 'This is a test file content.');
+        rewind($tmpFile);
+
+        $tmpFilePath = stream_get_meta_data($tmpFile)['uri'];
+
+        return $this->response->sendFile($tmpFilePath, 'testfile.txt', ['mimeType' => 'text/plain']);
     }
 
-    public function actionGeneralException()
+    public function actionGeneralException(): never
     {
-        throw new \Exception('General Exception');
+        throw new Exception('General Exception');
     }
 
     public function actionGet()
@@ -117,14 +130,21 @@ final class SiteController extends Controller
         $this->response->statusCode = 201;
     }
 
-    public function actionStream()
+    public function actionStream(): Response
     {
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_RAW;
-        if ($stream = fopen(__DIR__ . '/../.rr.yaml', 'r')) {
-            return $response->sendStreamAsFile($stream, '.rr.yaml', [
-                'mimeType' => 'text/yaml',
-            ]);
+        $this->response->format = Response::FORMAT_RAW;
+
+        $tmpFile = tmpfile();
+
+        if ($tmpFile === false) {
+            throw new Exception('Failed to create temporary file');
         }
+
+        fwrite($tmpFile, 'This is a test file content.');
+        rewind($tmpFile);
+
+        $tmpFilePath = stream_get_meta_data($tmpFile)['uri'];
+
+        return $this->response->sendStreamAsFile($tmpFile, $tmpFilePath, ['mimeType' => 'text/plain']);
     }
 }
