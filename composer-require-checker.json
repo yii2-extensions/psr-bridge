@@ -1,5 +1,8 @@
 {
     "symbol-whitelist": [
+        "PHP_SESSION_ACTIVE",
+        "session_status",
+        "session_write_close",
         "uopz_redefine",
         "YII_DEBUG"
     ]
