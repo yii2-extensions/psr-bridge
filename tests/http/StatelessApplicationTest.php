@@ -30,24 +30,22 @@ final class StatelessApplicationTest extends TestCase
     {
         $originalLimit = ini_get('memory_limit');
 
-        try {
-            ini_set('memory_limit', '-1');
+        ini_set('memory_limit', '-1');
 
-            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-            $app = $this->statelessApplication();
+        $app = $this->statelessApplication();
 
-            self::assertSame(
-                PHP_INT_MAX,
-                $app->getMemoryLimit(),
-                "Memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited) in 'StatelessApplication'.",
-            );
+        self::assertSame(
+            PHP_INT_MAX,
+            $app->getMemoryLimit(),
+            "Memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited) in 'StatelessApplication'.",
+        );
 
-            $app->handle($request);
-            $app->clean();
-        } finally {
-            ini_set('memory_limit', $originalLimit);
-        }
+        $app->handle($request);
+        $app->clean();
+
+        ini_set('memory_limit', $originalLimit);
     }
 
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
@@ -75,7 +73,7 @@ final class StatelessApplicationTest extends TestCase
 
         $cookies = $response->getHeaders()['set-cookie'] ?? [];
 
-        foreach ($cookies as $i => $cookie) {
+        foreach ($cookies as $cookie) {
             // skip the last cookie header (assumed to be 'PHPSESSION').
             if (str_starts_with($cookie, 'PHPSESSID=') === false) {
                 $params = explode('; ', $cookie);
@@ -104,6 +102,7 @@ final class StatelessApplicationTest extends TestCase
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
         $app = $this->statelessApplication();
+
         $app->handle($request);
 
         self::assertSame(
@@ -530,6 +529,7 @@ final class StatelessApplicationTest extends TestCase
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
         $app = $this->statelessApplication();
+
         $app->handle($request);
 
         self::assertSame(
