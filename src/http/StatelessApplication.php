@@ -234,22 +234,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     }
 
     /**
-     * Bootstraps the StatelessApplication by setting core path aliases and invoking parent bootstrap logic.
-     *
-     * Sets the '@webroot' and '@web' path aliases based on the current request, ensuring correct path resolution for
-     * asset management and routing in stateless and worker environments.
-     *
-     * This method prepares the application for request handling by configuring essential Yii2 path aliases before
-     * delegating to the parent bootstrap implementation.
-     *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    protected function bootstrap(): void
-    {
-        parent::bootstrap();
-    }
-
-    /**
      * Resets the StatelessApplication state and prepares the Yii2 environment for handling a PSR-7 request.
      *
      * Performs a full reinitialization of the application state, including event tracking, error handler cleanup,
