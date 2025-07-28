@@ -232,6 +232,11 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->state = self::STATE_INIT;
     }
 
+    public function setMemoryLimit(int $limit): void
+    {
+        $this->memoryLimit = $limit;
+    }
+
     /**
      * Resets the StatelessApplication state and prepares the Yii2 environment for handling a PSR-7 request.
      *
