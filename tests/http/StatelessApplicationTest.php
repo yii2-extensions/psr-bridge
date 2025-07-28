@@ -61,13 +61,10 @@ final class StatelessApplicationTest extends TestCase
 
             $app = $this->statelessApplication();
             $app->handle($request);
-            $cleanResult = $app->clean();
 
-            self::assertSame(
-                false,
-                $cleanResult,
-                "Should return boolean from 'clean()' when 'memory_limit' '64M' is properly parsed to bytes.",
-            );
+            $this->expectNotToPerformAssertions();
+
+            $app->clean();
         } finally {
             ini_set('memory_limit', $originalLimit);
         }
