@@ -6,6 +6,17 @@ namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\Group;
 use Psr\Http\Message\ResponseInterface;
+use Yii;
+use yii\base\Security;
+use yii\i18n\Formatter;
+use yii\i18n\I18N;
+use yii\log\Dispatcher;
+use yii\web\AssetManager;
+use yii\web\Session;
+use yii\web\UrlManager;
+use yii\web\User;
+use yii\web\View;
+use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -68,6 +79,58 @@ final class StatelessApplicationTest extends TestCase
                 ),
             );
         }
+    }
+
+    public function testReturnCoreComponentsConfigurationAfterHandle(): void
+    {
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+        $app->handle($request);
+
+        self::assertSame(
+            [
+                'log' => [
+                    'class' => Dispatcher::class,
+                ],
+                'view' => [
+                    'class' => View::class,
+                ],
+                'formatter' => [
+                    'class' => Formatter::class,
+                ],
+                'i18n' => [
+                    'class' => I18N::class,
+                ],
+                'urlManager' => [
+                    'class' => UrlManager::class,
+                ],
+                'assetManager' => [
+                    'class' => AssetManager::class,
+                ],
+                'security' => [
+                    'class' => Security::class,
+                ],
+                'request' => [
+                    'class' => Request::class,
+                ],
+                'response' => [
+                    'class' => Response::class,
+                ],
+                'session' => [
+                    'class' => Session::class,
+                ],
+                'user' => [
+                    'class' => User::class,
+                ],
+                'errorHandler' => [
+                    'class' => ErrorHandler::class,
+                ],
+            ],
+            $app->coreComponents(),
+            "'coreComponents()' should return the expected mapping of component IDs to class definitions after " .
+            "handling a request in 'StatelessApplication'.",
+        );
     }
 
     public function testReturnJsonResponseWithCookiesForSiteGetCookiesRoute(): void
@@ -441,6 +504,26 @@ final class StatelessApplicationTest extends TestCase
             201,
             $response->getStatusCode(),
             "Response status code should be '201' for 'site/statuscode' route in 'StatelessApplication'.",
+        );
+    }
+
+    public function testSetWebAndWebrootAliasesAfterHandleRequest(): void
+    {
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+        $app->handle($request);
+
+        self::assertSame(
+            '',
+            Yii::getAlias('@web'),
+            "'@web' alias should be set to an empty string after handling a request in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            dirname(__DIR__),
+            Yii::getAlias('@webroot'),
+            "'@webroot' alias should be set to the parent directory of the test directory after handling a request " .
+            "in 'StatelessApplication'.",
         );
     }
 }

@@ -8,10 +8,9 @@ use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use Yii;
-use yii\base\Event;
-use yii\base\InvalidConfigException;
+use yii\base\{Event, InvalidConfigException};
 use yii\di\NotInstantiableException;
-use yii\web\{Application, Session, UploadedFile, User};
+use yii\web\{Application, UploadedFile};
 
 use function array_merge;
 use function array_reverse;
@@ -162,12 +161,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
                 ],
                 'response' => [
                     'class' => Response::class,
-                ],
-                'session' => [
-                    'class' => Session::class,
-                ],
-                'user' => [
-                    'class' => User::class,
                 ],
             ],
         );
