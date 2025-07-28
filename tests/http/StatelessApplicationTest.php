@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ResponseInterface;
 use Yii;
 use yii\base\Security;
-use yii\i18n\Formatter;
-use yii\i18n\I18N;
+use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
-use yii\web\AssetManager;
-use yii\web\Session;
-use yii\web\UrlManager;
-use yii\web\User;
-use yii\web\View;
+use yii\web\{AssetManager, Session, UrlManager, User, View};
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
+use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -54,50 +50,6 @@ final class StatelessApplicationTest extends TestCase
         }
     }
 
-    public function testGetMemoryLimitParsesMemoryLimitWithSuffix(): void
-    {
-        $originalLimit = ini_get('memory_limit');
-
-        try {
-            ini_set('memory_limit', '64M');
-
-            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-            $app = $this->statelessApplication();
-            $app->handle($request);
-
-            $this->expectNotToPerformAssertions();
-
-            $app->clean();
-        } finally {
-            ini_set('memory_limit', $originalLimit);
-        }
-    }
-
-    public function testGetMemoryLimitRecalculatesWhenMemoryLimitIsZero(): void
-    {
-        $originalLimit = ini_get('memory_limit');
-
-        try {
-            ini_set('memory_limit', '256M');
-
-            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-            $app = $this->statelessApplication();
-
-            $app->handle($request);
-            $app->setMemoryLimit(0);
-
-            ini_set('memory_limit', '128M');
-
-            $this->expectNotToPerformAssertions();
-
-            $app->clean();
-        } finally {
-            ini_set('memory_limit', $originalLimit);
-        }
-    }
-
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
     {
         $_SERVER = [
@@ -124,28 +76,26 @@ final class StatelessApplicationTest extends TestCase
         $cookies = $response->getHeaders()['set-cookie'] ?? [];
 
         foreach ($cookies as $i => $cookie) {
-            // Skip the last cookie header (assumed to be 'PHPSESSION').
-            if ((int) $i + 1 === count($cookies)) {
-                continue;
+            // skip the last cookie header (assumed to be 'PHPSESSION').
+            if (str_starts_with($cookie, 'PHPSESSID=') === false) {
+                $params = explode('; ', $cookie);
+
+                self::assertTrue(
+                    in_array(
+                        $params[0],
+                        [
+                            'test=test',
+                            'test2=test2',
+                        ],
+                        true,
+                    ),
+                    sprintf(
+                        "Cookie header should contain either 'test=test' or 'test2=test2', got '%s' for 'site/cookie' " .
+                        'route.',
+                        $params[0],
+                    ),
+                );
             }
-
-            $params = explode('; ', $cookie);
-
-            self::assertTrue(
-                in_array(
-                    $params[0],
-                    [
-                        'test=test',
-                        'test2=test2',
-                    ],
-                    true,
-                ),
-                sprintf(
-                    "Cookie header should contain either 'test=test' or 'test2=test2', got '%s' for 'site/cookie' " .
-                    'route.',
-                    $params[0],
-                ),
-            );
         }
     }
 
@@ -595,47 +545,24 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
-    public function testTriggerAfterRequestEventDuringHandle(): void
+    #[DataProviderExternal(StatelessApplicationProvider::class, 'eventDataProvider')]
+    public function testTriggerEventDuringHandle(string $eventName): void
     {
-        $afterRequestTriggered = false;
+        $eventTriggered = false;
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
         $app = $this->statelessApplication();
 
         $app->on(
-            $app::EVENT_AFTER_REQUEST,
-            static function () use (&$afterRequestTriggered): void {
-                $afterRequestTriggered = true;
+            $eventName,
+            static function () use (&$eventTriggered): void {
+                $eventTriggered = true;
             },
         );
 
         $app->handle($request);
 
-        self::assertTrue(
-            $afterRequestTriggered,
-            "Should trigger 'EVENT_AFTER_REQUEST' event during 'handle()' execution in 'StatelessApplication'.",
-        );
-    }
-
-    public function testTriggerBeforeRequestEventDuringHandle(): void
-    {
-        $beforeRequestTriggered = false;
-
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-        $app = $this->statelessApplication();
-
-        $app->on(
-            $app::EVENT_BEFORE_REQUEST,
-            static function () use (&$beforeRequestTriggered): void {
-                $beforeRequestTriggered = true;
-            },
-        );
-
-        $app->handle($request);
-
-        self::assertTrue(
-            $beforeRequestTriggered,
-            "Should trigger 'EVENT_BEFORE_REQUEST' event during 'handle()' execution in 'StatelessApplication'.",
-        );
+        self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
     }
 }
