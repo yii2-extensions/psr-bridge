@@ -527,28 +527,6 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
-    public function testTriggerBeforeRequestEventDuringHandle(): void
-    {
-        $beforeRequestTriggered = false;
-
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-        $app = $this->statelessApplication();
-
-        $app->on(
-            $app::EVENT_BEFORE_REQUEST,
-            static function () use (&$beforeRequestTriggered): void {
-                $beforeRequestTriggered = true;
-            },
-        );
-
-        $app->handle($request);
-
-        self::assertTrue(
-            $beforeRequestTriggered,
-            "Should trigger 'EVENT_BEFORE_REQUEST' event during 'handle()' execution in 'StatelessApplication'.",
-        );
-    }
-
     public function testTriggerAfterRequestEventDuringHandle(): void
     {
         $afterRequestTriggered = false;
@@ -568,6 +546,28 @@ final class StatelessApplicationTest extends TestCase
         self::assertTrue(
             $afterRequestTriggered,
             "Should trigger 'EVENT_AFTER_REQUEST' event during 'handle()' execution in 'StatelessApplication'.",
+        );
+    }
+
+    public function testTriggerBeforeRequestEventDuringHandle(): void
+    {
+        $beforeRequestTriggered = false;
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+        $app = $this->statelessApplication();
+
+        $app->on(
+            $app::EVENT_BEFORE_REQUEST,
+            static function () use (&$beforeRequestTriggered): void {
+                $beforeRequestTriggered = true;
+            },
+        );
+
+        $app->handle($request);
+
+        self::assertTrue(
+            $beforeRequestTriggered,
+            "Should trigger 'EVENT_BEFORE_REQUEST' event during 'handle()' execution in 'StatelessApplication'.",
         );
     }
 }
