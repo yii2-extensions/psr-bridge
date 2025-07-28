@@ -278,8 +278,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
             $this->session->setId($sessionId);
         }
 
-        $this->ensureBehaviors();
-
         $this->session->open();
 
         $this->bootstrap();
