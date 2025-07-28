@@ -53,6 +53,30 @@ final class StatelessApplicationTest extends TestCase
         }
     }
 
+    public function testGetMemoryLimitParsesMemoryLimitWithSuffix(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        try {
+            ini_set('memory_limit', '64M');
+
+            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+            $app = $this->statelessApplication();
+            $app->handle($request);
+            $cleanResult = $app->clean();
+
+            self::assertSame(
+                false,
+                $cleanResult,
+                "Should return boolean from 'clean()' when 'memory_limit' '64M' is properly parsed to bytes.",
+            );
+
+        } finally {
+            ini_set('memory_limit', $originalLimit);
+        }
+    }
+
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
     {
         $_SERVER = [
