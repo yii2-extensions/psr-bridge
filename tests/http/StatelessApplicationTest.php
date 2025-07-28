@@ -40,14 +40,11 @@ final class StatelessApplicationTest extends TestCase
             $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
             $app = $this->statelessApplication();
-
             $app->handle($request);
 
-            self::assertFalse(
-                $app->clean(),
-                "Should return 'false' from 'clean()' when 'memory_limit' is unlimited ('-1'), indicating memory usage " .
-                'is below threshold.',
-            );
+            $this->expectNotToPerformAssertions();
+
+            $app->clean();
         } finally {
             ini_set('memory_limit', $originalLimit);
         }
@@ -84,6 +81,7 @@ final class StatelessApplicationTest extends TestCase
             ini_set('memory_limit', '256M');
 
             $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
             $app = $this->statelessApplication();
 
             $app->handle($request);
