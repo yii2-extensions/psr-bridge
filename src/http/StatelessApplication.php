@@ -246,11 +246,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      */
     protected function bootstrap(): void
     {
-        $request = $this->getRequest();
-
-        Yii::setAlias('@webroot', dirname($request->getScriptFile()));
-        Yii::setAlias('@web', $request->getBaseUrl());
-
         parent::bootstrap();
     }
 
