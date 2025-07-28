@@ -84,6 +84,11 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     private array $registeredEvents = [];
 
     /**
+     * Flag to indicate if memory limit should be recalculated.
+     */
+    private bool $shouldRecalculateMemoryLimit = false;
+
+    /**
      * Creates a new instance of the {@see StatelessApplication} class.
      *
      * @phpstan-param array<string, mixed> $config
@@ -93,8 +98,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     public function __construct(array $config = [])
     {
         $this->config = $config;
-
-        $this->memoryLimit = $this->handleMemoryLimit();
 
         $this->initEventTracking();
     }
@@ -121,8 +124,9 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     {
         gc_collect_cycles();
 
-        $limit = (int) $this->memoryLimit;
-        $bound = $limit * .90;
+        $limit = $this->getMemoryLimit();
+
+        $bound = (int) ($limit * 0.9);
 
         $usage = memory_get_usage(true);
 
@@ -130,7 +134,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     }
 
     /**
-     * Returns the core components configuration for the {@see StatelessApplication}.
+     * Returns the core components configuration for the StatelessApplication.
      *
      * Provides the array of core Yii2 components required for stateless operation, including error handler, request,
      * response, session, and user components.
@@ -165,8 +169,30 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         );
     }
 
-    public function getMemoryLimit(): int|null
+    /**
+     * Returns the memory limit for the StatelessApplication in bytes.
+     *
+     * If the memory limit is not set or recalculation is required, this method retrieves the system memory limit
+     * using {@see getSystemMemoryLimit()}, parses it to an integer value in bytes, and stores it for future access.
+     *
+     * This ensures that the application always operates with an up-to-date memory limit, supporting dynamic
+     * recalculation when needed.
+     *
+     * @return int Memory limit in bytes for the StatelessApplication.
+     *
+     * Usage example:
+     * ```php
+     * $limit = $app->getMemoryLimit();
+     * ```
+     */
+    public function getMemoryLimit(): int
     {
+        if ($this->memoryLimit === null || $this->shouldRecalculateMemoryLimit) {
+            $this->memoryLimit = self::parseMemoryLimit($this->getSystemMemoryLimit());
+
+            $this->shouldRecalculateMemoryLimit = false;
+        }
+
         return $this->memoryLimit;
     }
 
@@ -237,9 +263,73 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->state = self::STATE_INIT;
     }
 
+    /**
+     * Sets the memory limit for the StatelessApplication.
+     *
+     * - If the provided limit is less than or equal to zero, the memory limit will be recalculated from the system
+     *   configuration on the next access.
+     * - Otherwise, sets the memory limit to the specified value in bytes and disables recalculation.
+     *
+     * @param int $limit Memory limit in bytes. Use a value less than or equal to zero to trigger recalculation from
+     * system settings.
+     */
     public function setMemoryLimit(int $limit): void
     {
-        $this->memoryLimit = $limit;
+        if ($limit <= 0) {
+            $this->shouldRecalculateMemoryLimit = true;
+            $this->memoryLimit = null;
+        } else {
+            $this->memoryLimit = $limit;
+            $this->shouldRecalculateMemoryLimit = false;
+        }
+    }
+
+    /**
+     * Retrieves the current memory limit from the PHP configuration.
+     *
+     * @return string Memory limit value from ini_get('memory_limit').
+     */
+    protected function getSystemMemoryLimit(): string
+    {
+        return ini_get('memory_limit');
+    }
+
+    /**
+     * Parses a PHP memory limit string and converts it to bytes.
+     *
+     * Supports the following formats.
+     * - '-1' for unlimited (returns 'PHP_INT_MAX').
+     * - Numeric values with suffix: K (kilobytes), M (megabytes), G (gigabytes).
+     * - Plain numeric values (bytes).
+     *
+     * @param string $limit Memory limit string to parse.
+     *
+     * @return int Memory limit in bytes, or 'PHP_INT_MAX' if unlimited.
+     */
+    protected static function parseMemoryLimit(string $limit): int
+    {
+        if ($limit === '-1') {
+            return PHP_INT_MAX;
+        }
+
+        $number = 0;
+        $suffix = null;
+
+        sscanf($limit, '%u%c', $number, $suffix);
+
+        if ($suffix !== null) {
+            $multipliers = [
+                ' ' => 1,
+                'K' => 1024,
+                'M' => 1048576,
+                'G' => 1073741824,
+            ];
+
+            $suffix = strtoupper((string) $suffix);
+            $number = (int) $number * ($multipliers[$suffix] ?? 1);
+        }
+
+        return (int) $number;
     }
 
     /**
@@ -266,6 +356,13 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
         $this->startEventTracking();
 
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        // clear the global session array to prevent data leakage
+        $_SESSION = [];
+
         $config = $this->config;
 
         if ($this->has('errorHandler')) {
@@ -282,12 +379,13 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->request->setPsr7Request($request);
 
         $this->session->close();
-        $sessionId = $request->getCookieParams()[$this->session->getName()] ?? null;
+        $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? null;
 
-        if (is_string($sessionId)) {
+        if (is_string($sessionId) && $sessionId !== '') {
             $this->session->setId($sessionId);
         }
 
+        // start the session with the correct 'ID'
         $this->session->open();
 
         $this->bootstrap();
@@ -374,46 +472,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->state = self::STATE_END;
 
         return $response;
-    }
-
-    /**
-     * Retrieves and parses the configured PHP memory limit for the application.
-     *
-     * Determines the memory limit by reading the 'memory_limit' value from the PHP configuration, parsing the value and
-     * converting it to an integer representing the number of bytes.
-     *
-     * Supports suffixes for kilobytes (K), megabytes (M), and gigabytes (G), and returns 'PHP_INT_MAX' if unlimited.
-     *
-     * This method is used to set the internal memory limit for the application, enabling memory usage checks and
-     * recycling logic in worker and SAPI environments.
-     *
-     * @return int Memory limit in bytes as configured in PHP, or 'PHP_INT_MAX' if unlimited.
-     */
-    private function handleMemoryLimit(): int
-    {
-        if ($this->memoryLimit === null || $this->memoryLimit <= 0) {
-            $limit = ini_get('memory_limit');
-
-            if ($limit === '-1') {
-                $this->memoryLimit = PHP_INT_MAX;
-
-                return $this->memoryLimit;
-            }
-
-            sscanf($limit, '%u%c', $number, $suffix);
-
-            if (isset($suffix)) {
-                $multipliers = [' ' => 1, 'K' => 1024, 'M' => 1048576, 'G' => 1073741824];
-
-                $suffix = strtoupper((string) $suffix);
-
-                $number = (int) $number * ($multipliers[$suffix] ?? 1);
-            }
-
-            $this->memoryLimit = (int) $number;
-        }
-
-        return $this->memoryLimit;
     }
 
     /**
