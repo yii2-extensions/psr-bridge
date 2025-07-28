@@ -383,6 +383,9 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
         if (is_string($sessionId) && $sessionId !== '') {
             $this->session->setId($sessionId);
+        } else {
+            // reset session 'ID' to ensure a new session is created
+            $this->session->setId('');
         }
 
         // start the session with the correct 'ID'
