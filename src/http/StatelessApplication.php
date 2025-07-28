@@ -14,7 +14,6 @@ use yii\web\{Application, UploadedFile};
 
 use function array_merge;
 use function array_reverse;
-use function dirname;
 use function function_exists;
 use function gc_collect_cycles;
 use function ini_get;
