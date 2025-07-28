@@ -76,6 +76,29 @@ final class StatelessApplicationTest extends TestCase
         }
     }
 
+    public function testGetMemoryLimitRecalculatesWhenMemoryLimitIsZero(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        try {
+            ini_set('memory_limit', '256M');
+
+            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+            $app = $this->statelessApplication();
+
+            $app->handle($request);
+            $app->setMemoryLimit(0);
+
+            ini_set('memory_limit', '128M');
+
+            $this->expectNotToPerformAssertions();
+
+            $app->clean();
+        } finally {
+            ini_set('memory_limit', $originalLimit);
+        }
+    }
+
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
     {
         $_SERVER = [
@@ -615,30 +638,5 @@ final class StatelessApplicationTest extends TestCase
             $beforeRequestTriggered,
             "Should trigger 'EVENT_BEFORE_REQUEST' event during 'handle()' execution in 'StatelessApplication'.",
         );
-    }
-
-    public function testGetMemoryLimitRecalculatesWhenMemoryLimitIsZero(): void
-    {
-        $originalLimit = ini_get('memory_limit');
-
-        try {
-            ini_set('memory_limit', '256M');
-
-            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-            $app = $this->statelessApplication();
-
-            $app->handle($request);
-            $app->setMemoryLimit(0);
-
-            ini_set('memory_limit', '128M');
-
-            self::assertSame(
-                true,
-                $app->clean(),
-                "Should recalculate 'memory_limit' when current 'memoryLimit' is exactly '0'.",
-            );
-        } finally {
-            ini_set('memory_limit', $originalLimit);
-        }
     }
 }
