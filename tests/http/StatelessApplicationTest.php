@@ -71,7 +71,6 @@ final class StatelessApplicationTest extends TestCase
                 $cleanResult,
                 "Should return boolean from 'clean()' when 'memory_limit' '64M' is properly parsed to bytes.",
             );
-
         } finally {
             ini_set('memory_limit', $originalLimit);
         }
