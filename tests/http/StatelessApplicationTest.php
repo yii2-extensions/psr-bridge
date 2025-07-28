@@ -48,6 +48,37 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    public function testRecalculateMemoryLimitAfterResetAndIniChange(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '256M');
+
+        $app = $this->statelessApplication();
+
+        $firstCalculation = $app->getMemoryLimit();
+        $app->setMemoryLimit(0);
+
+        ini_set('memory_limit', '128M');
+
+        $secondCalculation = $app->getMemoryLimit();
+
+        self::assertSame(
+            134_217_728,
+            $secondCalculation,
+            "'getMemoryLimit()' should return '134_217_728' ('128M') after resetting and updating 'memory_limit' to " .
+            "'128M' in 'StatelessApplication'.",
+        );
+        self::assertNotSame(
+            $firstCalculation,
+            $secondCalculation,
+            "'getMemoryLimit()' should return a different value after recalculation when 'memory_limit' changes in " .
+            "'StatelessApplication'.",
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
     {
         $_SERVER = [
@@ -148,6 +179,27 @@ final class StatelessApplicationTest extends TestCase
             "'coreComponents()' should return the expected mapping of component IDs to class definitions after " .
             "handling a request in 'StatelessApplication'.",
         );
+    }
+
+    public function testReturnFalseFromCleanWhenMemoryUsageIsBelowThreshold(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '1G');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+
+        self::assertFalse(
+            $app->clean(),
+            "'clean()' should return 'false' when memory usage is below '90%' of the configured 'memory_limit' in " .
+            "'StatelessApplication'.",
+        );
+
+        ini_set('memory_limit', $originalLimit);
     }
 
     public function testReturnJsonResponseWithCookiesForSiteGetCookiesRoute(): void
@@ -326,6 +378,34 @@ final class StatelessApplicationTest extends TestCase
             "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for 'site/get' " .
             "route in 'StatelessApplication'.",
         );
+    }
+
+    public function testReturnPhpIntMaxWhenMemoryLimitIsUnlimited(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '-1');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+
+        self::assertSame(
+            PHP_INT_MAX,
+            $app->getMemoryLimit(),
+            "'getMemoryLimit()' should return 'PHP_INT_MAX' when 'memory_limit' is set to '-1' (unlimited) in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            PHP_INT_MAX,
+            $app->getMemoryLimit(),
+            "'getMemoryLimit()' should remain 'PHP_INT_MAX' after handling a request with unlimited memory in " .
+            "'StatelessApplication'.",
+        );
+
+        ini_set('memory_limit', $originalLimit);
     }
 
     public function testReturnPlainTextFileResponseForSiteFileRoute(): void
