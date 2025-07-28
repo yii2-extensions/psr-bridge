@@ -30,6 +30,29 @@ final class StatelessApplicationTest extends TestCase
         parent::tearDown();
     }
 
+    public function testGetMemoryLimitHandlesUnlimitedMemoryCorrectly(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        try {
+            ini_set('memory_limit', '-1');
+
+            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+            $app = $this->statelessApplication();
+
+            $app->handle($request);
+
+            self::assertFalse(
+                $app->clean(),
+                "Should return 'false' from 'clean()' when 'memory_limit' is unlimited ('-1'), indicating memory usage " .
+                'is below threshold.',
+            );
+        } finally {
+            ini_set('memory_limit', $originalLimit);
+        }
+    }
+
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
     {
         $_SERVER = [
