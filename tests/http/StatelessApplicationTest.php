@@ -40,10 +40,14 @@ final class StatelessApplicationTest extends TestCase
             $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
             $app = $this->statelessApplication();
+
+            self::assertSame(
+                PHP_INT_MAX,
+                $app->getMemoryLimit(),
+                "Memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited) in 'StatelessApplication'.",
+            );
+
             $app->handle($request);
-
-            $this->expectNotToPerformAssertions();
-
             $app->clean();
         } finally {
             ini_set('memory_limit', $originalLimit);
