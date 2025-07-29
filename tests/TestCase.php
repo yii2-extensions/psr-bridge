@@ -45,17 +45,12 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function tearDown(): void
     {
+        FileHelper::removeDirectory(dirname(__DIR__) . '/runtime/sessions');
+
         $_COOKIE = [];
         $_FILES = [];
         $_GET = [];
         $_POST = [];
-
-        // reset and destroy any active PHP session
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            session_unset();
-            session_destroy();
-        }
-
         $_SESSION = [];
         $_SERVER = $this->originalServer;
 
@@ -73,8 +68,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                 $session->close();
             }
         }
-
-        FileHelper::removeDirectory(dirname(__DIR__) . '/runtime/sessions');
 
         // ensure the logger is flushed after closing the application
         $logger = Yii::getLogger();
