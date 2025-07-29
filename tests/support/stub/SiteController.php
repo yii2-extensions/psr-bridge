@@ -108,6 +108,16 @@ final class SiteController extends Controller
     }
 
     /**
+     * @phpstan-return array{flash: mixed[]}
+     */
+    public function actionGetflash(): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        return ['flash' => Yii::$app->session->getAllFlashes()];
+    }
+
+    /**
      * @phpstan-return array<string, mixed>
      */
     public function actionGetsession(): array
@@ -191,6 +201,15 @@ final class SiteController extends Controller
                 'maxLength' => 6,
             ],
         ];
+    }
+
+    public function actionSetflash(): void
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        Yii::$app->session->setFlash('success', 'Test flash message');
+
+        $this->response->data = ['status' => 'ok'];
     }
 
     public function actionSetsession(): void
