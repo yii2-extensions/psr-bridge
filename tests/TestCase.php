@@ -57,7 +57,11 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     protected function closeApplication(): void
     {
         if (Yii::$app->has('session')) {
-            Yii::$app->getSession()->close();
+            $session = Yii::$app->getSession();
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                $session->destroy();
+                $session->close();
+            }
         }
 
         // ensure the logger is flushed after closing the application

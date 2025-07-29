@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
-use Psr\Http\Message\ResponseInterface;
 use Yii;
-use yii\base\Security;
+use yii\base\{InvalidConfigException, Security};
 use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
@@ -16,6 +15,16 @@ use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
+
+use function array_filter;
+use function array_key_exists;
+use function explode;
+use function ini_get;
+use function ini_set;
+use function sprintf;
+use function str_starts_with;
+
+use const PHP_INT_MAX;
 
 #[Group('http')]
 final class StatelessApplicationTest extends TestCase
@@ -27,6 +36,9 @@ final class StatelessApplicationTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testCaptchaSessionIsolation(): void
     {
         // first user generates captcha - need to use refresh=1 to get JSON response
@@ -51,7 +63,7 @@ final class StatelessApplicationTest extends TestCase
             "'StatelessApplication'.",
         );
 
-        $captchaData1 = Json::decode($response1->getBody()->getContents(), true);
+        $captchaData1 = Json::decode($response1->getBody()->getContents());
 
         self::assertIsArray(
             $captchaData1,
@@ -87,7 +99,7 @@ final class StatelessApplicationTest extends TestCase
 
         $response2 = $app->handle($request2);
 
-        $captchaData2 = Json::decode($response2->getBody()->getContents(), true);
+        $captchaData2 = Json::decode($response2->getBody()->getContents());
 
         self::assertIsArray(
             $captchaData2,
@@ -174,6 +186,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testGetMemoryLimitHandlesUnlimitedMemoryCorrectly(): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -227,6 +242,9 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
     {
         $_SERVER = [
@@ -238,12 +256,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/cookie' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -257,15 +269,12 @@ final class StatelessApplicationTest extends TestCase
             if (str_starts_with($cookie, 'PHPSESSID=') === false) {
                 $params = explode('; ', $cookie);
 
-                self::assertTrue(
-                    in_array(
-                        $params[0],
-                        [
-                            'test=test',
-                            'test2=test2',
-                        ],
-                        true,
-                    ),
+                self::assertContains(
+                    $params[0],
+                    [
+                        'test=test',
+                        'test2=test2',
+                    ],
                     sprintf(
                         "Cookie header should contain either 'test=test' or 'test2=test2', got '%s' for 'site/cookie' " .
                         'route.',
@@ -276,6 +285,9 @@ final class StatelessApplicationTest extends TestCase
         }
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnCoreComponentsConfigurationAfterHandle(): void
     {
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
@@ -329,6 +341,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnFalseFromCleanWhenMemoryUsageIsBelowThreshold(): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -350,6 +365,9 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnJsonResponseWithCookiesForSiteGetCookiesRoute(): void
     {
         $_COOKIE = [
@@ -364,12 +382,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/getcookies' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -385,6 +397,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnJsonResponseWithCredentialsForSiteAuthRoute(): void
     {
         $_SERVER = [
@@ -397,12 +412,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/auth' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -418,6 +427,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnJsonResponseWithNullCredentialsForMalformedAuthorizationHeader(): void
     {
         $_SERVER = [
@@ -430,12 +442,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/auth' route with malformed " .
-            "authorization header in 'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -452,6 +458,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnJsonResponseWithPostParametersForSitePostRoute(): void
     {
         $_POST = [
@@ -469,12 +478,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/post' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -490,6 +493,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnJsonResponseWithQueryParametersForSiteGetRoute(): void
     {
         $_GET = [
@@ -507,12 +513,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/get' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -528,6 +528,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnPhpIntMaxWhenMemoryLimitIsUnlimited(): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -556,6 +559,9 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnPlainTextFileResponseForSiteFileRoute(): void
     {
         $_SERVER = [
@@ -567,12 +573,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/file' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -600,6 +600,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnPlainTextResponseWithFileContentForSiteStreamRoute(): void
     {
         $_SERVER = [
@@ -611,12 +614,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/stream' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -635,6 +632,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnRedirectResponseForSiteRedirectRoute(): void
     {
         $_SERVER = [
@@ -646,12 +646,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/redirect' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             302,
             $response->getStatusCode(),
@@ -665,6 +659,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnRedirectResponseForSiteRefreshRoute(): void
     {
         $_SERVER = [
@@ -676,12 +673,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/refresh' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             302,
             $response->getStatusCode(),
@@ -695,17 +686,15 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnsJsonResponse(): void
     {
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when 'handled()' by 'StatelessApplication'.",
-        );
         self::assertSame(
             200,
             $response->getStatusCode(),
@@ -728,7 +717,10 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
-    public function testReturnsStatusCode201ForSiteStatuscodeRoute(): void
+    /**
+     * @throws InvalidConfigException
+     */
+    public function testReturnsStatusCode201ForSiteStatusCodeRoute(): void
     {
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -739,12 +731,6 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $this->statelessApplication()->handle($request);
 
-        self::assertInstanceOf(
-            ResponseInterface::class,
-            $response,
-            "Response should be an instance of 'ResponseInterface' when handling 'site/statuscode' route in " .
-            "'StatelessApplication'.",
-        );
         self::assertSame(
             201,
             $response->getStatusCode(),
@@ -752,6 +738,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testSessionDataPersistenceWithSameSessionId(): void
     {
         $sessionId = 'test-session-' . uniqid();
@@ -816,7 +805,7 @@ final class StatelessApplicationTest extends TestCase
             "'StatelessApplication'.",
         );
 
-        $body = Json::decode($response2->getBody()->getContents(), true);
+        $body = Json::decode($response2->getBody()->getContents());
 
         self::assertIsArray(
             $body,
@@ -837,6 +826,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testSessionIsolationBetweenRequests(): void
     {
         $_COOKIE = ['PHPSESSID' => 'session-user-a'];
@@ -899,7 +891,7 @@ final class StatelessApplicationTest extends TestCase
             "'StatelessApplication'.",
         );
 
-        $body = Json::decode($response2->getBody()->getContents(), true);
+        $body = Json::decode($response2->getBody()->getContents());
 
         self::assertIsArray(
             $body,
@@ -920,6 +912,44 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
+    public function testSessionWithoutCookieCreatesNewSession(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/getsession',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+        $cookies = $response->getHeaders()['Set-Cookie'] ?? [];
+        $cookie = array_filter(
+            $cookies,
+            static fn(string $cookie): bool => str_starts_with($cookie, 'PHPSESSID='),
+        );
+
+        self::assertCount(
+            1,
+            $cookie,
+            "Response 'Set-Cookie' header should contain exactly one 'PHPSESSID' cookie when no session cookie is " .
+            "sent in 'StatelessApplication'.",
+        );
+        self::assertMatchesRegularExpression(
+            '/^PHPSESSID=[a-f0-9]+; Path=\/; HttpOnly; SameSite$/',
+            $cookie[0] ?? '',
+            "Response 'Set-Cookie' header should match the expected format for a new session 'ID' when no session " .
+            "cookie is sent in 'StatelessApplication'. Value received: '" . ($cookie[0] ?? '') . "'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
     public function testSetWebAndWebrootAliasesAfterHandleRequest(): void
     {
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
@@ -941,6 +971,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'eventDataProvider')]
     public function testTriggerEventDuringHandle(string $eventName): void
     {
@@ -962,6 +995,9 @@ final class StatelessApplicationTest extends TestCase
         self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testUserAuthenticationSessionIsolation(): void
     {
         // first user logs in
