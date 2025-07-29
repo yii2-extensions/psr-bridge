@@ -195,8 +195,6 @@ final class SiteController extends Controller
         fwrite($tmpFile, 'This is a test file content.');
         rewind($tmpFile);
 
-        $tmpFilePath = stream_get_meta_data($tmpFile)['uri'];
-
         return $this->response->sendStreamAsFile($tmpFile, 'stream.txt', ['mimeType' => 'text/plain']);
     }
 }

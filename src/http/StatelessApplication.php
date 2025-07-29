@@ -17,9 +17,13 @@ use function array_reverse;
 use function function_exists;
 use function gc_collect_cycles;
 use function ini_get;
+use function is_string;
 use function memory_get_usage;
 use function method_exists;
 use function microtime;
+use function session_create_id;
+use function session_status;
+use function session_write_close;
 use function sscanf;
 use function strtoupper;
 use function uopz_redefine;
@@ -378,8 +382,11 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->request->setPsr7Request($request);
 
         $this->session->close();
-        $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
-        $this->session->setId($sessionId);
+        $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? session_create_id();
+
+        if (is_string($sessionId)) {
+            $this->session->setId($sessionId);
+        }
 
         // start the session with the correct 'ID'
         $this->session->open();

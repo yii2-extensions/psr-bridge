@@ -9,7 +9,7 @@ use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use RuntimeException;
 use Yii;
 use yii\caching\FileCache;
-use yii\helpers\{ArrayHelper, FileHelper};
+use yii\helpers\ArrayHelper;
 use yii\log\FileTarget;
 use yii\web\JsonParser;
 use yii2\extensions\psrbridge\http\StatelessApplication;
@@ -36,8 +36,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::setUp();
 
-        FileHelper::createDirectory(dirname(__DIR__) . '/runtime/sessions', 0777, true);
-
         $this->originalServer = $_SERVER;
 
         $_SERVER = [];
@@ -45,13 +43,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     protected function tearDown(): void
     {
-        FileHelper::removeDirectory(dirname(__DIR__) . '/runtime/sessions');
-
         $_COOKIE = [];
         $_FILES = [];
         $_GET = [];
         $_POST = [];
-        $_SESSION = [];
         $_SERVER = $this->originalServer;
 
         $this->closeTmpFile(...$this->tmpFiles);
@@ -63,7 +58,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         if (Yii::$app->has('session')) {
             $session = Yii::$app->getSession();
-            if (session_status() === PHP_SESSION_ACTIVE) {
+
+            if ($session->getIsActive()) {
                 $session->destroy();
                 $session->close();
             }
@@ -149,7 +145,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                         ],
                         'session' => [
                             'name' => 'PHPSESSID',
-                            'savePath' => dirname(__DIR__) . '/runtime/sessions',
                         ],
                         'user' => [
                             'enableAutoLogin' => false,
