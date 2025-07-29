@@ -137,6 +137,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                         'response' => [
                             'charset' => 'UTF-8',
                         ],
+                        'session' => [
+                            'name' => 'PHPSESSID',
+                        ],
                         'user' => [
                             'enableAutoLogin' => false,
                         ],
