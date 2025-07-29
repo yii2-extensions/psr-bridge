@@ -331,7 +331,7 @@ final class StatelessApplicationTest extends TestCase
         $cookies = $response->getHeaders()['set-cookie'] ?? [];
 
         foreach ($cookies as $cookie) {
-             // skip the session cookie header
+            // skip the session cookie header
             if (str_starts_with($cookie, $app->session->getName()) === false) {
                 $params = explode('; ', $cookie);
 
