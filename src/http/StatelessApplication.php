@@ -17,7 +17,6 @@ use function array_reverse;
 use function function_exists;
 use function gc_collect_cycles;
 use function ini_get;
-use function is_string;
 use function memory_get_usage;
 use function method_exists;
 use function microtime;
@@ -379,11 +378,8 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->request->setPsr7Request($request);
 
         $this->session->close();
-        $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? null;
-
-        if (is_string($sessionId)) {
-            $this->session->setId($sessionId);
-        }
+        $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
+        $this->session->setId($sessionId);
 
         // start the session with the correct 'ID'
         $this->session->open();
