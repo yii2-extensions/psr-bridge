@@ -211,6 +211,64 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    public function testMultipleRequestsWithDifferentSessionsInWorkerMode(): void
+    {
+        $app = $this->statelessApplication();
+
+        $sessions = [];
+
+        for ($i = 1; $i <= 3; $i++) {
+            $sessionId = "worker-session-{$i}";
+            $_COOKIE = ['PHPSESSID' => $sessionId];
+            $_POST = ['data' => "user-{$i}-data"];
+            $_SERVER = [
+                'REQUEST_METHOD' => 'POST',
+                'REQUEST_URI' => 'site/setsessiondata',
+            ];
+
+            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+            $app->handle($request);
+
+            $sessions[] = $sessionId;
+        }
+
+        foreach ($sessions as $index => $sessionId) {
+            $_COOKIE = ['PHPSESSID' => $sessionId];
+            $_POST = [];
+            $_SERVER = [
+                'REQUEST_METHOD' => 'GET',
+                'REQUEST_URI' => 'site/getsessiondata',
+            ];
+
+            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+            $response = $app->handle($request);
+            $data = Json::decode($response->getBody()->getContents());
+
+            $expectedData = 'user-' . ($index + 1) . '-data';
+
+            self::assertIsArray(
+                $data,
+                sprintf(
+                    "Response body should be an array after decoding JSON for session '%s' in multiple requests with " .
+                    'different sessions in worker mode.',
+                    $sessionId,
+                ),
+            );
+            self::assertSame(
+                $expectedData,
+                $data['data'] ?? null,
+                sprintf(
+                    "Session '%s' should return its own data ('%s') and not leak data between sessions in  multiple " .
+                    'requests with different sessions in worker mode.',
+                    $sessionId,
+                    $expectedData,
+                ),
+            );
+        }
+    }
+
     public function testRecalculateMemoryLimitAfterResetAndIniChange(): void
     {
         $originalLimit = ini_get('memory_limit');

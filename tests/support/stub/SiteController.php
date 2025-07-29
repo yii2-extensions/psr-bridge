@@ -115,6 +115,16 @@ final class SiteController extends Controller
     }
 
     /**
+     * @phpstan-return array{data: mixed}
+     */
+    public function actionGetsessiondata(): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        return ['data' => Yii::$app->session->get('userData')];
+    }
+
+    /**
      * @phpstan-return string[]
      */
     public function actionIndex(): array
@@ -185,6 +195,17 @@ final class SiteController extends Controller
         $this->response->format = Response::FORMAT_JSON;
 
         Yii::$app->session->set('testValue', 'test-value');
+
+        $this->response->data = ['status' => 'ok'];
+    }
+
+    public function actionSetsessiondata(): void
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        $data = $this->request->post('data');
+
+        Yii::$app->session->set('userData', $data);
 
         $this->response->data = ['status' => 'ok'];
     }
