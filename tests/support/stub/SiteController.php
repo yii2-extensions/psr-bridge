@@ -6,9 +6,15 @@ namespace yii2\extensions\psrbridge\tests\support\stub;
 
 use Yii;
 use yii\base\Exception;
+use yii\base\InvalidRouteException;
 use yii\captcha\CaptchaAction;
-use yii\web\{Controller, Cookie, CookieCollection, Response};
-use yii\web\IdentityInterface;
+use yii\web\{Controller, Cookie, CookieCollection, RangeNotSatisfiableHttpException, Response};
+
+use function fwrite;
+use function is_string;
+use function rewind;
+use function stream_get_meta_data;
+use function tmpfile;
 
 final class SiteController extends Controller
 {
@@ -63,6 +69,9 @@ final class SiteController extends Controller
         );
     }
 
+    /**
+     * @throws Exception
+     */
     public function actionFile(): Response
     {
         $this->response->format = Response::FORMAT_RAW;
@@ -128,7 +137,7 @@ final class SiteController extends Controller
         if (is_string($username) && is_string($password)) {
             $identity = Identity::findByUsername($username);
 
-            if ($identity instanceof IdentityInterface === false || $identity->validatePassword($password) === false) {
+            if ($identity === null || $identity->validatePassword($password) === false) {
                 return ['status' => 'error'];
             }
 
@@ -147,6 +156,9 @@ final class SiteController extends Controller
         return $this->request->post();
     }
 
+    /**
+     * @throws InvalidRouteException
+     */
     public function actionRedirect(): void
     {
         $this->response->redirect('/site/index');
@@ -182,6 +194,10 @@ final class SiteController extends Controller
         $this->response->statusCode = 201;
     }
 
+    /**
+     * @throws Exception
+     * @throws RangeNotSatisfiableHttpException
+     */
     public function actionStream(): Response
     {
         $this->response->format = Response::FORMAT_RAW;

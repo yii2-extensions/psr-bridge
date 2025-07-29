@@ -372,6 +372,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
             $this->errorHandler->unregister();
         }
 
+        // parent constructor is called because StatelessApplication uses a custom initialization pattern
         // @phpstan-ignore-next-line
         parent::__construct($config);
 

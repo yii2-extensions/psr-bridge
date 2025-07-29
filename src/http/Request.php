@@ -10,7 +10,14 @@ use yii\web\{CookieCollection, HeaderCollection, UploadedFile};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
+use function base64_decode;
+use function count;
+use function explode;
 use function is_array;
+use function is_string;
+use function mb_check_encoding;
+use function mb_substr;
+use function strncasecmp;
 
 /**
  * HTTP Request extension with PSR-7 bridge and worker mode support.
@@ -104,27 +111,27 @@ final class Request extends \yii\web\Request
          * --OR--
          * RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
          */
-        $auth_token = $this->getHeaders()->get('Authorization');
+        $authToken = $this->getHeaders()->get('Authorization');
 
         /** @phpstan-ignore-next-line */
-        if ($auth_token !== null && strncasecmp($auth_token, 'basic', 5) === 0) {
-            $encoded = mb_substr($auth_token, 6);
+        if ($authToken !== null && strncasecmp($authToken, 'basic', 5) === 0) {
+            $encoded = mb_substr($authToken, 6);
             $decoded = base64_decode($encoded, true); // strict mode
 
             // validate decoded data
-            if ($decoded === false || !mb_check_encoding($decoded, 'UTF-8')) {
+            if ($decoded === false || mb_check_encoding($decoded, 'UTF-8') === false) {
                 return [null, null]; // return null for malformed credentials
             }
 
             $parts = explode(':', $decoded, 2);
 
             if (count($parts) < 2) {
-                return [strlen($parts[0]) === 0 ? null : $parts[0], null];
+                return [$parts[0] === '' ? null : $parts[0], null];
             }
 
             return [
-                strlen($parts[0]) === 0 ? null : $parts[0],
-                (isset($parts[1]) && strlen($parts[1]) !== 0) ? $parts[1] : null,
+                $parts[0] === '' ? null : $parts[0],
+                (isset($parts[1]) && $parts[1] !== '') ? $parts[1] : null,
             ];
         }
 
