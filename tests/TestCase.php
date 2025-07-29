@@ -144,6 +144,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                         ],
                         'session' => [
                             'name' => 'PHPSESSID',
+                            'savePath' => dirname(__DIR__) . '/runtime',
                         ],
                         'user' => [
                             'enableAutoLogin' => false,
