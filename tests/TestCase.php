@@ -49,6 +49,14 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $_FILES = [];
         $_GET = [];
         $_POST = [];
+
+        // reset and destroy any active PHP session
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_unset();
+            session_destroy();
+        }
+
+        $_SESSION = [];
         $_SERVER = $this->originalServer;
 
         $this->closeTmpFile(...$this->tmpFiles);
