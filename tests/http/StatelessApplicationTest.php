@@ -27,6 +27,153 @@ final class StatelessApplicationTest extends TestCase
         parent::tearDown();
     }
 
+    public function testCaptchaSessionIsolation(): void
+    {
+        // first user generates captcha - need to use refresh=1 to get JSON response
+        $_COOKIE = ['PHPSESSID' => 'user-a-session'];
+        $_GET = ['refresh' => '1'];
+        $_SERVER = [
+            'QUERY_STRING' => 'refresh=1',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/captcha',
+        ];
+
+        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response1 = $app->handle($request1);
+
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response1->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/captcha' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $captchaData1 = Json::decode($response1->getBody()->getContents(), true);
+
+        self::assertIsArray(
+            $captchaData1,
+            "Captcha response should be an array after decoding JSON for 'site/captcha' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertArrayHasKey(
+            'hash1',
+            $captchaData1,
+            "Captcha response should contain 'hash1' key for 'site/captcha' route in 'StatelessApplication'.",
+        );
+        self::assertArrayHasKey(
+            'hash2',
+            $captchaData1,
+            "Captcha response should contain 'hash2' key for 'site/captcha' route in 'StatelessApplication'.",
+        );
+        self::assertArrayHasKey(
+            'url',
+            $captchaData1,
+            "Captcha response should contain 'url' key for 'site/captcha' route in 'StatelessApplication'.",
+        );
+
+        // second user requests captcha - should get different data
+        $_COOKIE = ['PHPSESSID' => 'user-b-session'];
+        $_GET = ['refresh' => '1'];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/captcha',
+            'QUERY_STRING' => 'refresh=1',
+        ];
+
+        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response2 = $app->handle($request2);
+
+        $captchaData2 = Json::decode($response2->getBody()->getContents(), true);
+
+        self::assertIsArray(
+            $captchaData2,
+            "Captcha response should be an array after decoding JSON for second user in 'site/captcha' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertArrayHasKey(
+            'hash1',
+            $captchaData2,
+            "Captcha response should contain 'hash1' key for second user in 'site/captcha' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $hash1 = $captchaData1['hash1'] ?? null;
+        $hash2 = $captchaData2['hash2'] ?? null;
+
+        self::assertNotNull(
+            $hash1,
+            "First captcha response 'hash1' should not be 'null' for 'site/captcha' route in 'StatelessApplication'.",
+        );
+        self::assertNotNull(
+            $hash2,
+            "Second captcha response 'hash2' should not be 'null' for 'site/captcha' route in 'StatelessApplication'.",
+        );
+        self::assertNotSame(
+            $hash1,
+            $hash2,
+            "Captcha 'hash1' for first user should not match 'hash2' for second user, ensuring session isolation in " .
+            "'StatelessApplication'.",
+        );
+
+        // also test that we can get the actual captcha image
+        $url = $captchaData2['url'] ?? null;
+
+        self::assertNotNull(
+            $url,
+            "Captcha response 'url' should not be 'null' for second user in 'site/captcha' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $_COOKIE = ['PHPSESSID' => 'user-a-session'];
+        $_GET = [];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => $url,
+        ];
+
+        $request3 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response3 = $app->handle($request3);
+
+        self::assertIsString(
+            $url,
+            "Captcha response 'url' should be a string for second user in 'site/captcha' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'image/png',
+            $response3->getHeaders()['content-type'][0] ?? '',
+            "Captcha image response 'content-type' should be 'image/png' for '{$url}' in 'StatelessApplication'.",
+        );
+
+        $imageContent = $response3->getBody()->getContents();
+
+        self::assertNotEmpty(
+            $imageContent,
+            "Captcha image content should not be empty for '{$url}' in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'image/png',
+            $response3->getHeaders()['content-type'][0],
+            "Captcha image response 'content-type' should be 'image/png' for '{$url}' in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'PHPSESSID=user-a-session; Path=/; HttpOnly; SameSite',
+            $response3->getHeaders()['Set-Cookie'][0] ?? '',
+            "Captcha image response 'Set-Cookie' should contain 'user-a-session' for '{$url}' in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringStartsWith(
+            "\x89PNG",
+            $imageContent,
+            "Captcha image content should start with PNG header for '{$url}' in 'StatelessApplication'.",
+        );
+    }
+
     public function testGetMemoryLimitHandlesUnlimitedMemoryCorrectly(): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -605,6 +752,91 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    public function testSessionDataPersistenceWithSameSessionId(): void
+    {
+        $sessionId = 'test-session-' . uniqid();
+
+        $_COOKIE = ['PHPSESSID' => $sessionId];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/setsession',
+        ];
+
+        // first request - set session data
+        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response1 = $app->handle($request1);
+
+        self::assertSame(
+            200,
+            $response1->getStatusCode(),
+            "Response status code should be '200' for 'site/setsession' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response1->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            "PHPSESSID={$sessionId}; Path=/; HttpOnly; SameSite",
+            $response1->getHeaders()['Set-Cookie'][0] ?? '',
+            "Response 'Set-Cookie' header should contain '{$sessionId}' for 'site/setsession' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $_COOKIE = ['PHPSESSID' => $sessionId];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/getsession',
+        ];
+
+        // second request - same session ID should retrieve the data
+        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response2 = $app->handle($request2);
+
+        self::assertSame(
+            200,
+            $response2->getStatusCode(),
+            "Response status code should be '200' for 'site/getsession' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response2->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            "PHPSESSID={$sessionId}; Path=/; HttpOnly; SameSite",
+            $response2->getHeaders()['Set-Cookie'][0] ?? '',
+            "Response 'Set-Cookie' header should contain '{$sessionId}' for 'site/getsession' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $body = Json::decode($response2->getBody()->getContents(), true);
+
+        self::assertIsArray(
+            $body,
+            "Response body should be an array after decoding JSON response from 'site/getsession' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $testValue = '';
+
+        if (array_key_exists('testValue', $body)) {
+            $testValue = $body['testValue'];
+        }
+
+        self::assertSame(
+            'test-value',
+            $testValue,
+            'Session data should persist between requests with the same session ID',
+        );
+    }
+
     public function testSessionIsolationBetweenRequests(): void
     {
         $_COOKIE = ['PHPSESSID' => 'session-user-a'];
@@ -613,6 +845,7 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/setsession',
         ];
 
+        // first request - set a session value
         $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
         $app = $this->statelessApplication();
@@ -633,7 +866,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             'PHPSESSID=session-user-a; Path=/; HttpOnly; SameSite',
             $response1->getHeaders()['Set-Cookie'][0] ?? '',
-            "Response 'set-cookie' header should contain 'session-user-a' for 'site/setsession' route in " .
+            "Response 'Set-Cookie' header should contain 'session-user-a' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
 
@@ -643,6 +876,7 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/getsession',
         ];
 
+        // second request - different session
         $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
         $response2 = $app->handle($request2);
@@ -661,7 +895,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             'PHPSESSID=session-user-b; Path=/; HttpOnly; SameSite',
             $response2->getHeaders()['Set-Cookie'][0] ?? '',
-            "Response 'set-cookie' header should contain 'session-user-b' for 'site/getsession' route in " .
+            "Response 'Set-Cookie' header should contain 'session-user-b' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
 
@@ -726,5 +960,89 @@ final class StatelessApplicationTest extends TestCase
         $app->handle($request);
 
         self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
+    }
+
+    public function testUserAuthenticationSessionIsolation(): void
+    {
+        // first user logs in
+        $_COOKIE = ['PHPSESSID' => 'user1-session'];
+        $_POST = [
+            'username' => 'admin',
+            'password' => 'admin',
+        ];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_URI' => 'site/login',
+        ];
+
+        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response1 = $app->handle($request1);
+
+        self::assertSame(
+            200,
+            $response1->getStatusCode(),
+            "Response status code should be '200' for 'site/login' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response1->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/login' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'PHPSESSID=user1-session; Path=/; HttpOnly; SameSite',
+            $response1->getHeaders()['Set-Cookie'][0] ?? '',
+            "Response 'Set-Cookie' header should contain 'user1-session' for 'site/login' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            <<<JSON
+            {"status":"ok","username":"admin"}
+            JSON,
+            $response1->getBody()->getContents(),
+            "Response body should contain valid JSON with 'status' and 'username' for successful login in " .
+            "'StatelessApplication'.",
+        );
+
+        // second user checks authentication status - should not be logged in
+        $_COOKIE = ['PHPSESSID' => 'user2-session'];
+        $_POST = [];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/checkauth',
+        ];
+
+        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response2 = $app->handle($request2);
+
+        self::assertSame(
+            200,
+            $response2->getStatusCode(),
+            "Response status code should be '200' for 'site/checkauth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response2->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/checkauth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'PHPSESSID=user2-session; Path=/; HttpOnly; SameSite',
+            $response2->getHeaders()['Set-Cookie'][0] ?? '',
+            "Response 'Set-Cookie' header should contain 'user2-session' for 'site/checkauth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            <<<JSON
+            {"isGuest":true,"identity":null}
+            JSON,
+            $response2->getBody()->getContents(),
+            "Response body should indicate 'guest' status and 'null' identity for a new session in " .
+            "'StatelessApplication'.",
+        );
     }
 }

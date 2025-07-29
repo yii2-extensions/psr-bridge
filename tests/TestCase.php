@@ -13,6 +13,7 @@ use yii\helpers\ArrayHelper;
 use yii\log\FileTarget;
 use yii\web\JsonParser;
 use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\psrbridge\tests\support\stub\Identity;
 
 use function fclose;
 use function tmpfile;
@@ -142,6 +143,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                         ],
                         'user' => [
                             'enableAutoLogin' => false,
+                            'identityClass' => Identity::class,
                         ],
                         'urlManager' => [
                             'showScriptName' => false,

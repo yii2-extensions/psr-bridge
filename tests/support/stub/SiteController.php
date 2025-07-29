@@ -6,7 +6,9 @@ namespace yii2\extensions\psrbridge\tests\support\stub;
 
 use Yii;
 use yii\base\Exception;
+use yii\captcha\CaptchaAction;
 use yii\web\{Controller, Cookie, CookieCollection, Response};
+use yii\web\IdentityInterface;
 
 final class SiteController extends Controller
 {
@@ -20,6 +22,22 @@ final class SiteController extends Controller
         return [
             'username' => $this->request->getAuthUser(),
             'password' => $this->request->getAuthPassword(),
+        ];
+    }
+
+    /**
+     * @phpstan-return  array{isGuest: bool, Identity?: string|null}
+     */
+    public function actionCheckauth(): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        $user = Yii::$app->user;
+        $username = $user->identity instanceof Identity ? $user->identity->username : null;
+
+        return [
+            'isGuest' => $user->isGuest,
+            'identity' => $username,
         ];
     }
 
@@ -97,6 +115,31 @@ final class SiteController extends Controller
         return ['hello' => 'world'];
     }
 
+    /**
+     * @phpstan-return array{status: string, username?: string}
+     */
+    public function actionLogin(): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        $username = $this->request->post('username');
+        $password = $this->request->post('password');
+
+        if (is_string($username) && is_string($password)) {
+            $identity = Identity::findByUsername($username);
+
+            if ($identity instanceof IdentityInterface === false || $identity->validatePassword($password) === false) {
+                return ['status' => 'error'];
+            }
+
+            Yii::$app->user->login($identity);
+
+            return ['status' => 'ok', 'username' => $username];
+        }
+
+        return ['status' => 'error'];
+    }
+
     public function actionPost(): mixed
     {
         $this->response->format = Response::FORMAT_JSON;
@@ -112,6 +155,16 @@ final class SiteController extends Controller
     public function actionRefresh(): void
     {
         $this->response->refresh('#stateless');
+    }
+    public function actions(): array
+    {
+        return [
+            'captcha' => [
+                'class' => CaptchaAction::class,
+                'minLength' => 4,
+                'maxLength' => 6,
+            ],
+        ];
     }
 
     public function actionSetsession(): void
