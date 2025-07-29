@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ResponseInterface;
 use Yii;
 use yii\base\Security;
+use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
 use yii\web\{AssetManager, Session, UrlManager, User, View};
@@ -601,6 +602,87 @@ final class StatelessApplicationTest extends TestCase
             201,
             $response->getStatusCode(),
             "Response status code should be '201' for 'site/statuscode' route in 'StatelessApplication'.",
+        );
+    }
+
+    public function testSessionIsolationBetweenRequests(): void
+    {
+        $_COOKIE = ['PHPSESSID' => 'session-user-a'];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/setsession',
+        ];
+
+        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response1 = $app->handle($request1);
+
+        self::assertSame(
+            200,
+            $response1->getStatusCode(),
+            "Response status code should be '200' for 'site/setsession' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response1->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'PHPSESSID=session-user-a; Path=/; HttpOnly; SameSite',
+            $response1->getHeaders()['Set-Cookie'][0] ?? '',
+            "Response 'set-cookie' header should contain 'session-user-a' for 'site/setsession' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $_COOKIE = ['PHPSESSID' => 'session-user-b'];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/getsession',
+        ];
+
+        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $response2 = $app->handle($request2);
+
+        self::assertSame(
+            200,
+            $response2->getStatusCode(),
+            "Response status code should be '200' for 'site/getsession' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response2->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'PHPSESSID=session-user-b; Path=/; HttpOnly; SameSite',
+            $response2->getHeaders()['Set-Cookie'][0] ?? '',
+            "Response 'set-cookie' header should contain 'session-user-b' for 'site/getsession' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $body = Json::decode($response2->getBody()->getContents(), true);
+
+        self::assertIsArray(
+            $body,
+            "Response body should be an array after decoding JSON response from 'site/getsession' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $testValue = '';
+
+        if (array_key_exists('testValue', $body)) {
+            $testValue = $body['testValue'];
+        }
+
+        self::assertNull(
+            $testValue,
+            "Session data from first request should not leak to second request with different session 'ID' in " .
+            "'StatelessApplication'.",
         );
     }
 

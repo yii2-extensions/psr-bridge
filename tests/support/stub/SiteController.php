@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\support\stub;
 
+use Yii;
 use yii\base\Exception;
 use yii\web\{Controller, Cookie, CookieCollection, Response};
 
@@ -77,6 +78,16 @@ final class SiteController extends Controller
     }
 
     /**
+     * @phpstan-return array<string, mixed>
+     */
+    public function actionGetsession(): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        return ['testValue' => Yii::$app->session->get('testValue')];
+    }
+
+    /**
      * @phpstan-return string[]
      */
     public function actionIndex(): array
@@ -101,6 +112,15 @@ final class SiteController extends Controller
     public function actionRefresh(): void
     {
         $this->response->refresh('#stateless');
+    }
+
+    public function actionSetsession(): void
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        Yii::$app->session->set('testValue', 'test-value');
+
+        $this->response->data = ['status' => 'ok'];
     }
 
     public function actionStatuscode(): void
