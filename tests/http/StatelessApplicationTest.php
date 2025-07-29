@@ -997,8 +997,11 @@ final class StatelessApplicationTest extends TestCase
             "Response 'Set-Cookie' header should contain exactly one 'PHPSESSID' cookie when no session cookie is " .
             "sent in 'StatelessApplication'.",
         );
+
+        $sessionName = $app->session->getName();
+
         self::assertMatchesRegularExpression(
-            '/^PHPSESSID=[a-zA-Z0-9]+; Path=\/; HttpOnly; SameSite$/',
+            '/^' . preg_quote($sessionName, '/') . '=[a-zA-Z0-9]+; Path=\/; HttpOnly; SameSite$/',
             $cookie[0] ?? '',
             "Response 'Set-Cookie' header should match the expected format for a new session 'ID' when no session " .
             "cookie is sent in 'StatelessApplication'. Value received: '" . ($cookie[0] ?? '') . "'.",
@@ -1086,8 +1089,11 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/login' route in " .
             "'StatelessApplication'.",
         );
+
+        $sessionName = $app->session->getName();
+
         self::assertSame(
-            'PHPSESSID=user1-session; Path=/; HttpOnly; SameSite',
+            "{$sessionName}=user1-session; Path=/; HttpOnly; SameSite",
             $response1->getHeaders()['Set-Cookie'][0] ?? '',
             "Response 'Set-Cookie' header should contain 'user1-session' for 'site/login' route in " .
             "'StatelessApplication'.",

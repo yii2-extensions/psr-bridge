@@ -97,11 +97,14 @@ final class SiteController extends Controller
         return $this->request->get();
     }
 
-    public function actionGetcookies(): CookieCollection
+    /**
+     * @phpstan-return Cookie[]
+     */
+    public function actionGetcookies(): array
     {
         $this->response->format = Response::FORMAT_JSON;
 
-        return $this->request->getCookies();
+        return $this->request->getCookies()->toArray();
     }
 
     /**
