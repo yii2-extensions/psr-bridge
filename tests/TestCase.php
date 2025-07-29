@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests;
 
+use HttpSoft\Message\{ResponseFactory, StreamFactory};
+use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use RuntimeException;
 use Yii;
+use yii\caching\FileCache;
 use yii\helpers\ArrayHelper;
+use yii\log\FileTarget;
+use yii\web\JsonParser;
+use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\psrbridge\tests\support\stub\Identity;
 
 use function fclose;
 use function tmpfile;
@@ -50,7 +57,12 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     protected function closeApplication(): void
     {
         if (Yii::$app->has('session')) {
-            Yii::$app->getSession()->close();
+            $session = Yii::$app->getSession();
+
+            if ($session->getIsActive()) {
+                $session->destroy();
+                $session->close();
+            }
         }
 
         // ensure the logger is flushed after closing the application
@@ -91,6 +103,79 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * @phpstan-param array<string, mixed> $config
      */
+    protected function statelessApplication($config = []): StatelessApplication
+    {
+        return new StatelessApplication(
+            ArrayHelper::merge(
+                [
+                    'id' => 'stateless-app',
+                    'basePath' => __DIR__,
+                    'bootstrap' => ['log'],
+                    'controllerNamespace' => '\yii2\extensions\psrbridge\tests\support\stub',
+                    'components' => [
+                        'cache' => [
+                            'class' => FileCache::class,
+                        ],
+                        'log' => [
+                            'traceLevel' => YII_DEBUG ? 3 : 0,
+                            'targets' => [
+                                [
+                                    'class' => FileTarget::class,
+                                    'levels' => [
+                                        'error',
+                                        'info',
+                                        'warning',
+                                    ],
+                                    'logFile' => '@runtime/log/app.log',
+                                ],
+                            ],
+                        ],
+                        'request' => [
+                            'enableCookieValidation' => false,
+                            'enableCsrfCookie' => false,
+                            'enableCsrfValidation' => false,
+                            'parsers' => [
+                                'application/json' => JsonParser::class,
+                            ],
+                            'scriptFile' => __DIR__ . '/index.php',
+                            'scriptUrl' => '/index.php',
+                        ],
+                        'response' => [
+                            'charset' => 'UTF-8',
+                        ],
+                        'user' => [
+                            'enableAutoLogin' => false,
+                            'identityClass' => Identity::class,
+                        ],
+                        'urlManager' => [
+                            'showScriptName' => false,
+                            'enableStrictParsing' => false,
+                            'enablePrettyUrl' => true,
+                            'rules' => [
+                                [
+                                    'pattern' => '/<controller>/<action>/<test:\w+>',
+                                    'route' => '<controller>/<action>',
+                                ],
+                            ],
+                        ],
+                    ],
+                    'container' => [
+                        'definitions' => [
+                            ResponseFactoryInterface::class => ResponseFactory::class,
+                            StreamFactoryInterface::class => StreamFactory::class,
+                        ],
+                    ],
+                    'runtimePath' => dirname(__DIR__) . '/runtime',
+                    'vendorPath' => dirname(__DIR__) . '/vendor',
+                ],
+                $config,
+            ),
+        );
+    }
+
+    /**
+     * @phpstan-param array<string, mixed> $config
+     */
     protected function webApplication($config = []): void
     {
         new \yii\web\Application(
@@ -106,9 +191,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                     'components' => [
                         'request' => [
                             'cookieValidationKey' => 'wefJDF8sfdsfSDefwqdxj9oq',
+                            'isConsoleRequest' => false,
                             'scriptFile' => __DIR__ . '/index.php',
                             'scriptUrl' => '/index.php',
-                            'isConsoleRequest' => false,
                         ],
                     ],
                 ],

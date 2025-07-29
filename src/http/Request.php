@@ -10,7 +10,14 @@ use yii\web\{CookieCollection, HeaderCollection, UploadedFile};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
+use function base64_decode;
+use function count;
+use function explode;
 use function is_array;
+use function is_string;
+use function mb_check_encoding;
+use function mb_substr;
+use function strncasecmp;
 
 /**
  * HTTP Request extension with PSR-7 bridge and worker mode support.
@@ -44,6 +51,12 @@ use function is_array;
 final class Request extends \yii\web\Request
 {
     /**
+     * @var string A secret key used for cookie validation. This property must be set if {@see enableCookieValidation}
+     * is 'true'.
+     */
+    public $cookieValidationKey = '';
+
+    /**
      * Whether the request is in worker mode.
      */
     public bool $workerMode = true;
@@ -55,6 +68,75 @@ final class Request extends \yii\web\Request
      * Yii2 Request component.
      */
     private ServerRequestAdapter|null $adapter = null;
+
+    /**
+     * Retrieves HTTP Basic authentication credentials from the current request.
+     *
+     * Returns an array containing the username and password sent via HTTP authentication, supporting both standard PHP
+     * SAPI variables and the 'Authorization' header for environments where credentials are not passed directly.
+     *
+     * The method first checks for credentials in the PHP_AUTH_USER and PHP_AUTH_PW server variables. If not present, it
+     * attempts to extract and decode credentials from the 'Authorization' header, handling Apache php-cgi scenarios and
+     * validating the decoded data for UTF-8 encoding and proper format.
+     *
+     * Usage example:
+     * ```php
+     * [$username, $password] = $request->getAuthCredentials();
+     * ```
+     *
+     * @return array Contains exactly two elements.
+     *   - 0: username sent via HTTP authentication, `null` if the username is not given.
+     *   - 1: password sent via HTTP authentication, `null` if the password is not given.
+     *
+     * @phpstan-return array{0: string|null, 1: string|null}
+     */
+    public function getAuthCredentials(): array
+    {
+        $username = isset($_SERVER['PHP_AUTH_USER']) && is_string($_SERVER['PHP_AUTH_USER'])
+            ? $_SERVER['PHP_AUTH_USER']
+            : null;
+        $password = isset($_SERVER['PHP_AUTH_PW']) && is_string($_SERVER['PHP_AUTH_PW'])
+            ? $_SERVER['PHP_AUTH_PW']
+            : null;
+
+        if ($username !== null || $password !== null) {
+            return [$username, $password];
+        }
+
+        /**
+         * Apache with php-cgi does not pass HTTP Basic authentication to PHP by default.
+         * To make it work, add one of the following lines to to your .htaccess file:
+         *
+         * SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
+         * --OR--
+         * RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+         */
+        $authToken = $this->getHeaders()->get('Authorization');
+
+        /** @phpstan-ignore-next-line */
+        if ($authToken !== null && strncasecmp($authToken, 'basic', 5) === 0) {
+            $encoded = mb_substr($authToken, 6);
+            $decoded = base64_decode($encoded, true); // strict mode
+
+            // validate decoded data
+            if ($decoded === false || mb_check_encoding($decoded, 'UTF-8') === false) {
+                return [null, null]; // return null for malformed credentials
+            }
+
+            $parts = explode(':', $decoded, 2);
+
+            if (count($parts) < 2) {
+                return [$parts[0] === '' ? null : $parts[0], null];
+            }
+
+            return [
+                $parts[0] === '' ? null : $parts[0],
+                (isset($parts[1]) && $parts[1] !== '') ? $parts[1] : null,
+            ];
+        }
+
+        return [null, null];
+    }
 
     /**
      * Retrieves the request body parameters, excluding the HTTP method override parameter if present.

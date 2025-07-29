@@ -12,8 +12,10 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.1",
-        "psr/http-message": "^2.0",
+        "ext-mbstring": "*",
         "psr/http-factory": "^1.0",
+        "psr/http-message": "^2.0",
+        "psr/http-server-handler": "^1.0",
         "yiisoft/yii2": "^2.0.53|^22"
     },
     "require-dev": {
@@ -27,6 +29,9 @@
         "symplify/easy-coding-standard": "^12.5",
         "xepozz/internal-mocker": "^1.4",
         "yii2-extensions/phpstan": "^0.3"
+    },
+    "suggest": {
+        "ext-uopz": "*"
     },
     "autoload": {
         "psr-4": {

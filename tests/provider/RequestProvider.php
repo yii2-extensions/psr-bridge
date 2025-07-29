@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\provider;
 
-use function base64_decode;
-
 final class RequestProvider
 {
     /**
@@ -469,7 +467,7 @@ final class RequestProvider
             [
                 'not a base64 at all',
                 [
-                    base64_decode('not a base64 at all', true),
+                    null,
                     null,
                 ],
             ],
