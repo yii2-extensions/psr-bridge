@@ -117,7 +117,7 @@ final class StatelessApplicationTest extends TestCase
         );
 
         $hash1 = $captchaData1['hash1'] ?? null;
-        $hash2 = $captchaData2['hash2'] ?? null;
+        $hash2 = $captchaData2['hash1'] ?? null;
 
         self::assertNotNull(
             $hash1,
