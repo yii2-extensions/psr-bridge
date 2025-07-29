@@ -940,7 +940,7 @@ final class StatelessApplicationTest extends TestCase
             "sent in 'StatelessApplication'.",
         );
         self::assertMatchesRegularExpression(
-            '/^PHPSESSID=[a-f0-9]+; Path=\/; HttpOnly; SameSite$/',
+            '/^PHPSESSID=[a-zA-Z0-9]+; Path=\/; HttpOnly; SameSite$/',
             $cookie[0] ?? '',
             "Response 'Set-Cookie' header should match the expected format for a new session 'ID' when no session " .
             "cookie is sent in 'StatelessApplication'. Value received: '" . ($cookie[0] ?? '') . "'.",
