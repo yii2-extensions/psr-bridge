@@ -9,7 +9,7 @@ use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use RuntimeException;
 use Yii;
 use yii\caching\FileCache;
-use yii\helpers\ArrayHelper;
+use yii\helpers\{ArrayHelper, FileHelper};
 use yii\log\FileTarget;
 use yii\web\JsonParser;
 use yii2\extensions\psrbridge\http\StatelessApplication;
@@ -35,6 +35,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        FileHelper::createDirectory(dirname(__DIR__) . '/runtime/sessions', 0777, true);
 
         $this->originalServer = $_SERVER;
 
@@ -63,6 +65,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                 $session->close();
             }
         }
+
+        FileHelper::removeDirectory(dirname(__DIR__) . '/runtime/sessions');
 
         // ensure the logger is flushed after closing the application
         $logger = Yii::getLogger();
@@ -144,7 +148,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                         ],
                         'session' => [
                             'name' => 'PHPSESSID',
-                            'savePath' => dirname(__DIR__) . '/runtime',
+                            'savePath' => dirname(__DIR__) . '/runtime/sessions',
                         ],
                         'user' => [
                             'enableAutoLogin' => false,
