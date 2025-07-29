@@ -8,7 +8,7 @@ use Yii;
 use yii\base\Exception;
 use yii\base\InvalidRouteException;
 use yii\captcha\CaptchaAction;
-use yii\web\{Controller, Cookie, CookieCollection, RangeNotSatisfiableHttpException, Response};
+use yii\web\{Controller, Cookie, RangeNotSatisfiableHttpException, Response};
 
 use function fwrite;
 use function is_string;
