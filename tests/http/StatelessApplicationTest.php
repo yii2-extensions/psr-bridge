@@ -21,6 +21,7 @@ use function array_key_exists;
 use function explode;
 use function ini_get;
 use function ini_set;
+use function session_name;
 use function sprintf;
 use function str_starts_with;
 
@@ -41,8 +42,10 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testCaptchaSessionIsolation(): void
     {
+        $sessionName = session_name();
+
         // first user generates captcha - need to use refresh=1 to get JSON response
-        $_COOKIE = ['PHPSESSID' => 'user-a-session'];
+        $_COOKIE = [$sessionName => 'user-a-session'];
         $_GET = ['refresh' => '1'];
         $_SERVER = [
             'QUERY_STRING' => 'refresh=1',
@@ -173,8 +176,6 @@ final class StatelessApplicationTest extends TestCase
             $response3->getHeaders()['content-type'][0],
             "Captcha image response 'content-type' should be 'image/png' for '{$url}' in 'StatelessApplication'.",
         );
-
-        $sessionName = $app->session->getName();
 
         self::assertSame(
             "{$sessionName}=user-a-session; Path=/; HttpOnly; SameSite",
@@ -806,9 +807,10 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testSessionDataPersistenceWithSameSessionId(): void
     {
+        $sessionName = session_name();
         $sessionId = 'test-session-' . uniqid();
 
-        $_COOKIE = ['PHPSESSID' => $sessionId];
+        $_COOKIE = [$sessionName => $sessionId];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/setsession',
@@ -832,8 +834,6 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
-
-        $sessionName = $app->session->getName();
 
         self::assertSame(
             "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
@@ -864,9 +864,6 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
-
-        $sessionName = $app->session->getName();
-
         self::assertSame(
             "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
             $response2->getHeaders()['Set-Cookie'][0] ?? '',
@@ -900,7 +897,9 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testSessionIsolationBetweenRequests(): void
     {
-        $_COOKIE = ['PHPSESSID' => 'session-user-a'];
+        $sessionName = session_name();
+
+        $_COOKIE = [$sessionName => 'session-user-a'];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/setsession',
@@ -924,9 +923,6 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
-
-        $sessionName = $app->session->getName();
-
         self::assertSame(
             "{$sessionName}=session-user-a; Path=/; HttpOnly; SameSite",
             $response1->getHeaders()['Set-Cookie'][0] ?? '',
@@ -956,9 +952,6 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
-
-        $sessionName = $app->session->getName();
-
         self::assertSame(
             "{$sessionName}=session-user-b; Path=/; HttpOnly; SameSite",
             $response2->getHeaders()['Set-Cookie'][0] ?? '',
@@ -1015,9 +1008,6 @@ final class StatelessApplicationTest extends TestCase
             "Response 'Set-Cookie' header should contain exactly one '{$sessionName}' cookie when no session cookie " .
             "is sent in 'StatelessApplication'.",
         );
-
-        $sessionName = $app->session->getName();
-
         self::assertMatchesRegularExpression(
             '/^' . preg_quote($sessionName, '/') . '=[a-zA-Z0-9]+; Path=\/; HttpOnly; SameSite$/',
             $cookie[0] ?? '',
@@ -1079,8 +1069,10 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testUserAuthenticationSessionIsolation(): void
     {
+        $sessionName = session_name();
+
         // first user logs in
-        $_COOKIE = ['PHPSESSID' => 'user1-session'];
+        $_COOKIE = [$sessionName => 'user1-session'];
         $_POST = [
             'username' => 'admin',
             'password' => 'admin',
@@ -1107,9 +1099,6 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/login' route in " .
             "'StatelessApplication'.",
         );
-
-        $sessionName = $app->session->getName();
-
         self::assertSame(
             "{$sessionName}=user1-session; Path=/; HttpOnly; SameSite",
             $response1->getHeaders()['Set-Cookie'][0] ?? '',
@@ -1148,9 +1137,6 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/checkauth' route in " .
             "'StatelessApplication'.",
         );
-
-        $sessionName = $app->session->getName();
-
         self::assertSame(
             "{$sessionName}=user2-session; Path=/; HttpOnly; SameSite",
             $response2->getHeaders()['Set-Cookie'][0] ?? '',
