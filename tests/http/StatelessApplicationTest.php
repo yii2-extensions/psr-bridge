@@ -90,7 +90,7 @@ final class StatelessApplicationTest extends TestCase
         );
 
         // second user requests captcha - should get different data
-        $_COOKIE = ['PHPSESSID' => 'user-b-session'];
+        $_COOKIE = [$sessionName => 'user-b-session'];
         $_GET = ['refresh' => '1'];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -143,7 +143,7 @@ final class StatelessApplicationTest extends TestCase
             "'StatelessApplication'.",
         );
 
-        $_COOKIE = ['PHPSESSID' => 'user-a-session'];
+        $_COOKIE = [$sessionName => 'user-a-session'];
         $_GET = [];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -217,13 +217,15 @@ final class StatelessApplicationTest extends TestCase
 
     public function testMultipleRequestsWithDifferentSessionsInWorkerMode(): void
     {
+        $sessionName = session_name();
+
         $app = $this->statelessApplication();
 
         $sessions = [];
 
         for ($i = 1; $i <= 3; $i++) {
             $sessionId = "worker-session-{$i}";
-            $_COOKIE = ['PHPSESSID' => $sessionId];
+            $_COOKIE = [$sessionName => $sessionId];
             $_POST = ['data' => "user-{$i}-data"];
             $_SERVER = [
                 'REQUEST_METHOD' => 'POST',
@@ -238,7 +240,7 @@ final class StatelessApplicationTest extends TestCase
         }
 
         foreach ($sessions as $index => $sessionId) {
-            $_COOKIE = ['PHPSESSID' => $sessionId];
+            $_COOKIE = [$sessionName => $sessionId];
             $_POST = [];
             $_SERVER = [
                 'REQUEST_METHOD' => 'GET',
@@ -842,7 +844,7 @@ final class StatelessApplicationTest extends TestCase
             "'StatelessApplication'.",
         );
 
-        $_COOKIE = ['PHPSESSID' => $sessionId];
+        $_COOKIE = [$sessionName => $sessionId];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/getsession',
@@ -930,7 +932,7 @@ final class StatelessApplicationTest extends TestCase
             "'StatelessApplication'.",
         );
 
-        $_COOKIE = ['PHPSESSID' => 'session-user-b'];
+        $_COOKIE = [$sessionName => 'session-user-b'];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/getsession',
@@ -1115,7 +1117,7 @@ final class StatelessApplicationTest extends TestCase
         );
 
         // second user checks authentication status - should not be logged in
-        $_COOKIE = ['PHPSESSID' => 'user2-session'];
+        $_COOKIE = [$sessionName => 'user2-session'];
         $_POST = [];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
