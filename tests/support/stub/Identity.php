@@ -42,7 +42,7 @@ final class Identity extends BaseObject implements IdentityInterface
         ],
     ];
 
-    public static function findByUsername(string $username): Identity|null
+    public static function findByUsername(string $username): self|null
     {
         foreach (self::$users as $user) {
             if (strcasecmp($user['username'], $username) === 0) {

@@ -156,6 +156,7 @@ final class SiteController extends Controller
     {
         $this->response->refresh('#stateless');
     }
+
     public function actions(): array
     {
         return [
