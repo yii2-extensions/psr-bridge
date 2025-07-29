@@ -173,8 +173,11 @@ final class StatelessApplicationTest extends TestCase
             $response3->getHeaders()['content-type'][0],
             "Captcha image response 'content-type' should be 'image/png' for '{$url}' in 'StatelessApplication'.",
         );
+
+        $sessionName = $app->session->getName();
+
         self::assertSame(
-            'PHPSESSID=user-a-session; Path=/; HttpOnly; SameSite',
+            "{$sessionName}=user-a-session; Path=/; HttpOnly; SameSite",
             $response3->getHeaders()['Set-Cookie'][0] ?? '',
             "Captcha image response 'Set-Cookie' should contain 'user-a-session' for '{$url}' in " .
             "'StatelessApplication'.",
@@ -312,7 +315,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -324,7 +329,7 @@ final class StatelessApplicationTest extends TestCase
 
         foreach ($cookies as $cookie) {
             // skip the last cookie header (assumed to be 'PHPSESSION').
-            if (str_starts_with($cookie, 'PHPSESSID=') === false) {
+            if (str_starts_with($cookie, $app->session->getName()) === false) {
                 $params = explode('; ', $cookie);
 
                 self::assertContains(
@@ -827,8 +832,11 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
+
+        $sessionName = $app->session->getName();
+
         self::assertSame(
-            "PHPSESSID={$sessionId}; Path=/; HttpOnly; SameSite",
+            "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
             $response1->getHeaders()['Set-Cookie'][0] ?? '',
             "Response 'Set-Cookie' header should contain '{$sessionId}' for 'site/setsession' route in " .
             "'StatelessApplication'.",
@@ -856,8 +864,11 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
+
+        $sessionName = $app->session->getName();
+
         self::assertSame(
-            "PHPSESSID={$sessionId}; Path=/; HttpOnly; SameSite",
+            "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
             $response2->getHeaders()['Set-Cookie'][0] ?? '',
             "Response 'Set-Cookie' header should contain '{$sessionId}' for 'site/getsession' route in " .
             "'StatelessApplication'.",
@@ -913,8 +924,11 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
+
+        $sessionName = $app->session->getName();
+
         self::assertSame(
-            'PHPSESSID=session-user-a; Path=/; HttpOnly; SameSite',
+            "{$sessionName}=session-user-a; Path=/; HttpOnly; SameSite",
             $response1->getHeaders()['Set-Cookie'][0] ?? '',
             "Response 'Set-Cookie' header should contain 'session-user-a' for 'site/setsession' route in " .
             "'StatelessApplication'.",
@@ -942,8 +956,11 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
+
+        $sessionName = $app->session->getName();
+
         self::assertSame(
-            'PHPSESSID=session-user-b; Path=/; HttpOnly; SameSite',
+            "{$sessionName}=session-user-b; Path=/; HttpOnly; SameSite",
             $response2->getHeaders()['Set-Cookie'][0] ?? '',
             "Response 'Set-Cookie' header should contain 'session-user-b' for 'site/getsession' route in " .
             "'StatelessApplication'.",
@@ -986,16 +1003,17 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $app->handle($request);
         $cookies = $response->getHeaders()['Set-Cookie'] ?? [];
+        $sessionName = $app->session->getName();
         $cookie = array_filter(
             $cookies,
-            static fn(string $cookie): bool => str_starts_with($cookie, 'PHPSESSID='),
+            static fn(string $cookie): bool => str_starts_with($cookie, "{$sessionName}="),
         );
 
         self::assertCount(
             1,
             $cookie,
-            "Response 'Set-Cookie' header should contain exactly one 'PHPSESSID' cookie when no session cookie is " .
-            "sent in 'StatelessApplication'.",
+            "Response 'Set-Cookie' header should contain exactly one '{$sessionName}' cookie when no session cookie " .
+            "is sent in 'StatelessApplication'.",
         );
 
         $sessionName = $app->session->getName();
@@ -1130,8 +1148,11 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/checkauth' route in " .
             "'StatelessApplication'.",
         );
+
+        $sessionName = $app->session->getName();
+
         self::assertSame(
-            'PHPSESSID=user2-session; Path=/; HttpOnly; SameSite',
+            "{$sessionName}=user2-session; Path=/; HttpOnly; SameSite",
             $response2->getHeaders()['Set-Cookie'][0] ?? '',
             "Response 'Set-Cookie' header should contain 'user2-session' for 'site/checkauth' route in " .
             "'StatelessApplication'.",
