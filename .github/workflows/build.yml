@@ -22,5 +22,14 @@ jobs:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
       extensions: mbstring, gd
+      phpunit-exclude-group: risky
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  risky-tests:
+    uses: php-forge/actions/.github/workflows/phpunit.yml@main
+    with:
+      extensions: mbstring, gd
+      phpunit-configuration: phpunit.risky.xml
+      phpunit-group: risky
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
