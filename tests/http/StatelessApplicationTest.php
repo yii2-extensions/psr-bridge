@@ -38,7 +38,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testCaptchaSessionIsolation(): void
     {
@@ -301,7 +301,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testGetMemoryLimitHandlesUnlimitedMemoryCorrectly(): void
     {
@@ -467,7 +467,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
     {
@@ -512,7 +512,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnCoreComponentsConfigurationAfterHandle(): void
     {
@@ -568,7 +568,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnFalseFromCleanWhenMemoryUsageIsBelowThreshold(): void
     {
@@ -592,7 +592,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnJsonResponseWithCookiesForSiteGetCookiesRoute(): void
     {
@@ -624,7 +624,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnJsonResponseWithCredentialsForSiteAuthRoute(): void
     {
@@ -654,7 +654,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnJsonResponseWithNullCredentialsForMalformedAuthorizationHeader(): void
     {
@@ -685,7 +685,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnJsonResponseWithPostParametersForSitePostRoute(): void
     {
@@ -720,7 +720,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnJsonResponseWithQueryParametersForSiteGetRoute(): void
     {
@@ -755,7 +755,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnPhpIntMaxWhenMemoryLimitIsUnlimited(): void
     {
@@ -786,7 +786,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnPlainTextFileResponseForSiteFileRoute(): void
     {
@@ -827,7 +827,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnPlainTextResponseWithFileContentForSiteStreamRoute(): void
     {
@@ -859,7 +859,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnRedirectResponseForSiteRedirectRoute(): void
     {
@@ -886,7 +886,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnRedirectResponseForSiteRefreshRoute(): void
     {
@@ -913,7 +913,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnsJsonResponse(): void
     {
@@ -944,7 +944,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnsStatusCode201ForSiteStatusCodeRoute(): void
     {
@@ -965,7 +965,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testSessionDataPersistenceWithSameSessionId(): void
     {
@@ -1055,7 +1055,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testSessionIsolationBetweenRequests(): void
     {
@@ -1143,7 +1143,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testSessionWithoutCookieCreatesNewSession(): void
     {
@@ -1178,8 +1178,123 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    public function testSetMemoryLimitWithLargePositiveValueMaintainsValue(): void
+    {
+        $largeLimit = 2_147_483_647; // Near PHP_INT_MAX
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $app->setMemoryLimit($largeLimit);
+
+        self::assertSame(
+            $largeLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should handle large positive values correctly without overflow.',
+        );
+    }
+
+    public function testSetMemoryLimitWithPositiveValueDisablesRecalculation(): void
+    {
+        $customLimit = 134_217_728; // 128MB in bytes
+
+        $originalLimit = ini_get('memory_limit');
+        ini_set('memory_limit', '512M');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $app->setMemoryLimit($customLimit);
+
+        ini_set('memory_limit', '1G');
+
+        self::assertSame(
+            $customLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should remain unchanged when recalculation is disabled after setting positive value.',
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    public function testSetMemoryLimitWithPositiveValueOverridesSystemRecalculation(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $app->setMemoryLimit(0);
+
+        ini_set('memory_limit', '256M');
+
+        $systemBasedLimit = $app->getMemoryLimit();
+
+        $customLimit = 104_857_600; // 100MB in bytes (different from system)
+
+        $app->setMemoryLimit($customLimit);
+
+        ini_set('memory_limit', '512M');
+
+        self::assertSame(
+            $customLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should maintain custom value and ignore system changes when set to positive value.',
+        );
+
+        self::assertNotSame(
+            $systemBasedLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should override system-based calculation when positive value is set.',
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    public function testSetMemoryLimitWithPositiveValueSetsLimitDirectly(): void
+    {
+        $memoryLimit = 268_435_456; // 256MB in bytes
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->setMemoryLimit($memoryLimit);
+        $app->handle($request);
+
+        self::assertSame(
+            $memoryLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should be set to the exact value when a positive limit is provided.',
+        );
+    }
+
+    public function testSetMemoryLimitWithSmallPositiveValueSetsCorrectly(): void
+    {
+        $smallLimit = 1024; // 1KB
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $app->setMemoryLimit($smallLimit);
+
+        self::assertSame(
+            $smallLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should handle small positive values correctly.',
+        );
+    }
+
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testSetWebAndWebrootAliasesAfterHandleRequest(): void
     {
@@ -1203,7 +1318,46 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testThrowableOccursDuringRequestHandling(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'nonexistent/invalidaction',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            404,
+            $response->getStatusCode(),
+            "Response status code should be '404' when handling a request to 'non-existent' route in " .
+            "'StatelessApplication', confirming proper error handling in catch block.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'Throwable' occurs " .
+            "during request handling in 'StatelessApplication'.",
+        );
+
+        $body = $response->getBody()->getContents();
+
+        self::assertStringContainsString(
+            '<pre>Not Found: Page not found.</pre>',
+            $body,
+            "Response body should contain error message about 'Not Found: Page not found' when 'Throwable' occurs " .
+            "during request handling in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'eventDataProvider')]
     public function testTriggerEventDuringHandle(string $eventName): void
@@ -1227,7 +1381,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testUserAuthenticationSessionIsolation(): void
     {

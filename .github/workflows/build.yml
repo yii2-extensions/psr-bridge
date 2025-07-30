@@ -21,6 +21,25 @@ jobs:
   phpunit:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
+      concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  phpunit-uozp:
+    uses: php-forge/actions/.github/workflows/phpunit.yml@main
+    with:
+      before-hook: |
+        sudo apt-get update
+        sudo apt-get install -y autoconf automake libtool m4 make gcc
+        git clone https://github.com/krakjoe/uopz.git /tmp/uopz
+        cd /tmp/uopz && phpize && ./configure && make && sudo make install
+        PHP_INI_DIR=$(php-config --ini-dir)
+        sudo mkdir -p "$PHP_INI_DIR"
+        sudo sh -c "echo 'extension=uopz' > '$PHP_INI_DIR/uopz.ini'"
+      concurrency-group: phpunit-uozp${{ github.workflow }}-${{ github.ref }}
+      extensions: mbstring, gd
+      os: '["ubuntu-latest"]'
+      php-version: '["8.3"]'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
