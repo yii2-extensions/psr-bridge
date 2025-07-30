@@ -22,13 +22,7 @@ jobs:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
       before-hook: |
-        sudo apt-get update
-        sudo apt-get install -y git autoconf automake libtool m4 make gcc
-        git clone https://github.com/krakjoe/uopz.git /tmp/uopz
-        cd /tmp/uopz && sed -i '127s/^/\/\//' src/handlers.c
-        phpize && ./configure && make && sudo make install
-        echo "extension=uopz" > /usr/local/etc/php/conf.d/uopz.ini
-        php -m | grep uopz
+        php -i
       extensions: mbstring, gd
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
