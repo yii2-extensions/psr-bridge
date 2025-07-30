@@ -21,7 +21,6 @@ jobs:
   mutation:
     uses: php-forge/actions/.github/workflows/infection.yml@main
     with:
-      command-options: --threads=2 --ignore-msi-with-no-mutations --only-covered --test-framework-options="--configuration=phpunit.risky.xml.dist"
       phpstan: true
     secrets:
       STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
