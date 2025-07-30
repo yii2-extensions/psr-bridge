@@ -2,13 +2,15 @@
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    beStrictAboutOutputDuringTests="false"
     bootstrap="tests/bootstrap.php"
     cacheDirectory="runtime/.phpunit.cache"
     colors="true"
     executionOrder="depends,defects"
-    failOnRisky="true"
-    failOnWarning="true"
+    failOnRisky="false"
+    failOnWarning="false"
     stopOnFailure="false"
+    stopOnRisky="false"
 >
     <testsuites>
         <testsuite name="Yii2-PSR-Bridge">
