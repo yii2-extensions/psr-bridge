@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
     bootstrap="bootstrap.php"
-    cacheDirectory="runtime/.phpunit.cache"
+    cacheDirectory="./runtime/.phpunit.cache"
     colors="true"
     executionOrder="depends,defects"
     failOnRisky="false"
@@ -13,7 +13,7 @@
 >
     <testsuites>
         <testsuite name="Yii2-PSR-Bridge">
-            <directory>tests</directory>
+            <directory>.</directory>
         </testsuite>
     </testsuites>
 
