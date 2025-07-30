@@ -1,6 +1,7 @@
 {
     "symbol-whitelist": [
         "uopz_redefine",
-        "YII_DEBUG"
+        "YII_DEBUG",
+        "YII_ENV_TEST"
     ]
 }
