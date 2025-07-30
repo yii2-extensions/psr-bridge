@@ -42,6 +42,44 @@ use function ini_set;
 final class ErrorHandler extends \yii\web\ErrorHandler
 {
     /**
+     * Clears all output buffers above the minimum required level.
+     *
+     * Iterates through all active output buffers and cleans them, ensuring that only the minimum buffer level remains.
+     *
+     * This method is used to discard any existing output before rendering an error response, maintaining a clean output
+     * state while preserving compatibility with the testing framework.
+     *
+     * **PHPUnit Compatibility.**
+     *
+     * PHPUnit manages its own output buffer (typically at level '1') to capture and verify test output. Clearing this
+     * buffer causes PHPUnit to mark tests as "risky" because it detects unexpected manipulation of the output buffering
+     * system.
+     *
+     * By preserving level '1' in test environments, we ensure compatibility with PHPUnit testing infrastructure.
+     *
+     * @see https://github.com/sebastianbergmann/phpunit/issues/risky-tests PHPUnit risky test detection
+     *
+     * Usage example:
+     * ```php
+     * $this->clearOutput(); // Clears buffers while respecting testing environment
+     * ```
+     */
+    public function clearOutput(): void
+    {
+        $currentLevel = ob_get_level();
+
+        $minLevel = YII_ENV_TEST ? 1 : 0;
+
+        while ($currentLevel > $minLevel) {
+            if (@ob_end_clean() === false) {
+                ob_clean();
+            }
+
+            $currentLevel = ob_get_level();
+        }
+    }
+
+    /**
      * Handles exceptions and produces a PSR-7 ResponseInterface object.
      *
      * Overrides the default Yii2 exception handling to generate a PSR-7 ResponseInterface instance, supporting custom
