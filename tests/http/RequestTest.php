@@ -8,11 +8,14 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
 use stdClass;
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\web\JsonParser;
+use yii\web\{JsonParser, NotFoundHttpException};
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\TestCase;
+
+use function array_filter;
+use function str_starts_with;
 
 #[Group('http')]
 final class RequestTest extends TestCase
@@ -336,26 +339,24 @@ final class RequestTest extends TestCase
         $token = $request->getCsrfToken();
 
         // accept any value on custom safe request
-        foreach (['OPTIONS'] as $method) {
-            $_SERVER['REQUEST_METHOD'] = $method;
+        $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
 
-            self::assertTrue(
-                $request->validateCsrfToken($token),
-                "'CSRF' token validation should pass for valid token on custom safe 'HTTP' methods ('OPTIONS').",
-            );
-            self::assertTrue(
-                $request->validateCsrfToken($token . 'a'),
-                "'CSRF' token validation should pass for any value on custom safe 'HTTP' methods ('OPTIONS').",
-            );
-            self::assertTrue(
-                $request->validateCsrfToken(null),
-                "'CSRF' token validation should pass for 'null' value on custom safe 'HTTP' methods ('OPTIONS').",
-            );
-            self::assertTrue(
-                $request->validateCsrfToken(),
-                "'CSRF' token validation should pass when no token is provided on custom safe 'HTTP' methods ('OPTIONS').",
-            );
-        }
+        self::assertTrue(
+            $request->validateCsrfToken($token),
+            "'CSRF' token validation should pass for valid token on custom safe 'HTTP' methods ('OPTIONS').",
+        );
+        self::assertTrue(
+            $request->validateCsrfToken($token . 'a'),
+            "'CSRF' token validation should pass for any value on custom safe 'HTTP' methods ('OPTIONS').",
+        );
+        self::assertTrue(
+            $request->validateCsrfToken(null),
+            "'CSRF' token validation should pass for 'null' value on custom safe 'HTTP' methods ('OPTIONS').",
+        );
+        self::assertTrue(
+            $request->validateCsrfToken(),
+            "'CSRF' token validation should pass when no token is provided on custom safe 'HTTP' methods ('OPTIONS').",
+        );
 
         // only accept valid token on other requests
         foreach (['GET', 'HEAD', 'POST'] as $method) {
@@ -391,25 +392,23 @@ final class RequestTest extends TestCase
         $request->enableCsrfValidation = true;
 
         // only accept valid custom header on unsafe requests
-        foreach (['POST'] as $method) {
-            $_SERVER['REQUEST_METHOD'] = $method;
+        $_SERVER['REQUEST_METHOD'] = 'POST';
 
-            $request->headers->remove(Request::CSRF_HEADER);
+        $request->headers->remove(Request::CSRF_HEADER);
 
-            self::assertFalse(
-                $request->validateCsrfToken(),
-                "'CSRF' token validation should fail when the custom header is missing for unsafe 'HTTP' methods " .
-                "('POST').",
-            );
+        self::assertFalse(
+            $request->validateCsrfToken(),
+            "'CSRF' token validation should fail when the custom header is missing for unsafe 'HTTP' methods " .
+            "('POST').",
+        );
 
-            $request->headers->add(Request::CSRF_HEADER, '');
+        $request->headers->add(Request::CSRF_HEADER, '');
 
-            self::assertTrue(
-                $request->validateCsrfToken(),
-                "'CSRF' token validation should pass when the custom header is present for unsafe 'HTTP' methods " .
-                "('POST').",
-            );
-        }
+        self::assertTrue(
+            $request->validateCsrfToken(),
+            "'CSRF' token validation should pass when the custom header is present for unsafe 'HTTP' methods " .
+            "('POST').",
+        );
 
         // accept no value on other requests
         foreach (['GET', 'HEAD'] as $method) {
@@ -462,6 +461,65 @@ final class RequestTest extends TestCase
         );
     }
 
+    public function testGetAuthCredentialsWithNoAuthenticationData(): void
+    {
+        unset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']);
+
+        // test when no authentication data is available at all
+        $_SERVER = array_filter(
+            $_SERVER,
+            static function (string $key): bool {
+                return
+                    str_starts_with($key, 'HTTP_AUTHORIZATION') === false &&
+                    str_starts_with($key, 'REDIRECT_HTTP_AUTHORIZATION') === false;
+            },
+            ARRAY_FILTER_USE_KEY,
+        );
+
+        $request = new Request();
+
+        self::assertSame(
+            [null, null],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should return ['null', 'null'] when no authentication data is available.",
+        );
+
+        // test when Authorization header is present but not Basic auth
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+
+        $request = new Request();
+
+        self::assertSame(
+            [null, null],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header is not Basic " .
+            'authentication.',
+        );
+
+        // test when Authorization header is empty
+        $_SERVER['HTTP_AUTHORIZATION'] = '';
+
+        $request = new Request();
+
+        self::assertSame(
+            [null, null],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header is empty.",
+        );
+
+        // test when Authorization header contains only 'Basic' without credentials
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Basic';
+
+        $request = new Request();
+
+        self::assertSame(
+            [null, null],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header contains only 'Basic' " .
+            'without credentials.',
+        );
+    }
+
     public function testGetBodyParam(): void
     {
         $request = new Request();
@@ -478,8 +536,7 @@ final class RequestTest extends TestCase
             $request->getBodyParam('param.dot'),
             "'getBodyParam()' should return the correct value for a parameter with a dot in its name.",
         );
-        self::assertSame(
-            null,
+        self::assertNull(
             $request->getBodyParam('unexisting'),
             "'getBodyParam()' should return 'null' for a non-existing parameter.",
         );
@@ -507,8 +564,7 @@ final class RequestTest extends TestCase
             $request->getBodyParam('param.dot'),
             "'getBodyParam()' should return the correct value for a parameter with a dot in its name in 'stdClass'.",
         );
-        self::assertSame(
-            null,
+        self::assertNull(
             $request->getBodyParam('unexisting'),
             "'getBodyParam()' should return 'null' for a non-existing parameter in 'stdClass'.",
         );
@@ -520,6 +576,8 @@ final class RequestTest extends TestCase
     }
 
     /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
      * @phpstan-param array<string, mixed> $expected
      */
     #[DataProviderExternal(RequestProvider::class, 'getBodyParams')]
@@ -931,6 +989,9 @@ final class RequestTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testGetUrlWhenRequestUriIsSet(): void
     {
         $_SERVER['REQUEST_URI'] = '/search?q=hello+world&category=books&price[min]=10&price[max]=50';
@@ -946,6 +1007,9 @@ final class RequestTest extends TestCase
         unset($_SERVER['REQUEST_URI']);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testGetUrlWithRootPath(): void
     {
         $_SERVER['REQUEST_URI'] = '/';
@@ -1377,6 +1441,9 @@ final class RequestTest extends TestCase
         );
     }
 
+    /**
+     * @throws NotFoundHttpException if the request cannot be resolved.
+     */
     public function testResolve(): void
     {
         $this->webApplication(
@@ -1575,8 +1642,6 @@ final class RequestTest extends TestCase
     /**
      * @phpstan-param array<array-key, string>|null $ipHeaders
      * @phpstan-param array<array-key, string> $trustedHosts
-     *
-     * @throws InvalidConfigException
      */
     #[DataProviderExternal(RequestProvider::class, 'trustedHostAndInjectedXForwardedFor')]
     public function testTrustedHostAndInjectedXForwardedFor(
