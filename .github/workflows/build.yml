@@ -27,7 +27,7 @@ jobs:
         git clone https://github.com/krakjoe/uopz.git /tmp/uopz
         cd /tmp/uopz && sed -i '127s/^/\/\//' src/handlers.c
         phpize && ./configure && make && sudo make install
-        echo "extension=uopz" > /usr/local/etc/php/${{ php-version }}/conf.d/uopz.ini
+        echo "extension=uopz" > /usr/local/etc/php/${{ matrix.php-version }}/conf.d/uopz.ini
         php -m | grep uopz
       extensions: mbstring, gd
     secrets:
