@@ -31,7 +31,7 @@ jobs:
     with:
       concurrency-group: phpunit-risky-${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd
-      phpunit-configuration: phpunit.risky.xml.dist
+      phpunit-configuration: tests/phpunit.xml.dist
       phpunit-group: risky
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
