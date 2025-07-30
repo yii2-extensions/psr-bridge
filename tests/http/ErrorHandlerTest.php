@@ -57,6 +57,10 @@ final class ErrorHandlerTest extends TestCase
             $closed,
             "Should close all local output buffers after calling 'clearOutput()'.",
         );
+
+        if (function_exists('uopz_redefine')) {
+            uopz_redefine('YII_ENV_TEST', true);
+        }
     }
 
     public function testHandleExceptionResetsState(): void
