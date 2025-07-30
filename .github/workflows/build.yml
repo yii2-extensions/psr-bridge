@@ -39,7 +39,7 @@ jobs:
       concurrency-group: phpunit-uozp${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd
       os: ubuntu-latest
-      php-version: 8.3
+      php-version: '["8.3"]'
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
