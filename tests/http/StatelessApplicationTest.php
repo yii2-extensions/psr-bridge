@@ -18,9 +18,12 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
 use function array_key_exists;
+use function end;
 use function explode;
 use function ini_get;
 use function ini_set;
+use function ob_get_level;
+use function ob_start;
 use function session_name;
 use function sprintf;
 use function str_starts_with;
@@ -62,8 +65,8 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response1->getStatusCode(),
-            "Response status code should be '200' for 'site/captcha' route, confirming successful captcha generation " .
-            "in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/captcha' route, confirming successful captcha " .
+            "generation in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -117,8 +120,8 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response2->getStatusCode(),
-            "Response status code should be '200' for 'site/captcha' route, confirming successful captcha generation " .
-            "for second user in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/captcha' route, confirming successful captcha " .
+            "generation for second user in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -189,7 +192,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response3->getStatusCode(),
-            "Response status code should be '200' for captcha image request for user-a-session in " .
+            "Response 'status code' should be '200' for captcha image request for user-a-session in " .
                 "'StatelessApplication', confirming successful image retrieval and session isolation.",
         );
         self::assertNotEmpty(
@@ -214,6 +217,43 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    public function testClearOutputCleansLocalBuffers(): void
+    {
+        $levels = [];
+
+        ob_start();
+        $levels[] = ob_get_level();
+        ob_start();
+        $levels[] = ob_get_level();
+        ob_start();
+        $levels[] = ob_get_level();
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+
+        self::assertGreaterThanOrEqual(
+            3,
+            end($levels),
+            'Should have at least 3 output buffer levels before clearing output.',
+        );
+
+        $app->errorHandler->clearOutput();
+
+        $closed = true;
+
+        foreach ($levels as $level) {
+            $closed = $closed && (ob_get_level() < $level);
+        }
+
+        self::assertTrue(
+            $closed,
+            "Should close all local output buffers after calling 'clearOutput()'.",
+        );
+    }
+
     public function testFlashMessagesIsolationBetweenSessions(): void
     {
         $sessionName = session_name();
@@ -235,8 +275,8 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response1->getStatusCode(),
-            "Response status code should be '200' for 'site/setflash' route, confirming successful flash message set " .
-            "in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/setflash' route, confirming successful flash message " .
+            "set in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -247,8 +287,8 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             '{"status":"ok"}',
             $response1->getBody()->getContents(),
-            "Response body should be '{\"status\":\"ok\"}' after setting flash message for 'site/setflash' route in " .
-            "'StatelessApplication'.",
+            "Response 'body' should be '{\"status\":\"ok\"}' after setting flash message for 'site/setflash' route " .
+            "in 'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=flash-user-a; Path=/; HttpOnly; SameSite",
@@ -273,7 +313,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response2->getStatusCode(),
-            "Response status code should be '200' for 'site/getflash' route, confirming successful flash message " .
+            "Response 'status code' should be '200' for 'site/getflash' route, confirming successful flash message " .
             "retrieval in 'StatelessApplication'.",
         );
         self::assertSame(
@@ -349,7 +389,7 @@ final class StatelessApplicationTest extends TestCase
             self::assertSame(
                 200,
                 $response->getStatusCode(),
-                "Response status code should be '200' for 'site/setsessiondata' route in 'StatelessApplication', " .
+                "Response 'status code' should be '200' for 'site/setsessiondata' route in 'StatelessApplication', " .
                 'confirming successful session data set in worker mode.',
             );
             self::assertSame(
@@ -384,8 +424,8 @@ final class StatelessApplicationTest extends TestCase
                 200,
                 $response->getStatusCode(),
                 sprintf(
-                    "Response status code should be '200' for 'site/getsessiondata' route in 'StatelessApplication', " .
-                    "confirming successful session data retrieval for session '%s' in worker mode.",
+                    "Response 'status code' should be '200' for 'site/getsessiondata' route in 'StatelessApplication'" .
+                    ", confirming successful session data retrieval for session '%s' in worker mode.",
                     $sessionId,
                 ),
             );
@@ -417,8 +457,8 @@ final class StatelessApplicationTest extends TestCase
             self::assertIsArray(
                 $data,
                 sprintf(
-                    "Response body should be an array after decoding JSON for session '%s' in multiple requests with " .
-                    'different sessions in worker mode.',
+                    "Response 'body' should be an array after decoding JSON for session '%s' in multiple requests " .
+                    'with different sessions in worker mode.',
                     $sessionId,
                 ),
             );
@@ -485,7 +525,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for 'site/cookie' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/cookie' route in 'StatelessApplication'.",
         );
 
         $cookies = $response->getHeaders()['set-cookie'] ?? [];
@@ -594,6 +634,53 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnHtmlErrorResponseWhenErrorHandlerActionIsInvalid(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/nonexistent-action',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'invalid/nonexistent-action',
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' when 'ErrorHandler' is misconfigured and a nonexistent action is " .
+            "requested in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when ErrorHandler " .
+            "action is invalid in 'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            <<<HTML
+            <pre>An Error occurred while handling another error:
+            yii\base\InvalidRouteException: Unable to resolve the request &quot;invalid/nonexistent-action&quot;.
+            HTML,
+            $response->getBody()->getContents(),
+            "Response 'body' should contain error message about 'An Error occurred while handling another error' and " .
+            "the InvalidRouteException when errorHandler action is invalid in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnJsonResponseWithCookiesForSiteGetCookiesRoute(): void
     {
         $_COOKIE = [
@@ -606,19 +693,21 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
         );
         self::assertSame(
             <<<JSON
             {"test":{"name":"test","value":"test","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
             JSON,
             $response->getBody()->getContents(),
-            "Response body should match expected JSON string for cookie 'test' on 'site/getcookies' route in " .
+            "Response 'body' should match expected JSON string for cookie 'test' on 'site/getcookies' route in " .
             "'StatelessApplication'.",
         );
     }
@@ -636,19 +725,21 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for 'site/auth' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
         );
         self::assertSame(
             <<<JSON
             {"username":"admin","password":"admin"}
             JSON,
             $response->getBody()->getContents(),
-            "Response body should match expected JSON string '{\"username\":\"admin\",\"password\":\"admin\"}' " .
+            "Response 'body' should match expected JSON string '{\"username\":\"admin\",\"password\":\"admin\"}' " .
             "for 'site/auth' route in 'StatelessApplication'.",
         );
     }
@@ -666,12 +757,14 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for 'site/auth' route with malformed authorization header in " .
+            "Response 'status code' should be '200' for 'site/auth' route with malformed authorization header in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
@@ -679,7 +772,7 @@ final class StatelessApplicationTest extends TestCase
             {"username":null,"password":null}
             JSON,
             $response->getBody()->getContents(),
-            "Response body should match expected JSON string '{\"username\":null,\"password\":null}' for malformed " .
+            "Response 'body' should match expected JSON string '{\"username\":null,\"password\":null}' for malformed " .
             "authorization header on 'site/auth' route in 'StatelessApplication'.",
         );
     }
@@ -702,20 +795,22 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for 'site/post' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/post' route in 'StatelessApplication'.",
         );
         self::assertSame(
             <<<JSON
             {"foo":"bar","a":{"b":"c"}}
             JSON,
             $response->getBody()->getContents(),
-            "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for 'site/post'" .
-            "route in 'StatelessApplication'.",
+            "Response 'body' should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for " .
+            "'site/post' route in 'StatelessApplication'.",
         );
     }
 
@@ -737,20 +832,22 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for 'site/get' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/get' route in 'StatelessApplication'.",
         );
         self::assertSame(
             <<<JSON
             {"foo":"bar","a":{"b":"c"}}
             JSON,
             $response->getBody()->getContents(),
-            "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for 'site/get' " .
-            "route in 'StatelessApplication'.",
+            "Response 'body' should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for " .
+            "'site/get' route in 'StatelessApplication'.",
         );
     }
 
@@ -797,16 +894,15 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for 'site/file' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/file' route in 'StatelessApplication'.",
         );
-
-        $body = $response->getBody()->getContents();
-
         self::assertSame(
             'text/plain',
             $response->getHeaders()['content-type'][0] ?? '',
@@ -814,8 +910,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'This is a test file content.',
-            $body,
-            "Response body should match expected plain text 'This is a test file content.' for 'site/file' route " .
+            $response->getBody()->getContents(),
+            "Response 'body' should match expected plain text 'This is a test file content.' for 'site/file' route " .
             "in 'StatelessApplication'.",
         );
         self::assertSame(
@@ -838,12 +934,14 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for 'site/stream' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/stream' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'text/plain',
@@ -853,7 +951,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             'This is a test file content.',
             $response->getBody()->getContents(),
-            "Response body should match expected plain text 'This is a test file content.' for 'site/stream' route " .
+            "Response 'body' should match expected plain text 'This is a test file content.' for 'site/stream' route " .
             "in 'StatelessApplication'.",
         );
     }
@@ -870,12 +968,14 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             302,
             $response->getStatusCode(),
-            "Response status code should be '302' for redirect route 'site/redirect' in 'StatelessApplication'.",
+            "Response 'status code' should be '302' for redirect route 'site/redirect' in 'StatelessApplication'.",
         );
         self::assertSame(
             '/site/index',
@@ -897,12 +997,14 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             302,
             $response->getStatusCode(),
-            "Response status code should be '302' for redirect route 'site/refresh' in 'StatelessApplication'.",
+            "Response 'status code' should be '302' for redirect route 'site/refresh' in 'StatelessApplication'.",
         );
         self::assertSame(
             'site/refresh#stateless',
@@ -919,27 +1021,26 @@ final class StatelessApplicationTest extends TestCase
     {
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response status code should be '200' for successful 'StatelessApplication' handling.",
+            "Response 'status code' should be '200' for successful 'StatelessApplication' handling.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaders()['content-type'][0] ?? '',
             "Response 'content-type' should be 'application/json; charset=UTF-8' for JSON output.",
         );
-
-        $body = $response->getBody()->getContents();
-
         self::assertSame(
             <<<JSON
             {"hello":"world"}
             JSON,
-            $body,
-            'Response body should match expected JSON string "{\"hello\":\"world\"}".',
+            $response->getBody()->getContents(),
+            "Response 'body' should match expected JSON string '{\"hello\":\"world\"}'.",
         );
     }
 
@@ -955,12 +1056,14 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             201,
             $response->getStatusCode(),
-            "Response status code should be '201' for 'site/statuscode' route in 'StatelessApplication'.",
+            "Response 'status code' should be '201' for 'site/statuscode' route in 'StatelessApplication'.",
         );
     }
 
@@ -988,7 +1091,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response1->getStatusCode(),
-            "Response status code should be '200' for 'site/setsession' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/setsession' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -1018,7 +1121,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response2->getStatusCode(),
-            "Response status code should be '200' for 'site/getsession' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/getsession' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -1037,7 +1140,7 @@ final class StatelessApplicationTest extends TestCase
 
         self::assertIsArray(
             $body,
-            "Response body should be an array after decoding JSON response from 'site/getsession' route in " .
+            "Response 'body' should be an array after decoding JSON response from 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
 
@@ -1077,7 +1180,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response1->getStatusCode(),
-            "Response status code should be '200' for 'site/setsession' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/setsession' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -1106,7 +1209,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response2->getStatusCode(),
-            "Response status code should be '200' for 'site/getsession' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/getsession' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -1125,7 +1228,7 @@ final class StatelessApplicationTest extends TestCase
 
         self::assertIsArray(
             $body,
-            "Response body should be an array after decoding JSON response from 'site/getsession' route in " .
+            "Response 'body' should be an array after decoding JSON response from 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
 
@@ -1336,7 +1439,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             404,
             $response->getStatusCode(),
-            "Response status code should be '404' when handling a request to 'non-existent' route in " .
+            "Response 'status code' should be '404' when handling a request to 'non-existent' route in " .
             "'StatelessApplication', confirming proper error handling in catch block.",
         );
         self::assertSame(
@@ -1345,13 +1448,10 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'Throwable' occurs " .
             "during request handling in 'StatelessApplication'.",
         );
-
-        $body = $response->getBody()->getContents();
-
         self::assertStringContainsString(
             '<pre>Not Found: Page not found.</pre>',
-            $body,
-            "Response body should contain error message about 'Not Found: Page not found' when 'Throwable' occurs " .
+            $response->getBody()->getContents(),
+            "Response 'body' should contain error message about 'Not Found: Page not found' when 'Throwable' occurs " .
             "during request handling in 'StatelessApplication'.",
         );
     }
@@ -1407,7 +1507,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response1->getStatusCode(),
-            "Response status code should be '200' for 'site/login' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/login' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -1426,7 +1526,7 @@ final class StatelessApplicationTest extends TestCase
             {"status":"ok","username":"admin"}
             JSON,
             $response1->getBody()->getContents(),
-            "Response body should contain valid JSON with 'status' and 'username' for successful login in " .
+            "Response 'body' should contain valid JSON with 'status' and 'username' for successful login in " .
             "'StatelessApplication'.",
         );
 
@@ -1445,7 +1545,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response2->getStatusCode(),
-            "Response status code should be '200' for 'site/checkauth' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/checkauth' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
@@ -1464,7 +1564,7 @@ final class StatelessApplicationTest extends TestCase
             {"isGuest":true,"identity":null}
             JSON,
             $response2->getBody()->getContents(),
-            "Response body should indicate 'guest' status and 'null' identity for a new session in " .
+            "Response 'body' should indicate 'guest' status and 'null' identity for a new session in " .
             "'StatelessApplication'.",
         );
     }
