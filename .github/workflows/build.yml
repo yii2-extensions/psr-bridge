@@ -38,7 +38,8 @@ jobs:
         sudo sh -c "echo 'extension=uopz' > '$PHP_INI_DIR/uopz.ini'"
       concurrency-group: phpunit-uozp${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd
-      php-version: '["8.3"]'
+      os: ubuntu-latest
+      php-version: 8.3
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
