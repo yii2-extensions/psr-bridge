@@ -18,9 +18,12 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
 use function array_key_exists;
+use function end;
 use function explode;
 use function ini_get;
 use function ini_set;
+use function ob_get_level;
+use function ob_start;
 use function session_name;
 use function sprintf;
 use function str_starts_with;
@@ -211,6 +214,43 @@ final class StatelessApplicationTest extends TestCase
             "\x89PNG",
             $imageContent,
             "Captcha image content should start with PNG header for '{$url}' in 'StatelessApplication'.",
+        );
+    }
+
+    public function testClearOutputCleansLocalBuffers(): void
+    {
+        $levels = [];
+
+        ob_start();
+        $levels[] = ob_get_level();
+        ob_start();
+        $levels[] = ob_get_level();
+        ob_start();
+        $levels[] = ob_get_level();
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+
+        self::assertGreaterThanOrEqual(
+            3,
+            end($levels),
+            'Should have at least 3 output buffer levels before clearing output.',
+        );
+
+        $app->errorHandler->clearOutput();
+
+        $closed = true;
+
+        foreach ($levels as $level) {
+            $closed = $closed && (ob_get_level() < $level);
+        }
+
+        self::assertTrue(
+            $closed,
+            "Should close all local output buffers after calling 'clearOutput()'.",
         );
     }
 
@@ -653,7 +693,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -683,7 +725,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -713,7 +757,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -749,7 +795,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -784,7 +832,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -844,7 +894,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -882,7 +934,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -914,7 +968,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             302,
@@ -941,7 +997,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             302,
@@ -963,7 +1021,9 @@ final class StatelessApplicationTest extends TestCase
     {
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             200,
@@ -996,7 +1056,9 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $response = $this->statelessApplication()->handle($request);
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
 
         self::assertSame(
             201,

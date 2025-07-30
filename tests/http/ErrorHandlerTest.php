@@ -12,57 +12,11 @@ use yii\web\HttpException;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Response};
 use yii2\extensions\psrbridge\tests\TestCase;
 
-use function end;
-use function function_exists;
-use function ob_get_level;
-use function ob_start;
 use function str_repeat;
-use function uopz_redefine;
 
 #[Group('http')]
 final class ErrorHandlerTest extends TestCase
 {
-    public function testClearOutputCleansLocalBuffers(): void
-    {
-        if (function_exists('uopz_redefine')) {
-            uopz_redefine('YII_ENV_TEST', false);
-        }
-
-        $levels = [];
-
-        $errorHandler = new ErrorHandler();
-
-        ob_start();
-        $levels[] = ob_get_level();
-        ob_start();
-        $levels[] = ob_get_level();
-        ob_start();
-        $levels[] = ob_get_level();
-
-        self::assertGreaterThanOrEqual(
-            3,
-            end($levels),
-            'Should have at least 3 output buffer levels before clearing output.',
-        );
-
-        $errorHandler->clearOutput();
-
-        $closed = true;
-
-        foreach ($levels as $level) {
-            $closed = $closed && (ob_get_level() < $level);
-        }
-
-        self::assertTrue(
-            $closed,
-            "Should close all local output buffers after calling 'clearOutput()'.",
-        );
-
-        if (function_exists('uopz_redefine')) {
-            uopz_redefine('YII_ENV_TEST', true);
-        }
-    }
-
     public function testHandleExceptionResetsState(): void
     {
         $errorHandler = new ErrorHandler();
