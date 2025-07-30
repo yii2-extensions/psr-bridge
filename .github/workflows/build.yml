@@ -25,9 +25,10 @@ jobs:
       phpunit-exclude-group: risky
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  risky-tests:
+  phpunit-risky:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
+      concurrency-group: phpunit-risky-${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd
       phpunit-configuration: phpunit.risky.xml
       phpunit-group: risky
