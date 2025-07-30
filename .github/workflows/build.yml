@@ -21,12 +21,14 @@ jobs:
   phpunit:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
+      concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   phpunit-uozp:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
+      concurrency-group: phpunit-uozp${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd, uozp
       php-version: '["8.3"]'
     secrets:
