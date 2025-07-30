@@ -58,6 +58,7 @@ final class ErrorHandlerTest extends TestCase
             "Should close all local output buffers after calling 'clearOutput()'.",
         );
     }
+
     public function testHandleExceptionResetsState(): void
     {
         $errorHandler = new ErrorHandler();
