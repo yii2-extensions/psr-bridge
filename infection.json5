@@ -6,6 +6,9 @@
             "report": "main"
         }
     },
+    "phpunit": {
+        "configDir": "phpunit.risky.xml.dist"
+    }
     "source": {
         "directories": [
             "src"
