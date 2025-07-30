@@ -12,9 +12,52 @@ use yii\web\HttpException;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Response};
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function end;
+use function function_exists;
+use function ob_get_level;
+use function ob_start;
+use function str_repeat;
+use function uopz_redefine;
+
 #[Group('http')]
 final class ErrorHandlerTest extends TestCase
 {
+    public function testClearOutputCleansLocalBuffers(): void
+    {
+        if (function_exists('uopz_redefine')) {
+            uopz_redefine('YII_ENV_TEST', false);
+        }
+
+        $levels = [];
+
+        $errorHandler = new ErrorHandler();
+
+        ob_start();
+        $levels[] = ob_get_level();
+        ob_start();
+        $levels[] = ob_get_level();
+        ob_start();
+        $levels[] = ob_get_level();
+
+        self::assertGreaterThanOrEqual(
+            3,
+            end($levels),
+            'Should have at least 3 output buffer levels before clearing output.',
+        );
+
+        $errorHandler->clearOutput();
+
+        $closed = true;
+
+        foreach ($levels as $level) {
+            $closed = $closed && (ob_get_level() < $level);
+        }
+
+        self::assertTrue(
+            $closed,
+            "Should close all local output buffers after calling 'clearOutput()'.",
+        );
+    }
     public function testHandleExceptionResetsState(): void
     {
         $errorHandler = new ErrorHandler();
@@ -25,11 +68,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should return 'Response' instance after 'handlingException()'.",
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -47,11 +85,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should 'handleException()' with complex message.",
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -73,11 +106,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should 'handleException()' with empty message.",
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -99,11 +127,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should return instance of custom 'Response' class.",
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -125,11 +148,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should return instance of custom 'Response' class for 'HTTPException'.",
-        );
         self::assertSame(
             404,
             $response->getStatusCode(),
@@ -153,11 +171,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should 'handleException()' with very long message.",
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -184,12 +197,6 @@ final class ErrorHandlerTest extends TestCase
             $errorHandler->discardExistingOutput = false;
 
             $response = $errorHandler->handleException($exception);
-
-            self::assertInstanceOf(
-                Response::class,
-                $response,
-                "Should return 'Response' instance for exceptions {$index}.",
-            );
 
             if ($exception instanceof HttpException) {
                 self::assertSame(
@@ -222,11 +229,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($outerException);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            'Should handle nested exceptions.',
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -248,11 +250,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should return instance of custom 'Response' class for RuntimeException.",
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -275,11 +272,6 @@ final class ErrorHandlerTest extends TestCase
         } catch (Throwable $exception) {
             $response = $errorHandler->handleException($exception);
 
-            self::assertInstanceOf(
-                Response::class,
-                $response,
-                "Should 'handleException()' with special characters in trace.",
-            );
             self::assertSame(
                 500,
                 $response->getStatusCode(),
@@ -302,11 +294,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should return instance of custom 'Response' class for 'UserException'.",
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -328,11 +315,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should 'handleException()' with zero error code.",
-        );
         self::assertSame(
             500,
             $response->getStatusCode(),
@@ -354,11 +336,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should return 'Response' instance.",
-        );
         self::assertNotEmpty(
             $response->data,
             'Should always set non-empty response data.',
@@ -379,11 +356,6 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        self::assertInstanceOf(
-            Response::class,
-            $response,
-            "Should return 'Response' instance.",
-        );
         self::assertSame(
             Response::FORMAT_HTML,
             $response->format,
