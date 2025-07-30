@@ -1178,6 +1178,121 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    public function testSetMemoryLimitWithLargePositiveValueMaintainsValue(): void
+    {
+        $largeLimit = 2_147_483_647; // Near PHP_INT_MAX
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $app->setMemoryLimit($largeLimit);
+
+        self::assertSame(
+            $largeLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should handle large positive values correctly without overflow.',
+        );
+    }
+
+    public function testSetMemoryLimitWithPositiveValueDisablesRecalculation(): void
+    {
+        $customLimit = 134_217_728; // 128MB in bytes
+
+        $originalLimit = ini_get('memory_limit');
+        ini_set('memory_limit', '512M');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $app->setMemoryLimit($customLimit);
+
+        ini_set('memory_limit', '1G');
+
+        self::assertSame(
+            $customLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should remain unchanged when recalculation is disabled after setting positive value.',
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    public function testSetMemoryLimitWithPositiveValueOverridesSystemRecalculation(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $app->setMemoryLimit(0);
+
+        ini_set('memory_limit', '256M');
+
+        $systemBasedLimit = $app->getMemoryLimit();
+
+        $customLimit = 104_857_600; // 100MB in bytes (different from system)
+
+        $app->setMemoryLimit($customLimit);
+
+        ini_set('memory_limit', '512M');
+
+        self::assertSame(
+            $customLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should maintain custom value and ignore system changes when set to positive value.',
+        );
+
+        self::assertNotSame(
+            $systemBasedLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should override system-based calculation when positive value is set.',
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    public function testSetMemoryLimitWithPositiveValueSetsLimitDirectly(): void
+    {
+        $memoryLimit = 268_435_456; // 256MB in bytes
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->setMemoryLimit($memoryLimit);
+        $app->handle($request);
+
+        self::assertSame(
+            $memoryLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should be set to the exact value when a positive limit is provided.',
+        );
+    }
+
+    public function testSetMemoryLimitWithSmallPositiveValueSetsCorrectly(): void
+    {
+        $smallLimit = 1024; // 1KB
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $app->setMemoryLimit($smallLimit);
+
+        self::assertSame(
+            $smallLimit,
+            $app->getMemoryLimit(),
+            'Memory limit should handle small positive values correctly.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
