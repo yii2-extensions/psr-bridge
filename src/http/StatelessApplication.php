@@ -9,7 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use Yii;
 use yii\base\{Event, InvalidConfigException};
-use yii\di\NotInstantiableException;
+use yii\di\{Container, NotInstantiableException};
 use yii\web\{Application, UploadedFile};
 
 use function array_merge;
@@ -17,6 +17,7 @@ use function array_reverse;
 use function function_exists;
 use function gc_collect_cycles;
 use function ini_get;
+use function is_array;
 use function memory_get_usage;
 use function method_exists;
 use function microtime;
@@ -62,6 +63,11 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      * @phpstan-var array<string, mixed>
      */
     private array $config = [];
+
+    /**
+     * Container for dependency injection.
+     */
+    private Container|null $container = null;
 
     /**
      * Event handler for tracking events.
@@ -130,6 +136,36 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $usage = memory_get_usage(true);
 
         return $usage >= $bound;
+    }
+
+    /**
+     * Returns the dependency injection container for the StatelessApplication.
+     *
+     * Provides access to the Yii2 {@see Container} instance, configured with definitions and singletons from the
+     * application configuration. If the container is not already initialized, it is created using the provided
+     * configuration and cached for subsequent calls.
+     *
+     * This method enables type-safe dependency resolution and service management within the application lifecycle,
+     * supporting stateless operation and PSR-7 integration.
+     *
+     * @return Container Yii2 dependency injection container instance for the application.
+     *
+     * Usage example:
+     * ```php
+     * $container = $app->container();
+     * $service = $container->get(MyService::class);
+     * ```
+     */
+    public function container(): Container
+    {
+        $config = $this->config['container'] ?? [];
+
+        return $this->container ??= new Container(
+            [
+                'definitions' => is_array($config) && isset($config['definitions']) ? $config['definitions'] : [],
+                'singletons' => is_array($config) && isset($config['singletons']) ? $config['singletons'] : [],
+            ],
+        );
     }
 
     /**
@@ -355,15 +391,13 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
         $this->startEventTracking();
 
-        $config = $this->config;
-
         if ($this->has('errorHandler')) {
             $this->errorHandler->unregister();
         }
 
         // parent constructor is called because StatelessApplication uses a custom initialization pattern
         // @phpstan-ignore-next-line
-        parent::__construct($config);
+        parent::__construct($this->config);
 
         $this->requestedRoute = '';
         $this->requestedAction = null;
