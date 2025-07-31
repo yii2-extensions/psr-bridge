@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
+use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
+use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use Yii;
 use yii\base\{InvalidConfigException, Security};
 use yii\helpers\Json;
@@ -217,6 +219,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testClearOutputCleansLocalBuffers(): void
     {
         $levels = [];
@@ -254,6 +259,55 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    public function testContainerResolvesPsrFactoriesWithDefinitions(): void
+    {
+        $app = $this->statelessApplication([
+            'container' => [
+                'definitions' => [
+                    ServerRequestFactoryInterface::class => ServerRequestFactory::class,
+                    StreamFactoryInterface::class => StreamFactory::class,
+                    UploadedFileFactoryInterface::class => UploadedFileFactory::class,
+                ],
+            ],
+        ]);
+
+        $container = $app->container();
+
+        self::assertTrue(
+            $container->has(ServerRequestFactoryInterface::class),
+            "Container should have definition for 'ServerRequestFactoryInterface', ensuring PSR-7 request factory is " .
+            'available.',
+        );
+        self::assertTrue(
+            $container->has(StreamFactoryInterface::class),
+            "Container should have definition for 'StreamFactoryInterface', ensuring PSR-7 stream factory is " .
+            'available.',
+        );
+        self::assertTrue(
+            $container->has(UploadedFileFactoryInterface::class),
+            "Container should have definition for 'UploadedFileFactoryInterface', ensuring PSR-7 uploaded file " .
+            'factory is available.',
+        );
+        self::assertInstanceOf(
+            ServerRequestFactory::class,
+            $container->get(ServerRequestFactoryInterface::class),
+            "Container should resolve 'ServerRequestFactoryInterface' to an instance of 'ServerRequestFactory'.",
+        );
+        self::assertInstanceOf(
+            StreamFactory::class,
+            $container->get(StreamFactoryInterface::class),
+            "Container should resolve 'StreamFactoryInterface' to an instance of 'StreamFactory'.",
+        );
+        self::assertInstanceOf(
+            UploadedFileFactory::class,
+            $container->get(UploadedFileFactoryInterface::class),
+            "Container should resolve 'UploadedFileFactoryInterface' to an instance of 'UploadedFileFactory'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFlashMessagesIsolationBetweenSessions(): void
     {
         $sessionName = session_name();
@@ -365,6 +419,9 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testMultipleRequestsWithDifferentSessionsInWorkerMode(): void
     {
         $sessionName = session_name();
@@ -1281,6 +1338,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testSetMemoryLimitWithLargePositiveValueMaintainsValue(): void
     {
         $largeLimit = 2_147_483_647; // Near PHP_INT_MAX
@@ -1299,6 +1359,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testSetMemoryLimitWithPositiveValueDisablesRecalculation(): void
     {
         $customLimit = 134_217_728; // 128MB in bytes
@@ -1324,6 +1387,9 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testSetMemoryLimitWithPositiveValueOverridesSystemRecalculation(): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -1360,6 +1426,9 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testSetMemoryLimitWithPositiveValueSetsLimitDirectly(): void
     {
         $memoryLimit = 268_435_456; // 256MB in bytes
@@ -1378,6 +1447,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testSetMemoryLimitWithSmallPositiveValueSetsCorrectly(): void
     {
         $smallLimit = 1024; // 1KB
