@@ -235,8 +235,11 @@ final class StatelessApplicationTest extends TestCase
         $app->handle($request);
         $memoryLimit = $app->getMemoryLimit();
 
-        $expectedNinetyPercent = (int) (104_857_600 * 0.9);
-
+        self::assertFalse(
+            $app->clean(),
+            "'clean()' should return 'false' when memory usage is below the '90%' threshold of the configured memory " .
+            "limit ('100M'), confirming that no cleanup is needed in 'StatelessApplication'.",
+        );
         self::assertSame(
             104_857_600,
             $memoryLimit,
@@ -245,7 +248,7 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             94_371_840,
-            $expectedNinetyPercent,
+            $memoryLimit * 0.9,
             "'90%' of '100M' should be exactly '94_371_840' bytes, not a division result like '116_508_444' bytes " .
             "('100M' / '0.9') in 'StatelessApplication'.",
         );
