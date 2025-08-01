@@ -10,6 +10,7 @@ use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, Upl
 use stdClass;
 use Yii;
 use yii\base\{InvalidConfigException, Security};
+use yii\base\UserException;
 use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
@@ -31,6 +32,7 @@ use function gc_enable;
 use function gc_status;
 use function ini_get;
 use function ini_set;
+use function is_string;
 use function memory_get_usage;
 use function ob_get_level;
 use function ob_start;
@@ -842,6 +844,53 @@ final class StatelessApplicationTest extends TestCase
         );
 
         ini_set('memory_limit', $originalLimit);
+    }
+
+    public function testReturnHtmlErrorResponseForUserException(): void
+    {
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'stub/error',
+                    ],
+                ],
+            ],
+        );
+
+        $app->handle($request);
+
+        $errorHandler = $app->errorHandler;
+        $errorHandler->discardExistingOutput = false;
+
+        $exception = new UserException('User-friendly error message.');
+
+        $response = $errorHandler->handleException($exception);
+        $data = is_string($response->data) ? $response->data : '';
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' when handling a 'UserException' in 'ErrorHandler', confirming " .
+            'proper error handling.',
+        );
+        self::assertSame(
+            Response::FORMAT_HTML,
+            $response->format,
+            "Response 'format' should be 'html' for 'UserException' handled by 'ErrorHandler'.",
+        );
+        self::assertNotEmpty(
+            $data,
+            "Response 'data' should not be empty when 'ErrorHandler' handles a 'UserException', ensuring error " .
+            'details are present.',
+        );
+        self::assertStringContainsString(
+            'User-friendly error message.',
+            $data,
+            "Response 'data' should contain the exception message when 'ErrorHandler' handles a 'UserException'.",
+        );
     }
 
     /**
