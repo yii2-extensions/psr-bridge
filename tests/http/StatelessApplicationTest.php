@@ -7,8 +7,10 @@ namespace yii2\extensions\psrbridge\tests\http;
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
+use stdClass;
 use Yii;
 use yii\base\{InvalidConfigException, Security};
+use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
@@ -18,17 +20,26 @@ use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function array_fill;
 use function array_filter;
 use function array_key_exists;
+use function base64_encode;
 use function end;
 use function explode;
+use function gc_disable;
+use function gc_enable;
+use function gc_status;
 use function ini_get;
 use function ini_set;
+use function memory_get_usage;
 use function ob_get_level;
 use function ob_start;
+use function preg_quote;
 use function session_name;
 use function sprintf;
 use function str_starts_with;
+
+use function uniqid;
 
 use const PHP_INT_MAX;
 
@@ -296,6 +307,74 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testCleanTriggersGarbageCollectionAndReducesMemoryUsage(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '512M');
+
+        gc_disable();
+
+        $app = $this->statelessApplication();
+
+        for ($i = 0; $i < 25; $i++) {
+            $circular = new stdClass();
+
+            $circular->self = $circular;
+
+            $circular->data = array_fill(0, 100, "data-{$i}");
+
+            $_SERVER = [
+                'REQUEST_METHOD' => 'GET',
+                'REQUEST_URI' => "site/index?iteration={$i}",
+            ];
+
+            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+            $response = $app->handle($request);
+
+            $obj1 = new stdClass();
+            $obj2 = new stdClass();
+
+            $obj1->ref = $obj2;
+            $obj2->ref = $obj1;
+            $obj1->circular = $circular;
+
+            unset($circular, $obj1, $obj2, $request, $response);
+        }
+
+        $gcStatsBefore = gc_status();
+        $memoryBefore = memory_get_usage(true);
+        $app->clean();
+        $memoryAfter = memory_get_usage(true);
+        $gcStatsAfter = gc_status();
+
+        gc_enable();
+
+        $cyclesCollected = $gcStatsAfter['collected'] - $gcStatsBefore['collected'];
+
+        self::assertGreaterThan(
+            0,
+            $cyclesCollected,
+            "'clean()' should trigger garbage collection that collects circular references, but no cycles were " .
+            "collected. This indicates 'gc_collect_cycles()' was not called in 'StatelessApplication'.",
+        );
+
+        $memoryDifference = $memoryAfter - $memoryBefore;
+
+        self::assertLessThanOrEqual(
+            1_048_576,
+            $memoryDifference,
+            "'clean()' should reduce memory usage through garbage collection. Memory increased by {$memoryDifference}" .
+            " bytes, suggesting 'gc_collect_cycles()' was not called in 'StatelessApplication'.",
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testClearOutputCleansLocalBuffers(): void
     {
         $levels = [];
@@ -333,6 +412,10 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
     public function testContainerResolvesPsrFactoriesWithDefinitions(): void
     {
         $app = $this->statelessApplication([
@@ -1441,6 +1524,7 @@ final class StatelessApplicationTest extends TestCase
         $customLimit = 134_217_728; // 128MB in bytes
 
         $originalLimit = ini_get('memory_limit');
+
         ini_set('memory_limit', '512M');
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
