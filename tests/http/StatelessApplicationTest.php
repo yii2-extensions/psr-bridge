@@ -38,7 +38,6 @@ use function preg_quote;
 use function session_name;
 use function sprintf;
 use function str_starts_with;
-
 use function uniqid;
 
 use const PHP_INT_MAX;
