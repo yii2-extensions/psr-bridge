@@ -247,7 +247,7 @@ final class StatelessApplicationTest extends TestCase
             "'StatelessApplication'.",
         );
         self::assertSame(
-            94_371_840,
+            94_371_840.0,
             $memoryLimit * 0.9,
             "'90%' of '100M' should be exactly '94_371_840' bytes, not a division result like '116_508_444' bytes " .
             "('100M' / '0.9') in 'StatelessApplication'.",
