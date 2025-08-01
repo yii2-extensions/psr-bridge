@@ -96,6 +96,8 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     /**
      * Creates a new instance of the {@see StatelessApplication} class.
      *
+     * @param array $config Configuration for the StatelessApplication.
+     *
      * @phpstan-param array<string, mixed> $config
      *
      * @phpstan-ignore constructor.missingParentCall
