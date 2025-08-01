@@ -259,6 +259,43 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testCleanReturnsTrueWhenMemoryUsageExactlyEqualsThreshold(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '2G');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+
+        $currentUsage = memory_get_usage(true);
+
+        $artificialLimit = (int) ($currentUsage / 0.9);
+
+        $app->setMemoryLimit($artificialLimit);
+        $memoryLimit = $app->getMemoryLimit();
+
+        self::assertTrue(
+            $app->clean(),
+            "'clean()' should return 'true' when memory usage is exactly at or above '90%' threshold ('>=' operator)" .
+            ", not only when strictly greater than ('>' operator) in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            $artificialLimit,
+            $memoryLimit,
+            "Memory limit should be set to the artificial limit '{$artificialLimit}' for threshold calculation test " .
+            "in 'StatelessApplication'.",
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testClearOutputCleansLocalBuffers(): void
     {
         $levels = [];
