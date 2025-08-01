@@ -873,8 +873,8 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '500' when handling a 'UserException' in 'ErrorHandler', confirming " .
-            'proper error handling.',
+            "Response 'status code' should be '200' when handling a 'UserException' with a configured 'errorAction' " .
+            "that executes successfully in 'ErrorHandler', confirming proper error action delegation.",
         );
         self::assertSame(
             Response::FORMAT_HTML,
