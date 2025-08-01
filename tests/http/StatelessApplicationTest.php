@@ -222,6 +222,80 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testCleanCalculatesCorrectMemoryThresholdWith90Percent(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '100M');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+        $memoryLimit = $app->getMemoryLimit();
+
+        self::assertFalse(
+            $app->clean(),
+            "'clean()' should return 'false' when memory usage is below the '90%' threshold of the configured memory " .
+            "limit ('100M'), confirming that no cleanup is needed in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            104_857_600,
+            $memoryLimit,
+            "Memory limit should be exactly '104_857_600' bytes ('100M') for threshold calculation test in" .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            94_371_840.0,
+            $memoryLimit * 0.9,
+            "'90%' of '100M' should be exactly '94_371_840' bytes, not a division result like '116_508_444' bytes " .
+            "('100M' / '0.9') in 'StatelessApplication'.",
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testCleanReturnsTrueWhenMemoryUsageExactlyEqualsThreshold(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '2G');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $app->handle($request);
+
+        $currentUsage = memory_get_usage(true);
+
+        $artificialLimit = (int) ($currentUsage / 0.9);
+
+        $app->setMemoryLimit($artificialLimit);
+        $memoryLimit = $app->getMemoryLimit();
+
+        self::assertTrue(
+            $app->clean(),
+            "'clean()' should return 'true' when memory usage is exactly at or above '90%' threshold ('>=' operator)" .
+            ", not only when strictly greater than ('>' operator) in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            $artificialLimit,
+            $memoryLimit,
+            "Memory limit should be set to the artificial limit '{$artificialLimit}' for threshold calculation test " .
+            "in 'StatelessApplication'.",
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testClearOutputCleansLocalBuffers(): void
     {
         $levels = [];

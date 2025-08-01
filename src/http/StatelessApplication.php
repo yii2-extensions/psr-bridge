@@ -133,7 +133,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
         $limit = $this->getMemoryLimit();
 
-        $bound = (int) ($limit * 0.9);
+        $bound = $limit * 0.9;
 
         $usage = memory_get_usage(true);
 
