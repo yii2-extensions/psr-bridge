@@ -321,4 +321,40 @@ final class ErrorHandlerTest extends TestCase
             'Should default to HTML format.',
         );
     }
+
+    public function testUseErrorViewLogicWithDebugTrueAndUserException(): void
+    {
+        if (function_exists('runkit_constant_redefine')) {
+            @runkit_constant_redefine('YII_DEBUG', true);
+        }
+
+        $errorHandler = new ErrorHandler();
+
+        $errorHandler->discardExistingOutput = false;
+        $errorHandler->errorAction = 'site/error';
+
+        $exception = new UserException('User-friendly error message');
+
+        $response = $errorHandler->handleException($exception);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Should set status code to '200' for 'UserException'",
+        );
+        self::assertSame(
+            Response::FORMAT_HTML,
+            $response->format,
+            'Response format should be HTML',
+        );
+        self::assertIsString(
+            $response->data,
+            'Response data should be a string',
+        );
+        self::assertStringContainsString(
+            'User-friendly error message',
+            $response->data,
+            "Should set response data when using error view with 'UserException' in 'debug' mode",
+        );
+    }
 }
