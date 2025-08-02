@@ -21,16 +21,7 @@ jobs:
   mutation:
     uses: php-forge/actions/.github/workflows/infection.yml@main
     with:
-      before-hook: |
-        sudo apt-get update
-        sudo apt-get install -y autoconf automake libtool m4 make gcc
-        git clone https://github.com/zonuexe/uopz.git /tmp/uopz
-        cd /tmp/uopz && git checkout support/php84-exit
-        phpize && ./configure && make && sudo make install
-        PHP_INI_DIR=$(php-config --ini-dir)
-        sudo mkdir -p "$PHP_INI_DIR"
-        sudo sh -c "echo 'extension=uopz' > '$PHP_INI_DIR/uopz.ini'"
-      command-options: --threads=2 --ignore-msi-with-no-mutations --initial-tests-php-options="-d error_reporting=E_ALL"
+      command-options: --threads=2 --ignore-msi-with-no-mutations
       php-version: '["8.4"]'
       phpstan: true
     secrets:
