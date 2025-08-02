@@ -30,7 +30,7 @@ jobs:
         PHP_INI_DIR=$(php-config --ini-dir)
         sudo mkdir -p "$PHP_INI_DIR"
         sudo sh -c "echo 'extension=uopz' > '$PHP_INI_DIR/uopz.ini'"
-      php-version: '["8.3"]'
+      php-version: '["8.4"]'
       phpstan: true
     secrets:
       STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
