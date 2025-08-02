@@ -6,6 +6,7 @@ namespace yii2\extensions\psrbridge\tests\http;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use stdClass;
 use Yii;
@@ -1707,6 +1708,89 @@ final class StatelessApplicationTest extends TestCase
         $app->handle($request);
 
         self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
+    }
+
+    #[RequiresPhpExtension('runkit7')]
+    public function testUseErrorViewLogicWithDebugFalseAndUserException(): void
+    {
+        @runkit_constant_redefine('YII_DEBUG', false);
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-user-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication([
+            'components' => [
+                'errorHandler' => [
+                    'errorAction' => 'site/error',
+                ],
+            ],
+        ]);
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' when handling 'UserException' with 'debug' mode disabled, " .
+            "confirming error view logic in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'UserException' " .
+            "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'An internal server error occurred.',
+            $response->getBody()->getContents(),
+            "Response 'body' should contain generic error message 'An internal server error occurred.' when " .
+            "'UserException' is triggered and 'debug' mode is disabled in 'StatelessApplication'.",
+        );
+
+        @runkit_constant_redefine('YII_DEBUG', true);
+    }
+
+    public function testUseErrorViewLogicWithDebugTrueAndUserException(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-user-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication([
+            'components' => [
+                'errorHandler' => [
+                    'errorAction' => 'site/error',
+                ],
+            ],
+        ]);
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' when handling 'UserException' with 'debug' mode enabled, " .
+            "confirming error view logic in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'UserException'" .
+            "occurs and 'debug' mode is enabled in 'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'User-friendly error message.',
+            $response->getBody()->getContents(),
+            "Response 'body' should contain 'User-friendly error message.' when 'UserException' is triggered and " .
+            "'debug' mode is enabled in 'StatelessApplication'.",
+        );
     }
 
     /**

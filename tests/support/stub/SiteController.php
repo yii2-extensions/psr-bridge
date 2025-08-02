@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\support\stub;
 
 use Yii;
-use yii\base\Exception;
-use yii\base\InvalidRouteException;
+use yii\base\{Exception, InvalidRouteException, UserException};
 use yii\captcha\CaptchaAction;
 use yii\web\{Controller, Cookie, RangeNotSatisfiableHttpException, Response};
 
@@ -255,5 +254,10 @@ final class SiteController extends Controller
         rewind($tmpFile);
 
         return $this->response->sendStreamAsFile($tmpFile, 'stream.txt', ['mimeType' => 'text/plain']);
+    }
+
+    public function actionTriggerUserException(): never
+    {
+        throw new UserException('User-friendly error message.');
     }
 }
