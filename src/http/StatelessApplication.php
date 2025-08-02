@@ -21,9 +21,9 @@ use function is_array;
 use function memory_get_usage;
 use function method_exists;
 use function microtime;
+use function runkit_constant_redefine;
 use function sscanf;
 use function strtoupper;
-use function uopz_redefine;
 
 /**
  * Stateless Yii2 Application with PSR-7 RequestHandler integration for worker and SAPI environments.
@@ -387,8 +387,8 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     protected function reset(ServerRequestInterface $request): void
     {
         // override 'YII_BEGIN_TIME' if possible for yii2-debug and other modules that depend on it
-        if (function_exists('uopz_redefine')) {
-            uopz_redefine('YII_BEGIN_TIME', microtime(true));
+        if (function_exists('runkit_constant_redefine')) {
+            @runkit_constant_redefine('YII_ENV', 'prod');
         }
 
         $this->startEventTracking();
