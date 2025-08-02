@@ -20,6 +20,7 @@ use function ini_get;
 use function is_array;
 use function memory_get_usage;
 use function method_exists;
+use function microtime;
 use function runkit_constant_redefine;
 use function sscanf;
 use function strtoupper;
@@ -387,7 +388,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     {
         // override 'YII_BEGIN_TIME' if possible for yii2-debug and other modules that depend on it
         if (function_exists('runkit_constant_redefine')) {
-            @runkit_constant_redefine('YII_ENV', 'prod');
+            @runkit_constant_redefine('YII_BEGIN_TIME', microtime(true));
         }
 
         $this->startEventTracking();
