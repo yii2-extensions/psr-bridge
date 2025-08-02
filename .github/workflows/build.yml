@@ -31,15 +31,16 @@ jobs:
       before-hook: |
         sudo apt-get update
         sudo apt-get install -y autoconf automake libtool m4 make gcc
-        git clone https://github.com/krakjoe/uopz.git /tmp/uopz
-        cd /tmp/uopz && phpize && ./configure && make && sudo make install
+        git clone https://github.com/zonuexe/uopz.git /tmp/uopz
+        cd /tmp/uopz && git checkout support/php84-exit
+        phpize && ./configure && make && sudo make install
         PHP_INI_DIR=$(php-config --ini-dir)
         sudo mkdir -p "$PHP_INI_DIR"
         sudo sh -c "echo 'extension=uopz' > '$PHP_INI_DIR/uopz.ini'"
       concurrency-group: phpunit-uozp${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd
       os: '["ubuntu-latest"]'
-      php-version: '["8.3"]'
+      php-version: '["8.4"]'
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
