@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
-use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use stdClass;
 use Yii;
@@ -1711,6 +1710,48 @@ final class StatelessApplicationTest extends TestCase
     }
 
     #[RequiresPhpExtension('runkit7')]
+    public function testUseErrorViewLogicWithDebugFalseAndException(): void
+    {
+        if (YII_DEBUG) {
+            @runkit_constant_redefine('YII_DEBUG', false);
+        }
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' when a 'Exception' occurs and 'debug' mode is disabled in " .
+            "'StatelessApplication', indicating an 'internal server error'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'Exception' " .
+            "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'An internal server error occurred.',
+            $response->getBody()->getContents(),
+            "Response 'body' should contain generic error message 'An internal server error occurred.' when " .
+            "'Exception' is triggered and 'debug' mode is disabled in 'StatelessApplication'.",
+        );
+
+        if (YII_DEBUG === false) {
+            @runkit_constant_redefine('YII_DEBUG', true);
+        }
+    }
+
+    #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndUserException(): void
     {
         @runkit_constant_redefine('YII_DEBUG', false);
@@ -1722,21 +1763,15 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $app = $this->statelessApplication([
-            'components' => [
-                'errorHandler' => [
-                    'errorAction' => 'site/error',
-                ],
-            ],
-        ]);
+        $app = $this->statelessApplication();
 
         $response = $app->handle($request);
 
         self::assertSame(
-            200,
+            500,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' when handling 'UserException' with 'debug' mode disabled, " .
-            "confirming error view logic in 'StatelessApplication'.",
+            "Response 'status code' should be '500' when a 'UserException' occurs and 'debug' mode is disabled in " .
+            "'StatelessApplication', indicating an 'internal server error'.",
         );
         self::assertSame(
             'text/html; charset=UTF-8',
@@ -1763,21 +1798,15 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $app = $this->statelessApplication([
-            'components' => [
-                'errorHandler' => [
-                    'errorAction' => 'site/error',
-                ],
-            ],
-        ]);
+        $app = $this->statelessApplication();
 
         $response = $app->handle($request);
 
         self::assertSame(
-            200,
+            500,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' when handling 'UserException' with 'debug' mode enabled, " .
-            "confirming error view logic in 'StatelessApplication'.",
+            "Response 'status code' should be '500' when a 'UserException' occurs and 'debug' mode is enabled in " .
+            "'StatelessApplication', indicating an 'internal server error'.",
         );
         self::assertSame(
             'text/html; charset=UTF-8',

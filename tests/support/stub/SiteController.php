@@ -256,6 +256,11 @@ final class SiteController extends Controller
         return $this->response->sendStreamAsFile($tmpFile, 'stream.txt', ['mimeType' => 'text/plain']);
     }
 
+    public function actionTriggerException(): never
+    {
+        throw new Exception('Exception error message.');
+    }
+
     public function actionTriggerUserException(): never
     {
         throw new UserException('User-friendly error message.');
