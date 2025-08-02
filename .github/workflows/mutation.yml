@@ -22,7 +22,7 @@ jobs:
     uses: php-forge/actions/.github/workflows/infection.yml@main
     with:
       command-options: --threads=2 --ignore-msi-with-no-mutations
-      php-version: '["8.4"]'
+      extensions: runkit7
       phpstan: true
     secrets:
       STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
