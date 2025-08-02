@@ -1747,7 +1747,15 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertStringContainsString(
             <<<HTML
-            <div id="custom-error-action">Custom error page from errorAction</div>
+            <div id="custom-error-action">
+            Custom error page from errorAction.
+            <span class="exception-type">
+            yii\base\Exception
+            </span>
+            <span class="exception-message">
+            Exception error message.
+            </span>
+            </div>
             HTML,
             $response->getBody()->getContents(),
             "Response 'body' should contain 'Custom error page from errorAction' when 'Exception' is triggered " .
@@ -1795,7 +1803,15 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertStringContainsString(
             <<<HTML
-            <div id="custom-error-action">Custom error page from errorAction</div>
+            <div id="custom-error-action">
+            Custom error page from errorAction.
+            <span class="exception-type">
+            yii\base\UserException
+            </span>
+            <span class="exception-message">
+            User-friendly error message.
+            </span>
+            </div>
             HTML,
             $response->getBody()->getContents(),
             "Response 'body' should contain 'Custom error page from errorAction' when 'UserException' is triggered " .
@@ -1814,7 +1830,15 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $app = $this->statelessApplication();
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'site/error',
+                    ],
+                ],
+            ],
+        );
 
         $response = $app->handle($request);
 
@@ -1831,7 +1855,17 @@ final class StatelessApplicationTest extends TestCase
             "occurs and 'debug' mode is enabled in 'StatelessApplication'.",
         );
         self::assertStringContainsString(
-            'User-friendly error message.',
+            <<<HTML
+            <div id="custom-error-action">
+            Custom error page from errorAction.
+            <span class="exception-type">
+            yii\base\UserException
+            </span>
+            <span class="exception-message">
+            User-friendly error message.
+            </span>
+            </div>
+            HTML,
             $response->getBody()->getContents(),
             "Response 'body' should contain 'User-friendly error message.' when 'UserException' is triggered and " .
             "'debug' mode is enabled in 'StatelessApplication'.",

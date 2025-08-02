@@ -72,7 +72,28 @@ final class SiteController extends Controller
     {
         $this->response->format = Response::FORMAT_HTML;
 
-        return '<div id="custom-error-action">Custom error page from errorAction</div>';
+        $exception = Yii::$app->errorHandler->exception;
+
+        if ($exception !== null) {
+            $exceptionType = get_class($exception);
+            $exceptionMessage = htmlspecialchars($exception->getMessage());
+
+            return <<< HTML
+            <div id="custom-error-action">
+            Custom error page from errorAction.
+            <span class="exception-type">
+            $exceptionType
+            </span>
+            <span class="exception-message">
+            $exceptionMessage
+            </span>
+            </div>
+            HTML;
+        }
+
+        return <<<HTML
+        <div id="custom-error-action">Custom error page from errorAction</div>
+        HTML;
     }
 
     /**
