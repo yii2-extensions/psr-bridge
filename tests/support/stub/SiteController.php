@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\support\stub;
 
 use Yii;
-use yii\base\Exception;
-use yii\base\InvalidRouteException;
+use yii\base\{Exception, InvalidRouteException, UserException};
 use yii\captcha\CaptchaAction;
 use yii\web\{Controller, Cookie, RangeNotSatisfiableHttpException, Response};
 
@@ -67,6 +66,34 @@ final class SiteController extends Controller
                 ],
             ),
         );
+    }
+
+    public function actionError(): string
+    {
+        $this->response->format = Response::FORMAT_HTML;
+
+        $exception = Yii::$app->errorHandler->exception;
+
+        if ($exception !== null) {
+            $exceptionType = get_class($exception);
+            $exceptionMessage = htmlspecialchars($exception->getMessage());
+
+            return <<< HTML
+            <div id="custom-error-action">
+            Custom error page from errorAction.
+            <span class="exception-type">
+            $exceptionType
+            </span>
+            <span class="exception-message">
+            $exceptionMessage
+            </span>
+            </div>
+            HTML;
+        }
+
+        return <<<HTML
+        <div id="custom-error-action">Custom error page from errorAction</div>
+        HTML;
     }
 
     /**
@@ -255,5 +282,15 @@ final class SiteController extends Controller
         rewind($tmpFile);
 
         return $this->response->sendStreamAsFile($tmpFile, 'stream.txt', ['mimeType' => 'text/plain']);
+    }
+
+    public function actionTriggerException(): never
+    {
+        throw new Exception('Exception error message.');
+    }
+
+    public function actionTriggerUserException(): never
+    {
+        throw new UserException('User-friendly error message.');
     }
 }
