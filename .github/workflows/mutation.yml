@@ -30,6 +30,7 @@ jobs:
         PHP_INI_DIR=$(php-config --ini-dir)
         sudo mkdir -p "$PHP_INI_DIR"
         sudo sh -c "echo 'extension=uopz' > '$PHP_INI_DIR/uopz.ini'"
+      command-options: --threads=2 --ignore-msi-with-no-mutations --initial-tests-php-options="-d error_reporting=E_ALL"
       php-version: '["8.4"]'
       phpstan: true
     secrets:
