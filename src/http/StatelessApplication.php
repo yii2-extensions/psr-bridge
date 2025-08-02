@@ -20,7 +20,6 @@ use function ini_get;
 use function is_array;
 use function memory_get_usage;
 use function method_exists;
-use function microtime;
 use function runkit_constant_redefine;
 use function sscanf;
 use function strtoupper;
