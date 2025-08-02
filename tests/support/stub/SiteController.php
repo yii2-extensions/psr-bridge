@@ -68,6 +68,13 @@ final class SiteController extends Controller
         );
     }
 
+    public function actionError(): string
+    {
+        $this->response->format = Response::FORMAT_HTML;
+
+        return '<div id="custom-error-action">Custom error page from errorAction</div>';
+    }
+
     /**
      * @throws Exception
      */

@@ -1712,9 +1712,7 @@ final class StatelessApplicationTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndException(): void
     {
-        if (YII_DEBUG) {
-            @runkit_constant_redefine('YII_DEBUG', false);
-        }
+        @runkit_constant_redefine('YII_DEBUG', false);
 
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -1723,7 +1721,15 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $app = $this->statelessApplication();
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'site/error',
+                    ],
+                ],
+            ],
+        );
 
         $response = $app->handle($request);
 
@@ -1740,15 +1746,15 @@ final class StatelessApplicationTest extends TestCase
             "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
         );
         self::assertStringContainsString(
-            'An internal server error occurred.',
+            <<<HTML
+            <div id="custom-error-action">Custom error page from errorAction</div>
+            HTML,
             $response->getBody()->getContents(),
-            "Response 'body' should contain generic error message 'An internal server error occurred.' when " .
-            "'Exception' is triggered and 'debug' mode is disabled in 'StatelessApplication'.",
+            "Response 'body' should contain 'Custom error page from errorAction' when 'Exception' is triggered " .
+            "and 'debug' mode is disabled with errorAction configured in 'StatelessApplication'.",
         );
 
-        if (YII_DEBUG === false) {
-            @runkit_constant_redefine('YII_DEBUG', true);
-        }
+        @runkit_constant_redefine('YII_DEBUG', true);
     }
 
     #[RequiresPhpExtension('runkit7')]
@@ -1763,7 +1769,15 @@ final class StatelessApplicationTest extends TestCase
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
-        $app = $this->statelessApplication();
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'site/error',
+                    ],
+                ],
+            ],
+        );
 
         $response = $app->handle($request);
 
@@ -1780,10 +1794,12 @@ final class StatelessApplicationTest extends TestCase
             "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
         );
         self::assertStringContainsString(
-            'An internal server error occurred.',
+            <<<HTML
+            <div id="custom-error-action">Custom error page from errorAction</div>
+            HTML,
             $response->getBody()->getContents(),
-            "Response 'body' should contain generic error message 'An internal server error occurred.' when " .
-            "'UserException' is triggered and 'debug' mode is disabled in 'StatelessApplication'.",
+            "Response 'body' should contain 'Custom error page from errorAction' when 'UserException' is triggered " .
+            "and 'debug' mode is disabled with errorAction configured in 'StatelessApplication'.",
         );
 
         @runkit_constant_redefine('YII_DEBUG', true);
