@@ -1,6 +1,6 @@
 {
     "symbol-whitelist": [
-        "uopz_redefine",
+        "runkit_constant_redefine",
         "YII_DEBUG",
         "YII_ENV_TEST"
     ]
