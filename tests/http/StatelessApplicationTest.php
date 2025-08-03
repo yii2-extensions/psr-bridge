@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
+use PHPForge\Support\Assert;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use stdClass;
@@ -429,6 +430,8 @@ final class StatelessApplicationTest extends TestCase
 
         $container = $app->container();
 
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
         self::assertTrue(
             $container->has(ServerRequestFactoryInterface::class),
             "Container should have definition for 'ServerRequestFactoryInterface', ensuring PSR-7 request factory is " .
@@ -695,6 +698,8 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', '256M');
 
         $app = $this->statelessApplication();
+
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         $firstCalculation = $app->getMemoryLimit();
         $app->setMemoryLimit(0);
@@ -1745,7 +1750,7 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'Exception' " .
             "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
         );
-        self::assertStringContainsString(
+        Assert::equalsWithoutLE(
             <<<HTML
             <div id="custom-error-action">
             Custom error page from errorAction.
@@ -1801,7 +1806,7 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'UserException' " .
             "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
         );
-        self::assertStringContainsString(
+        Assert::equalsWithoutLE(
             <<<HTML
             <div id="custom-error-action">
             Custom error page from errorAction.
@@ -1854,7 +1859,7 @@ final class StatelessApplicationTest extends TestCase
             "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'UserException'" .
             "occurs and 'debug' mode is enabled in 'StatelessApplication'.",
         );
-        self::assertStringContainsString(
+        Assert::equalsWithoutLE(
             <<<HTML
             <div id="custom-error-action">
             Custom error page from errorAction.
@@ -1869,6 +1874,63 @@ final class StatelessApplicationTest extends TestCase
             $response->getBody()->getContents(),
             "Response 'body' should contain 'User-friendly error message.' when 'UserException' is triggered and " .
             "'debug' mode is enabled in 'StatelessApplication'.",
+        );
+    }
+
+    public function testUseErrorViewLogicWithNonHtmlFormat(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'site/error',
+                    ],
+                    'response' => [
+                        'format' => Response::FORMAT_JSON,
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle($request);
+        $responseBody = $response->getBody()->getContents();
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' when a 'Exception' occurs with JSON format in " .
+            "'StatelessApplication', indicating an 'internal server error'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for error response when 'Exception'" .
+            "occurs with JSON format in 'StatelessApplication'.",
+        );
+        self::assertStringNotContainsString(
+            'Custom error page from errorAction.',
+            $responseBody,
+            "Response 'body' should NOT contain 'Custom error page from errorAction' when format is JSON " .
+            "because useErrorView should be false regardless of YII_DEBUG or exception type in 'StatelessApplication'.",
+        );
+
+        $decodedResponse = Json::decode($responseBody);
+
+        self::assertIsArray(
+            $decodedResponse,
+            'JSON response should be decodable to array',
+        );
+        self::assertArrayHasKey(
+            'message',
+            $decodedResponse,
+            'JSON error response should contain message key',
         );
     }
 

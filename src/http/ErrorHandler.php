@@ -42,6 +42,23 @@ use function ini_set;
 final class ErrorHandler extends \yii\web\ErrorHandler
 {
     /**
+     * Default configuration for creating fallback Response instances.
+     *
+     * @phpstan-var array<string, mixed>
+     */
+    public array $defaultResponseConfig = [
+        'charset' => 'UTF-8',
+    ];
+
+    /**
+     * Template Response instance for error handling.
+     *
+     * When set, this Response instance will be used as a base for error responses, preserving configured format,
+     * formatters, and other settings.
+     */
+    private Response|null $templateResponse = null;
+
+    /**
      * Clears all output buffers above the minimum required level.
      *
      * Iterates through all active output buffers and cleans them, ensuring that only the minimum buffer level remains.
@@ -130,6 +147,19 @@ final class ErrorHandler extends \yii\web\ErrorHandler
     }
 
     /**
+     * Sets the template Response for error handling.
+     *
+     * The provided Response will be used as a template for error responses, preserving configuration such as format,
+     * charset, and formatters. The Response will be cleared of any existing data before use.
+     *
+     * @param Response $response Template response with desired configuration.
+     */
+    public function setResponse(Response $response): void
+    {
+        $this->templateResponse = $response;
+    }
+
+    /**
      * Handles fallback exception rendering when an error occurs during exception processing.
      *
      * Produces a {@see Response} object with a generic error message and, in debug mode, includes detailed exception
@@ -145,14 +175,11 @@ final class ErrorHandler extends \yii\web\ErrorHandler
      */
     protected function handleFallbackExceptionMessage($exception, $previousException): Response
     {
-        $response = new Response();
+        $response = $this->createErrorResponse();
 
         $msg = "An Error occurred while handling another error:\n";
-
         $msg .= $exception;
-
         $msg .= "\nPrevious exception:\n";
-
         $msg .= $previousException;
 
         $response->data = 'An internal server error occurred.';
@@ -193,7 +220,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
      */
     protected function renderException($exception): Response
     {
-        $response = new Response();
+        $response = $this->createErrorResponse();
 
         $response->setStatusCodeByException($exception);
 
@@ -217,7 +244,6 @@ final class ErrorHandler extends \yii\web\ErrorHandler
                 }
 
                 $file = $useErrorView ? $this->errorView : $this->exceptionView;
-
                 $response->data = $this->renderFile($file, ['exception' => $exception]);
             }
         } elseif ($response->format === Response::FORMAT_RAW) {
@@ -225,6 +251,22 @@ final class ErrorHandler extends \yii\web\ErrorHandler
         } else {
             $response->data = $this->convertExceptionToArray($exception);
         }
+
+        return $response;
+    }
+
+    /**
+     * Creates a Response instance for error handling.
+     *
+     * Uses the template Response if available, otherwise creates a new instance with default configuration.
+     *
+     * @return Response Clean Response instance ready for error content.
+     */
+    private function createErrorResponse(): Response
+    {
+        $response = $this->templateResponse ?? new Response($this->defaultResponseConfig);
+
+        $response->clear();
 
         return $response;
     }
