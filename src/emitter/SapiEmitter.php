@@ -10,8 +10,6 @@ use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, O
 
 use function array_map;
 use function implode;
-use function ob_get_length;
-use function ob_get_level;
 use function sprintf;
 use function str_replace;
 use function strlen;
