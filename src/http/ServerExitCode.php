@@ -8,7 +8,7 @@ namespace yii2\extensions\psrbridge\http;
  * Represents standardized exit codes for server execution states.
  *
  * Defines exit codes used to indicate the result of server execution, including normal completion, request limit
- * exhaustion and graceful shutdown,
+ * exhaustion and graceful shutdown.
  *
  * This enum provides a consistent and type-safe way to communicate server termination reasons to external process
  * managers, monitoring tools, or runtime environments.
