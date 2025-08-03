@@ -405,6 +405,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->requestedAction = null;
         $this->requestedParams = [];
 
+        $this->errorHandler->setResponse($this->response);
         $this->request->setPsr7Request($request);
 
         $this->session->close();

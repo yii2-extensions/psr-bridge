@@ -70,8 +70,6 @@ final class SiteController extends Controller
 
     public function actionError(): string
     {
-        $this->response->format = Response::FORMAT_HTML;
-
         $exception = Yii::$app->errorHandler->exception;
 
         if ($exception !== null) {
