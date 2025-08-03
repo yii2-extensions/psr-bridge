@@ -17,8 +17,8 @@ final class ServerExitCodeTest extends TestCase
      * @param int $expected Expected integer value for the enum case.
      */
     #[TestWith([ServerExitCode::OK, 0])]
-    #[TestWith([ServerExitCode::SHUTDOWN, 1])]
-    #[TestWith([ServerExitCode::REQUEST_LIMIT, 2])]
+    #[TestWith([ServerExitCode::REQUEST_LIMIT, 1])]
+    #[TestWith([ServerExitCode::SHUTDOWN, 2])]
     public function testReturnCorrectValueForServerExitCodeCases(BackedEnum $exitCode, int $expected): void
     {
         self::assertSame(

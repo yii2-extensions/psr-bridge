@@ -7,15 +7,15 @@ namespace yii2\extensions\psrbridge\http;
 /**
  * Represents standardized exit codes for server execution states.
  *
- * Defines exit codes used to indicate the result of server execution, including normal completion, graceful shutdown,
- * and request limit exhaustion.
+ * Defines exit codes used to indicate the result of server execution, including normal completion, request limit
+ * exhaustion and graceful shutdown,
  *
  * This enum provides a consistent and type-safe way to communicate server termination reasons to external process
  * managers, monitoring tools, or runtime environments.
  *
  * Key features.
  * - Designed for use in PSR-7/PSR-15 compatible HTTP stacks and Yii2 bridge components.
- * - Distinguishes between successful execution, clean shutdown, and request limit reached.
+ * - Distinguishes between successful execution, request limit reached and clean shutdown.
  * - Enables clear signaling of server lifecycle events for process orchestration.
  * - Immutable, type-safe values for integration with PHP runtimes and worker managers.
  *
@@ -32,10 +32,10 @@ enum ServerExitCode: int
     /**
      * Request limit reached - server handled maximum allowed requests.
      */
-    case REQUEST_LIMIT = 2;
+    case REQUEST_LIMIT = 1;
 
     /**
      * Clean shutdown requested - server should terminate gracefully.
      */
-    case SHUTDOWN = 1;
+    case SHUTDOWN = 2;
 }
