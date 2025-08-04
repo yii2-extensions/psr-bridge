@@ -11,7 +11,7 @@ use Yii;
 use yii\caching\FileCache;
 use yii\helpers\ArrayHelper;
 use yii\log\FileTarget;
-use yii\web\JsonParser;
+use yii\web\{Application, JsonParser};
 use yii2\extensions\psrbridge\http\StatelessApplication;
 use yii2\extensions\psrbridge\tests\support\stub\Identity;
 
@@ -103,7 +103,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * @phpstan-param array<string, mixed> $config
      */
-    protected function statelessApplication($config = []): StatelessApplication
+    protected function statelessApplication(array $config = []): StatelessApplication
     {
         return new StatelessApplication(
             ArrayHelper::merge(
@@ -173,9 +173,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * @phpstan-param array<string, mixed> $config
      */
-    protected function webApplication($config = []): void
+    protected function webApplication(array $config = []): void
     {
-        new \yii\web\Application(
+        new Application(
             ArrayHelper::merge(
                 [
                     'id' => 'web-app',
