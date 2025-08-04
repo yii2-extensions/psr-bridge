@@ -67,6 +67,11 @@ final class HTTPFunctions
      */
     private static int $responseCode = 200;
 
+    /**
+     * Controls whether stream_get_contents should fail.
+     */
+    private static bool $streamGetContentsShouldFail = false;
+
     public static function flush(): void
     {
         self::$flushedTimes++;
@@ -151,12 +156,13 @@ final class HTTPFunctions
 
     public static function reset(): void
     {
+        self::$flushedTimes = 0;
         self::$headers = [];
-        self::$responseCode = 200;
         self::$headersSent = false;
         self::$headersSentFile = '';
         self::$headersSentLine = 0;
-        self::$flushedTimes = 0;
+        self::$responseCode = 200;
+        self::$streamGetContentsShouldFail = false;
     }
 
     public static function set_headers_sent(bool $value = false, string $file = '', int $line = 0): void
@@ -164,5 +170,23 @@ final class HTTPFunctions
         self::$headersSent = $value;
         self::$headersSentFile = $file;
         self::$headersSentLine = $line;
+    }
+
+    public static function set_stream_get_contents_should_fail(bool $shouldFail = true): void
+    {
+        self::$streamGetContentsShouldFail = $shouldFail;
+    }
+
+    public static function stream_get_contents(mixed $resource, int $maxlength = -1, int $offset = -1): string|false
+    {
+        if (self::$streamGetContentsShouldFail) {
+            return false;
+        }
+
+        if (is_resource($resource) === false) {
+            return false;
+        }
+
+        return \stream_get_contents($resource, $maxlength, $offset);
     }
 }

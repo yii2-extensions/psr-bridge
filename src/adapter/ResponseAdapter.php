@@ -20,7 +20,6 @@ use function is_numeric;
 use function is_resource;
 use function is_string;
 use function max;
-use function stream_get_contents;
 use function strtotime;
 use function time;
 use function urlencode;
@@ -229,6 +228,12 @@ final class ResponseAdapter
         fseek($handle, $begin);
 
         $content = stream_get_contents($handle, $end - $begin + 1);
+
+        if ($content === false) {
+            fclose($handle);
+
+            throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
+        }
 
         fclose($handle);
 

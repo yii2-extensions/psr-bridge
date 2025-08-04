@@ -39,6 +39,11 @@ final class MockerExtension implements Extension
         $mocks = [
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
+                'name' => 'flush',
+                'function' => static fn() => HTTPFunctions::flush(),
+            ],
+            [
+                'namespace' => 'yii2\extensions\psrbridge\emitter',
                 'name' => 'header',
                 'function' => static fn(
                     string $string,
@@ -52,11 +57,8 @@ final class MockerExtension implements Extension
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
-                'name' => 'headers_sent',
-                'function' => static fn(&$file = null, &$line = null): bool => HTTPFunctions::headers_sent(
-                    $file,
-                    $line,
-                ),
+                'name' => 'header_list',
+                'function' => static fn(): array => HTTPFunctions::headers_list(),
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
@@ -65,13 +67,24 @@ final class MockerExtension implements Extension
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
-                'name' => 'header_list',
-                'function' => static fn(): array => HTTPFunctions::headers_list(),
+                'name' => 'headers_sent',
+                'function' => static fn(&$file = null, &$line = null): bool => HTTPFunctions::headers_sent(
+                    $file,
+                    $line,
+                ),
             ],
             [
-                'namespace' => 'yii2\extensions\psrbridge\emitter',
-                'name' => 'flush',
-                'function' => static fn() => HTTPFunctions::flush(),
+                'namespace' => 'yii2\extensions\psrbridge\adapter',
+                'name' => 'stream_get_contents',
+                'function' => static fn(
+                    $resource,
+                    int $maxlength = -1,
+                    int $offset = -1,
+                ): mixed => HTTPFunctions::stream_get_contents(
+                    $resource,
+                    $maxlength,
+                    $offset,
+                ),
             ],
         ];
 
