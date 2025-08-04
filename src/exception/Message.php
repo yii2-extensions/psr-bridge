@@ -156,6 +156,13 @@ enum Message: string
     "('begin' >= '0' and 'end' >= 'begin'). Received: (begin='%d', end='%d'.)";
 
     /**
+     * Error when unable to read from the response stream.
+     *
+     * Format: "Failed to read from response stream."
+     */
+    case RESPONSE_STREAM_READ_ERROR = 'Failed to read from response stream.';
+
+    /**
      * Error when 'size' is not an integer in file specification.
      *
      * Format: "'size' must be an 'integer' in file specification."
