@@ -21,7 +21,6 @@ jobs:
   mutation:
     uses: php-forge/actions/.github/workflows/infection.yml@main
     with:
-      command-options: --threads=2 --ignore-msi-with-no-mutations
       extensions: runkit7-4.0.0a6
       php-version: '["8.3"]'
       phpstan: true
