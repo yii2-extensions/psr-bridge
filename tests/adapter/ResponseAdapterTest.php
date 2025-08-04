@@ -1798,6 +1798,37 @@ final class ResponseAdapterTest extends TestCase
         $adapter->toPsr7();
     }
 
+    public function testThrowExceptionWhenStreamGetContentsFailsToReadFile(): void
+    {
+        $this->webApplication();
+
+        $content = 'Test content for stream failure';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource($handle, 'File handle should be a valid resource.');
+
+        $response = new Response();
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $adapter = new ResponseAdapter(
+            $response,
+            FactoryHelper::createResponseFactory(),
+            FactoryHelper::createStreamFactory(),
+        );
+
+        HTTPFunctions::set_stream_get_contents_should_fail(true);
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            Message::RESPONSE_STREAM_READ_ERROR->getMessage(),
+        );
+
+        $adapter->toPsr7();
+    }
+
     public function testThrowExceptionWhenStreamHandleIsInvalid(): void
     {
         $this->webApplication();
@@ -1947,36 +1978,5 @@ final class ResponseAdapterTest extends TestCase
         }
 
         return $tmpPathFile;
-    }
-
-    public function testThrowExceptionWhenStreamGetContentsFailsToReadFile(): void
-    {
-        $this->webApplication();
-
-        $content = 'Test content for stream failure';
-
-        $tempFile = $this->createTempFileWithContent($content);
-        $handle = fopen($tempFile, 'rb');
-
-        self::assertIsResource($handle, 'File handle should be a valid resource.');
-
-        $response = new Response();
-
-        $response->stream = [$handle, 0, strlen($content) - 1];
-
-        $adapter = new ResponseAdapter(
-            $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
-        );
-
-        HTTPFunctions::set_stream_get_contents_should_fail(true);
-
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage(
-            Message::RESPONSE_STREAM_READ_ERROR->getMessage(),
-        );
-
-        $adapter->toPsr7();
     }
 }
