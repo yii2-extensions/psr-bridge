@@ -129,6 +129,11 @@ final class ErrorHandlerTest extends TestCase
             $response->data,
             'Should set response data for HTTP exception.',
         );
+        self::assertSame(
+            $sapi,
+            HTTPFunctions::php_sapi_name(),
+            "Should return correct SAPI name '{$sapi}' for 'HttpException'.",
+        );
     }
 
     public function testHandleExceptionWithLongMessage(): void
