@@ -23,7 +23,7 @@ enabled:
   - integer_literal_case
   - is_null
   - logical_operators
-  - magic_method_casing
+  - magic_constant_casing
   - method_separation
   - modernize_types_casting
   - native_function_casing
