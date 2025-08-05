@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
 use Throwable;
 use yii\base\{Exception, UserException};
 use yii\web\HttpException;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Response};
+use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function str_repeat;
@@ -17,6 +19,13 @@ use function str_repeat;
 #[Group('http')]
 final class ErrorHandlerTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        HTTPFunctions::reset();
+
+        parent::tearDown();
+    }
+
     public function testHandleExceptionResetsState(): void
     {
         $errorHandler = new ErrorHandler();
@@ -97,8 +106,12 @@ final class ErrorHandlerTest extends TestCase
         );
     }
 
-    public function testHandleExceptionWithHttpException(): void
+    #[TestWith(['apache'])]
+    #[TestWith(['cli'])]
+    public function testHandleExceptionWithHttpException(string $sapi): void
     {
+        HTTPFunctions::set_sapi($sapi);
+
         $errorHandler = new ErrorHandler();
 
         $errorHandler->discardExistingOutput = false;
@@ -115,6 +128,11 @@ final class ErrorHandlerTest extends TestCase
         self::assertNotEmpty(
             $response->data,
             'Should set response data for HTTP exception.',
+        );
+        self::assertSame(
+            $sapi,
+            HTTPFunctions::php_sapi_name(),
+            "Should return correct SAPI name '{$sapi}' for 'HttpException'.",
         );
     }
 

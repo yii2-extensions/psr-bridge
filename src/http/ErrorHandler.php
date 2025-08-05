@@ -119,7 +119,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
 
         $this->unregister();
 
-        if (PHP_SAPI !== 'cli') {
+        if (php_sapi_name() !== 'cli') {
             $statusCode = 500;
 
             if ($exception instanceof HttpException) {
