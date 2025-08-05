@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use RuntimeException;
 use Throwable;
 use yii\base\{Exception, UserException};
@@ -39,6 +38,8 @@ final class ErrorHandlerTest extends TestCase
     public function testHandleExceptionSetsCorrectStatusCodeForHttpException(): void
     {
         @runkit_constant_redefine('PHP_SAPI', 'sapi');
+
+        var_dump(PHP_SAPI);
 
         $errorHandler = new ErrorHandler();
 
