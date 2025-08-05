@@ -15,19 +15,20 @@ use function strtolower;
  * Provides controlled replacements for core PHP HTTP header and response functions to facilitate testing of HTTP
  * emitter and response-related code without actual header output or side effects.
  *
- * This class allows tests to simulate and inspect HTTP header operations, response codes, and output flushing by
- * maintaining internal state and exposing methods to manipulate and query that state.
+ * This class allows tests to simulate and inspect HTTP header operations, response codes, output flushing,
+ * and SAPI name retrieval by maintaining internal state and exposing methods to manipulate and query that state.
  *
- * It enables validation of emitter logic, header management, and response code handling in isolation from PHP's global
- * state.
+ * It enables validation of emitter logic, header management, response code handling, and SAPI simulation in isolation
+ * from PHP global state.
  *
  * Key features.
  * - Complete simulation of {@see \header()}, {@see \headers_sent()}, {@see \header_remove()}, {@see \headers_list()},
- *   and {@see \http_response_code()}
+ *   {@see \http_response_code()}, and {@see php_sapi_name()} for test reliability.
  * - Consistent behavior matching PHP's native functions for test reliability.
  * - File and line tracking for headers_sent simulation.
  * - Header inspection and manipulation for assertions.
  * - Simulated output flushing and flush count tracking.
+ * - SAPI name simulation for emitter and environment testing.
  * - State reset capability for test isolation and repeatability.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
