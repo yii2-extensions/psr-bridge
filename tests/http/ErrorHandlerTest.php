@@ -25,6 +25,7 @@ final class ErrorHandlerTest extends TestCase
 
         parent::tearDown();
     }
+
     public function testHandleExceptionResetsState(): void
     {
         $errorHandler = new ErrorHandler();

@@ -158,6 +158,7 @@ final class HTTPFunctions
 
         return self::$responseCode;
     }
+
     public static function php_sapi_name(): string
     {
         return self::$sapi;
