@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use RuntimeException;
 use Throwable;
 use yii\base\{Exception, UserException};
@@ -32,6 +33,29 @@ final class ErrorHandlerTest extends TestCase
             $response->getStatusCode(),
             "Should set correct status code after 'handlingException()'.",
         );
+    }
+
+    #[RequiresPhpExtension('runkit7')]
+    public function testHandleExceptionSetsCorrectStatusCodeForHttpException(): void
+    {
+        @runkit_constant_redefine('PHP_SAPI', 'sapi');
+
+        $errorHandler = new ErrorHandler();
+
+        $errorHandler->discardExistingOutput = false;
+
+        $exception = new HttpException(404, 'Page not found.');
+
+        $response = $errorHandler->handleException($exception);
+
+        self::assertSame(
+            404,
+            $response->getStatusCode(),
+            "Global 'http_response_code()' should be set to '404' when 'HttpException' with status code '404' " .
+            "is handled in 'non-CLI' environment, ensuring proper HTTP response status for web requests.",
+        );
+
+        @runkit_constant_redefine('PHP_SAPI', 'cli');
     }
 
     public function testHandleExceptionWithComplexMessage(): void
