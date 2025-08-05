@@ -74,6 +74,11 @@ final class MockerExtension implements Extension
                 ),
             ],
             [
+                'namespace' => 'yii2\extensions\psrbridge\http',
+                'name' => 'php_sapi_name',
+                'function' => static fn(): string => HTTPFunctions::php_sapi_name(),
+            ],
+            [
                 'namespace' => 'yii2\extensions\psrbridge\adapter',
                 'name' => 'stream_get_contents',
                 'function' => static fn(
