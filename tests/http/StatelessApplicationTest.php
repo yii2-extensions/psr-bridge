@@ -1982,9 +1982,6 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_DEBUG', true);
     }
 
-    /**
-     *
-     */
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndUserException(): void
     {
@@ -2041,9 +2038,6 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_DEBUG', true);
     }
 
-    /**
-     *
-     */
     public function testUseErrorViewLogicWithDebugTrueAndUserException(): void
     {
         $_SERVER = [
@@ -2095,9 +2089,6 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
-    /**
-     *
-     */
     public function testUseErrorViewLogicWithNonHtmlFormat(): void
     {
         $_SERVER = [
