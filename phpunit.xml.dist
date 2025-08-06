@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    bootstrap="tests/bootstrap.php"
+    cacheDirectory="runtime/.phpunit.cache"
+    colors="true"
+    executionOrder="depends,defects"
+    failOnRisky="true"
+    failOnWarning="true"
+    stopOnFailure="false"
+>
+    <testsuites>
+        <testsuite name="Yii2-PSR-Bridge">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">./src</directory>
+        </include>
+    </source>
+
+    <extensions>
+        <bootstrap class="yii2\extensions\psrbridge\tests\support\MockerExtension"/>
+    </extensions>
+</phpunit>
