@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\http;
 
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
+use Yii;
 use yii\base\InvalidConfigException;
 use yii\web\{CookieCollection, HeaderCollection, UploadedFile};
+use yii\web\NotFoundHttpException;
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
@@ -105,7 +107,7 @@ final class Request extends \yii\web\Request
 
         /**
          * Apache with php-cgi does not pass HTTP Basic authentication to PHP by default.
-         * To make it work, add one of the following lines to to your .htaccess file:
+         * To make it work, add one of the following lines to your .htaccess file:
          *
          * SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
          * --OR--
@@ -517,6 +519,41 @@ final class Request extends \yii\web\Request
     public function reset(): void
     {
         $this->adapter = null;
+    }
+
+    /**
+     * Resolves the current request into a route and the associated parameters.
+     *
+     * This method parses the current request using the URL manager and combines the extracted route parameters with
+     * query parameters from both PSR-7 and traditional sources.
+     *
+     * The method ensures seamless parameter binding for controller actions in both PSR-7 and legacy Yii2 environments.
+     *
+     * @throws NotFoundHttpException if the request cannot be resolved.
+     *
+     * @return array First element is the route, and the second is the associated parameters.
+     *
+     * @phpstan-return array<array-key, array<mixed>|string>
+     *
+     * Usage example:
+     * ```php
+     * [$route, $params] = $request->resolve();
+     * ```
+     */
+    public function resolve(): array
+    {
+        /** @phpstan-var array{0: string, 1: array<string, mixed>}|false $result*/
+        $result = Yii::$app->getUrlManager()->parseRequest($this);
+
+        if ($result !== false) {
+            [$route, $params] = $result;
+
+            $combinedParams = $params + $this->getQueryParams();
+
+            return [$route, $combinedParams];
+        }
+
+        throw new NotFoundHttpException(Yii::t('yii', Message::PAGE_NOT_FOUND->getMessage()));
     }
 
     /**

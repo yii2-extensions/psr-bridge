@@ -125,6 +125,13 @@ enum Message: string
     case NAME_MUST_BE_STRING_OR_NULL = "'name' must be a 'string' or 'null' in file specification.";
 
     /**
+     * Error when the page is not found.
+     *
+     * Format: "Page not found."
+     */
+    case PAGE_NOT_FOUND = 'Page not found.';
+
+    /**
      * Error when the PSR-7 request adapter is not set.
      *
      * Format: "PSR-7 request adapter is not set."
