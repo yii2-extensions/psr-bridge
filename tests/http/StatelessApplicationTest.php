@@ -780,6 +780,55 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
+    #[RequiresPhpExtension('runkit7')]
+    public function testRenderExceptionWithErrorActionReturningResponseObject(): void
+    {
+        @runkit_constant_redefine('YII_DEBUG', false);
+
+        HTTPFunctions::set_sapi('apache2handler');
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'site/error-with-response',
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' when 'errorAction' returns Response object.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/html; charset=UTF-8' when 'errorAction' returns Response object.",
+        );
+        Assert::equalsWithoutLE(
+            <<<HTML
+            <div id="custom-response-error">
+            Custom Response object from error action: Exception error message.
+            </div>
+            HTML,
+            $response->getBody()->getContents(),
+            "Response 'body' should contain content from Response object returned by 'errorAction'.",
+        );
+
+        @runkit_constant_redefine('YII_DEBUG', true);
+    }
+
     public function testRenderExceptionWithRawFormat(): void
     {
         HTTPFunctions::set_sapi('apache2handler');

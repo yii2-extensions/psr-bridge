@@ -10,6 +10,7 @@ use yii\captcha\CaptchaAction;
 use yii\web\{Controller, Cookie, RangeNotSatisfiableHttpException, Response};
 
 use function fwrite;
+use function htmlspecialchars;
 use function is_string;
 use function rewind;
 use function stream_get_meta_data;
@@ -73,7 +74,7 @@ final class SiteController extends Controller
         $exception = Yii::$app->errorHandler->exception;
 
         if ($exception !== null) {
-            $exceptionType = get_class($exception);
+            $exceptionType = $exception::class;
             $exceptionMessage = htmlspecialchars($exception->getMessage());
 
             return <<< HTML
@@ -92,6 +93,32 @@ final class SiteController extends Controller
         return <<<HTML
         <div id="custom-error-action">Custom error page from errorAction</div>
         HTML;
+    }
+
+    public function actionErrorWithResponse(): Response
+    {
+        $exception = Yii::$app->errorHandler->exception;
+
+        $this->response->format = Response::FORMAT_HTML;
+        $this->response->statusCode = 500;
+
+        if ($exception !== null) {
+            $message = htmlspecialchars($exception->getMessage());
+
+            $this->response->data = <<<HTML
+            <div id="custom-response-error">
+            Custom Response object from error action: $message
+            </div>
+            HTML;
+        } else {
+            $this->response->data = <<<HTML
+            <div id="custom-response-error">
+            Custom Response object from error action.
+            </div>
+            HTML;
+        }
+
+        return $this->response;
     }
 
     /**
