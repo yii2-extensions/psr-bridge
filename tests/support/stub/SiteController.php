@@ -309,13 +309,29 @@ final class SiteController extends Controller
         return $this->response->sendStreamAsFile($tmpFile, 'stream.txt', ['mimeType' => 'text/plain']);
     }
 
+    /**
+     * @throws Exception
+     */
     public function actionTriggerException(): never
     {
         throw new Exception('Exception error message.');
     }
 
+    /**
+     * @throws UserException
+     */
     public function actionTriggerUserException(): never
     {
         throw new UserException('User-friendly error message.');
+    }
+
+    /**
+     * @phpstan-return array<array-key, string|null>
+     */
+    public function actionUpdate(string|null $id = null): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        return ['site/update' => $id];
     }
 }

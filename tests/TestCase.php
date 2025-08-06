@@ -149,10 +149,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                             'enableStrictParsing' => false,
                             'enablePrettyUrl' => true,
                             'rules' => [
-                                [
-                                    'pattern' => '/<controller>/<action>/<test:\w+>',
-                                    'route' => '<controller>/<action>',
-                                ],
+                                'site/update/<id:\d+>' => 'site/update',
+                                '<controller>/<action>/<test:\w+>' => '<controller>/<action>',
                             ],
                         ],
                     ],
