@@ -727,6 +727,59 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    #[RequiresPhpExtension('runkit7')]
+    public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
+    {
+        @runkit_constant_redefine('YII_ENV_TEST', false);
+
+        $initialBufferLevel = ob_get_level();
+
+        HTTPFunctions::set_sapi('apache2handler');
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $originalDisplayErrors = ini_get('display_errors');
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication([
+            'components' => [
+                'errorHandler' => [
+                    'errorAction' => null,
+                ],
+            ],
+        ]);
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            '1',
+            ini_get('display_errors'),
+            "'display_errors' should be set to '1' when 'YII_DEBUG' is 'true' and rendering exception view.",
+        );
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' for exception.",
+        );
+        self::assertStringContainsString(
+            'yii\base\Exception: Exception error message.',
+            $response->getBody()->getContents(),
+            "Response should contain exception details when 'YII_DEBUG' is 'true'.",
+        );
+
+        ini_set('display_errors', $originalDisplayErrors);
+
+        while (ob_get_level() < $initialBufferLevel) {
+            ob_start();
+        }
+
+        @runkit_constant_redefine('YII_ENV_TEST', true);
+    }
+
     public function testRenderExceptionWithRawFormat(): void
     {
         HTTPFunctions::set_sapi('apache2handler');
