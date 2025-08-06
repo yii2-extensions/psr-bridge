@@ -106,7 +106,7 @@ final class ErrorHandlerTest extends TestCase
         );
     }
 
-    #[TestWith(['apache'])]
+    #[TestWith(['apache2handler'])]
     #[TestWith(['cli'])]
     public function testHandleExceptionWithHttpException(string $sapi): void
     {

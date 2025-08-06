@@ -19,6 +19,7 @@ use yii\web\{AssetManager, Session, UrlManager, User, View};
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
+use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_fill;
@@ -49,6 +50,8 @@ final class StatelessApplicationTest extends TestCase
     protected function tearDown(): void
     {
         $this->closeApplication();
+
+        HTTPFunctions::reset();
 
         parent::tearDown();
     }
@@ -722,6 +725,57 @@ final class StatelessApplicationTest extends TestCase
         );
 
         ini_set('memory_limit', $originalLimit);
+    }
+
+    public function testRenderExceptionWithRawFormat(): void
+    {
+        HTTPFunctions::set_sapi('apache2handler');
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'response' => [
+                        'format' => Response::FORMAT_RAW,
+                    ],
+                    'errorHandler' => [
+                        'errorAction' => null,
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' for exception with RAW format.",
+        );
+
+        $body = $response->getBody()->getContents();
+
+        self::assertStringContainsString(
+            'yii\base\Exception',
+            $body,
+            'RAW format response should contain exception class name.',
+        );
+        self::assertStringContainsString(
+            'Exception error message.',
+            $body,
+            'RAW format response should contain exception message.',
+        );
+        self::assertStringNotContainsString(
+            '<pre>',
+            $body,
+            'RAW format response should not contain HTML tags.',
+        );
     }
 
     /**
