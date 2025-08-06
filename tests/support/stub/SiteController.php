@@ -122,7 +122,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @throws Exception
+     * @throws Exception if an unexpected error occurs during execution.
      */
     public function actionFile(): Response
     {
@@ -290,8 +290,8 @@ final class SiteController extends Controller
     }
 
     /**
-     * @throws Exception
-     * @throws RangeNotSatisfiableHttpException
+     * @throws Exception if an unexpected error occurs during execution.
+     * @throws RangeNotSatisfiableHttpException if the requested range is not satisfiable.
      */
     public function actionStream(): Response
     {
@@ -310,7 +310,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @throws Exception
+     * @throws Exception if an unexpected error occurs during execution.
      */
     public function actionTriggerException(): never
     {
@@ -318,7 +318,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @throws UserException
+     * @throws UserException if user-friendly error is triggered.
      */
     public function actionTriggerUserException(): never
     {
