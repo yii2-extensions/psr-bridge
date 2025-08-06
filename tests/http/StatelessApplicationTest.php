@@ -10,12 +10,13 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtens
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use stdClass;
 use Yii;
-use yii\base\{InvalidConfigException, Security};
+use yii\base\{Exception, InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
-use yii\web\{AssetManager, Session, UrlManager, User, View};
+use yii\web\{AssetManager, NotFoundHttpException, Session, UrlManager, User, View};
+use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -694,6 +695,9 @@ final class StatelessApplicationTest extends TestCase
         }
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testRecalculateMemoryLimitAfterResetAndIniChange(): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -727,6 +731,9 @@ final class StatelessApplicationTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
     {
@@ -780,6 +787,9 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionWithErrorActionReturningResponseObject(): void
     {
@@ -829,6 +839,9 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_DEBUG', true);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testRenderExceptionWithRawFormat(): void
     {
         HTTPFunctions::set_sapi('apache2handler');
@@ -864,7 +877,7 @@ final class StatelessApplicationTest extends TestCase
         $body = $response->getBody()->getContents();
 
         self::assertStringContainsString(
-            'yii\base\Exception',
+            Exception::class,
             $body,
             'RAW format response should contain exception class name.',
         );
@@ -1222,6 +1235,47 @@ final class StatelessApplicationTest extends TestCase
             $response->getBody()->getContents(),
             "Response 'body' should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for " .
             "'site/get' route in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnJsonResponseWithRouteParameterForSiteUpdateRoute(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/update/123',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/update/123' route in 'StatelessApplication', " .
+            'indicating a successful update.',
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/update/123' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            '{"site/update":"123"}',
+            $response->getBody()->getContents(),
+            "Response 'body' should contain valid JSON with the route parameter for 'site/update/123' in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'site/update/123',
+            $request->getUri()->getPath(),
+            "Request 'path' should be 'site/update/123' for 'site/update/123' route in 'StatelessApplication'.",
         );
     }
 
@@ -1849,6 +1903,72 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testThrowNotFoundHttpExceptionWhenStrictParsingDisabledAndRouteIsMissing(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/profile/123',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            404,
+            $response->getStatusCode(),
+            "Response 'status code' should be '404' when accessing a non-existent route in 'StatelessApplication', " .
+            "indicating a 'Not Found' error.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/html; charset=UTF-8' for 'NotFoundHttpException' in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            '<pre>Not Found: Page not found.</pre>',
+            $response->getBody()->getContents(),
+            "Response 'body' should contain the default not found message '<pre>Not Found: Page not found.</pre>' " .
+            "when a 'NotFoundHttpException' is thrown in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testThrowNotFoundHttpExceptionWhenStrictParsingEnabledAndRouteIsMissing(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/profile/123',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'urlManager' => [
+                        'enableStrictParsing' => true,
+                    ],
+                ],
+            ],
+        );
+
+        $app->handle($request);
+
+        $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage(Message::PAGE_NOT_FOUND->getMessage());
+
+        $app->request->resolve();
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'eventDataProvider')]
     public function testTriggerEventDuringHandle(string $eventName): void
     {
@@ -1870,6 +1990,9 @@ final class StatelessApplicationTest extends TestCase
         self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndException(): void
     {
@@ -1926,6 +2049,9 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_DEBUG', true);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndUserException(): void
     {
@@ -1982,6 +2108,9 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_DEBUG', true);
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testUseErrorViewLogicWithDebugTrueAndUserException(): void
     {
         $_SERVER = [
@@ -2033,6 +2162,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testUseErrorViewLogicWithNonHtmlFormat(): void
     {
         $_SERVER = [

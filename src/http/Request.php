@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\http;
 
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
 use yii\base\InvalidConfigException;
-use yii\web\{CookieCollection, HeaderCollection, UploadedFile};
+use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, UploadedFile};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
@@ -105,7 +105,7 @@ final class Request extends \yii\web\Request
 
         /**
          * Apache with php-cgi does not pass HTTP Basic authentication to PHP by default.
-         * To make it work, add one of the following lines to to your .htaccess file:
+         * To make it work, add one of the following lines to your .htaccess file:
          *
          * SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
          * --OR--
@@ -313,7 +313,7 @@ final class Request extends \yii\web\Request
     /**
      * Retrieves the underlying PSR-7 ServerRequestInterface instance from the adapter.
      *
-     * Returns the PSR-7 {@see ServerRequestInterface} associated with this request via the internal adapter.
+     * Returns the PSR-7 ServerRequestInterface associated with this request via the internal adapter.
      *
      * If the adapter is not set, an {@see InvalidConfigException} is thrown to indicate misconfiguration or missing
      * bridge setup.
@@ -520,10 +520,39 @@ final class Request extends \yii\web\Request
     }
 
     /**
+     * Resolves the request parameters using PSR-7 adapter or Yii2 fallback.
+     *
+     * Returns an array of resolved request parameters by delegating to the PSR-7 ServerRequestAdapter if present, or
+     * falling back to the parent Yii2 implementation when no adapter is set.
+     *
+     * This method enables seamless interoperability between PSR-7 compatible HTTP stacks and legacy Yii2 workflows,
+     * ensuring consistent parameter resolution in both environments.
+     *
+     * @throws NotFoundHttpException if the route cannot be resolved by UrlManager.
+     *
+     * @return array Array of resolved request parameters for the current request.
+     *
+     * @phpstan-return array<array-key, mixed>
+     *
+     * Usage example:
+     * ```php
+     * $params = $request->resolve();
+     * ```
+     */
+    public function resolve(): array
+    {
+        if ($this->adapter !== null) {
+            return $this->adapter->resolve($this);
+        }
+
+        return parent::resolve();
+    }
+
+    /**
      * Sets the PSR-7 ServerRequestInterface instance for the current request.
      *
-     * Assigns a new {@see ServerRequestAdapter} wrapping the provided PSR-7 {@see ServerRequestInterface} to enable
-     * PSR-7 interoperability for the Yii2 Request component.
+     * Assigns a new {@see ServerRequestAdapter} wrapping the provided PSR-7 ServerRequestInterface to enable PSR-7
+     * interoperability for the Yii2 Request component.
      *
      * This method is used to bridge PSR-7 compatible HTTP stacks with Yii2, allowing request data to be accessed via
      * the adapter.

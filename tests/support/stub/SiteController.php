@@ -122,7 +122,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @throws Exception
+     * @throws Exception if an unexpected error occurs during execution.
      */
     public function actionFile(): Response
     {
@@ -290,8 +290,8 @@ final class SiteController extends Controller
     }
 
     /**
-     * @throws Exception
-     * @throws RangeNotSatisfiableHttpException
+     * @throws Exception if an unexpected error occurs during execution.
+     * @throws RangeNotSatisfiableHttpException if the requested range is not satisfiable.
      */
     public function actionStream(): Response
     {
@@ -309,13 +309,29 @@ final class SiteController extends Controller
         return $this->response->sendStreamAsFile($tmpFile, 'stream.txt', ['mimeType' => 'text/plain']);
     }
 
+    /**
+     * @throws Exception if an unexpected error occurs during execution.
+     */
     public function actionTriggerException(): never
     {
         throw new Exception('Exception error message.');
     }
 
+    /**
+     * @throws UserException if user-friendly error is triggered.
+     */
     public function actionTriggerUserException(): never
     {
         throw new UserException('User-friendly error message.');
+    }
+
+    /**
+     * @phpstan-return array<array-key, string|null>
+     */
+    public function actionUpdate(string|null $id = null): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        return ['site/update' => $id];
     }
 }
