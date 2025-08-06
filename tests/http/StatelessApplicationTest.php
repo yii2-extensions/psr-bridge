@@ -1902,6 +1902,42 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testThrowNotFoundHttpExceptionForNonExistentRoute(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/profile/123',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            404,
+            $response->getStatusCode(),
+            "Response 'status code' should be '404' when accessing a non-existent route in 'StatelessApplication', " .
+            "indicating a 'Not Found' error.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'text/html; charset=UTF-8' for 'NotFoundHttpException' in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            '<pre>Not Found: Page not found.</pre>',
+            $response->getBody()->getContents(),
+            "Response 'body' should contain the default not found message '<pre>Not Found: Page not found.</pre>' " .
+            "when a 'NotFoundHttpException' is thrown in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'eventDataProvider')]
     public function testTriggerEventDuringHandle(string $eventName): void
     {
