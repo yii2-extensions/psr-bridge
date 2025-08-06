@@ -1238,6 +1238,39 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    public function testReturnJsonResponseWithQueryParamsForSiteQueryRoute(): void
+    {
+        $_GET = ['q' => '1'];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/query/foo?q=1',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/query/foo?q=1' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/query/foo?q=1' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            '{"test":"foo","q":"1","queryParams":{"test":"foo","q":"1"}}',
+            $response->getBody()->getContents(),
+            "Response 'body' should contain valid JSON with route and query parameters for 'site/query/foo?q=1' in " .
+            "'StatelessApplication'.",
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
