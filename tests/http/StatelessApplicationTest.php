@@ -16,6 +16,8 @@ use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
 use yii\web\{AssetManager, Session, UrlManager, User, View};
+use yii\web\NotFoundHttpException;
+use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -1902,7 +1904,7 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testThrowNotFoundHttpExceptionForNonExistentRoute(): void
+    public function testThrowNotFoundHttpExceptionWhenStrictParsingDisabledAndRouteIsMissing(): void
     {
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -1933,6 +1935,36 @@ final class StatelessApplicationTest extends TestCase
             "Response 'body' should contain the default not found message '<pre>Not Found: Page not found.</pre>' " .
             "when a 'NotFoundHttpException' is thrown in 'StatelessApplication'.",
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testThrowNotFoundHttpExceptionWhenStrictParsingEnabledAndRouteIsMissing(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/profile/123',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'urlManager' => [
+                        'enableStrictParsing' => true,
+                    ],
+                ],
+            ],
+        );
+
+        $app->handle($request);
+
+        $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage(Message::PAGE_NOT_FOUND->getMessage());
+
+        $app->request->resolve();
     }
 
     /**
