@@ -1924,7 +1924,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     *  if the configuration is invalid or incomplete.
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndException(): void
@@ -1983,7 +1983,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndUserException(): void
@@ -2042,7 +2042,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testUseErrorViewLogicWithDebugTrueAndUserException(): void
     {
@@ -2096,7 +2096,7 @@ final class StatelessApplicationTest extends TestCase
     }
 
     /**
-     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testUseErrorViewLogicWithNonHtmlFormat(): void
     {
