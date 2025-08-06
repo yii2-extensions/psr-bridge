@@ -1982,9 +1982,12 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_DEBUG', true);
     }
 
+<<<<<<< HEAD
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+=======
+>>>>>>> 48734d53610bb53cc2fc7fe52f6bc4eef2e83f27
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndUserException(): void
     {
@@ -2041,9 +2044,12 @@ final class StatelessApplicationTest extends TestCase
         @runkit_constant_redefine('YII_DEBUG', true);
     }
 
+<<<<<<< HEAD
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+=======
+>>>>>>> 48734d53610bb53cc2fc7fe52f6bc4eef2e83f27
     public function testUseErrorViewLogicWithDebugTrueAndUserException(): void
     {
         $_SERVER = [
@@ -2095,9 +2101,12 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+<<<<<<< HEAD
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+=======
+>>>>>>> 48734d53610bb53cc2fc7fe52f6bc4eef2e83f27
     public function testUseErrorViewLogicWithNonHtmlFormat(): void
     {
         $_SERVER = [
