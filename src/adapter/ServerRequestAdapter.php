@@ -303,7 +303,7 @@ final class ServerRequestAdapter
      */
     public function getScriptUrl(bool $workerMode): string
     {
-        $serverParams = $this->psrRequest->getServerParams();
+        $serverParams = $this->getServerParams();
 
         // for traditional PSR-7 apps where 'SCRIPT_NAME' is available
         if ($workerMode === false && isset($serverParams['SCRIPT_NAME']) && is_string($serverParams['SCRIPT_NAME'])) {
@@ -313,6 +313,28 @@ final class ServerRequestAdapter
         // for PSR-7 workers (RoadRunner, FrankenPHP, etc.) where no script file exists
         // return empty to prevent URL duplication as routing is handled internally
         return '';
+    }
+
+    /**
+     * Retrieves server parameters from the PSR-7 ServerRequestInterface.
+     *
+     * Returns the server parameters as provided by the underlying PSR-7 ServerRequestInterface instance.
+     *
+     * This method exposes the raw server parameters array, enabling direct access to all server environment values in
+     * a format compatible with PSR-7 expectations.
+     *
+     * @return array Server parameters from the PSR-7 ServerRequestInterface.
+     *
+     * @phpstan-return array<array-key, mixed>
+     *
+     * Usage example:
+     * ```php
+     * $params = $adapter->getServerParams();
+     * ```
+     */
+    public function getServerParams(): array
+    {
+        return $this->psrRequest->getServerParams();
     }
 
     /**

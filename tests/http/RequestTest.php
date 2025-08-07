@@ -959,6 +959,33 @@ final class RequestTest extends TestCase
         );
     }
 
+    public function testGetServerParamsReturnsExpectedServerArray(): void
+    {
+        $_SERVER = [
+            'HTTP_HOST' => 'example.com',
+            'QUERY_STRING' => 'param=value',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/test',
+            'SERVER_NAME' => 'example.com',
+            'SERVER_PORT' => '80',
+        ];
+
+        $request = new Request();
+
+        self::assertSame(
+            [
+                'HTTP_HOST' => 'example.com',
+                'QUERY_STRING' => 'param=value',
+                'REQUEST_METHOD' => 'GET',
+                'REQUEST_URI' => '/test',
+                'SERVER_NAME' => 'example.com',
+                'SERVER_PORT' => '80',
+            ],
+            $request->getServerParams(),
+            "'getServerParams()' should return the expected server parameters array.",
+        );
+    }
+
     public function testGetServerPort(): void
     {
         $request = new Request();
