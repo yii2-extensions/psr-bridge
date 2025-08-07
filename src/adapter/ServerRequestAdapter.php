@@ -49,6 +49,13 @@ use function strtoupper;
 final class ServerRequestAdapter
 {
     /**
+     * Query parameters resolved from the PSR-7 ServerRequestInterface.
+     *
+     * @phpstan-var array<array-key, mixed>
+     */
+    private array $queryParams = [];
+
+    /**
      * Creates a new instance of the {@see ServerRequestAdapter} class.
      *
      * @param ServerRequestInterface $psrRequest PSR-7 ServerRequestInterface instance to adapt.
@@ -83,7 +90,6 @@ final class ServerRequestAdapter
     {
         $parsedBody = $this->psrRequest->getParsedBody();
 
-        // remove method parameter if present (same logic as parent)
         if (is_array($parsedBody) && isset($parsedBody[$methodParam])) {
             $bodyParams = $parsedBody;
 
@@ -219,14 +225,17 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Retrieves query parameters from the PSR-7 ServerRequestInterface.
+     * Retrieves query parameters from the PSR-7 ServerRequestInterface or cached values.
      *
-     * Returns the query parameters as an associative array, providing direct access to all values present in the
-     * request URI.
+     * Returns the cached query parameters if previously set, otherwise retrieves them directly from the PSR-7
+     * ServerRequestInterface instance.
      *
-     * @return array Associative array of query parameters from the request URI.
+     * This method provides immutable, type-safe access to query parameters for use in Yii2 Request component logic and
+     * controller actions.
      *
-     * @phpstan-return array<mixed, mixed>
+     * @return array Query parameters as an associative array.
+     *
+     * @phpstan-return array<array-key, mixed>
      *
      * Usage example:
      * ```php
@@ -235,6 +244,10 @@ final class ServerRequestAdapter
      */
     public function getQueryParams(): array
     {
+        if ($this->queryParams !== []) {
+            return $this->queryParams;
+        }
+
         return $this->psrRequest->getQueryParams();
     }
 
@@ -395,9 +408,9 @@ final class ServerRequestAdapter
         if ($result !== false) {
             [$route, $params] = $result;
 
-            $combinedParams = $params + $this->psrRequest->getQueryParams();
+            $this->queryParams = $params + $this->psrRequest->getQueryParams();
 
-            return [$route, $combinedParams];
+            return [$route, $this->queryParams];
         }
 
         throw new NotFoundHttpException(Yii::t('yii', Message::PAGE_NOT_FOUND->getMessage()));

@@ -149,6 +149,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                             'enableStrictParsing' => false,
                             'enablePrettyUrl' => true,
                             'rules' => [
+                                'site/query/<test:\w+>' => 'site/query',
                                 'site/update/<id:\d+>' => 'site/update',
                             ],
                         ],

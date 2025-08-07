@@ -232,6 +232,20 @@ final class SiteController extends Controller
     }
 
     /**
+     * @phpstan-return array<array-key, mixed>
+     */
+    public function actionQuery(string $test): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        return [
+            'test' => $test,
+            'q' => $this->request->get('q'),
+            'queryParams' => $this->request->getQueryParams(),
+        ];
+    }
+
+    /**
      * @throws InvalidRouteException
      */
     public function actionRedirect(): void
