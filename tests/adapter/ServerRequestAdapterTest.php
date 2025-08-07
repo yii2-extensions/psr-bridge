@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Yii;
 use yii\base\{InvalidCallException, InvalidConfigException};
 use yii\helpers\Json;
-use yii\web\{Cookie, CookieCollection, UploadedFile};
+use yii\web\{Cookie, UploadedFile};
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
