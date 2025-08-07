@@ -24,15 +24,11 @@ final class ServerRequestAdapterTest extends TestCase
 {
     protected function tearDown(): void
     {
-        $this->closeApplication();
-
         parent::tearDown();
     }
 
     public function testGetCsrfTokenFromHeaderUsesAdapterWhenAdapterIsNotNull(): void
     {
-        $this->webApplication();
-
         $expectedToken = 'adapter-csrf-token-123';
         $csrfHeaderName = 'X-CSRF-Token';
 
@@ -58,8 +54,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testResetCookieCollectionAfterReset(): void
     {
-        $this->webApplication();
-
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(['reset_cookie' => 'test_value']);
@@ -188,10 +182,30 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    public function testReturnContentTypeFromPsr7RequestWhenHeaderIsPresent(): void
+    {
+        $_SERVER['CONTENT_TYPE'] = 'text/plain';
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/upload',
+                ['Content-Type' => 'multipart/form-data; boundary=----WebKitFormBoundary'],
+            ),
+        );
+
+        self::assertSame(
+            'multipart/form-data; boundary=----WebKitFormBoundary',
+            $request->getContentType(),
+            "'getContentType()' should return the 'Content-Type' header from the PSR-7 request when present, " .
+            'overriding "text/plain" from $_SERVER[\'CONTENT_TYPE\'].',
+        );
+    }
+
     public function testReturnCookieCollectionWhenCookiesPresent(): void
     {
-        $this->webApplication();
-
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(
@@ -246,8 +260,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnCookieCollectionWhenNoCookiesPresent(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->enableCookieValidation = false;
@@ -270,8 +282,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnCookieCollectionWithValidationDisabled(): void
     {
-        $this->webApplication();
-
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(
@@ -321,8 +331,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnCookieWithCorrectNamePropertyWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $cookieName = 'session_id';
         $cookieValue = 'abc123';
 
@@ -372,8 +380,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnCsrfTokenFromHeaderWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $csrfToken = 'test-csrf-token-value';
 
         $request = new Request();
@@ -396,8 +402,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnCsrfTokenFromHeaderWithCustomHeaderWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $customHeaderName = 'X-Custom-CSRF';
         $csrfToken = 'custom-csrf-token-value';
 
@@ -423,8 +427,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnEmptyCookieCollectionWhenValidationEnabledButNoValidationKey(): void
     {
-        $this->webApplication();
-
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(['session_id' => 'abc123']);
@@ -443,8 +445,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnEmptyCookieCollectionWhenValidationEnabledWithInvalidCookies(): void
     {
-        $this->webApplication();
-
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(
@@ -476,8 +476,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnEmptyQueryParamsWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('GET', '/products'));
@@ -491,8 +489,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnEmptyQueryStringWhenAdapterIsSetWithNoQuery(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
@@ -503,8 +499,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
     {
-        $this->webApplication();
-
         $request = new Request(['workerMode' => false]);
 
         $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test', [], null, []));
@@ -518,8 +512,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
@@ -534,8 +526,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnHttpMethodFromAdapterWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('POST', '/test'));
@@ -550,8 +540,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnHttpMethodWithBodyOverrideAndLowerCaseMethodsWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
@@ -576,8 +564,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnHttpMethodWithBodyOverrideWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
@@ -602,8 +588,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnHttpMethodWithCustomMethodParamWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->methodParam = 'custom_method';
@@ -630,8 +614,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnHttpMethodWithHeaderOverrideWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
@@ -666,8 +648,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnMultipleUploadedFilesWithDifferentStructures(): void
     {
-        $this->webApplication();
-
         $tmpFile1 = $this->createTmpFile();
 
         $tmpPathFile1 = stream_get_meta_data($tmpFile1)['uri'];
@@ -792,8 +772,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnMultipleValidatedCookiesWhenValidationEnabledWithMultipleValidCookies(): void
     {
-        $this->webApplication();
-
         $validationKey = 'test-validation-key-32-characters';
 
         $cookies = [
@@ -863,8 +841,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnNewCookieCollectionInstanceOnEachCall(): void
     {
-        $this->webApplication();
-
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(['cached_cookie' => 'test_value']);
@@ -887,8 +863,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnNullFromHeaderWhenCsrfHeaderEmptyAndAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
@@ -910,8 +884,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnNullFromHeaderWhenCsrfHeaderNotPresentAndAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('DELETE', '/api/resource'));
@@ -925,11 +897,9 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParentCsrfTokenFromHeaderWhenAdapterIsNull(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
-        // ensure adapter is null (default state)
+        // ensure adapter is `null` (default state)
         $request->reset();
         $result = $request->getCsrfTokenFromHeader();
 
@@ -941,8 +911,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParentGetParsedBodyWhenAdapterIsNull(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         // ensure adapter is 'null' (default state)
@@ -956,8 +924,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParentGetScriptUrlWhenAdapterIsNull(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         // ensure adapter is 'null' (default state)
@@ -978,8 +944,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParentHttpMethodWhenAdapterIsNull(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         // ensure adapter is 'null' (default state)
@@ -991,8 +955,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParentQueryParamsWhenAdapterIsNull(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         // ensure adapter is 'null' (default state)
@@ -1004,8 +966,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParentQueryStringWhenAdapterIsNull(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $queryString = $request->getQueryString();
@@ -1018,11 +978,9 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParentRawBodyWhenAdapterIsNull(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
-        // ensure adapter is 'null' (default state)
+        // ensure adapter is `null` (default state)
         $request->reset();
         $result = $request->getRawBody();
 
@@ -1036,11 +994,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $_SERVER['REQUEST_URI'] = '/legacy/path?param=value';
 
-        $this->webApplication();
-
         $request = new Request();
 
-        // ensure adapter is 'null' (default state)
+        // ensure adapter is `null` (default state)
         $request->reset();
 
         $url = $request->getUrl();
@@ -1056,8 +1012,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParsedBodyArrayWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $parsedBodyData = [
             'name' => 'John',
             'email' => 'john@example.com',
@@ -1099,8 +1053,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParsedBodyNullWhenAdapterIsSetWithNullBody(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
@@ -1118,8 +1070,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnParsedBodyObjectWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $parsedBodyObject = (object) [
             'title' => 'Test Article',
             'content' => 'Article content',
@@ -1160,8 +1110,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnPsr7RequestInstanceWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
@@ -1176,8 +1124,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnQueryParamsWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
@@ -1223,8 +1169,6 @@ final class ServerRequestAdapterTest extends TestCase
     #[DataProviderExternal(RequestProvider::class, 'getQueryString')]
     public function testReturnQueryStringWhenAdapterIsSet(string $queryString, string $expectedString): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('GET', "/test?{$queryString}"));
@@ -1239,8 +1183,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnRawBodyFromAdapterWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $bodyContent = '{"name":"John","email":"john@example.com","message":"Hello World"}';
 
         $stream = FactoryHelper::createStream('php://temp', 'wb+');
@@ -1261,8 +1203,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnRawBodyWhenAdapterIsSetWithEmptyBody(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
@@ -1276,8 +1216,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnReadOnlyCookieCollectionWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(
@@ -1316,8 +1254,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
     {
-        $this->webApplication();
-
         $expectedScriptName = '/app/public/index.php';
 
         $request = new Request(['workerMode' => false]);
@@ -1342,8 +1278,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnUploadedFilesRecursivelyConvertsNestedArrays(): void
     {
-        $this->webApplication();
-
         $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
         $file2 = dirname(__DIR__) . '/support/stub/files/test2.php';
         $size1 = filesize($file1);
@@ -1450,8 +1384,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnUploadedFilesWhenAdapterIsSet(): void
     {
-        $this->webApplication();
-
         $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
         $file2 = dirname(__DIR__) . '/support/stub/files/test2.php';
         $size1 = filesize($file1);
@@ -1554,8 +1486,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnUploadedFileWithZeroSizeWhenPsr7FileSizeIsNull(): void
     {
-        $this->webApplication();
-
         $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
 
         $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1);
@@ -1611,8 +1541,6 @@ final class ServerRequestAdapterTest extends TestCase
     #[DataProviderExternal(RequestProvider::class, 'getUrl')]
     public function testReturnUrlFromAdapterWhenAdapterIsSet(string $url, string $expectedUrl): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(FactoryHelper::createRequest('GET', $url));
@@ -1627,8 +1555,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnValidatedCookiesWhenValidationEnabledWithValidCookies(): void
     {
-        $this->webApplication();
-
         $validationKey = 'test-validation-key-32-characters';
 
         // create a valid signed cookie using Yii security component
@@ -1681,8 +1607,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnValidatedCookieWithCorrectNamePropertyWhenValidationEnabled(): void
     {
-        $this->webApplication();
-
         $validationKey = 'test-validation-key-32-characters';
         $cookieName = 'validated_session';
         $cookieValue = 'secure_session_value';
@@ -1738,8 +1662,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testSecureHeadersAreFilteredWhenNotFromTrustedHost(): void
     {
-        $this->webApplication();
-
         $_SERVER['REMOTE_ADDR'] = '192.168.1.100';
 
         $request = new Request(

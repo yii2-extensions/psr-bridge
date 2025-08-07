@@ -114,7 +114,6 @@ final class Request extends \yii\web\Request
          */
         $authToken = $this->getHeaders()->get('Authorization');
 
-        /** @phpstan-ignore-next-line */
         if ($authToken !== null && strncasecmp($authToken, 'basic', 5) === 0) {
             $encoded = mb_substr($authToken, 6);
             $decoded = base64_decode($encoded, true); // strict mode
@@ -171,6 +170,29 @@ final class Request extends \yii\web\Request
     }
 
     /**
+     * Retrieves the 'Content-Type' header value for the current request.
+     *
+     * Returns the value of the 'Content-Type' header from the PSR-7 ServerRequestInterface if the adapter is set.
+     *
+     * If no adapter is present, falls back to the parent implementation.
+     *
+     * @return string 'Content-Type' header value, or an empty string if not present.
+     *
+     * Usage example:
+     * ```php
+     * $contentType = $request->getContentType();
+     * ```
+     */
+    public function getContentType(): string
+    {
+        if ($this->adapter !== null) {
+            return $this->getHeaders()->get('Content-Type') ?? '';
+        }
+
+        return parent::getContentType();
+    }
+
+    /**
      * Retrieves cookies from the current request, supporting PSR-7 and Yii2 validation.
      *
      * Returns a {@see CookieCollection} containing cookies extracted from the PSR-7 ServerRequestInterface if the
@@ -216,8 +238,6 @@ final class Request extends \yii\web\Request
      * ```php
      * $token = $request->getCsrfTokenFromHeader();
      * ```
-     *
-     * @phpstan-ignore return.unusedType
      */
     public function getCsrfTokenFromHeader(): string|null
     {
