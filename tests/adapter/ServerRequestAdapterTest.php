@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
-use Psr\Http\Message\ServerRequestInterface;
 use Yii;
 use yii\base\{InvalidCallException, InvalidConfigException};
 use yii\helpers\Json;
@@ -22,11 +21,6 @@ use function filesize;
 #[Group('http')]
 final class ServerRequestAdapterTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-    }
-
     public function testGetCsrfTokenFromHeaderUsesAdapterWhenAdapterIsNotNull(): void
     {
         $expectedToken = 'adapter-csrf-token-123';
@@ -52,6 +46,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testResetCookieCollectionAfterReset(): void
     {
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
@@ -90,6 +87,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnBodyParamsWhenPsr7RequestHasFormData(): void
     {
         $request = new Request();
@@ -133,6 +133,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnBodyParamsWithMethodParamRemoved(): void
     {
         $request = new Request();
@@ -204,6 +207,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnCookieCollectionWhenCookiesPresent(): void
     {
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
@@ -224,11 +230,6 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request($psr7Request);
         $cookies = $request->getCookies();
 
-        self::assertInstanceOf(
-            CookieCollection::class,
-            $cookies,
-            "Cookies should return a 'CookieCollection' instance when cookies are present.",
-        );
         self::assertCount(
             2,
             $cookies,
@@ -258,6 +259,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnCookieCollectionWhenNoCookiesPresent(): void
     {
         $request = new Request();
@@ -268,11 +272,6 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
         $cookies = $request->getCookies();
 
-        self::assertInstanceOf(
-            CookieCollection::class,
-            $cookies,
-            "Cookies should return a 'CookieCollection' instance when no cookies are present.",
-        );
         self::assertCount(
             0,
             $cookies,
@@ -280,6 +279,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnCookieCollectionWithValidationDisabled(): void
     {
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
@@ -299,11 +301,6 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request($psr7Request);
         $cookies = $request->getCookies();
 
-        self::assertInstanceOf(
-            CookieCollection::class,
-            $cookies,
-            "Cookies should return a 'CookieCollection' instance when validation is disabled.",
-        );
         self::assertCount(
             2,
             $cookies,
@@ -329,6 +326,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnCookieWithCorrectNamePropertyWhenAdapterIsSet(): void
     {
         $cookieName = 'session_id';
@@ -443,6 +443,9 @@ final class ServerRequestAdapterTest extends TestCase
         $request->getCookies();
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnEmptyCookieCollectionWhenValidationEnabledWithInvalidCookies(): void
     {
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
@@ -462,11 +465,6 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request($psr7Request);
         $cookies = $request->getCookies();
 
-        self::assertInstanceOf(
-            CookieCollection::class,
-            $cookies,
-            "Cookies should return a 'CookieCollection' instance when validation is enabled with invalid cookies.",
-        );
         self::assertCount(
             0,
             $cookies,
@@ -497,11 +495,14 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertEmpty($result, 'Query string should be empty when no query parameters are present.');
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
     {
         $request = new Request(['workerMode' => false]);
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test', [], null, []));
+        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
         $scriptUrl = $request->getScriptUrl();
 
         self::assertEmpty(
@@ -510,6 +511,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
     {
         $request = new Request();
@@ -770,6 +774,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnMultipleValidatedCookiesWhenValidationEnabledWithMultipleValidCookies(): void
     {
         $validationKey = 'test-validation-key-32-characters';
@@ -839,6 +846,9 @@ final class ServerRequestAdapterTest extends TestCase
         }
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnNewCookieCollectionInstanceOnEachCall(): void
     {
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
@@ -909,11 +919,14 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnParentGetParsedBodyWhenAdapterIsNull(): void
     {
         $request = new Request();
 
-        // ensure adapter is 'null' (default state)
+        // ensure adapter is `null` (default state)
         $request->reset();
 
         self::assertEmpty(
@@ -922,6 +935,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnParentGetScriptUrlWhenAdapterIsNull(): void
     {
         $request = new Request();
@@ -934,7 +950,7 @@ final class ServerRequestAdapterTest extends TestCase
 
         $scriptUrl = $request->getScriptUrl();
 
-        // kust verify the method executes without throwing exception when adapter is 'null'
+        // verify the method executes without throwing exception when adapter is `null`
         self::assertSame(
             '/test.php',
             $scriptUrl,
@@ -990,6 +1006,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnParentUrlWhenAdapterIsNull(): void
     {
         $_SERVER['REQUEST_URI'] = '/legacy/path?param=value';
@@ -1010,6 +1029,9 @@ final class ServerRequestAdapterTest extends TestCase
         unset($_SERVER['REQUEST_URI']);
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnParsedBodyArrayWhenAdapterIsSet(): void
     {
         $parsedBodyData = [
@@ -1051,6 +1073,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnParsedBodyNullWhenAdapterIsSetWithNullBody(): void
     {
         $request = new Request();
@@ -1059,8 +1084,6 @@ final class ServerRequestAdapterTest extends TestCase
             FactoryHelper::createRequest(
                 'GET',
                 '/api/users',
-                [],
-                null,
             ),
         );
         $result = $request->getParsedBody();
@@ -1068,6 +1091,9 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertNull($result, "Parsed body should return 'null' when 'PSR-7' request has no parsed body.");
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnParsedBodyObjectWhenAdapterIsSet(): void
     {
         $parsedBodyObject = (object) [
@@ -1105,20 +1131,6 @@ final class ServerRequestAdapterTest extends TestCase
             'Article content',
             $result->content,
             "Object 'content' property should match the expected value.",
-        );
-    }
-
-    public function testReturnPsr7RequestInstanceWhenAdapterIsSet(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
-
-        self::assertInstanceOf(
-            ServerRequestInterface::class,
-            $request->getPsr7Request(),
-            "'getPsr7Request()' should return a '" . ServerRequestInterface::class . "' instance when the 'PSR-7' " .
-            'adapter is set.',
         );
     }
 
@@ -1185,7 +1197,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $bodyContent = '{"name":"John","email":"john@example.com","message":"Hello World"}';
 
-        $stream = FactoryHelper::createStream('php://temp', 'wb+');
+        $stream = FactoryHelper::createStream();
 
         $stream->write($bodyContent);
 
@@ -1214,6 +1226,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnReadOnlyCookieCollectionWhenAdapterIsSet(): void
     {
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
@@ -1233,12 +1248,6 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request($psr7Request);
         $cookies = $request->getCookies();
 
-        self::assertInstanceOf(
-            CookieCollection::class,
-            $cookies,
-            "Cookies should return a 'CookieCollection' instance when adapter is set.",
-        );
-
         $this->expectException(InvalidCallException::class);
         $this->expectExceptionMessage('The cookie collection is read only.');
 
@@ -1252,6 +1261,39 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    public function testReturnRemoteIPFromPsr7ServerParams(): void
+    {
+        $_SERVER = [
+            'REMOTE_ADDR' => '192.168.1.100',
+            'REQUEST_TIME' => '1234567890',
+            'SERVER_NAME' => 'old.example.com',
+        ];
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                'https://old.example.com/api',
+                serverParams: [
+                    'HTTP_X_FORWARDED_FOR' => '203.0.113.1',
+                    'REMOTE_ADDR' => '10.0.0.50',
+                    'REQUEST_TIME' => '1234567999',
+                    'SERVER_NAME' => 'new.example.com',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '10.0.0.50',
+            $request->getRemoteIP(),
+            "'getRemoteIP()' should return the 'REMOTE_ADDR' from PSR-7 'serverParams', not from global " . '$_SERVER',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
     {
         $expectedScriptName = '/app/public/index.php';
@@ -1538,6 +1580,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     #[DataProviderExternal(RequestProvider::class, 'getUrl')]
     public function testReturnUrlFromAdapterWhenAdapterIsSet(string $url, string $expectedUrl): void
     {
@@ -1553,6 +1598,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnValidatedCookiesWhenValidationEnabledWithValidCookies(): void
     {
         $validationKey = 'test-validation-key-32-characters';
@@ -1580,11 +1628,6 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request($psr7Request);
         $cookies = $request->getCookies();
 
-        self::assertInstanceOf(
-            CookieCollection::class,
-            $cookies,
-            "Cookies should return a 'CookieCollection' instance when validation is enabled with valid cookies.",
-        );
         self::assertCount(
             1,
             $cookies,
@@ -1605,6 +1648,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnValidatedCookieWithCorrectNamePropertyWhenValidationEnabled(): void
     {
         $validationKey = 'test-validation-key-32-characters';

@@ -40,7 +40,7 @@ use function strncasecmp;
  * - Automatic fallback to Yii2 parent methods when no adapter is set.
  * - Conversion utilities for PSR-7 UploadedFileInterface to Yii2 format.
  * - Full compatibility with Yii2 Cookie validation and CSRF protection.
- * - Immutable, type-safe access to request data (body, headers, cookies, files, query, etc.).
+ * - Immutable, type-safe access to request data (body, headers, cookies, files, query, server parameters, etc.).
  * - PSR-7 ServerRequestAdapter integration via {@see setPsr7Request()} and {@see getPsr7Request()}.
  * - Worker mode support for modern runtimes (see {@see $workerMode}).
  *
@@ -445,6 +445,32 @@ final class Request extends \yii\web\Request
     }
 
     /**
+     * Retrieves the remote IP address for the current request, supporting PSR-7 and Yii2 fallback.
+     *
+     * Returns the remote IP address as provided by the PSR-7 ServerRequestAdapter if the adapter is set.
+     *
+     * If no adapter is present, falls back to the parent implementation.
+     *
+     * This method enables seamless access to the remote IP address in both PSR-7 and Yii2 environments, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
+     *
+     * @return string|null Remote IP address for the current request, or `null` if not available.
+     *
+     * Usage example:
+     * ```php
+     * $ip = $request->getRemoteIP();
+     * ```
+     */
+    public function getRemoteIP(): string|null
+    {
+        if ($this->adapter !== null) {
+            return $this->getServerParam('REMOTE_ADDR');
+        }
+
+        return parent::getRemoteIP();
+    }
+
+    /**
      * Retrieves the script URL of the current request, supporting PSR-7 and Yii2 fallback.
      *
      * Returns the script URL as determined by the PSR-7 adapter if present, using the configured worker mode flag.
@@ -470,6 +496,34 @@ final class Request extends \yii\web\Request
         }
 
         return parent::getScriptUrl();
+    }
+
+    /**
+     * Retrieves server parameters from the current request, supporting PSR-7 and Yii2 fallback.
+     *
+     * Returns the server parameters as provided by the PSR-7 ServerRequestAdapter if the adapter is set.
+     *
+     * If no adapter is present, an empty array is returned.
+     *
+     * This method enables seamless access to server parameters in both PSR-7 and Yii2 environments, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
+     *
+     * @return array Array of server parameters for the current request.
+     *
+     * @phpstan-return array<array-key, mixed>
+     *
+     * Usage example:
+     * ```php
+     * $params = $request->getServerParams();
+     * ```
+     */
+    public function getServerParams(): array
+    {
+        if ($this->adapter !== null) {
+            return $this->adapter->getServerParams();
+        }
+
+        return [];
     }
 
     /**
@@ -670,5 +724,26 @@ final class Request extends \yii\web\Request
                 'type' => $psrFile->getClientMediaType() ?? '',
             ],
         );
+    }
+
+    /**
+     * Retrieves a server parameter value as a string or `null`.
+     *
+     * Returns the value of the specified server parameter from the current request server parameters array.
+     *
+     * If the parameter is not set or is not a string, `null` is returned.
+     *
+     * This method provides type-safe access to individual server parameters ensuring compatibility with both PSR-7 and
+     * Yii2 environments.
+     *
+     * @param string $name Name of the server parameter to retrieve.
+     *
+     * @return string|null Value of the server parameter as a string, or `null` if not set or not a string.
+     */
+    private function getServerParam(string $name): string|null
+    {
+        $serverParam = $this->getServerParams()[$name] ?? null;
+
+        return is_string($serverParam) ? $serverParam : null;
     }
 }
