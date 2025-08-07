@@ -9,9 +9,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii\web\{Cookie, HeaderCollection};
-use yii\web\NotFoundHttpException;
 use yii2\extensions\psrbridge\exception\Message;
-use yii2\extensions\psrbridge\http\Request;
 
 use function implode;
 use function in_array;
@@ -48,13 +46,6 @@ use function strtoupper;
  */
 final class ServerRequestAdapter
 {
-    /**
-     * Query parameters resolved from the PSR-7 ServerRequestInterface.
-     *
-     * @phpstan-var array<array-key, mixed>
-     */
-    private array $queryParams = [];
-
     /**
      * Creates a new instance of the {@see ServerRequestAdapter} class.
      *
@@ -244,10 +235,6 @@ final class ServerRequestAdapter
      */
     public function getQueryParams(): array
     {
-        if ($this->queryParams !== []) {
-            return $this->queryParams;
-        }
-
         return $this->psrRequest->getQueryParams();
     }
 
@@ -377,43 +364,6 @@ final class ServerRequestAdapter
         }
 
         return $url;
-    }
-
-    /**
-     * Resolves the route and parameters from the given {@see Request} instance using Yii2 UrlManager.
-     *
-     * Parses the request using Yii2 UrlManager and returns the resolved route and parameters.
-     *
-     * If the route is found, combine the parsed parameters with the query parameters from the PSR-7
-     * ServerRequestAdapter.
-     *
-     * @param Request $request Request instance to resolve.
-     *
-     * @throws NotFoundHttpException if the route cannot be resolved by UrlManager.
-     *
-     * @return array Array containing the resolved route and combined parameters.
-     *
-     * @phpstan-return array<array-key, mixed>
-     *
-     * Usage example:
-     * ```php
-     * [$route, $params] = $adapter->resolve($request);
-     * ```
-     */
-    public function resolve(Request $request): array
-    {
-        /** @phpstan-var array{0: string, 1: array<string, mixed>}|false $result*/
-        $result = Yii::$app->getUrlManager()->parseRequest($request);
-
-        if ($result !== false) {
-            [$route, $params] = $result;
-
-            $this->queryParams = $params + $this->psrRequest->getQueryParams();
-
-            return [$route, $this->queryParams];
-        }
-
-        throw new NotFoundHttpException(Yii::t('yii', Message::PAGE_NOT_FOUND->getMessage()));
     }
 
     /**
