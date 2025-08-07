@@ -32,11 +32,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->csrfHeader = $csrfHeaderName;
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'POST',
-                '/test',
-                [$csrfHeaderName => $expectedToken],
-            ),
+            FactoryHelper::createRequest('POST', '/test', [$csrfHeaderName => $expectedToken]),
         );
         $result = $request->getCsrfTokenFromHeader();
 
@@ -270,7 +266,9 @@ final class ServerRequestAdapterTest extends TestCase
         $request->enableCookieValidation = false;
         $request->cookieValidationKey = 'test-validation-key-32-characters';
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
         $cookies = $request->getCookies();
 
         self::assertCount(
@@ -386,11 +384,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'POST',
-                '/test',
-                ['X-CSRF-Token' => $csrfToken],
-            ),
+            FactoryHelper::createRequest('POST', '/test', ['X-CSRF-Token' => $csrfToken]),
         );
         $result = $request->getCsrfTokenFromHeader();
 
@@ -411,11 +405,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->csrfHeader = $customHeaderName;
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'PUT',
-                '/api/resource',
-                [$customHeaderName => $csrfToken],
-            ),
+            FactoryHelper::createRequest('PUT', '/api/resource', [$customHeaderName => $csrfToken]),
         );
         $result = $request->getCsrfTokenFromHeader();
 
@@ -477,7 +467,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/products'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/products'),
+        );
         $queryParams = $request->getQueryParams();
 
         self::assertEmpty(
@@ -490,7 +482,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
         $result = $request->getQueryString();
 
         self::assertEmpty($result, 'Query string should be empty when no query parameters are present.');
@@ -503,7 +497,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request(['workerMode' => false]);
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
         $scriptUrl = $request->getScriptUrl();
 
         self::assertEmpty(
@@ -519,7 +515,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
         $scriptUrl = $request->getScriptUrl();
 
         self::assertSame(
@@ -529,11 +527,33 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    public function testReturnEmptyServerParamsWhenAdapterIsSet(): void
+    {
+        $_SERVER = [
+            'REMOTE_ADDR' => '192.168.1.100',
+            'REQUEST_TIME' => '1234567890',
+            'SERVER_NAME' => 'old.example.com',
+        ];
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', 'https://old.example.com/api'),
+        );
+
+        self::assertEmpty(
+            $request->getServerParams(),
+            'Server parameter should be empty array when using a PSR-7 request, ignoring global \'$_SERVER\'.',
+        );
+    }
+
     public function testReturnHttpMethodFromAdapterWhenAdapterIsSet(): void
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('POST', '/test'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/test'),
+        );
         $method = $request->getMethod();
 
         self::assertSame(
@@ -622,11 +642,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'POST',
-                '/test',
-                ['X-Http-Method-Override' => 'DELETE'],
-            ),
+            FactoryHelper::createRequest('POST', '/test', ['X-Http-Method-Override' => 'DELETE']),
         );
         $method = $request->getMethod();
 
@@ -641,7 +657,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
         $method = $request->getMethod();
 
         self::assertSame(
@@ -717,7 +735,9 @@ final class ServerRequestAdapterTest extends TestCase
 
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('POST', '/upload')->withUploadedFiles($uploadedFiles));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/upload')->withUploadedFiles($uploadedFiles),
+        );
         $convertedFiles = $request->getUploadedFiles();
 
         self::assertCount(
@@ -877,11 +897,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'PATCH',
-                '/api/update',
-                ['X-CSRF-Token' => ''],
-            ),
+            FactoryHelper::createRequest('PATCH', '/api/update', ['X-CSRF-Token' => '']),
         );
         $result = $request->getCsrfTokenFromHeader();
 
@@ -897,12 +913,28 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('DELETE', '/api/resource'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('DELETE', '/api/resource'),
+        );
         $result = $request->getCsrfTokenFromHeader();
 
         self::assertNull(
             $result,
             "'CSRF' token from header should return 'null' when no 'CSRF' header is present in the 'PSR-7' request.",
+        );
+    }
+
+    public function testReturnNullWhenServerParamNotPresentInPsr7Request(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
+
+        self::assertNull(
+            $request->getServerParam('TEST_PARAM'),
+            "'getServerParam()' should return 'null' when the parameter is not present in PSR-7 'serverParams'.",
         );
     }
 
@@ -943,7 +975,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        // ensure adapter is 'null' (default state)
+        // ensure adapter is `null` (default state)
         $request->reset();
 
         $_SERVER['SCRIPT_NAME'] = '/test.php';
@@ -963,7 +995,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        // ensure adapter is 'null' (default state)
+        // ensure adapter is `null` (default state)
         $request->reset();
         $method = $request->getMethod();
 
@@ -974,7 +1006,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        // ensure adapter is 'null' (default state)
+        // ensure adapter is `null` (default state)
         $request->reset();
         $queryParams = $request->getQueryParams();
 
@@ -1082,10 +1114,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'GET',
-                '/api/users',
-            ),
+            FactoryHelper::createRequest('GET', '/api/users'),
         );
         $result = $request->getParsedBody();
 
@@ -1139,7 +1168,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
 
         self::assertInstanceOf(
             ServerRequestInterface::class,
@@ -1198,7 +1229,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', "/test?{$queryString}"));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', "/test?{$queryString}"),
+        );
         $result = $request->getQueryString();
 
         self::assertSame(
@@ -1218,7 +1251,9 @@ final class ServerRequestAdapterTest extends TestCase
 
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('POST', '/api/contact')->withBody($stream));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/api/contact')->withBody($stream),
+        );
         $result = $request->getRawBody();
 
         self::assertSame(
@@ -1232,7 +1267,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
         $result = $request->getRawBody();
 
         self::assertEmpty(
@@ -1278,11 +1315,28 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnRemoteIPFromPsr7ServerParams(): void
     {
-        $_SERVER = [
-            'REMOTE_ADDR' => '192.168.1.100',
-            'REQUEST_TIME' => '1234567890',
-            'SERVER_NAME' => 'old.example.com',
-        ];
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                'https://old.example.com/api',
+                serverParams: ['REMOTE_ADDR' => '192.168.1.100'],
+            ),
+        );
+
+        $remoteIP = $request->getRemoteIP();
+
+        self::assertSame(
+            '192.168.1.100',
+            $remoteIP,
+            "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams'.",
+        );
+    }
+
+    public function testReturnRemoteIPFromPsr7ServerParamsOverridesGlobalServer(): void
+    {
+        $_SERVER['REMOTE_ADDR'] = '192.168.1.100';
 
         $request = new Request();
 
@@ -1290,19 +1344,17 @@ final class ServerRequestAdapterTest extends TestCase
             FactoryHelper::createRequest(
                 'GET',
                 'https://old.example.com/api',
-                serverParams: [
-                    'HTTP_X_FORWARDED_FOR' => '203.0.113.1',
-                    'REMOTE_ADDR' => '10.0.0.50',
-                    'REQUEST_TIME' => '1234567999',
-                    'SERVER_NAME' => 'new.example.com',
-                ],
+                serverParams: ['REMOTE_ADDR' => '10.0.0.1'],
             ),
         );
 
+        $remoteIP = $request->getRemoteIP();
+
         self::assertSame(
-            '10.0.0.50',
-            $request->getRemoteIP(),
-            "'getRemoteIP()' should return the 'REMOTE_ADDR' from PSR-7 'serverParams', not from global " . '$_SERVER',
+            '10.0.0.1',
+            $remoteIP,
+            "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams', not from global " .
+            '\'$_SERVER\'.',
         );
     }
 
@@ -1330,6 +1382,92 @@ final class ServerRequestAdapterTest extends TestCase
             $expectedScriptName,
             $scriptUrl,
             "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
+        );
+    }
+
+    public function testReturnServerParamFromPsr7RequestWhenAdapterIsSet(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['TEST_PARAM' => 'test_value']),
+        );
+
+        self::assertSame(
+            'test_value',
+            $request->getServerParam('TEST_PARAM'),
+            "'getServerParam()' should return the value from PSR-7 'serverParams'.",
+        );
+    }
+
+    public function testReturnServerParamsFromPsr7RequestOverridesGlobalServer(): void
+    {
+        $_SERVER = [
+            'REMOTE_ADDR' => '192.168.1.100',
+            'REQUEST_TIME' => '1234567890',
+            'SERVER_NAME' => 'old.example.com',
+        ];
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                'https://old.example.com/api',
+                serverParams: [
+                    'HTTP_X_FORWARDED_FOR' => '203.0.113.1',
+                    'REMOTE_ADDR' => '10.0.0.50',
+                    'REQUEST_TIME' => null,
+                    'SERVER_NAME' => 'new.example.com',
+                ],
+            ),
+        );
+
+        $serverParams = $request->getServerParams();
+
+        self::assertSame(
+            '10.0.0.50',
+            $serverParams['REMOTE_ADDR'] ?? null,
+            "Server parameter 'REMOTE_ADDR' should be taken from PSR-7 'serverParams', not from global " .
+            '\'$_SERVER\'.',
+        );
+        self::assertNull(
+            $serverParams['REQUEST_TIME'] ?? null,
+            "Server parameter 'REQUEST_TIME' should be 'null' when not set in PSR-7 'serverParams', even if present " .
+            'in global \'$_SERVER\'.',
+        );
+    }
+
+    public function testReturnServerParamsFromPsr7RequestWhenAdapterIsSet(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                'https://old.example.com/api',
+                serverParams: [
+                    'HTTP_X_FORWARDED_FOR' => '203.0.113.1',
+                    'REQUEST_TIME' => '1234567890',
+                ],
+            ),
+        );
+
+        $serverParams = $request->getServerParams();
+
+        self::assertSame(
+            '203.0.113.1',
+            $serverParams['HTTP_X_FORWARDED_FOR'] ?? null,
+            "'HTTP_X_FORWARDED_FOR' should match the value from PSR-7 'serverParams'.",
+        );
+        self::assertSame(
+            '1234567890',
+            $serverParams['REQUEST_TIME'] ?? null,
+            "'REQUEST_TIME' should match the value from PSR-7 'serverParams'.",
+        );
+        self::assertNull(
+            $serverParams['REMOTE_ADDR'] ?? null,
+            "'REMOTE_ADDR' should not be set when not present in PSR-7 'serverParams'.",
         );
     }
 
@@ -1603,7 +1741,9 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        $request->setPsr7Request(FactoryHelper::createRequest('GET', $url));
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', $url),
+        );
         $url = $request->getUrl();
 
         self::assertSame(
