@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
+use Psr\Http\Message\ServerRequestInterface;
 use Yii;
 use yii\base\{InvalidCallException, InvalidConfigException};
 use yii\helpers\Json;
@@ -47,7 +48,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testResetCookieCollectionAfterReset(): void
     {
@@ -88,7 +89,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnBodyParamsWhenPsr7RequestHasFormData(): void
     {
@@ -134,7 +135,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnBodyParamsWithMethodParamRemoved(): void
     {
@@ -208,7 +209,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnCookieCollectionWhenCookiesPresent(): void
     {
@@ -260,7 +261,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnCookieCollectionWhenNoCookiesPresent(): void
     {
@@ -280,7 +281,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnCookieCollectionWithValidationDisabled(): void
     {
@@ -327,7 +328,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnCookieWithCorrectNamePropertyWhenAdapterIsSet(): void
     {
@@ -444,7 +445,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnEmptyCookieCollectionWhenValidationEnabledWithInvalidCookies(): void
     {
@@ -496,7 +497,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
     {
@@ -512,7 +513,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
     {
@@ -775,7 +776,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnMultipleValidatedCookiesWhenValidationEnabledWithMultipleValidCookies(): void
     {
@@ -847,7 +848,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnNewCookieCollectionInstanceOnEachCall(): void
     {
@@ -920,7 +921,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnParentGetParsedBodyWhenAdapterIsNull(): void
     {
@@ -936,7 +937,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnParentGetScriptUrlWhenAdapterIsNull(): void
     {
@@ -1007,7 +1008,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnParentUrlWhenAdapterIsNull(): void
     {
@@ -1030,7 +1031,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnParsedBodyArrayWhenAdapterIsSet(): void
     {
@@ -1074,7 +1075,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnParsedBodyNullWhenAdapterIsSetWithNullBody(): void
     {
@@ -1092,7 +1093,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnParsedBodyObjectWhenAdapterIsSet(): void
     {
@@ -1131,6 +1132,20 @@ final class ServerRequestAdapterTest extends TestCase
             'Article content',
             $result->content,
             "Object 'content' property should match the expected value.",
+        );
+    }
+
+    public function testReturnPsr7RequestInstanceWhenAdapterIsSet(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(FactoryHelper::createRequest('GET', '/test'));
+
+        self::assertInstanceOf(
+            ServerRequestInterface::class,
+            $request->getPsr7Request(),
+            "'getPsr7Request()' should return a '" . ServerRequestInterface::class . "' instance when the 'PSR-7' " .
+            'adapter is set.',
         );
     }
 
@@ -1227,7 +1242,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnReadOnlyCookieCollectionWhenAdapterIsSet(): void
     {
@@ -1292,7 +1307,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
     {
@@ -1581,7 +1596,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(RequestProvider::class, 'getUrl')]
     public function testReturnUrlFromAdapterWhenAdapterIsSet(string $url, string $expectedUrl): void
@@ -1599,7 +1614,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnValidatedCookiesWhenValidationEnabledWithValidCookies(): void
     {
@@ -1649,7 +1664,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnValidatedCookieWithCorrectNamePropertyWhenValidationEnabled(): void
     {
