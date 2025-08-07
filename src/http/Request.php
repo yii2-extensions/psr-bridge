@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\http;
 
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
+use Yii;
 use yii\base\InvalidConfigException;
 use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, UploadedFile};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
@@ -342,13 +343,14 @@ final class Request extends \yii\web\Request
     /**
      * Retrieves query parameters from the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns the query parameters as an array from the PSR-7 adapter if present.
+     * Returns the query parameters as an associative array from the PSR-7 adapter if present. If the parent
+     * implementation returns a non-empty array, it is used instead to maintain compatibility with Yii2 Request
+     * component logic.
      *
-     * If no adapter is set, falls back to the parent implementation.
+     * This method enables seamless access to query parameters in both PSR-7 and Yii2 environments, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
      *
-     * @return array Query parameters for the current request.
-     *
-     * @phpstan-return array<mixed, mixed>
+     * @phpstan-return array<array-key, mixed> Query parameters as an associative array.
      *
      * Usage example:
      * ```php
@@ -358,6 +360,12 @@ final class Request extends \yii\web\Request
     public function getQueryParams(): array
     {
         if ($this->adapter !== null) {
+            $parentParams = parent::getQueryParams();
+
+            if ($parentParams !== []) {
+                return $parentParams;
+            }
+
             return $this->adapter->getQueryParams();
         }
 
@@ -520,29 +528,41 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Resolves the request parameters using PSR-7 adapter or Yii2 fallback.
+     * Resolves the current request into a route and parameters, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns an array of resolved request parameters by delegating to the PSR-7 ServerRequestAdapter if present, or
-     * falling back to the parent Yii2 implementation when no adapter is set.
+     * Parses the request using the Yii2 UrlManager and merges parameters with those from the PSR-7 adapter if present.
+     * - If the PSR-7 adapter is set, this method delegates parsing to the UrlManager, merges the resulting parameters
+     *   with the query parameters from the adapter, and updates the request's query parameters accordingly.
+     * - If no adapter is present, it falls back to the parent implementation.
      *
-     * This method enables seamless interoperability between PSR-7 compatible HTTP stacks and legacy Yii2 workflows,
-     * ensuring consistent parameter resolution in both environments.
+     * @throws NotFoundHttpException if the route is not found or undefined.
      *
-     * @throws NotFoundHttpException if the route cannot be resolved by UrlManager.
-     *
-     * @return array Array of resolved request parameters for the current request.
+     * @return array An array containing the resolved route and parameters.
      *
      * @phpstan-return array<array-key, mixed>
      *
      * Usage example:
      * ```php
-     * $params = $request->resolve();
+     * [$route, $params] = $request->resolve();
      * ```
      */
     public function resolve(): array
     {
         if ($this->adapter !== null) {
-            return $this->adapter->resolve($this);
+            /** @phpstan-var array{0: string, 1: array<string, mixed>}|false $result*/
+            $result = Yii::$app->getUrlManager()->parseRequest($this);
+
+            if ($result !== false) {
+                [$route, $params] = $result;
+
+                $mergedParams = $params + $this->adapter->getQueryParams();
+
+                $this->setQueryParams($mergedParams);
+
+                return [$route, $mergedParams];
+            }
+
+            throw new NotFoundHttpException(Yii::t('yii', Message::PAGE_NOT_FOUND->getMessage()));
         }
 
         return parent::resolve();
