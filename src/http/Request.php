@@ -501,14 +501,13 @@ final class Request extends \yii\web\Request
     /**
      * Retrieves server parameters from the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns the server parameters as provided by the PSR-7 ServerRequestAdapter if the adapter is set.
-     *
-     * If no adapter is present, an empty array is returned.
+     * Returns the server parameters from the PSR-7 adapter if present, otherwise returns `$_SERVER` for backward
+     * compatibility with traditional SAPI environments.
      *
      * This method enables seamless access to server parameters in both PSR-7 and Yii2 environments, supporting
      * interoperability with modern HTTP stacks and legacy workflows.
      *
-     * @return array Array of server parameters for the current request.
+     * @return array Server parameters for the current request.
      *
      * @phpstan-return array<array-key, mixed>
      *
@@ -523,7 +522,8 @@ final class Request extends \yii\web\Request
             return $this->adapter->getServerParams();
         }
 
-        return [];
+        // fallback to `$_SERVER` for non-PSR7 environments
+        return $_SERVER;
     }
 
     /**
