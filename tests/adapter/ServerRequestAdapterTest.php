@@ -769,11 +769,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'DELETE',
-                '/resource/123',
-                serverParams: ['REMOTE_HOST' => $expectedHost],
-            ),
+            FactoryHelper::createRequest('DELETE', '/resource/123', serverParams: ['REMOTE_HOST' => $expectedHost]),
         );
 
         self::assertSame(
