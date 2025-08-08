@@ -445,6 +445,32 @@ final class Request extends \yii\web\Request
     }
 
     /**
+     * Retrieves the remote host name for the current request, supporting PSR-7 and Yii2 fallback.
+     *
+     * Returns the remote host as determined by the PSR-7 adapter if present, using the 'REMOTE_HOST' server parameter.
+     *
+     * If no adapter is set, falls back to the parent implementation.
+     *
+     * This method enables seamless access to the remote host in both PSR-7 and Yii2 environments, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
+     *
+     * @return string|null Remote host name for the current request, or null if not available.
+     *
+     * Usage example:
+     * ```php
+     * $host = $request->getRemoteHost();
+     * ```
+     */
+    public function getRemoteHost(): string|null
+    {
+        if ($this->adapter !== null) {
+            return $this->getServerParam('REMOTE_HOST');
+        }
+
+        return parent::getRemoteHost();
+    }
+
+    /**
      * Retrieves the remote IP address for the current request, supporting PSR-7 and Yii2 fallback.
      *
      * Returns the remote IP address as provided by the PSR-7 ServerRequestAdapter if the adapter is set.
