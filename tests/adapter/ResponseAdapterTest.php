@@ -535,7 +535,6 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
                     ],
                 ],
             ],
@@ -798,7 +797,6 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
                     ],
                 ],
             ],
@@ -908,7 +906,7 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
+                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
                     ],
                 ],
             ],
@@ -1078,7 +1076,6 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
                     ],
                 ],
             ],
@@ -1154,7 +1151,6 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
                     ],
                 ],
             ],
@@ -1212,7 +1208,6 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => false,
-                        'cookieValidationKey' => 'some-key',
                     ],
                 ],
             ],
@@ -1323,7 +1318,6 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
                     ],
                 ],
             ],
@@ -1383,7 +1377,6 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
                     ],
                 ],
             ],
@@ -1573,7 +1566,6 @@ final class ResponseAdapterTest extends TestCase
                 'components' => [
                     'request' => [
                         'enableCookieValidation' => true,
-                        'cookieValidationKey' => 'test-validation-key-32-characters',
                     ],
                 ],
             ],

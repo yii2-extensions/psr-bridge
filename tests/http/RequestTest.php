@@ -1723,8 +1723,6 @@ final class RequestTest extends TestCase
     {
         $request = new Request();
 
-        $_SERVER = [];
-
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage('Unable to determine the entry script file path.');
 
@@ -1734,8 +1732,6 @@ final class RequestTest extends TestCase
     public function testThrowInvalidConfigExceptionWhenGetScriptUrlItsEmptyServer(): void
     {
         $request = new Request();
-
-        $_SERVER = [];
 
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage('Unable to determine the entry script file path.');
