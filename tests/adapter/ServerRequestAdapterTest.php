@@ -18,6 +18,8 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function dirname;
 use function filesize;
+use function is_array;
+use function stream_get_meta_data;
 
 #[Group('http')]
 final class ServerRequestAdapterTest extends TestCase
@@ -34,11 +36,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('POST', '/test', [$csrfHeaderName => $expectedToken]),
         );
-        $result = $request->getCsrfTokenFromHeader();
 
         self::assertSame(
             $expectedToken,
-            $result,
+            $request->getCsrfTokenFromHeader(),
             "Should return CSRF token from adapter headers when adapter is not 'null'",
         );
     }
@@ -66,17 +67,17 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             $host1,
             $result1,
-            'First request instance should return its own remote host value.',
+            "First request instance should return its own 'REMOTE_HOST' value.",
         );
         self::assertSame(
             $host2,
             $result2,
-            'Second request instance should return its own remote host value.',
+            "Second request instance should return its own 'REMOTE_HOST' value.",
         );
         self::assertNotSame(
             $result1,
             $result2,
-            'Different request instances should maintain separate remote host values.',
+            "Different request instances should maintain separate 'REMOTE_HOST' values.",
         );
     }
 
@@ -95,35 +96,34 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = 'test-validation-key-32-characters';
 
         $request->setPsr7Request($psr7Request);
-        $cookies1 = $request->getCookies();
 
+        $cookies1 = $request->getCookies();
         $request->reset();
 
         $newPsr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $newPsr7Request = $newPsr7Request->withCookieParams(['new_cookie' => 'new_value']);
+
         $request->setPsr7Request($newPsr7Request);
+
         $cookies2 = $request->getCookies();
 
         self::assertNotSame(
             $cookies1,
             $cookies2,
-            "After reset, 'getCookies()' should return a new 'CookieCollection' instance.",
+            "After 'reset' method, 'getCookies()' should return a new CookieCollection instance.",
         );
         self::assertTrue(
             $cookies2->has('new_cookie'),
-            "New 'CookieCollection' should contain 'new_cookie' after reset.",
+            "New CookieCollection should contain 'new_cookie' after 'reset' method.",
         );
         self::assertSame(
             'new_value',
             $cookies2->getValue('new_cookie'),
-            "New cookie 'new_cookie' should have the expected value after reset.",
+            "New cookie 'new_cookie' should have the expected value after 'reset' method.",
         );
     }
 
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testResetRemoteHostAfterRequestReset(): void
     {
         $initialHost = 'initial.host.com';
@@ -140,24 +140,26 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             $initialHost,
             $result1,
-            'Remote host should return the initial host value from the first PSR-7 request.',
+            "'REMOTE_HOST' should return the initial host value from the first PSR-7 request.",
         );
 
         $request->reset();
+
         $request->setPsr7Request(
             FactoryHelper::createRequest('POST', '/second', serverParams: ['REMOTE_HOST' => $newHost]),
         );
+
         $result2 = $request->getRemoteHost();
 
         self::assertSame(
             $newHost,
             $result2,
-            'Remote host should return the new host value after reset and setting a new PSR-7 request.',
+            "'REMOTE_HOST' should return the new host value after 'reset' method and setting a new PSR-7 request.",
         );
         self::assertNotSame(
             $result1,
             $result2,
-            'Remote host values should be different after reset with new PSR-7 request data.',
+            "'REMOTE_HOST' values should be different after 'reset' method with new PSR-7 request data.",
         );
     }
 
@@ -179,31 +181,32 @@ final class ServerRequestAdapterTest extends TestCase
                 ],
             ),
         );
+
         $bodyParams = $request->getBodyParams();
 
         self::assertIsArray(
             $bodyParams,
-            "Body parameters should be returned as an array when 'PSR-7' request contains form data.",
+            'Body parameters should be returned as an array when PSR-7 request contains form data.',
         );
         self::assertArrayHasKey(
             'key1',
             $bodyParams,
-            "Body parameters should contain the key 'key1' when present in the 'PSR-7' request.",
+            "Body parameters should contain the key 'key1' when present in the PSR-7 request.",
         );
         self::assertSame(
             'value1',
             $bodyParams['key1'] ?? null,
-            "Body parameter 'key1' should have the expected value from the 'PSR-7' request.",
+            "Body parameter 'key1' should have the expected value from the PSR-7 request.",
         );
         self::assertArrayHasKey(
             'key2',
             $bodyParams,
-            "Body parameters should contain the key 'key2' when present in the 'PSR-7' request.",
+            "Body parameters should contain the key 'key2' when present in the PSR-7 request.",
         );
         self::assertSame(
             'value2',
             $bodyParams['key2'] ?? null,
-            "Body parameter 'key2' should have the expected value from the 'PSR-7' request.",
+            "Body parameter 'key2' should have the expected value from the PSR-7 request.",
         );
     }
 
@@ -226,6 +229,7 @@ final class ServerRequestAdapterTest extends TestCase
                 ],
             ),
         );
+
         $bodyParams = $request->getBodyParams();
 
         self::assertIsArray(
@@ -302,34 +306,35 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = 'test-validation-key-32-characters';
 
         $request->setPsr7Request($psr7Request);
+
         $cookies = $request->getCookies();
 
         self::assertCount(
             2,
             $cookies,
-            "'CookieCollection' should contain '2' cookies when empty cookies are filtered out.",
+            "CookieCollection should contain '2' cookies when empty cookies are filtered out.",
         );
         self::assertTrue(
             $cookies->has('session_id'),
-            "'CookieCollection' should contain 'session_id' cookie.",
+            "CookieCollection should contain 'session_id' cookie.",
         );
         self::assertSame(
             'abc123',
             $cookies->getValue('session_id'),
-            "Cookie 'session_id' should have the expected value from the 'PSR-7' request.",
+            "Cookie 'session_id' should have the expected value from the PSR-7 request.",
         );
         self::assertTrue(
             $cookies->has('theme'),
-            "'CookieCollection' should contain 'theme' cookie.",
+            "CookieCollection should contain 'theme' cookie.",
         );
         self::assertSame(
             'dark',
             $cookies->getValue('theme'),
-            "Cookie 'theme' should have the expected value from the 'PSR-7' request.",
+            "Cookie 'theme' should have the expected value from the PSR-7 request.",
         );
         self::assertFalse(
             $cookies->has('empty_cookie'),
-            "'CookieCollection' should not contain empty cookies.",
+            'CookieCollection should not contain empty cookies.',
         );
     }
 
@@ -346,12 +351,11 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test'),
         );
-        $cookies = $request->getCookies();
 
         self::assertCount(
             0,
-            $cookies,
-            "'CookieCollection' should be empty when no cookies are present in the 'PSR-7' request.",
+            $request->getCookies(),
+            'CookieCollection should be empty when no cookies are present in the PSR-7 request.',
         );
     }
 
@@ -375,16 +379,17 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = 'test-validation-key-32-characters';
 
         $request->setPsr7Request($psr7Request);
+
         $cookies = $request->getCookies();
 
         self::assertCount(
             2,
             $cookies,
-            "'CookieCollection' should contain all non-empty cookies when validation is disabled.",
+            'CookieCollection should contain all non-empty cookies when validation is disabled.',
         );
         self::assertTrue(
             $cookies->has('user_id'),
-            "'CookieCollection' should contain 'user_id' cookie when validation is disabled.",
+            "CookieCollection should contain 'user_id' cookie when validation is disabled.",
         );
         self::assertSame(
             '42',
@@ -393,7 +398,7 @@ final class ServerRequestAdapterTest extends TestCase
         );
         self::assertTrue(
             $cookies->has('preferences'),
-            "'CookieCollection' should contain 'preferences' cookie when validation is disabled.",
+            "CookieCollection should contain 'preferences' cookie when validation is disabled.",
         );
         self::assertSame(
             'compact',
@@ -420,6 +425,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = 'test-validation-key-32-characters';
 
         $request->setPsr7Request($psr7Request);
+
         $cookies = $request->getCookies();
 
         $cookie = $cookies[$cookieName] ?? null;
@@ -463,12 +469,11 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('POST', '/test', ['X-CSRF-Token' => $csrfToken]),
         );
-        $result = $request->getCsrfTokenFromHeader();
 
         self::assertSame(
             $csrfToken,
-            $result,
-            "'CSRF' token from header should match the value provided in the 'PSR-7' request header 'X-CSRF-Token'.",
+            $request->getCsrfTokenFromHeader(),
+            "CSRF token from header should match the value provided in the PSR-7 request header 'X-CSRF-Token'.",
         );
     }
 
@@ -484,31 +489,12 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('PUT', '/api/resource', [$customHeaderName => $csrfToken]),
         );
-        $result = $request->getCsrfTokenFromHeader();
 
         self::assertSame(
             $csrfToken,
-            $result,
-            "'CSRF' token from header should match the value provided in the custom 'PSR-7' request header.",
+            $request->getCsrfTokenFromHeader(),
+            'CSRF token from header should match the value provided in the custom PSR-7 request header.',
         );
-    }
-
-    public function testReturnEmptyCookieCollectionWhenValidationEnabledButNoValidationKey(): void
-    {
-        $psr7Request = FactoryHelper::createRequest('GET', '/test');
-
-        $psr7Request = $psr7Request->withCookieParams(['session_id' => 'abc123']);
-
-        $request = new Request();
-
-        $request->enableCookieValidation = true;
-        $request->cookieValidationKey = '';
-
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage(Message::COOKIE_VALIDATION_KEY_REQUIRED->getMessage());
-
-        $request->setPsr7Request($psr7Request);
-        $request->getCookies();
     }
 
     /**
@@ -531,12 +517,11 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = 'test-validation-key-32-characters';
 
         $request->setPsr7Request($psr7Request);
-        $cookies = $request->getCookies();
 
         self::assertCount(
             0,
-            $cookies,
-            "'CookieCollection' should be empty when validation is enabled but cookies are invalid.",
+            $request->getCookies(),
+            'CookieCollection should be empty when validation is enabled but cookies are invalid.',
         );
     }
 
@@ -547,11 +532,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/products'),
         );
-        $queryParams = $request->getQueryParams();
 
         self::assertEmpty(
-            $queryParams,
-            "Query parameters should be empty when 'PSR-7' request has no query string.",
+            $request->getQueryParams(),
+            'Query parameters should be empty when PSR-7 request has no query string.',
         );
     }
 
@@ -562,9 +546,11 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test'),
         );
-        $result = $request->getQueryString();
 
-        self::assertEmpty($result, 'Query string should be empty when no query parameters are present.');
+        self::assertEmpty(
+            $request->getQueryString(),
+            'Query string should be empty when no query parameters are present.',
+        );
     }
 
     /**
@@ -577,10 +563,9 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test'),
         );
-        $scriptUrl = $request->getScriptUrl();
 
         self::assertEmpty(
-            $scriptUrl,
+            $request->getScriptUrl(),
             "Script URL should be empty when adapter is set in traditional mode without 'SCRIPT_NAME'.",
         );
     }
@@ -595,12 +580,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test'),
         );
-        $scriptUrl = $request->getScriptUrl();
 
-        self::assertSame(
-            '',
-            $scriptUrl,
-            'Script URL should be empty when adapter is set in worker mode (default).',
+        self::assertEmpty(
+            $request->getScriptUrl(),
+            "Script URL should be empty when adapter is set in 'worker' mode (default).",
         );
     }
 
@@ -624,6 +607,22 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    public function testReturnEmptyStringFromHeaderWhenCsrfHeaderPresentButEmpty(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('PATCH', '/api/update', ['X-CSRF-Token' => '']),
+        );
+
+        self::assertSame(
+            '',
+            $request->getCsrfTokenFromHeader(),
+            'CSRF token from header should return empty string when CSRF header is present but empty in the PSR-7 ' .
+            'request.',
+        );
+    }
+
     public function testReturnEmptyStringWhenRemoteHostIsEmptyStringInPsr7Request(): void
     {
         $request = new Request();
@@ -635,8 +634,8 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             '',
             $request->getRemoteHost(),
-            "Remote host should return an empty string when 'REMOTE_HOST' parameter is an empty string in " .
-            "PSR-7 'serverParams'.",
+            "Remote host should return an empty string when 'REMOTE_HOST' parameter is an empty string in PSR-7 " .
+            "'serverParams'.",
         );
     }
 
@@ -647,11 +646,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('POST', '/test'),
         );
-        $method = $request->getMethod();
 
         self::assertSame(
             'POST',
-            $method,
+            $request->getMethod(),
             'HTTP method should be returned from adapter when adapter is set.',
         );
     }
@@ -671,11 +669,10 @@ final class ServerRequestAdapterTest extends TestCase
                 ],
             ),
         );
-        $method = $request->getMethod();
 
         self::assertSame(
             'PUT',
-            $method,
+            $request->getMethod(),
             'HTTP method should be overridden by body parameter when adapter is set.',
         );
     }
@@ -695,11 +692,10 @@ final class ServerRequestAdapterTest extends TestCase
                 ],
             ),
         );
-        $method = $request->getMethod();
 
         self::assertSame(
             'PUT',
-            $method,
+            $request->getMethod(),
             'HTTP method should be overridden by body parameter when adapter is set.',
         );
     }
@@ -721,11 +717,10 @@ final class ServerRequestAdapterTest extends TestCase
                 ],
             ),
         );
-        $method = $request->getMethod();
 
         self::assertSame(
             'PATCH',
-            $method,
+            $request->getMethod(),
             'HTTP method should be overridden by custom method parameter when adapter is set.',
         );
     }
@@ -737,11 +732,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('POST', '/test', ['X-Http-Method-Override' => 'DELETE']),
         );
-        $method = $request->getMethod();
 
         self::assertSame(
             'DELETE',
-            $method,
+            $request->getMethod(),
             'HTTP method should be overridden by header when adapter is set.',
         );
     }
@@ -753,11 +747,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test'),
         );
-        $method = $request->getMethod();
 
         self::assertSame(
             'GET',
-            $method,
+            $request->getMethod(),
             'HTTP method should return original method when no override is present and adapter is set.',
         );
     }
@@ -773,8 +766,8 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             '192.168.1.100',
             $request->getRemoteHost(),
-            "Remote host should correctly return IPv4 address from PSR-7 'serverParams' when 'REMOTE_HOST' contains " .
-            'an IPv4 address.',
+            "'REMOTE_HOST' should correctly return 'IPv4' address from PSR-7 'serverParams' when 'REMOTE_HOST' " .
+            "contains an 'IPv4' address.",
         );
     }
 
@@ -791,8 +784,8 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             $expectedHost,
             $request->getRemoteHost(),
-            "Remote host should correctly return IPv6 address from PSR-7 'serverParams' when 'REMOTE_HOST' contains " .
-            'an IPv6 address.',
+            "'REMOTE_HOST' should correctly return 'IPv6' address from PSR-7 'serverParams' when 'REMOTE_HOST' " .
+            "contains an 'IPv6' address.",
         );
     }
 
@@ -807,7 +800,7 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             'localhost',
             $request->getRemoteHost(),
-            "Remote host should correctly return 'localhost' from PSR-7 'serverParams' when 'REMOTE_HOST' is " .
+            "'REMOTE_HOST' should correctly return 'localhost' from PSR-7 'serverParams' when 'REMOTE_HOST' is " .
             "'localhost'.",
         );
     }
@@ -826,11 +819,11 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertNotFalse(
             $tmpFileSize1,
-            "File size for 'test1.txt' should not be 'false'.",
+            "'filesize' for 'test1.txt' should not be 'false'.",
         );
         self::assertNotFalse(
             $tmpFileSize2,
-            "File size for 'test2.php' should not be 'false'.",
+            "'filesize' for 'test2.php' should not be 'false'.",
         );
 
         $uploadedFiles = [
@@ -881,6 +874,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('POST', '/upload')->withUploadedFiles($uploadedFiles),
         );
+
         $convertedFiles = $request->getUploadedFiles();
 
         self::assertCount(
@@ -969,6 +963,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = $validationKey;
 
         $request->setPsr7Request($psr7Request);
+
         $cookieCollection = $request->getCookies();
 
         self::assertCount(
@@ -1025,30 +1020,14 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = 'test-validation-key-32-characters';
 
         $request->setPsr7Request($psr7Request);
+
         $cookies1 = $request->getCookies();
         $cookies2 = $request->getCookies();
 
         self::assertNotSame(
             $cookies1,
             $cookies2,
-            "Each call to 'getCookies()' should return a new 'CookieCollection' instance, not a cached one.",
-        );
-    }
-
-    public function testReturnNullFromHeaderWhenCsrfHeaderEmptyAndAdapterIsSet(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('PATCH', '/api/update', ['X-CSRF-Token' => '']),
-        );
-        $result = $request->getCsrfTokenFromHeader();
-
-        self::assertSame(
-            '',
-            $result,
-            "'CSRF' token from header should return empty string when 'CSRF' header is present but empty in the " .
-            "'PSR-7' request.",
+            "Each call to 'getCookies()' should return a new CookieCollection instance, not a cached one.",
         );
     }
 
@@ -1059,11 +1038,70 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('DELETE', '/api/resource'),
         );
-        $result = $request->getCsrfTokenFromHeader();
 
         self::assertNull(
-            $result,
-            "'CSRF' token from header should return 'null' when no 'CSRF' header is present in the 'PSR-7' request.",
+            $request->getCsrfTokenFromHeader(),
+            "CSRF token from header should return 'null' when no CSRF header is present in the PSR-7 request.",
+        );
+    }
+
+    public function testReturnNullWhenPsr7RequestServerNameIsEmptyArray(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => []]),
+        );
+
+        self::assertNull(
+            $request->getServerName(),
+            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
+            'an empty array.',
+        );
+    }
+
+    public function testReturnNullWhenPsr7RequestServerNameIsNotPresent(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['HTTP_HOST' => 'example.com']),
+        );
+
+        self::assertNull(
+            $request->getServerName(),
+            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
+            'not present.',
+        );
+    }
+
+    public function testReturnNullWhenPsr7RequestServerNameIsNotString(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => 12345]),
+        );
+
+        self::assertNull(
+            $request->getServerName(),
+            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
+            'not a string.',
+        );
+    }
+
+    public function testReturnNullWhenPsr7RequestServerNameIsNull(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => null]),
+        );
+
+        self::assertNull(
+            $request->getServerName(),
+            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
+            "'null'.",
         );
     }
 
@@ -1077,7 +1115,7 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertNull(
             $request->getRemoteHost(),
-            "Remote host should return 'null' when 'REMOTE_HOST' parameter is not a string in PSR-7 'serverParams'.",
+            "'REMOTE_HOST' should return 'null' when 'REMOTE_HOST' parameter is not a string in PSR-7 'serverParams'.",
         );
     }
 
@@ -1091,7 +1129,7 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertNull(
             $request->getRemoteHost(),
-            "Remote host should return 'null' when 'REMOTE_HOST' parameter is not present in PSR-7 'serverParams'.",
+            "'REMOTE_HOST' should return 'null' when 'REMOTE_HOST' parameter is not present in PSR-7 'serverParams'.",
         );
     }
 
@@ -1115,11 +1153,10 @@ final class ServerRequestAdapterTest extends TestCase
 
         // ensure adapter is `null` (default state)
         $request->reset();
-        $result = $request->getCsrfTokenFromHeader();
 
         self::assertNull(
-            $result,
-            "'CSRF' token from header should return parent implementation result when adapter is 'null'.",
+            $request->getCsrfTokenFromHeader(),
+            "CSRF token from header should return parent implementation result when adapter is 'null'.",
         );
     }
 
@@ -1135,30 +1172,7 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertEmpty(
             $request->getParsedBody(),
-            "Parsed body should return empty array when 'PSR-7' request has no parsed body and adapter is 'null'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnParentGetScriptUrlWhenAdapterIsNull(): void
-    {
-        $request = new Request();
-
-        // ensure adapter is `null` (default state)
-        $request->reset();
-
-        $_SERVER['SCRIPT_NAME'] = '/test.php';
-        $_SERVER['SCRIPT_FILENAME'] = '/path/to/test.php';
-
-        $scriptUrl = $request->getScriptUrl();
-
-        // verify the method executes without throwing exception when adapter is `null`
-        self::assertSame(
-            '/test.php',
-            $scriptUrl,
-            "'getScriptUrl()' should return 'SCRIPT_NAME' when adapter is 'null'.",
+            "Parsed body should return empty array when PSR-7 request has no parsed body and adapter is 'null'.",
         );
     }
 
@@ -1168,9 +1182,8 @@ final class ServerRequestAdapterTest extends TestCase
 
         // ensure adapter is `null` (default state)
         $request->reset();
-        $method = $request->getMethod();
 
-        self::assertNotEmpty($method, "HTTP method should not be empty when adapter is 'null'.");
+        self::assertNotEmpty($request->getMethod(), "HTTP method should not be empty when adapter is 'null'.");
     }
 
     public function testReturnParentQueryParamsWhenAdapterIsNull(): void
@@ -1179,20 +1192,20 @@ final class ServerRequestAdapterTest extends TestCase
 
         // ensure adapter is `null` (default state)
         $request->reset();
-        $queryParams = $request->getQueryParams();
 
-        self::assertEmpty($queryParams, "Query parameters should be empty when 'PSR-7' request has no query string.");
+        self::assertEmpty(
+            $request->getQueryParams(),
+            'Query parameters should be empty when PSR-7 request has no query string.',
+        );
     }
 
     public function testReturnParentQueryStringWhenAdapterIsNull(): void
     {
         $request = new Request();
 
-        $queryString = $request->getQueryString();
-
         self::assertEmpty(
-            $queryString,
-            "Query string should be empty when 'PSR-7' request has no query string and adapter is 'null'.",
+            $request->getQueryString(),
+            "Query string should be empty when PSR-7 request has no query string and adapter is 'null'.",
         );
     }
 
@@ -1202,35 +1215,11 @@ final class ServerRequestAdapterTest extends TestCase
 
         // ensure adapter is `null` (default state)
         $request->reset();
-        $result = $request->getRawBody();
 
         self::assertEmpty(
-            $result,
-            "Raw body should return empty string when 'PSR-7' request has no body content and adapter is 'null'.",
+            $request->getRawBody(),
+            "Raw body should return empty string when PSR-7 request has no body content and adapter is 'null'.",
         );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnParentUrlWhenAdapterIsNull(): void
-    {
-        $_SERVER['REQUEST_URI'] = '/legacy/path?param=value';
-
-        $request = new Request();
-
-        // ensure adapter is `null` (default state)
-        $request->reset();
-
-        $url = $request->getUrl();
-
-        self::assertSame(
-            '/legacy/path?param=value',
-            $url,
-            "URL should return parent implementation result when adapter is 'null'.",
-        );
-
-        unset($_SERVER['REQUEST_URI']);
     }
 
     /**
@@ -1254,16 +1243,17 @@ final class ServerRequestAdapterTest extends TestCase
                 $parsedBodyData,
             ),
         );
+
         $result = $request->getParsedBody();
 
         self::assertIsArray(
             $result,
-            "Parsed body should return an array when 'PSR-7' request contains array data.",
+            'Parsed body should return an array when PSR-7 request contains array data.',
         );
         self::assertSame(
             $parsedBodyData,
             $result,
-            "Parsed body should match the original data from 'PSR-7' request.",
+            'Parsed body should match the original data from PSR-7 request.',
         );
         self::assertArrayHasKey(
             'name',
@@ -1273,7 +1263,7 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             'John',
             $result['name'],
-            'Name field should match the expected value.',
+            "'name' field should match the expected value.",
         );
     }
 
@@ -1287,9 +1277,11 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/api/users'),
         );
-        $result = $request->getParsedBody();
 
-        self::assertNull($result, "Parsed body should return 'null' when 'PSR-7' request has no parsed body.");
+        self::assertNull(
+            $request->getParsedBody(),
+            "Parsed body should return 'null' when PSR-7 request has no parsed body.",
+        );
     }
 
     /**
@@ -1312,16 +1304,17 @@ final class ServerRequestAdapterTest extends TestCase
                 $parsedBodyObject,
             ),
         );
+
         $result = $request->getParsedBody();
 
         self::assertIsObject(
             $result,
-            "Parsed body should return an 'object' when 'PSR-7' request contains 'object' data.",
+            'Parsed body should return an object when PSR-7 request contains object data.',
         );
         self::assertSame(
             $parsedBodyObject,
             $result,
-            "Parsed body 'object' should match the original 'object' from 'PSR-7' request.",
+            'Parsed body object should match the original object from PSR-7 request.',
         );
         self::assertSame(
             'Test Article',
@@ -1335,6 +1328,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function testReturnPsr7RequestInstanceWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -1346,7 +1342,7 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertInstanceOf(
             ServerRequestInterface::class,
             $request->getPsr7Request(),
-            "'getPsr7Request()' should return a '" . ServerRequestInterface::class . "' instance when the 'PSR-7' " .
+            "'getPsr7Request()' should return a '" . ServerRequestInterface::class . "' instance when the PSR-7 " .
             'adapter is set.',
         );
     }
@@ -1358,37 +1354,38 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/products?category=electronics&price=500&sort=desc'),
         );
+
         $queryParams = $request->getQueryParams();
 
         self::assertArrayHasKey(
             'category',
             $queryParams,
-            "Query parameters should contain the key 'category' when present in the 'PSR-7' request URI.",
+            "Query parameters should contain the key 'category' when present in the PSR-7 request URI.",
         );
         self::assertSame(
             'electronics',
             $queryParams['category'] ?? null,
-            "Query parameter 'category' should have the expected value from the 'PSR-7' request URI.",
+            "Query parameter 'category' should have the expected value from the PSR-7 request URI.",
         );
         self::assertArrayHasKey(
             'price',
             $queryParams,
-            "Query parameters should contain the key 'price' when present in the 'PSR-7' request URI.",
+            "Query parameters should contain the key 'price' when present in the PSR-7 request URI.",
         );
         self::assertSame(
             '500',
             $queryParams['price'] ?? null,
-            "Query parameter 'price' should have the expected value from the 'PSR-7' request URI.",
+            "Query parameter 'price' should have the expected value from the PSR-7 request URI.",
         );
         self::assertArrayHasKey(
             'sort',
             $queryParams,
-            "Query parameters should contain the key 'sort' when present in the 'PSR-7' request URI.",
+            "Query parameters should contain the key 'sort' when present in the PSR-7 request URI.",
         );
         self::assertSame(
             'desc',
             $queryParams['sort'] ?? null,
-            "Query parameter 'sort' should have the expected value from the 'PSR-7' request URI.",
+            "Query parameter 'sort' should have the expected value from the PSR-7 request URI.",
         );
     }
 
@@ -1403,11 +1400,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', "/test?{$queryString}"),
         );
-        $result = $request->getQueryString();
 
         self::assertSame(
             $expectedString,
-            $result,
+            $request->getQueryString(),
             "Query string should match the expected value for: '{$queryString}'.",
         );
     }
@@ -1425,12 +1421,11 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('POST', '/api/contact')->withBody($stream),
         );
-        $result = $request->getRawBody();
 
         self::assertSame(
             $bodyContent,
-            $result,
-            "Raw body should return the exact content from the 'PSR-7' request body when adapter is set.",
+            $request->getRawBody(),
+            'Raw body should return the exact content from the PSR-7 request body when adapter is set.',
         );
     }
 
@@ -1441,46 +1436,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test'),
         );
-        $result = $request->getRawBody();
 
         self::assertEmpty(
-            $result,
-            "Raw body should return empty string when 'PSR-7' request has no body content.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnReadOnlyCookieCollectionWhenAdapterIsSet(): void
-    {
-        $psr7Request = FactoryHelper::createRequest('GET', '/test');
-
-        $psr7Request = $psr7Request->withCookieParams(
-            [
-                'another_cookie' => 'another_value',
-                'test_cookie' => 'test_value',
-            ],
-        );
-
-        $request = new Request();
-
-        $request->enableCookieValidation = false;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
-
-        $request->setPsr7Request($psr7Request);
-        $cookies = $request->getCookies();
-
-        $this->expectException(InvalidCallException::class);
-        $this->expectExceptionMessage('The cookie collection is read only.');
-
-        $cookies->add(
-            new Cookie(
-                [
-                    'name' => 'new_cookie',
-                    'value' => 'new_value',
-                ],
-            ),
+            $request->getRawBody(),
+            'Raw body should return empty string when PSR-7 request has no body content.',
         );
     }
 
@@ -1495,7 +1454,7 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             'example.host.com',
             $request->getRemoteHost(),
-            "Remote host should match the value from PSR-7 'serverParams' when 'REMOTE_HOST' is present.",
+            "'REMOTE_HOST' should match the value from PSR-7 'serverParams' when 'REMOTE_HOST' is present.",
         );
     }
 
@@ -1511,11 +1470,9 @@ final class ServerRequestAdapterTest extends TestCase
             ),
         );
 
-        $remoteIP = $request->getRemoteIP();
-
         self::assertSame(
             '192.168.1.100',
-            $remoteIP,
+            $request->getRemoteIP(),
             "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams'.",
         );
     }
@@ -1534,11 +1491,9 @@ final class ServerRequestAdapterTest extends TestCase
             ),
         );
 
-        $remoteIP = $request->getRemoteIP();
-
         self::assertSame(
             '10.0.0.1',
-            $remoteIP,
+            $request->getRemoteIP(),
             "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams', not from global " .
             '$_SERVER.',
         );
@@ -1554,20 +1509,29 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request(['workerMode' => false]);
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'GET',
-                '/test',
-                [],
-                null,
-                ['SCRIPT_NAME' => $expectedScriptName],
-            ),
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SCRIPT_NAME' => $expectedScriptName]),
         );
-        $scriptUrl = $request->getScriptUrl();
 
         self::assertSame(
             $expectedScriptName,
-            $scriptUrl,
+            $request->getScriptUrl(),
             "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
+        );
+    }
+
+    public function testReturnServerNameFromPsr7RequestWhenAdapterIsSetAndServerNamePresent(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => 'example.server.com']),
+        );
+
+        self::assertSame(
+            'example.server.com',
+            $request->getServerName(),
+            "'SERVER_NAME' should return 'example.server.com' from PSR-7 'serverParams' when adapter is set and " .
+            "'SERVER_NAME' is present as a string.",
         );
     }
 
@@ -1614,8 +1578,7 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             '10.0.0.50',
             $serverParams['REMOTE_ADDR'] ?? null,
-            "Server parameter 'REMOTE_ADDR' should be taken from PSR-7 'serverParams', not from global " .
-            '$_SERVER.',
+            "Server parameter 'REMOTE_ADDR' should be taken from PSR-7 'serverParams', not from global \$_SERVER.",
         );
         self::assertNull(
             $serverParams['REQUEST_TIME'] ?? null,
@@ -1666,11 +1629,11 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertNotFalse(
             $size1,
-            "File size for 'test1.txt' should not be 'false'.",
+            "'filesize' for 'test1.txt' should not be 'false'.",
         );
         self::assertNotFalse(
             $size2,
-            "File size for 'test2.php' should not be 'false'.",
+            "'filesize' for 'test2.php' should not be 'false'.",
         );
 
         $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1, size: $size1);
@@ -1688,6 +1651,7 @@ final class ServerRequestAdapterTest extends TestCase
         $psr7Request = FactoryHelper::createRequest('POST', '/upload')->withUploadedFiles($deepNestedFiles);
 
         $request = new Request();
+
         $request->setPsr7Request($psr7Request);
 
         $deepNestedUploadedFiles = $request->getUploadedFiles();
@@ -1772,11 +1736,11 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertNotFalse(
             $size1,
-            "File size for 'test1.txt' should not be 'false'.",
+            "'filesize' for 'test1.txt' should not be 'false'.",
         );
         self::assertNotFalse(
             $size2,
-            "File size for 'test2.php' should not be 'false'.",
+            "'filesize' for 'test2.php' should not be 'false'.",
         );
 
         $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1, size: $size1);
@@ -1793,6 +1757,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request($psr7Request);
+
         $uploadedFiles = $request->getUploadedFiles();
 
         $expectedNames = [
@@ -1877,6 +1842,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request($psr7Request);
+
         $uploadedFiles = $request->getUploadedFiles();
 
         self::assertArrayHasKey(
@@ -1930,11 +1896,10 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', $url),
         );
-        $url = $request->getUrl();
 
         self::assertSame(
             $expectedUrl,
-            $url,
+            $request->getUrl(),
             "URL should match the expected value for: {$url}.",
         );
     }
@@ -1967,16 +1932,17 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = $validationKey;
 
         $request->setPsr7Request($psr7Request);
+
         $cookies = $request->getCookies();
 
         self::assertCount(
             1,
             $cookies,
-            "'CookieCollection' should contain only the valid signed cookie when validation is enabled.",
+            'CookieCollection should contain only the valid signed cookie when validation is enabled.',
         );
         self::assertTrue(
             $cookies->has($cookieName),
-            "'CookieCollection' should contain the valid signed cookie '{$cookieName}'.",
+            "CookieCollection should contain the valid signed cookie '{$cookieName}'.",
         );
         self::assertSame(
             $cookieValue,
@@ -1985,7 +1951,7 @@ final class ServerRequestAdapterTest extends TestCase
         );
         self::assertFalse(
             $cookies->has('invalid_cookie'),
-            "'CookieCollection' should not contain invalid cookies when validation is enabled.",
+            'CookieCollection should not contain invalid cookies when validation is enabled.',
         );
     }
 
@@ -2011,6 +1977,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->cookieValidationKey = $validationKey;
 
         $request->setPsr7Request($psr7Request);
+
         $cookies = $request->getCookies();
 
         $cookie = null;
@@ -2066,7 +2033,7 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             'api.example-service.com',
             $request->getRemoteHost(),
-            "Remote host should correctly return domain name from PSR-7 'serverParams' when 'REMOTE_HOST' contains " .
+            "'REMOTE_HOST' should correctly return domain name from PSR-7 'serverParams' when 'REMOTE_HOST' contains " .
             'a valid hostname.',
         );
     }
@@ -2111,50 +2078,174 @@ final class ServerRequestAdapterTest extends TestCase
 
         $headerCollection = $request->getHeaders();
 
-        self::assertSame(
-            null,
+        self::assertNull(
             $headerCollection->get('X-Forwarded-For'),
-            "'X-Forwarded-For' header should be filtered out when request is not from trusted host.",
+            "'X-Forwarded-For' header should be filtered out when request is not from 'trustedHosts'.",
         );
-        self::assertSame(
-            null,
+        self::assertNull(
             $headerCollection->get('X-Forwarded-Proto'),
-            "'X-Forwarded-Proto' header should be filtered out when request is not from trusted host.",
+            "'X-Forwarded-Proto' header should be filtered out when request is not from 'trustedHosts'.",
         );
-        self::assertSame(
-            null,
+        self::assertNull(
             $headerCollection->get('X-Forwarded-Host'),
-            'X-Forwarded-Host header should be filtered out when request is not from trusted host.',
+            "'X-Forwarded-Host' header should be filtered out when request is not from 'trustedHosts'.",
         );
-        self::assertSame(
-            null,
+        self::assertNull(
             $headerCollection->get('X-Forwarded-Port'),
-            "'X-Forwarded-Port' header should be filtered out when request is not from trusted host.",
+            "'X-Forwarded-Port' header should be filtered out when request is not from 'trustedHosts'.",
         );
-        self::assertSame(
-            null,
+        self::assertNull(
             $headerCollection->get('Front-End-Https'),
-            "'Front-End-Https' header should be filtered out when request is not from trusted host.",
+            "'Front-End-Https' header should be filtered out when request is not from 'trustedHosts'.",
         );
-        self::assertSame(
-            null,
+        self::assertNull(
             $headerCollection->get('X-Real-IP'),
-            "'X-Real-IP' header should be filtered out when request is not from trusted host.",
+            "'X-Real-IP' header should be filtered out when request is not from 'trustedHosts'.",
         );
         self::assertSame(
             'application/json',
             $headerCollection->get('Content-Type'),
-            'Content-Type header should NOT be filtered as it is not a secure header.',
+            "'Content-Type' header should NOT be filtered as it is not a 'secureHeaders'.",
         );
         self::assertSame(
             'Bearer token123',
             $headerCollection->get('Authorization'),
-            'Authorization header should NOT be filtered as it is not a secure header.',
+            "'Authorization' header should NOT be filtered as it is not a 'secureHeaders'.",
         );
         self::assertSame(
             'Test-Agent/1.0',
             $headerCollection->get('User-Agent'),
-            'User-Agent header should NOT be filtered as it is not a secure header.',
+            "'User-Agent' header should NOT be filtered as it is not a secure header.",
         );
+    }
+
+    public function testServerNameAfterRequestReset(): void
+    {
+        $initialServerName = 'initial.server.com';
+        $newServerName = 'new.server.com';
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $initialServerName]),
+        );
+
+        $result1 = $request->getServerName();
+
+        self::assertSame(
+            $initialServerName,
+            $result1,
+            "'SERVER_NAME' should return '{$initialServerName}' from initial PSR-7 request.",
+        );
+
+        $request->reset();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $newServerName]),
+        );
+
+        $result2 = $request->getServerName();
+
+        self::assertSame(
+            $newServerName,
+            $result2,
+            "'SERVER_NAME' should return '{$newServerName}' from new PSR-7 request after 'reset' method.",
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            "'SERVER_NAME' should change after request 'reset' method and new PSR-7 request assignment.",
+        );
+    }
+
+    public function testServerNameIndependentRequestsWithDifferentServerNames(): void
+    {
+        $serverName1 = 'server1.example.com';
+        $serverName2 = 'server2.example.org';
+
+        $request1 = new Request();
+
+        $request1->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test1', serverParams: ['SERVER_NAME' => $serverName1]),
+        );
+
+        $request2 = new Request();
+
+        $request2->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test2', serverParams: ['SERVER_NAME' => $serverName2]),
+        );
+
+        $result1 = $request1->getServerName();
+        $result2 = $request2->getServerName();
+
+        self::assertSame(
+            $serverName1,
+            $result1,
+            "First request should return '{$serverName1}' from its PSR-7 'serverParams'.",
+        );
+        self::assertSame(
+            $serverName2,
+            $result2,
+            "Second request should return '{$serverName2}' from its PSR-7 'serverParams'.",
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            'Independent request instances should return different server names when configured with different values.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testThrowInvalidCallExceptionWhenReturnReadOnlyCookieCollectionWhenAdapterIsSet(): void
+    {
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+
+        $psr7Request = $psr7Request->withCookieParams(
+            [
+                'another_cookie' => 'another_value',
+                'test_cookie' => 'test_value',
+            ],
+        );
+
+        $request = new Request();
+
+        $request->enableCookieValidation = false;
+        $request->cookieValidationKey = 'test-validation-key-32-characters';
+
+        $request->setPsr7Request($psr7Request);
+
+        $cookies = $request->getCookies();
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage('The cookie collection is read only.');
+
+        $cookies->add(
+            new Cookie(
+                [
+                    'name' => 'new_cookie',
+                    'value' => 'new_value',
+                ],
+            ),
+        );
+    }
+
+    public function testThrowInvalidConfigExceptionWhenValidationEnabledButNoValidationKey(): void
+    {
+        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+
+        $psr7Request = $psr7Request->withCookieParams(['session_id' => 'abc123']);
+
+        $request = new Request();
+
+        $request->enableCookieValidation = true;
+        $request->cookieValidationKey = '';
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(Message::COOKIE_VALIDATION_KEY_REQUIRED->getMessage());
+
+        $request->setPsr7Request($psr7Request);
+        $request->getCookies();
     }
 }

@@ -525,6 +525,32 @@ final class Request extends \yii\web\Request
     }
 
     /**
+     * Retrieves the server name for the current request, supporting PSR-7 and Yii2 fallback.
+     *
+     * Returns the server name as determined by the PSR-7 adapter if present.
+     *
+     * If no adapter is set, falls back to the parent implementation.
+     *
+     * This method enables seamless access to the server name in both PSR-7 and Yii2 environments, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
+     *
+     * @return string|null Server name for the current request, or null if not available.
+     *
+     * Usage example:
+     * ```php
+     * $serverName = $request->getServerName();
+     * ```
+     */
+    public function getServerName(): string|null
+    {
+        if ($this->adapter !== null) {
+            return $this->getServerParam('SERVER_NAME');
+        }
+
+        return parent::getServerName();
+    }
+
+    /**
      * Retrieves a server parameter value as a string or `null`.
      *
      * Returns the value of the specified server parameter from the current request server parameters array.

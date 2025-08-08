@@ -21,6 +21,11 @@ use function tmpfile;
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
     /**
+     * A secret key used for cookie validation in tests.
+     */
+    protected const COOKIE_VALIDATION_KEY = 'wefJDF8sfdsfSDefwqdxj9oq';
+
+    /**
      * @phpstan-var array<mixed, mixed>
      */
     private array $originalServer = [];
@@ -185,7 +190,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                     ],
                     'components' => [
                         'request' => [
-                            'cookieValidationKey' => 'wefJDF8sfdsfSDefwqdxj9oq',
+                            'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
                             'isConsoleRequest' => false,
                             'scriptFile' => __DIR__ . '/index.php',
                             'scriptUrl' => '/index.php',
