@@ -6,6 +6,7 @@ namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
 use stdClass;
+use TypeError;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\web\{JsonParser, NotFoundHttpException};
@@ -701,7 +702,7 @@ final class RequestTest extends TestCase
         self::assertEquals(
             $expected,
             $request->getIsAjax(),
-            '\'getIsAjax()\' should return the expected value based on the simulated \'$_SERVER\' input.',
+            "'getIsAjax()' should return the expected value based on the simulated \$_SERVER input.",
         );
 
         $_SERVER = $original;
@@ -721,7 +722,7 @@ final class RequestTest extends TestCase
         self::assertEquals(
             $expected,
             $request->getIsPjax(),
-            '\'getIsPjax()\' should return the expected value based on the simulated \'$_SERVER\' input.',
+            "'getIsPjax()' should return the expected value based on the simulated \$_SERVER input.",
         );
 
         $_SERVER = $original;
@@ -842,7 +843,7 @@ final class RequestTest extends TestCase
         self::assertEquals(
             $expected,
             $request->getMethod(),
-            '\'getMethod()\' should return the expected value based on the simulated \'$_SERVER\' input.',
+            "'getMethod()' should return the expected value based on the simulated \$_SERVER input.",
         );
 
         $_SERVER = $original;
@@ -1615,6 +1616,37 @@ final class RequestTest extends TestCase
         );
     }
 
+    public function testReturnNullFromParentWhenRemoteHostNotSetInServerGlobals(): void
+    {
+        unset($_SERVER['REMOTE_HOST']);
+
+        $request = new Request();
+
+        $result = $request->getRemoteHost();
+
+        self::assertNull(
+            $result,
+            "Remote host should return 'null' from parent implementation when PSR-7 adapter is not set and " .
+            "'REMOTE_HOST' is not present in \$_SERVER.",
+        );
+    }
+
+    public function testReturnParentRemoteHostWhenAdapterIsNull(): void
+    {
+        $_SERVER['REMOTE_HOST'] = 'parent.host.com';
+
+        $request = new Request();
+
+        $result = $request->getRemoteHost();
+
+        self::assertSame(
+            'parent.host.com',
+            $result,
+            'Remote host should return the value from parent implementation when PSR-7 adapter is not set and ' .
+            "'REMOTE_HOST' is present in \$_SERVER.",
+        );
+    }
+
     public function testSetHostInfo(): void
     {
         $request = new Request();
@@ -1664,6 +1696,18 @@ final class RequestTest extends TestCase
         $this->expectExceptionMessage('Unable to determine the request URI.');
 
         $request->getUrl();
+    }
+
+    public function testThrowTypeErrorWhenRemoteHostIsNotStringOrNull(): void
+    {
+        $_SERVER['REMOTE_HOST'] = 456;
+
+        $request = new Request();
+
+        $this->expectException(TypeError::class);
+        $this->expectExceptionMessageMatches('/getRemoteHost\(\): Return value must be of type \?string/');
+
+        $request->getRemoteHost();
     }
 
     /**

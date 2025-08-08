@@ -43,6 +43,43 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    public function testIndependentRequestsWithDifferentRemoteHosts(): void
+    {
+        $host1 = 'client1.example.com';
+        $host2 = 'client2.example.org';
+
+        $request1 = new Request();
+
+        $request1->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/api/v1/users', serverParams: ['REMOTE_HOST' => $host1]),
+        );
+
+        $request2 = new Request();
+
+        $request2->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/api/v1/posts', serverParams: ['REMOTE_HOST' => $host2]),
+        );
+
+        $result1 = $request1->getRemoteHost();
+        $result2 = $request2->getRemoteHost();
+
+        self::assertSame(
+            $host1,
+            $result1,
+            'First request instance should return its own remote host value.',
+        );
+        self::assertSame(
+            $host2,
+            $result2,
+            'Second request instance should return its own remote host value.',
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            'Different request instances should maintain separate remote host values.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
@@ -81,6 +118,46 @@ final class ServerRequestAdapterTest extends TestCase
             'new_value',
             $cookies2->getValue('new_cookie'),
             "New cookie 'new_cookie' should have the expected value after reset.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testResetRemoteHostAfterRequestReset(): void
+    {
+        $initialHost = 'initial.host.com';
+        $newHost = 'new.host.com';
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/first', serverParams: ['REMOTE_HOST' => $initialHost]),
+        );
+
+        $result1 = $request->getRemoteHost();
+
+        self::assertSame(
+            $initialHost,
+            $result1,
+            'Remote host should return the initial host value from the first PSR-7 request.',
+        );
+
+        $request->reset();
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/second', serverParams: ['REMOTE_HOST' => $newHost]),
+        );
+        $result2 = $request->getRemoteHost();
+
+        self::assertSame(
+            $newHost,
+            $result2,
+            'Remote host should return the new host value after reset and setting a new PSR-7 request.',
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            'Remote host values should be different after reset with new PSR-7 request data.',
         );
     }
 
@@ -200,7 +277,7 @@ final class ServerRequestAdapterTest extends TestCase
             'multipart/form-data; boundary=----WebKitFormBoundary',
             $request->getContentType(),
             "'getContentType()' should return the 'Content-Type' header from the PSR-7 request when present, " .
-            'overriding "text/plain" from $_SERVER[\'CONTENT_TYPE\'].',
+            "overriding 'text/plain' from \$_SERVER[CONTENT_TYPE].",
         );
     }
 
@@ -543,7 +620,23 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertEmpty(
             $request->getServerParams(),
-            'Server parameter should be empty array when using a PSR-7 request, ignoring global \'$_SERVER\'.',
+            'Server parameters should be an empty array when using a PSR-7 request, ignoring global $_SERVER.',
+        );
+    }
+
+    public function testReturnEmptyStringWhenRemoteHostIsEmptyStringInPsr7Request(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => '']),
+        );
+
+        self::assertSame(
+            '',
+            $request->getRemoteHost(),
+            "Remote host should return an empty string when 'REMOTE_HOST' parameter is an empty string in " .
+            "PSR-7 'serverParams'.",
         );
     }
 
@@ -666,6 +759,56 @@ final class ServerRequestAdapterTest extends TestCase
             'GET',
             $method,
             'HTTP method should return original method when no override is present and adapter is set.',
+        );
+    }
+
+    public function testReturnIPv4AddressFromPsr7RequestWhenRemoteHostIsIP(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('PUT', '/data', serverParams: ['REMOTE_HOST' => '192.168.1.100']),
+        );
+
+        self::assertSame(
+            '192.168.1.100',
+            $request->getRemoteHost(),
+            "Remote host should correctly return IPv4 address from PSR-7 'serverParams' when 'REMOTE_HOST' contains " .
+            'an IPv4 address.',
+        );
+    }
+
+    public function testReturnIPv6AddressFromPsr7RequestWhenRemoteHostIsIPv6(): void
+    {
+        $expectedHost = '2001:0db8:85a3:0000:0000:8a2e:0370:7334';
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('DELETE', '/resource/123', serverParams: ['REMOTE_HOST' => $expectedHost]),
+        );
+
+        self::assertSame(
+            $expectedHost,
+            $request->getRemoteHost(),
+            "Remote host should correctly return IPv6 address from PSR-7 'serverParams' when 'REMOTE_HOST' contains " .
+            'an IPv6 address.',
+        );
+    }
+
+    public function testReturnLocalhostFromPsr7RequestWhenRemoteHostIsLocalhost(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/health-check', serverParams: ['REMOTE_HOST' => 'localhost']),
+        );
+
+        self::assertSame(
+            'localhost',
+            $request->getRemoteHost(),
+            "Remote host should correctly return 'localhost' from PSR-7 'serverParams' when 'REMOTE_HOST' is " .
+            "'localhost'.",
         );
     }
 
@@ -921,6 +1064,34 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertNull(
             $result,
             "'CSRF' token from header should return 'null' when no 'CSRF' header is present in the 'PSR-7' request.",
+        );
+    }
+
+    public function testReturnNullWhenRemoteHostIsNotStringInPsr7Request(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => 123]),
+        );
+
+        self::assertNull(
+            $request->getRemoteHost(),
+            "Remote host should return 'null' when 'REMOTE_HOST' parameter is not a string in PSR-7 'serverParams'.",
+        );
+    }
+
+    public function testReturnNullWhenRemoteHostNotPresentInPsr7Request(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => 'example.com']),
+        );
+
+        self::assertNull(
+            $request->getRemoteHost(),
+            "Remote host should return 'null' when 'REMOTE_HOST' parameter is not present in PSR-7 'serverParams'.",
         );
     }
 
@@ -1313,6 +1484,21 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    public function testReturnRemoteHostFromPsr7RequestWhenRemoteHostIsPresent(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => 'example.host.com']),
+        );
+
+        self::assertSame(
+            'example.host.com',
+            $request->getRemoteHost(),
+            "Remote host should match the value from PSR-7 'serverParams' when 'REMOTE_HOST' is present.",
+        );
+    }
+
     public function testReturnRemoteIPFromPsr7ServerParams(): void
     {
         $request = new Request();
@@ -1354,7 +1540,7 @@ final class ServerRequestAdapterTest extends TestCase
             '10.0.0.1',
             $remoteIP,
             "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams', not from global " .
-            '\'$_SERVER\'.',
+            '$_SERVER.',
         );
     }
 
@@ -1429,12 +1615,12 @@ final class ServerRequestAdapterTest extends TestCase
             '10.0.0.50',
             $serverParams['REMOTE_ADDR'] ?? null,
             "Server parameter 'REMOTE_ADDR' should be taken from PSR-7 'serverParams', not from global " .
-            '\'$_SERVER\'.',
+            '$_SERVER.',
         );
         self::assertNull(
             $serverParams['REQUEST_TIME'] ?? null,
             "Server parameter 'REQUEST_TIME' should be 'null' when not set in PSR-7 'serverParams', even if present " .
-            'in global \'$_SERVER\'.',
+            'in global $_SERVER.',
         );
     }
 
@@ -1858,6 +2044,30 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertNull(
             $cookie->expire,
             "Validated cookie 'expire' property should be 'null' as set in the constructor",
+        );
+    }
+
+    public function testReturnValidHostnameFromPsr7RequestWithDomainName(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/users',
+                ['Content-Type' => 'application/json'],
+                serverParams: [
+                    'REMOTE_HOST' => 'api.example-service.com',
+                    'SERVER_NAME' => 'localhost',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            'api.example-service.com',
+            $request->getRemoteHost(),
+            "Remote host should correctly return domain name from PSR-7 'serverParams' when 'REMOTE_HOST' contains " .
+            'a valid hostname.',
         );
     }
 
