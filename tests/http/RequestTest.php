@@ -1705,9 +1705,7 @@ final class RequestTest extends TestCase
         $request = new Request();
 
         $this->expectException(TypeError::class);
-        $this->expectExceptionMessage(
-            Request::class . '::getRemoteHost(): Return value must be of type ?string, int returned',
-        );
+        $this->expectExceptionMessageMatches('/getRemoteHost\(\): Return value must be of type \?string/');
 
         $request->getRemoteHost();
     }

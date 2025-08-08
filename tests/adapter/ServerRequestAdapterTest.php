@@ -22,7 +22,27 @@ use function filesize;
 #[Group('http')]
 final class ServerRequestAdapterTest extends TestCase
 {
-    public function testConcurrentRequestsWithDifferentRemoteHosts(): void
+    public function testGetCsrfTokenFromHeaderUsesAdapterWhenAdapterIsNotNull(): void
+    {
+        $expectedToken = 'adapter-csrf-token-123';
+        $csrfHeaderName = 'X-CSRF-Token';
+
+        $request = new Request();
+
+        $request->csrfHeader = $csrfHeaderName;
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/test', [$csrfHeaderName => $expectedToken]),
+        );
+        $result = $request->getCsrfTokenFromHeader();
+
+        self::assertSame(
+            $expectedToken,
+            $result,
+            "Should return CSRF token from adapter headers when adapter is not 'null'",
+        );
+    }
+    public function testIndependentRequestsWithDifferentRemoteHosts(): void
     {
         $host1 = 'client1.example.com';
         $host2 = 'client2.example.org';
@@ -56,27 +76,6 @@ final class ServerRequestAdapterTest extends TestCase
             $result1,
             $result2,
             'Different request instances should maintain separate remote host values.',
-        );
-    }
-
-    public function testGetCsrfTokenFromHeaderUsesAdapterWhenAdapterIsNotNull(): void
-    {
-        $expectedToken = 'adapter-csrf-token-123';
-        $csrfHeaderName = 'X-CSRF-Token';
-
-        $request = new Request();
-
-        $request->csrfHeader = $csrfHeaderName;
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/test', [$csrfHeaderName => $expectedToken]),
-        );
-        $result = $request->getCsrfTokenFromHeader();
-
-        self::assertSame(
-            $expectedToken,
-            $result,
-            "Should return CSRF token from adapter headers when adapter is not 'null'",
         );
     }
 
@@ -620,7 +619,23 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertEmpty(
             $request->getServerParams(),
-            'Server parameter should be empty array when using a PSR-7 request, ignoring global $_SERVER.',
+            'Server parameters should be an empty array when using a PSR-7 request, ignoring global $_SERVER.',
+        );
+    }
+
+    public function testReturnEmptyStringWhenRemoteHostIsEmptyStringInPsr7Request(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => '']),
+        );
+
+        self::assertSame(
+            '',
+            $request->getRemoteHost(),
+            "Remote host should return an empty string when 'REMOTE_HOST' parameter is an empty string in " .
+            "PSR-7 'serverParams'.",
         );
     }
 
@@ -1048,22 +1063,6 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertNull(
             $result,
             "'CSRF' token from header should return 'null' when no 'CSRF' header is present in the 'PSR-7' request.",
-        );
-    }
-
-    public function testReturnNullWhenRemoteHostIsEmptyStringInPsr7Request(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => '']),
-        );
-
-        self::assertSame(
-            '',
-            $request->getRemoteHost(),
-            "Remote host should return an empty string when 'REMOTE_HOST' parameter is an empty string in " .
-            "PSR-7 'serverParams'.",
         );
     }
 
