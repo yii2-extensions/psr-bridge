@@ -921,9 +921,9 @@ final class RequestTest extends TestCase
 
     public function testGetServerName(): void
     {
-        $request = new Request();
-
         $_SERVER['SERVER_NAME'] = 'servername';
+
+        $request = new Request();
 
         self::assertSame(
             'servername',
