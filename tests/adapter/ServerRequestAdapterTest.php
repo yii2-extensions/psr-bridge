@@ -748,8 +748,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnIPv4AddressFromPsr7RequestWhenRemoteHostIsIP(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
@@ -1059,8 +1057,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnNullWhenRemoteHostIsEmptyStringInPsr7Request(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
@@ -1091,8 +1087,6 @@ final class ServerRequestAdapterTest extends TestCase
 
     public function testReturnNullWhenRemoteHostNotPresentInPsr7Request(): void
     {
-        $this->webApplication();
-
         $request = new Request();
 
         $request->setPsr7Request(
