@@ -621,9 +621,10 @@ final class RequestTest extends TestCase
 
         $request->reset();
 
-        self::assertNotNull(
+        self::assertSame(
+            'parent-csrf-token-456',
             $request->getCsrfTokenFromHeader(),
-            "Should return result from parent when adapter is 'null'.",
+            "Should return value 'parent-csrf-token-456' result from parent when adapter is 'null'.",
         );
 
         $this->closeApplication();
@@ -1594,11 +1595,11 @@ final class RequestTest extends TestCase
     {
         $request = new Request();
 
-        // ensure adapter is `null` (default state)
-        $request->reset();
-
         $_SERVER['SCRIPT_NAME'] = '/test.php';
         $_SERVER['SCRIPT_FILENAME'] = '/path/to/test.php';
+
+        // ensure adapter is `null` (default state)
+        $request->reset();
 
         // verify the method executes without throwing exception when adapter is `null`
         self::assertSame(

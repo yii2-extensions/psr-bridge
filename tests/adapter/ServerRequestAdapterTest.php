@@ -607,6 +607,22 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    public function testReturnEmptyStringFromHeaderWhenCsrfHeaderPresentButEmpty(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('PATCH', '/api/update', ['X-CSRF-Token' => '']),
+        );
+
+        self::assertSame(
+            '',
+            $request->getCsrfTokenFromHeader(),
+            'CSRF token from header should return empty string when CSRF header is present but empty in the PSR-7 ' .
+            'request.',
+        );
+    }
+
     public function testReturnEmptyStringWhenRemoteHostIsEmptyStringInPsr7Request(): void
     {
         $request = new Request();
@@ -1012,22 +1028,6 @@ final class ServerRequestAdapterTest extends TestCase
             $cookies1,
             $cookies2,
             "Each call to 'getCookies()' should return a new CookieCollection instance, not a cached one.",
-        );
-    }
-
-    public function testReturnNullFromHeaderWhenCsrfHeaderEmptyAndAdapterIsSet(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('PATCH', '/api/update', ['X-CSRF-Token' => '']),
-        );
-
-        self::assertSame(
-            '',
-            $request->getCsrfTokenFromHeader(),
-            'CSRF token from header should return empty string when CSRF header is present but empty in the PSR-7 ' .
-            'request.',
         );
     }
 
