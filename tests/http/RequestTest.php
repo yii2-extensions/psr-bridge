@@ -21,13 +21,6 @@ use function str_starts_with;
 #[Group('http')]
 final class RequestTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        $this->closeApplication();
-
-        parent::tearDown();
-    }
-
     /**
      * @phpstan-param string[] $trustedHosts
      */
@@ -88,14 +81,14 @@ final class RequestTest extends TestCase
 
             self::assertFalse(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should fail when the 'CSRF' header is missing for unsafe 'HTTP' methods.",
+                'CSRF token validation should fail when the CSRF header is missing for unsafe HTTP methods.',
             );
 
             $request->headers->add(Request::CSRF_HEADER, '');
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should pass when the 'CSRF' header is present for unsafe 'HTTP' methods.",
+                'CSRF token validation should pass when the CSRF header is present for unsafe HTTP methods.',
             );
         }
 
@@ -105,9 +98,11 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should pass for safe 'HTTP' methods regardless of 'CSRF' header.",
+                'CSRF token validation should pass for safe HTTP methods regardless of CSRF header.',
             );
         }
+
+        $this->closeApplication();
     }
 
     /**
@@ -125,13 +120,15 @@ final class RequestTest extends TestCase
 
         self::assertNotNull(
             $token,
-            "'CSRF' token should not be null after generation.",
+            'CSRF token should not be null after generation.',
         );
         self::assertMatchesRegularExpression(
             '~[-_=a-z0-9]~i',
             $token,
-            "'CSRF' token should only contain ASCII characters ('a-z', '0-9', '-', '_', '=').",
+            "CSRF token should only contain ASCII characters ('a-z', '0-9', '-', '_', '=').",
         );
+
+        $this->closeApplication();
     }
 
     /**
@@ -153,8 +150,8 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should pass for safe 'HTTP' methods ('GET', 'HEAD', 'OPTIONS') even " .
-                'if no token is provided.',
+                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD', 'OPTIONS') even if no token " .
+                'is provided.',
             );
         }
 
@@ -167,22 +164,24 @@ final class RequestTest extends TestCase
 
             self::assertFalse(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should fail for unsafe 'HTTP' methods ('POST', 'PUT', 'DELETE') if no " .
-                'token is provided.',
+                "CSRF token validation should fail for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if no token is " .
+                'provided.',
             );
             self::assertNotNull(
                 $token,
-                "'CSRF' token should not be 'null' after generation.",
+                "CSRF token should not be 'null' after generation.",
             );
 
             $request->headers->add(Request::CSRF_HEADER, $token);
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should pass for unsafe 'HTTP' methods ('POST', 'PUT', 'DELETE') if a " .
-                'valid token is provided in the header.',
+                "CSRF token validation should pass for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if a valid " .
+                'token is provided in the header.',
             );
         }
+
+        $this->closeApplication();
     }
 
     /**
@@ -204,8 +203,8 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should pass for safe 'HTTP' methods ('GET', 'HEAD', 'OPTIONS') even if no " .
-                "token is provided in 'POST' params.",
+                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD', 'OPTIONS') even if no token " .
+                "is provided in 'POST' params.",
             );
         }
 
@@ -217,18 +216,20 @@ final class RequestTest extends TestCase
 
             self::assertFalse(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should fail for unsafe 'HTTP' methods ('POST', 'PUT', 'DELETE') if no " .
-                "token is provided in 'POST' params.",
+                "CSRF token validation should fail for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if no token is " .
+                "provided in 'POST' params.",
             );
 
             $request->setBodyParams([$request->csrfParam => $token]);
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should pass for unsafe 'HTTP' methods ('POST', 'PUT', 'DELETE') if a " .
-                "valid token is provided in 'POST' params.",
+                "CSRF token validation should pass for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if a valid " .
+                "token is provided in 'POST' params.",
             );
         }
+
+        $this->closeApplication();
     }
 
     public function testCsrfTokenValidation(): void
@@ -246,15 +247,15 @@ final class RequestTest extends TestCase
 
         self::assertTrue(
             $request->validateCsrfToken($token),
-            "'CSRF' token validation should pass for any value if 'CSRF' validation is disabled.",
+            'CSRF token validation should pass for any value if CSRF validation is disabled.',
         );
         self::assertTrue(
             $request->validateCsrfToken($token . 'a'),
-            "'CSRF' token validation should pass for any value if 'CSRF' validation is disabled.",
+            'CSRF token validation should pass for any value if CSRF validation is disabled.',
         );
         self::assertTrue(
             $request->validateCsrfToken(null),
-            "'CSRF' token validation should pass for 'null' value if 'CSRF' validation is disabled.",
+            "CSRF token validation should pass for 'null' value if CSRF validation is disabled.",
         );
 
         // enable validation
@@ -266,15 +267,15 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken($token),
-                "'CSRF' token validation should pass for valid token on safe 'HTTP' methods ('GET', 'HEAD', 'OPTIONS').",
+                "CSRF token validation should pass for valid token on safe HTTP methods ('GET', 'HEAD', 'OPTIONS').",
             );
             self::assertTrue(
                 $request->validateCsrfToken($token . 'a'),
-                "'CSRF' token validation should pass for any value on safe 'HTTP' methods ('GET', 'HEAD', 'OPTIONS').",
+                "CSRF token validation should pass for any value on safe HTTP methods ('GET', 'HEAD', 'OPTIONS').",
             );
             self::assertTrue(
                 $request->validateCsrfToken(null),
-                "'CSRF' token validation should pass for 'null' value on safe 'HTTP' methods ('GET', 'HEAD', 'OPTIONS').",
+                "CSRF token validation should pass for 'null' value on safe HTTP methods ('GET', 'HEAD', 'OPTIONS').",
             );
         }
 
@@ -284,17 +285,19 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken($token),
-                "'CSRF' token validation should pass for valid token on unsafe 'HTTP' methods ('POST', 'PUT', 'DELETE').",
+                "CSRF token validation should pass for valid token on unsafe HTTP methods ('POST', 'PUT', 'DELETE').",
             );
             self::assertFalse(
                 $request->validateCsrfToken($token . 'a'),
-                "'CSRF' token validation should fail for invalid token on unsafe 'HTTP' methods ('POST', 'PUT', 'DELETE').",
+                "CSRF token validation should fail for invalid token on unsafe HTTP methods ('POST', 'PUT', 'DELETE').",
             );
             self::assertFalse(
                 $request->validateCsrfToken(null),
-                "'CSRF' token validation should fail for 'null' value on unsafe 'HTTP' methods ('POST', 'PUT', 'DELETE').",
+                "CSRF token validation should fail for 'null' value on unsafe HTTP methods ('POST', 'PUT', 'DELETE').",
             );
         }
+
+        $this->closeApplication();
     }
 
     public function testCustomHeaderCsrfHeaderValidation(): void
@@ -315,16 +318,18 @@ final class RequestTest extends TestCase
 
             self::assertFalse(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should fail when the custom 'CSRF' header is missing for unsafe 'HTTP' methods.",
+                'CSRF token validation should fail when the custom CSRF header is missing for unsafe HTTP methods.',
             );
 
             $request->headers->add('X-JGURDA', '');
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should pass when the custom 'CSRF' header is present for unsafe 'HTTP' methods.",
+                'CSRF token validation should pass when the custom CSRF header is present for unsafe HTTP methods.',
             );
         }
+
+        $this->closeApplication();
     }
 
     public function testCustomSafeMethodsCsrfTokenValidation(): void
@@ -344,19 +349,19 @@ final class RequestTest extends TestCase
 
         self::assertTrue(
             $request->validateCsrfToken($token),
-            "'CSRF' token validation should pass for valid token on custom safe 'HTTP' methods ('OPTIONS').",
+            "CSRF token validation should pass for valid token on custom safe HTTP methods ('OPTIONS').",
         );
         self::assertTrue(
             $request->validateCsrfToken($token . 'a'),
-            "'CSRF' token validation should pass for any value on custom safe 'HTTP' methods ('OPTIONS').",
+            "CSRF token validation should pass for any value on custom safe HTTP methods ('OPTIONS').",
         );
         self::assertTrue(
             $request->validateCsrfToken(null),
-            "'CSRF' token validation should pass for 'null' value on custom safe 'HTTP' methods ('OPTIONS').",
+            "CSRF token validation should pass for 'null' value on custom safe HTTP methods ('OPTIONS').",
         );
         self::assertTrue(
             $request->validateCsrfToken(),
-            "'CSRF' token validation should pass when no token is provided on custom safe 'HTTP' methods ('OPTIONS').",
+            "CSRF token validation should pass when no token is provided on custom safe HTTP methods ('OPTIONS').",
         );
 
         // only accept valid token on other requests
@@ -365,21 +370,23 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken($token),
-                "'CSRF' token validation should pass for valid token on 'HTTP' methods ('GET', 'HEAD', 'POST').",
+                "CSRF token validation should pass for valid token on HTTP methods ('GET', 'HEAD', 'POST').",
             );
             self::assertFalse(
                 $request->validateCsrfToken($token . 'a'),
-                "'CSRF' token validation should fail for invalid token on 'HTTP' methods ('GET', 'HEAD', 'POST').",
+                "CSRF token validation should fail for invalid token on HTTP methods ('GET', 'HEAD', 'POST').",
             );
             self::assertFalse(
                 $request->validateCsrfToken(null),
-                "'CSRF' token validation should fail for 'null' value on 'HTTP' methods ('GET', 'HEAD', 'POST').",
+                "CSRF token validation should fail for 'null' value on HTTP methods ('GET', 'HEAD', 'POST').",
             );
             self::assertFalse(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should fail when no token is provided on 'HTTP' methods ('GET', 'HEAD', 'POST').",
+                "CSRF token validation should fail when no token is provided on HTTP methods ('GET', 'HEAD', 'POST').",
             );
         }
+
+        $this->closeApplication();
     }
 
     public function testCustomUnsafeMethodsCsrfHeaderValidation(): void
@@ -399,16 +406,14 @@ final class RequestTest extends TestCase
 
         self::assertFalse(
             $request->validateCsrfToken(),
-            "'CSRF' token validation should fail when the custom header is missing for unsafe 'HTTP' methods " .
-            "('POST').",
+            "CSRF token validation should fail when the custom header is missing for unsafe HTTP methods ('POST').",
         );
 
         $request->headers->add(Request::CSRF_HEADER, '');
 
         self::assertTrue(
             $request->validateCsrfToken(),
-            "'CSRF' token validation should pass when the custom header is present for unsafe 'HTTP' methods " .
-            "('POST').",
+            "CSRF token validation should pass when the custom header is present for unsafe HTTP methods ('POST').",
         );
 
         // accept no value on other requests
@@ -419,10 +424,12 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "'CSRF' token validation should pass for safe 'HTTP' methods ('GET', 'HEAD') regardless of custom " .
-                'header presence.',
+                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD') regardless of custom header " .
+                'presence.',
             );
         }
+
+        $this->closeApplication();
     }
 
     public function testForwardedNotTrusted(): void
@@ -485,7 +492,7 @@ final class RequestTest extends TestCase
             "'getAuthCredentials()' should return ['null', 'null'] when no authentication data is available.",
         );
 
-        // test when Authorization header is present but not Basic auth
+        // test when Authorization header is present but not basic auth
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
 
         $request = new Request();
@@ -493,7 +500,7 @@ final class RequestTest extends TestCase
         self::assertSame(
             [null, null],
             $request->getAuthCredentials(),
-            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header is not Basic " .
+            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header is not basic " .
             'authentication.',
         );
 
@@ -508,7 +515,7 @@ final class RequestTest extends TestCase
             "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header is empty.",
         );
 
-        // test when Authorization header contains only 'Basic' without credentials
+        // test when Authorization header contains only basic without credentials
         $_SERVER['HTTP_AUTHORIZATION'] = 'Basic';
 
         $request = new Request();
@@ -516,7 +523,7 @@ final class RequestTest extends TestCase
         self::assertSame(
             [null, null],
             $request->getAuthCredentials(),
-            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header contains only 'Basic' " .
+            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header contains only basic " .
             'without credentials.',
         );
     }
@@ -613,11 +620,13 @@ final class RequestTest extends TestCase
         $request->csrfHeader = 'X-CSRF-Token';
 
         $request->reset();
-        $result = $request->getCsrfTokenFromHeader();
 
-        self::assertNotNull($result, "Should return result from parent when adapter is 'null'.");
+        self::assertNotNull(
+            $request->getCsrfTokenFromHeader(),
+            "Should return result from parent when adapter is 'null'.",
+        );
 
-        unset($_SERVER['HTTP_X_CSRF_TOKEN']);
+        $this->closeApplication();
     }
 
     /**
@@ -644,13 +653,13 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertEquals(
+        self::assertSame(
             $expected[0] ?? null,
             $request->getHostInfo(),
             "'getHostInfo()' should return the expected value for the given 'secureHeaders' and 'trustedHosts' " .
             'configuration.',
         );
-        self::assertEquals(
+        self::assertSame(
             $expected[1] ?? null,
             $request->getHostName(),
             "'getHostName()' should return the expected value for the given 'secureHeaders' and 'trustedHosts' " .
@@ -674,12 +683,12 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertEquals(
+        self::assertSame(
             $expected[0] ?? null,
             $request->getHostInfo(),
             "'getHostInfo()' should return the expected value when 'trustedHosts' is an associative array.",
         );
-        self::assertEquals(
+        self::assertSame(
             $expected[1] ?? null,
             $request->getHostName(),
             "'getHostName()' should return the expected value when 'trustedHosts' is an associative array.",
@@ -699,7 +708,7 @@ final class RequestTest extends TestCase
 
         $request = new Request();
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getIsAjax(),
             "'getIsAjax()' should return the expected value based on the simulated \$_SERVER input.",
@@ -719,7 +728,7 @@ final class RequestTest extends TestCase
 
         $request = new Request();
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getIsPjax(),
             "'getIsPjax()' should return the expected value based on the simulated \$_SERVER input.",
@@ -753,7 +762,7 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getIsSecureConnection(),
             "'getIsSecureConnection()' should return the expected value for the given 'secureHeaders' and " .
@@ -780,7 +789,7 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getIsSecureConnection(),
             "'getIsSecureConnection()' should return the expected value for the associative 'trustedHosts' and " .
@@ -818,7 +827,7 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getIsSecureConnection(),
             "'getIsSecureConnection()' should return the expected value for the associative 'trustedHosts' and " .
@@ -835,18 +844,15 @@ final class RequestTest extends TestCase
     #[DataProviderExternal(RequestProvider::class, 'getMethod')]
     public function testGetMethod(array $server, string $expected): void
     {
-        $original = $_SERVER;
         $_SERVER = $server;
 
         $request = new Request();
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getMethod(),
             "'getMethod()' should return the expected value based on the simulated \$_SERVER input.",
         );
-
-        $_SERVER = $original;
     }
 
     public function testGetOrigin(): void
@@ -855,7 +861,7 @@ final class RequestTest extends TestCase
 
         $request = new Request();
 
-        self::assertEquals(
+        self::assertSame(
             'https://www.w3.org',
             $request->getOrigin(),
             "'getOrigin()' should return the correct origin when 'HTTP_ORIGIN' is set.",
@@ -879,10 +885,8 @@ final class RequestTest extends TestCase
 
         self::assertEmpty(
             $request->getQueryString(),
-            'Query string should be empty when \'$_SERVER[\'QUERY_STRING\']\' is empty.',
+            "Query string should be empty when \$_SERVER['QUERY_STRING'] is empty.",
         );
-
-        unset($_SERVER['QUERY_STRING']);
     }
 
     public function testGetQueryStringWhenNotSet(): void
@@ -893,7 +897,7 @@ final class RequestTest extends TestCase
 
         self::assertEmpty(
             $request->getQueryString(),
-            'Query string should be empty when \'$_SERVER[\'QUERY_STRING\']\' is not set.',
+            "Query string should be empty when \$_SERVER['QUERY_STRING'] is not set.",
         );
     }
 
@@ -912,32 +916,6 @@ final class RequestTest extends TestCase
             $request->getQueryString(),
             "Query string should match the expected value for: '{$queryString}'.",
         );
-
-        unset($_SERVER['QUERY_STRING']);
-    }
-
-    public function testGetScriptFileWithEmptyServer(): void
-    {
-        $request = new Request();
-
-        $_SERVER = [];
-
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Unable to determine the entry script file path.');
-
-        $request->getScriptFile();
-    }
-
-    public function testGetScriptUrlWithEmptyServer(): void
-    {
-        $request = new Request();
-
-        $_SERVER = [];
-
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Unable to determine the entry script file path.');
-
-        $request->getScriptUrl();
     }
 
     public function testGetServerName(): void
@@ -946,17 +924,17 @@ final class RequestTest extends TestCase
 
         $_SERVER['SERVER_NAME'] = 'servername';
 
-        self::assertEquals(
+        self::assertSame(
             'servername',
             $request->getServerName(),
-            '\'getServerName()\' should return the value of \'$_SERVER[\'SERVER_NAME\']\' when it is set.',
+            "'getServerName()' should return the value of \$_SERVER['SERVER_NAME'] when it is set.",
         );
 
         unset($_SERVER['SERVER_NAME']);
 
         self::assertNull(
             $request->getServerName(),
-            '\'getServerName()\' should return \'null\' when \'$_SERVER[\'SERVER_NAME\']\' is not set.',
+            "'getServerName()' should return 'null' when \$_SERVER['SERVER_NAME'] is not set.",
         );
     }
 
@@ -989,21 +967,21 @@ final class RequestTest extends TestCase
 
     public function testGetServerPort(): void
     {
-        $request = new Request();
-
         $_SERVER['SERVER_PORT'] = 33;
 
-        self::assertEquals(
+        $request = new Request();
+
+        self::assertSame(
             33,
             $request->getServerPort(),
-            '\'getServerPort()\' should return the value of \'$_SERVER[\'SERVER_PORT\']\' when it is set.',
+            "'getServerPort()' should return the value of \$_SERVER['SERVER_PORT'] when it is set.",
         );
 
         unset($_SERVER['SERVER_PORT']);
 
         self::assertNull(
             $request->getServerPort(),
-            '\'getServerPort()\' should return \'null\' when $_SERVER[\'SERVER_PORT\'] is not set.',
+            "'getServerPort()' should return 'null' when \$_SERVER['SERVER_PORT'] is not set.",
         );
     }
 
@@ -1029,10 +1007,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             '/search?q=hello+world&category=books&price[min]=10&price[max]=50',
             $request->getUrl(),
-            'URL should match the value of \'REQUEST_URI\' when it is set.',
+            "URL should match the value of 'REQUEST_URI' when it is set.",
         );
-
-        unset($_SERVER['REQUEST_URI']);
     }
 
     /**
@@ -1049,8 +1025,6 @@ final class RequestTest extends TestCase
             $request->getUrl(),
             "URL should return 'root' path when 'REQUEST_URI' is set to 'root'.",
         );
-
-        unset($_SERVER['REQUEST_URI']);
     }
 
     /**
@@ -1060,7 +1034,6 @@ final class RequestTest extends TestCase
     #[DataProviderExternal(RequestProvider::class, 'getUserIP')]
     public function testGetUserIP(array $server, string $expected): void
     {
-        $original = $_SERVER;
         $_SERVER = $server;
 
         $request = new Request(
@@ -1079,7 +1052,7 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getUserIP(),
             "'getUserIP()' should return the expected value for the given 'secureHeaders' and 'trustedHosts'.",
@@ -1104,13 +1077,11 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getUserIP(),
             "'getUserIP()' should return the expected value for the associative 'trustedHosts' and 'secureHeaders'.",
         );
-
-        $_SERVER = $original;
     }
 
     /**
@@ -1119,7 +1090,6 @@ final class RequestTest extends TestCase
     #[DataProviderExternal(RequestProvider::class, 'getUserIPWithoutTrustedHost')]
     public function testGetUserIPWithoutTrustedHost(array $server, string $expected): void
     {
-        $original = $_SERVER;
         $_SERVER = $server;
 
         $request = new Request(
@@ -1140,13 +1110,11 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertEquals(
+        self::assertSame(
             $expected,
             $request->getUserIP(),
             "'getUserIP()' should return the expected value for the associative 'trustedHosts' and 'secureHeaders'.",
         );
-
-        $_SERVER = $original;
     }
 
     /**
@@ -1155,8 +1123,6 @@ final class RequestTest extends TestCase
     #[DataProviderExternal(RequestProvider::class, 'httpAuthorizationHeaders')]
     public function testHttpAuthCredentialsFromHttpAuthorizationHeader(string $secret, array $expected): void
     {
-        $original = $_SERVER;
-
         $request = new Request();
 
         $_SERVER['HTTP_AUTHORIZATION'] = "Basic {$secret}";
@@ -1177,8 +1143,6 @@ final class RequestTest extends TestCase
             "'getAuthPassword()' should return the expected password from 'HTTP_AUTHORIZATION'.",
         );
 
-        $_SERVER = $original;
-
         $request = new Request();
 
         $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = "Basic {$secret}";
@@ -1198,13 +1162,10 @@ final class RequestTest extends TestCase
             $request->getAuthPassword(),
             "'getAuthPassword()' should return the expected password from 'REDIRECT_HTTP_AUTHORIZATION'.",
         );
-
-        $_SERVER = $original;
     }
 
     public function testHttpAuthCredentialsFromServerSuperglobal(): void
     {
-        $original = $_SERVER;
         [$user, $pw] = ['foo', 'bar'];
         $_SERVER['PHP_AUTH_USER'] = $user;
         $_SERVER['PHP_AUTH_PW'] = $pw;
@@ -1228,35 +1189,31 @@ final class RequestTest extends TestCase
             $request->getAuthPassword(),
             "'getAuthPassword()' should return the password from 'PHP_AUTH_PW' when set.",
         );
-
-        $_SERVER = $original;
     }
 
     public function testIssue15317(): void
     {
-        $originalCookie = $_COOKIE;
-
         $this->webApplication();
 
         $_COOKIE[(new Request())->csrfParam] = '';
+
         $request = new Request();
 
         $request->enableCsrfCookie = true;
         $request->enableCookieValidation = false;
+
         $_SERVER['REQUEST_METHOD'] = 'POST';
 
         Yii::$app->security->unmaskToken('');
 
         self::assertFalse(
             $request->validateCsrfToken(''),
-            "'validateCsrfToken()' should return 'false' when an empty 'CSRF' token is provided.",
+            "'validateCsrfToken()' should return 'false' when an empty CSRF token is provided.",
         );
         self::assertNotEmpty(
             $request->getCsrfToken(),
-            "'getCsrfToken()' should return a non-empty value after an empty 'CSRF' token is validated.",
+            "'getCsrfToken()' should return a non-empty value after an empty CSRF token is validated.",
         );
-
-        $_COOKIE = $originalCookie;
     }
 
     public function testNoCsrfTokenCsrfHeaderValidation(): void
@@ -1269,7 +1226,7 @@ final class RequestTest extends TestCase
 
         self::assertNull(
             $request->getCsrfToken(),
-            "'getCsrfToken()' should return 'null' when no 'CSRF' token is set.",
+            "'getCsrfToken()' should return 'null' when no CSRF token is set.",
         );
     }
 
@@ -1277,12 +1234,12 @@ final class RequestTest extends TestCase
     {
         $request = new Request();
 
-        self::assertEquals(
+        self::assertSame(
             [],
             $request->parseAcceptHeader(' '),
             "'parseAcceptHeader()' should return an empty array when the header is blank.",
         );
-        self::assertEquals(
+        self::assertSame(
             [
                 'audio/basic' => ['q' => 1],
                 'audio/*' => ['q' => 0.2],
@@ -1290,7 +1247,7 @@ final class RequestTest extends TestCase
             $request->parseAcceptHeader('audio/*; q=0.2, audio/basic'),
             "'parseAcceptHeader()' should correctly parse media types and quality values.",
         );
-        self::assertEquals(
+        self::assertSame(
             [
                 'application/json' => ['q' => 1, 'version' => '1.0'],
                 'application/xml' => ['q' => 1, 'version' => '2.0', 'x'],
@@ -1360,7 +1317,7 @@ final class RequestTest extends TestCase
 
         $request->acceptableLanguages = [];
 
-        self::assertEquals(
+        self::assertSame(
             'en',
             $request->getPreferredLanguage(),
             "Should return 'en' when no 'acceptableLanguages' are set.",
@@ -1370,7 +1327,7 @@ final class RequestTest extends TestCase
 
         $request->acceptableLanguages = ['de'];
 
-        self::assertEquals(
+        self::assertSame(
             'en',
             $request->getPreferredLanguage(),
             "Should return 'en' when 'acceptableLanguages' does not match the default.",
@@ -1380,7 +1337,7 @@ final class RequestTest extends TestCase
 
         $request->acceptableLanguages = ['en-us', 'de', 'ru-RU'];
 
-        self::assertEquals(
+        self::assertSame(
             'en',
             $request->getPreferredLanguage(['en']),
             "Should return 'en' when 'en' is in the preferred list.",
@@ -1390,12 +1347,12 @@ final class RequestTest extends TestCase
 
         $request->acceptableLanguages = ['en-us', 'de', 'ru-RU'];
 
-        self::assertEquals(
+        self::assertSame(
             'de',
             $request->getPreferredLanguage(['ru', 'de']),
             "Should return 'de' when 'de' is in the preferred list.",
         );
-        self::assertEquals(
+        self::assertSame(
             'de-DE',
             $request->getPreferredLanguage(['ru', 'de-DE']),
             "Should return 'de-DE' when 'de-DE' is in the preferred list.",
@@ -1405,7 +1362,7 @@ final class RequestTest extends TestCase
 
         $request->acceptableLanguages = ['en-us', 'de', 'ru-RU'];
 
-        self::assertEquals(
+        self::assertSame(
             'de',
             $request->getPreferredLanguage(['de', 'ru']),
             "Should return 'de' when 'de' is the first match in the preferred list.",
@@ -1415,7 +1372,7 @@ final class RequestTest extends TestCase
 
         $request->acceptableLanguages = ['en-us', 'de', 'ru-RU'];
 
-        self::assertEquals(
+        self::assertSame(
             'ru-ru',
             $request->getPreferredLanguage(['ru-ru']),
             "Should return 'ru-ru' when 'ru-ru' is in the preferred list.",
@@ -1425,12 +1382,12 @@ final class RequestTest extends TestCase
 
         $request->acceptableLanguages = ['en-us', 'de'];
 
-        self::assertEquals(
+        self::assertSame(
             'ru-ru',
             $request->getPreferredLanguage(['ru-ru', 'pl']),
             "Should return 'ru-ru' when 'ru-ru' is the first in the preferred list.",
         );
-        self::assertEquals(
+        self::assertSame(
             'ru-RU',
             $request->getPreferredLanguage(['ru-RU', 'pl']),
             "Should return 'ru-RU' when 'ru-RU' is the first in the preferred list.",
@@ -1440,7 +1397,7 @@ final class RequestTest extends TestCase
 
         $request->acceptableLanguages = ['en-us', 'de'];
 
-        self::assertEquals(
+        self::assertSame(
             'pl',
             $request->getPreferredLanguage(['pl', 'ru-ru']),
             "Should return 'pl' when 'pl' is the first in the preferred list and not present in 'acceptableLanguages'.",
@@ -1465,7 +1422,7 @@ final class RequestTest extends TestCase
         self::assertSame(
             $expectedMethod,
             $request->getMethod(),
-            "'getMethod()' should return the expected 'HTTP' method after considering override logic.",
+            "'getMethod()' should return the expected HTTP method after considering override logic.",
         );
     }
 
@@ -1493,28 +1450,29 @@ final class RequestTest extends TestCase
         $request = new Request();
 
         $request->pathInfo = 'posts';
+
         $_GET['page'] = 1;
 
         $result = $request->resolve();
 
-        self::assertEquals(
+        self::assertSame(
             [
                 'post/list',
                 ['page' => 1],
             ],
             $result,
-            '\'resolve()\' should return the correct route and query parameters when \'page\' is set in \'$_GET\'.',
+            "'resolve()' should return the correct route and query parameters when 'page' is set in \$_GET.",
         );
-        self::assertEquals(
+        self::assertSame(
             ['page' => 1],
             $_GET,
-            '\'$_GET\' should contain only the \'page\' parameter after resolving the \'posts\' route.',
+            "\$_GET should contain only the 'page' parameter after resolving the 'posts' route.",
         );
 
         $request->setQueryParams(['page' => 5]);
         $result = $request->resolve();
 
-        self::assertEquals(
+        self::assertSame(
             [
                 'post/list',
                 ['page' => 5],
@@ -1522,16 +1480,16 @@ final class RequestTest extends TestCase
             $result,
             "'resolve()' should return the correct route and query parameters when 'page' is set via 'setQueryParams()'.",
         );
-        self::assertEquals(
+        self::assertSame(
             ['page' => 1],
             $_GET,
-            '\'$_GET\' should remain unchanged after \'setQueryParams()\' is used on the request object.',
+            "\$_GET should remain unchanged after 'setQueryParams()' is used on the request object.",
         );
 
         $request->setQueryParams(['custom-page' => 5]);
         $result = $request->resolve();
 
-        self::assertEquals(
+        self::assertSame(
             [
                 'post/list',
                 ['custom-page' => 5],
@@ -1539,10 +1497,10 @@ final class RequestTest extends TestCase
             $result,
             "'resolve()' should return the correct route and custom query parameters when 'setQueryParams()' is used.",
         );
-        self::assertEquals(
+        self::assertSame(
             ['page' => 1],
             $_GET,
-            '\'$_GET\' should not be affected by custom query parameters set via \'setQueryParams()\'.',
+            "\$_GET should not be affected by custom query parameters set via 'setQueryParams()'.",
         );
 
         unset($_GET['page']);
@@ -1551,45 +1509,45 @@ final class RequestTest extends TestCase
 
         $request->pathInfo = 'post/21';
 
-        self::assertEquals(
+        self::assertSame(
             [],
             $_GET,
-            '\$_GET\' should be empty after unsetting the \'page\' parameter and before resolving a new route.',
+            "\$_GET should be empty after unsetting the 'page' parameter and before resolving a new route.",
         );
 
         $result = $request->resolve();
 
-        self::assertEquals(
+        self::assertSame(
             [
                 'post/view',
-                ['id' => 21],
+                ['id' => '21'],
             ],
             $result,
-            "'resolve()' should return the correct route and parameters when resolving a path with an \'id\'.",
+            "'resolve()' should return the correct route and parameters when resolving a path with an 'id'.",
         );
-        self::assertEquals(
-            ['id' => 21],
+        self::assertSame(
+            ['id' => '21'],
             $_GET,
-            '\'$_GET\' should contain the \'id\' parameter after resolving the \'post/21\' route.',
+            "\$_GET should contain the 'id' parameter after resolving the 'post/21' route.",
         );
 
         $_GET['id'] = 42;
 
         $result = $request->resolve();
 
-        self::assertEquals(
+        self::assertSame(
             [
                 'post/view',
-                ['id' => 21],
+                ['id' => '21'],
             ],
             $result,
-            '\'resolve()\' should return the same route and parameters even if \'$_GET[\'id\']\' is set to a ' .
-            'different value before resolving.',
+            "'resolve()' should return the same route and parameters even if \$_GET['id'] is set to a different " .
+            'value before resolving.',
         );
-        self::assertEquals(
-            ['id' => 21],
+        self::assertSame(
+            ['id' => '21'],
             $_GET,
-            '\'$_GET\' should be overwritten with the resolved \'id\' parameter after resolving the route.',
+            "\$_GET should be overwritten with the resolved 'id' parameter after resolving the route.",
         );
 
         $_GET['id'] = 63;
@@ -1597,11 +1555,11 @@ final class RequestTest extends TestCase
         $request->setQueryParams(['token' => 'secret']);
         $result = $request->resolve();
 
-        self::assertEquals(
+        self::assertSame(
             [
                 'post/view',
                 [
-                    'id' => 21,
+                    'id' => '21',
                     'token' => 'secret',
                 ],
             ],
@@ -1609,10 +1567,10 @@ final class RequestTest extends TestCase
             "'resolve()' should merge additional query parameters set via 'setQueryParams()' with the resolved route " .
             'parameters.',
         );
-        self::assertEquals(
+        self::assertSame(
             ['id' => 63],
             $_GET,
-            '\'$_GET\' should remain unchanged by \'setQueryParams()\' after resolving the route with extra parameters.',
+            "\$_GET should remain unchanged by 'setQueryParams()' after resolving the route with extra parameters.",
         );
     }
 
@@ -1622,12 +1580,44 @@ final class RequestTest extends TestCase
 
         $request = new Request();
 
-        $result = $request->getRemoteHost();
-
         self::assertNull(
-            $result,
+            $request->getRemoteHost(),
             "Remote host should return 'null' from parent implementation when PSR-7 adapter is not set and " .
             "'REMOTE_HOST' is not present in \$_SERVER.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnParentGetScriptUrlWhenAdapterIsNull(): void
+    {
+        $request = new Request();
+
+        // ensure adapter is `null` (default state)
+        $request->reset();
+
+        $_SERVER['SCRIPT_NAME'] = '/test.php';
+        $_SERVER['SCRIPT_FILENAME'] = '/path/to/test.php';
+
+        // verify the method executes without throwing exception when adapter is `null`
+        self::assertSame(
+            '/test.php',
+            $request->getScriptUrl(),
+            "'getScriptUrl()' should return 'SCRIPT_NAME' when adapter is 'null'.",
+        );
+    }
+
+    public function testReturnParentNullWhenAdapterIsNotSetAndServerNameNotPresent(): void
+    {
+        unset($_SERVER['SERVER_NAME']);
+
+        $request = new Request();
+
+        self::assertNull(
+            $request->getServerName(),
+            "Server name should return 'null' from parent implementation when PSR-7 adapter is not set and " .
+            "'SERVER_NAME' is not present in \$_SERVER.",
         );
     }
 
@@ -1637,13 +1627,44 @@ final class RequestTest extends TestCase
 
         $request = new Request();
 
-        $result = $request->getRemoteHost();
-
         self::assertSame(
             'parent.host.com',
-            $result,
+            $request->getRemoteHost(),
             'Remote host should return the value from parent implementation when PSR-7 adapter is not set and ' .
             "'REMOTE_HOST' is present in \$_SERVER.",
+        );
+    }
+
+    public function testReturnParentServerNameWhenAdapterIsNotSet(): void
+    {
+        $_SERVER['SERVER_NAME'] = 'fallback.server.com';
+
+        $request = new Request();
+
+        self::assertSame(
+            'fallback.server.com',
+            $request->getServerName(),
+            "Server name should return 'fallback.server.com' from parent implementation when PSR-7 adapter is not " .
+            "set and 'SERVER_NAME' is present in \$_SERVER.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnParentUrlWhenAdapterIsNull(): void
+    {
+        $_SERVER['REQUEST_URI'] = '/legacy/path?param=value';
+
+        $request = new Request();
+
+        // ensure adapter is `null` (default state)
+        $request->reset();
+
+        self::assertSame(
+            '/legacy/path?param=value',
+            $request->getUrl(),
+            "URL should return parent implementation result when adapter is 'null'.",
         );
     }
 
@@ -1696,6 +1717,30 @@ final class RequestTest extends TestCase
         $this->expectExceptionMessage('Unable to determine the request URI.');
 
         $request->getUrl();
+    }
+
+    public function testThrowInvalidConfigExceptionWhenGetScriptFileItsEmptyServer(): void
+    {
+        $request = new Request();
+
+        $_SERVER = [];
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('Unable to determine the entry script file path.');
+
+        $request->getScriptFile();
+    }
+
+    public function testThrowInvalidConfigExceptionWhenGetScriptUrlItsEmptyServer(): void
+    {
+        $request = new Request();
+
+        $_SERVER = [];
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('Unable to determine the entry script file path.');
+
+        $request->getScriptUrl();
     }
 
     public function testThrowTypeErrorWhenRemoteHostIsNotStringOrNull(): void
