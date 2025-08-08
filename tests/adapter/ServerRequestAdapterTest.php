@@ -2248,5 +2248,4 @@ final class ServerRequestAdapterTest extends TestCase
         $request->setPsr7Request($psr7Request);
         $request->getCookies();
     }
-
 }
