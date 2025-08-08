@@ -58,6 +58,7 @@ final class ServerRequestAdapterTest extends TestCase
             'Different request instances should maintain separate remote host values.',
         );
     }
+
     public function testGetCsrfTokenFromHeaderUsesAdapterWhenAdapterIsNotNull(): void
     {
         $expectedToken = 'adapter-csrf-token-123';
