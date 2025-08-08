@@ -42,6 +42,7 @@ final class ServerRequestAdapterTest extends TestCase
             "Should return CSRF token from adapter headers when adapter is not 'null'",
         );
     }
+
     public function testIndependentRequestsWithDifferentRemoteHosts(): void
     {
         $host1 = 'client1.example.com';
