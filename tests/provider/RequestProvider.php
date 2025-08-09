@@ -822,6 +822,103 @@ final class RequestProvider
     /**
      * @phpstan-return array<array-key, array{mixed, string|null}>
      */
+    public static function remoteIPCases(): array
+    {
+        return [
+            'boolean-false' => [
+                false,
+                null,
+            ],
+            'boolean-true' => [
+                true,
+                null,
+            ],
+            'empty-array' => [
+                [],
+                null,
+            ],
+            'empty-string' => [
+                '',
+                null,
+            ],
+            'float' => [
+                123.45,
+                null,
+            ],
+            'integer' => [
+                12345,
+                null,
+            ],
+            'integer-zero' => [
+                0,
+                null,
+            ],
+            'invalid-ip' => [
+                '999.999.999.999',
+                null,
+            ],
+            'IPv4' => [
+                '192.168.1.100',
+                '192.168.1.100',
+            ],
+            'ipv4-with-port' => [
+                '10.0.0.1:8080',
+                null,
+            ],
+            'IPv4-local' => [
+                '127.0.0.1',
+                '127.0.0.1',
+            ],
+            'IPv6' => [
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+            ],
+            'ipv6-bracketed' => [
+                '[::1]',
+                null,
+            ],
+            'IPv6-compressed' => [
+                '::1',
+                '::1',
+            ],
+            'ipv6-with-port' => [
+                '[::1]:443',
+                null,
+            ],
+            'localhost' => [
+                'localhost',
+                null,
+            ],
+            'null' => [
+                null,
+                null,
+            ],
+            'numeric string' => [
+                '123',
+                null,
+            ],
+            'object' => [
+                (object) ['foo' => 'bar'],
+                null,
+            ],
+            'spaces-around' => [
+                ' 127.0.0.1 ',
+                null,
+            ],
+            'string-zero' => [
+                '0',
+                null,
+            ],
+            'zero-address' => [
+                '0.0.0.0',
+                '0.0.0.0',
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array<array-key, array{mixed, string|null}>
+     */
     public static function serverNameCases(): array
     {
         return [
