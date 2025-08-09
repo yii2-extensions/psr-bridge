@@ -756,7 +756,7 @@ final class RequestProvider
     public static function remoteHostCases(): array
     {
         return [
-            'absent' => [
+            'array-value' => [
                 [],
                 null,
             ],
@@ -807,6 +807,10 @@ final class RequestProvider
             'numeric string' => [
                 '123',
                 '123',
+            ],
+            'object' => [
+                (object) ['foo' => 'bar'],
+                null,
             ],
             'string-zero' => [
                 '0',
@@ -821,7 +825,7 @@ final class RequestProvider
     public static function serverNameCases(): array
     {
         return [
-            'absent' => [
+            'array-value' => [
                 [],
                 null,
             ],
@@ -872,6 +876,10 @@ final class RequestProvider
             'numeric string' => [
                 '123',
                 '123',
+            ],
+            'object' => [
+                (object) ['foo' => 'bar'],
+                null,
             ],
             'string-zero' => [
                 '0',
