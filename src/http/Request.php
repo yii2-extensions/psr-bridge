@@ -492,7 +492,9 @@ final class Request extends \yii\web\Request
     public function getRemoteIP(): string|null
     {
         if ($this->adapter !== null) {
-            return $this->getServerParam('REMOTE_ADDR');
+            $remoteIP = $this->getServerParam('REMOTE_ADDR');
+
+            return is_string($remoteIP) ? $remoteIP : null;
         }
 
         return parent::getRemoteIP();
