@@ -802,7 +802,7 @@ final class RequestProvider
     {
         return [
             'absent' => [
-                null,
+                [],
                 null,
             ],
             'boolean false' => [
@@ -836,6 +836,10 @@ final class RequestProvider
             'localhost' => [
                 'localhost',
                 'localhost',
+            ],
+            'null value' => [
+                null,
+                null,
             ],
             'numeric string' => [
                 '123',
