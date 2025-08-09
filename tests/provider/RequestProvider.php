@@ -796,6 +796,75 @@ final class RequestProvider
     }
 
     /**
+     * @phpstan-return array<array-key, array{mixed, string|null}>
+     */
+    public static function serverNameCases(): array
+    {
+        return [
+            'absent' => [
+                [],
+                null,
+            ],
+            'boolean-false' => [
+                false,
+                null,
+            ],
+            'boolean-true' => [
+                true,
+                null,
+            ],
+            'domain' => [
+                'example.server.com',
+                'example.server.com',
+            ],
+            'empty array' => [
+                [],
+                null,
+            ],
+            'empty string' => [
+                '',
+                '',
+            ],
+            'float' => [
+                123.45,
+                null,
+            ],
+            'integer' => [
+                12345,
+                null,
+            ],
+            'integer-zero' => [
+                0,
+                null,
+            ],
+            'IPv4' => [
+                '192.168.1.100',
+                '192.168.1.100',
+            ],
+            'IPv6' => [
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+            ],
+            'localhost' => [
+                'localhost',
+                'localhost',
+            ],
+            'null' => [
+                null,
+                null,
+            ],
+            'numeric string' => [
+                '123',
+                '123',
+            ],
+            'string-zero' => [
+                '0',
+                '0',
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return array<
      *     string,
      *     array{string, string, array<array-key, string>|null, array<array-key, string>, string}
