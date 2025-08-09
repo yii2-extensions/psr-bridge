@@ -566,13 +566,11 @@ final class Request extends \yii\web\Request
      *
      * @param string $name Name of the server parameter to retrieve.
      *
-     * @return string|null Value of the server parameter as a string, or `null` if not set or not a string.
+     * @return mixed Value of the server parameter as a string, or `null` if not set or not a string.
      */
-    public function getServerParam(string $name): string|null
+    public function getServerParam(string $name): mixed
     {
-        $serverParam = $this->getServerParams()[$name] ?? null;
-
-        return is_string($serverParam) ? $serverParam : null;
+        return $this->getServerParams()[$name] ?? null;
     }
 
     /**

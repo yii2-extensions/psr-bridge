@@ -113,6 +113,21 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    #[Group('server-param')]
+    public function testReturnNullWhenServerParamNotPresentInPsr7Request(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
+
+        self::assertNull(
+            $request->getServerParam('TEST_PARAM'),
+            "'getServerParam()' should return 'null' when the parameter is not present in PSR-7 'serverParams'.",
+        );
+    }
+
     #[DataProviderExternal(RequestProvider::class, 'remoteHostCases')]
     #[Group('remote-host')]
     public function testReturnRemoteHostFromServerParamsCases(mixed $serverValue, string|null $expected): void
@@ -158,6 +173,22 @@ final class ServerParamsPsr7Test extends TestCase
                 var_export($serverValue, true),
                 var_export($actual, true),
             ),
+        );
+    }
+
+    #[Group('server-param')]
+    public function testReturnServerParamFromPsr7RequestWhenAdapterIsSet(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['TEST_PARAM' => 'test_value']),
+        );
+
+        self::assertSame(
+            'test_value',
+            $request->getServerParam('TEST_PARAM'),
+            "'getServerParam()' should return the value from PSR-7 'serverParams'.",
         );
     }
 
