@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\adapter;
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii2\extensions\psrbridge\http\Request;
+use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
-#[Group('http')]
+#[Group('adapter')]
 #[Group('psr7-request')]
-#[Group('server-params')]
 final class ServerParamsPsr7Test extends TestCase
 {
+    #[Group('remote-host')]
     public function testIndependentRequestsWithDifferentRemoteHosts(): void
     {
         $host1 = 'client1.example.com';
@@ -51,6 +52,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    #[Group('remote-host')]
     public function testResetRemoteHostAfterRequestReset(): void
     {
         $initialHost = 'initial.host.com';
@@ -90,6 +92,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    #[Group('server-params')]
     public function testReturnEmptyServerParamsWhenAdapterIsSet(): void
     {
         $_SERVER = [
@@ -110,115 +113,28 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
-    public function testReturnEmptyStringWhenRemoteHostIsEmptyStringInPsr7Request(): void
+    #[DataProviderExternal(RequestProvider::class, 'remoteHostCases')]
+    #[Group('remote-host')]
+    public function testReturnRemoteHostFromServerParamsCases(int|string|null $serverValue, string|null $expected): void
     {
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => '']),
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => $serverValue]),
         );
 
         self::assertSame(
-            '',
+            $expected,
             $request->getRemoteHost(),
-            "Remote host should return an empty string when 'REMOTE_HOST' parameter is an empty string in PSR-7 " .
-            "'serverParams'.",
+            sprintf(
+                "'getRemoteHost()' should return '%s' when 'REMOTE_HOST' is '%s' in PSR-7 'serverParams'.",
+                (string) $expected,
+                (string) $serverValue,
+            ),
         );
     }
 
-    public function testReturnIPv4AddressFromPsr7RequestWhenRemoteHostIsIP(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('PUT', '/data', serverParams: ['REMOTE_HOST' => '192.168.1.100']),
-        );
-
-        self::assertSame(
-            '192.168.1.100',
-            $request->getRemoteHost(),
-            "'REMOTE_HOST' should correctly return 'IPv4' address from PSR-7 'serverParams' when 'REMOTE_HOST' " .
-            "contains an 'IPv4' address.",
-        );
-    }
-
-    public function testReturnIPv6AddressFromPsr7RequestWhenRemoteHostIsIPv6(): void
-    {
-        $expectedHost = '2001:0db8:85a3:0000:0000:8a2e:0370:7334';
-
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('DELETE', '/resource/123', serverParams: ['REMOTE_HOST' => $expectedHost]),
-        );
-
-        self::assertSame(
-            $expectedHost,
-            $request->getRemoteHost(),
-            "'REMOTE_HOST' should correctly return 'IPv6' address from PSR-7 'serverParams' when 'REMOTE_HOST' " .
-            "contains an 'IPv6' address.",
-        );
-    }
-
-    public function testReturnLocalhostFromPsr7RequestWhenRemoteHostIsLocalhost(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/health-check', serverParams: ['REMOTE_HOST' => 'localhost']),
-        );
-
-        self::assertSame(
-            'localhost',
-            $request->getRemoteHost(),
-            "'REMOTE_HOST' should correctly return 'localhost' from PSR-7 'serverParams' when 'REMOTE_HOST' is " .
-            "'localhost'.",
-        );
-    }
-
-    public function testReturnNullWhenRemoteHostIsNotStringInPsr7Request(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => 123]),
-        );
-
-        self::assertNull(
-            $request->getRemoteHost(),
-            "'REMOTE_HOST' should return 'null' when 'REMOTE_HOST' parameter is not a string in PSR-7 'serverParams'.",
-        );
-    }
-
-    public function testReturnNullWhenRemoteHostNotPresentInPsr7Request(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => 'example.com']),
-        );
-
-        self::assertNull(
-            $request->getRemoteHost(),
-            "'REMOTE_HOST' should return 'null' when 'REMOTE_HOST' parameter is not present in PSR-7 'serverParams'.",
-        );
-    }
-
-    public function testReturnRemoteHostFromPsr7RequestWhenRemoteHostIsPresent(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => 'example.host.com']),
-        );
-
-        self::assertSame(
-            'example.host.com',
-            $request->getRemoteHost(),
-            "'REMOTE_HOST' should match the value from PSR-7 'serverParams' when 'REMOTE_HOST' is present.",
-        );
-    }
-
+    #[Group('server-params')]
     public function testReturnServerParamsFromPsr7RequestOverridesGlobalServer(): void
     {
         $_SERVER = [
@@ -271,6 +187,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    #[Group('server-params')]
     public function testReturnServerParamsFromPsr7RequestWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -306,30 +223,6 @@ final class ServerParamsPsr7Test extends TestCase
         self::assertNull(
             $serverParams['REMOTE_ADDR'] ?? null,
             "'REMOTE_ADDR' should not be set when not present in PSR-7 'serverParams'.",
-        );
-    }
-
-    public function testReturnValidHostnameFromPsr7RequestWithDomainName(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'POST',
-                '/api/users',
-                ['Content-Type' => 'application/json'],
-                serverParams: [
-                    'REMOTE_HOST' => 'api.example-service.com',
-                    'SERVER_NAME' => 'localhost',
-                ],
-            ),
-        );
-
-        self::assertSame(
-            'api.example-service.com',
-            $request->getRemoteHost(),
-            "'REMOTE_HOST' should correctly return domain name from PSR-7 'serverParams' when 'REMOTE_HOST' contains " .
-            'a valid hostname.',
         );
     }
 }
