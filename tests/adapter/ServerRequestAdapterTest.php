@@ -883,20 +883,6 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
-    public function testReturnNullWhenServerParamNotPresentInPsr7Request(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
-        );
-
-        self::assertNull(
-            $request->getServerParam('TEST_PARAM'),
-            "'getServerParam()' should return 'null' when the parameter is not present in PSR-7 'serverParams'.",
-        );
-    }
-
     public function testReturnParentCsrfTokenFromHeaderWhenAdapterIsNull(): void
     {
         $request = new Request();
@@ -1251,21 +1237,6 @@ final class ServerRequestAdapterTest extends TestCase
             $expectedScriptName,
             $request->getScriptUrl(),
             "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
-        );
-    }
-
-    public function testReturnServerParamFromPsr7RequestWhenAdapterIsSet(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['TEST_PARAM' => 'test_value']),
-        );
-
-        self::assertSame(
-            'test_value',
-            $request->getServerParam('TEST_PARAM'),
-            "'getServerParam()' should return the value from PSR-7 'serverParams'.",
         );
     }
 

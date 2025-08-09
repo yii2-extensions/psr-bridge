@@ -11,6 +11,7 @@ use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, Uploaded
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
+use function array_key_exists;
 use function base64_decode;
 use function count;
 use function explode;
@@ -492,7 +493,9 @@ final class Request extends \yii\web\Request
     public function getRemoteIP(): string|null
     {
         if ($this->adapter !== null) {
-            return $this->getServerParam('REMOTE_ADDR');
+            $remoteIP = $this->getServerParam('REMOTE_ADDR');
+
+            return is_string($remoteIP) ? $remoteIP : null;
         }
 
         return parent::getRemoteIP();
@@ -555,30 +558,35 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves a server parameter value as a string or `null`.
+     * Retrieves a server parameter by name from the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns the value of the specified server parameter from the current request server parameters array.
+     * Returns the value of the specified server parameter from the PSR-7 adapter if present; otherwise, returns the
+     * value from the Yii2 environment.
      *
-     * If the parameter is not set or is not a string, `null` is returned.
+     * If the parameter is not set, the provided default value is returned.
      *
-     * This method provides type-safe access to individual server parameters ensuring compatibility with both PSR-7 and
-     * Yii2 environments.
+     * This method enables seamless access to server parameters in both PSR-7 and Yii2 environments, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
      *
      * @param string $name Name of the server parameter to retrieve.
+     * @param mixed $default Default value to return if the parameter is not set.
      *
-     * @return string|null Value of the server parameter as a string, or `null` if not set or not a string.
+     * @return mixed Value of the server parameter, or the default value if not set.
+     *
+     * Usage example:
+     * ```php
+     * $param = $request->getServerParam('REMOTE_ADDR', '127.0.0.1');
+     * ```
      */
-    public function getServerParam(string $name): string|null
+    public function getServerParam(string $name, mixed $default = null): mixed
     {
-        $serverParam = $this->getServerParams()[$name] ?? null;
-
-        return is_string($serverParam) ? $serverParam : null;
+        return array_key_exists($name, $this->getServerParams()) ? $this->getServerParams()[$name] : $default;
     }
 
     /**
      * Retrieves server parameters from the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns the server parameters from the PSR-7 adapter if present, otherwise returns `$_SERVER` for backward
+     * Returns the server parameters from the PSR-7 adapter if present, otherwise returns '$_SERVER' for backward
      * compatibility with traditional SAPI environments.
      *
      * This method enables seamless access to server parameters in both PSR-7 and Yii2 environments, supporting
@@ -599,7 +607,7 @@ final class Request extends \yii\web\Request
             return $this->adapter->getServerParams();
         }
 
-        // fallback to `$_SERVER` for non-PSR7 environments
+        // fallback to '$_SERVER' for non-PSR7 environments
         return $_SERVER;
     }
 

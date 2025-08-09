@@ -161,6 +161,37 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    /**
+     * @phpstan-param array<string, mixed> $serverParams
+     */
+    #[DataProviderExternal(RequestProvider::class, 'serverParamCases')]
+    #[Group('server-param')]
+    public function testReturnServerParamFromPsr7RequestCases(
+        string $paramName,
+        array $serverParams,
+        mixed $expected,
+    ): void {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: $serverParams),
+        );
+
+        $actual = $request->getServerParam($paramName);
+
+        self::assertSame(
+            $expected,
+            $actual,
+            sprintf(
+                "'getServerParam('%s')' should return '%s' when PSR-7 'serverParams' contains '%s'. Got: '%s'",
+                $paramName,
+                var_export($expected, true),
+                var_export($serverParams, true),
+                var_export($actual, true),
+            ),
+        );
+    }
+
     #[Group('server-params')]
     public function testReturnServerParamsFromPsr7RequestOverridesGlobalServer(): void
     {
@@ -250,6 +281,39 @@ final class ServerParamsPsr7Test extends TestCase
         self::assertNull(
             $serverParams['REMOTE_ADDR'] ?? null,
             "'REMOTE_ADDR' should not be set when not present in PSR-7 'serverParams'.",
+        );
+    }
+
+    /**
+     * @phpstan-param array<string, mixed> $serverParams
+     */
+    #[DataProviderExternal(RequestProvider::class, 'serverParamDefaultValueCases')]
+    #[Group('server-param')]
+    public function testReturnServerParamWithDefaultFromPsr7RequestCases(
+        string $paramName,
+        array $serverParams,
+        mixed $default,
+        mixed $expected,
+    ): void {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: $serverParams),
+        );
+
+        $actual = $request->getServerParam($paramName, $default);
+
+        self::assertSame(
+            $expected,
+            $actual,
+            sprintf(
+                "'getServerParam('%s', '%s')' should return '%s' when PSR-7 'serverParams' contains '%s'. Got: '%s'",
+                $paramName,
+                var_export($default, true),
+                var_export($expected, true),
+                var_export($serverParams, true),
+                var_export($actual, true),
+            ),
         );
     }
 
