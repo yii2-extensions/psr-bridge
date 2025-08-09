@@ -756,10 +756,6 @@ final class RequestProvider
     public static function remoteHostCases(): array
     {
         return [
-            'array-value' => [
-                [],
-                null,
-            ],
             'boolean-false' => [
                 false,
                 null,
@@ -772,7 +768,11 @@ final class RequestProvider
                 'api.example-service.com',
                 'api.example-service.com',
             ],
-            'empty string' => [
+            'empty-array' => [
+                [],
+                null,
+            ],
+            'empty-string' => [
                 '',
                 '',
             ],
@@ -825,10 +825,6 @@ final class RequestProvider
     public static function serverNameCases(): array
     {
         return [
-            'array-value' => [
-                [],
-                null,
-            ],
             'boolean-false' => [
                 false,
                 null,
@@ -841,7 +837,11 @@ final class RequestProvider
                 'example.server.com',
                 'example.server.com',
             ],
-            'empty string' => [
+            'empty-array' => [
+                [],
+                null,
+            ],
+            'empty-string' => [
                 '',
                 '',
             ],
@@ -893,6 +893,8 @@ final class RequestProvider
      */
     public static function serverParamCases(): array
     {
+        $object = (object) ['foo' => 'bar'];
+
         return [
             'absent' => [
                 'MISSING_PARAM',
@@ -914,6 +916,11 @@ final class RequestProvider
                 ['BOOL_PARAM' => true],
                 true,
             ],
+            'empty-array' => [
+                'EMPTY_ARRAY_PARAM',
+                ['EMPTY_ARRAY_PARAM' => []],
+                [],
+            ],
             'empty-string' => [
                 'EMPTY_PARAM',
                 ['EMPTY_PARAM' => ''],
@@ -929,15 +936,93 @@ final class RequestProvider
                 ['REQUEST_TIME' => 1_234_567_890],
                 1_234_567_890,
             ],
+            'integer-zero' => [
+                'ZERO_INT',
+                ['ZERO_INT' => 0],
+                0,
+            ],
             'null' => [
                 'NULL_PARAM',
                 ['NULL_PARAM' => null],
                 null,
             ],
+            'object' => [
+                'OBJECT_PARAM',
+                ['OBJECT_PARAM' => $object],
+                $object,
+            ],
             'string' => [
                 'TEST_PARAM',
                 ['TEST_PARAM' => 'test_value'],
                 'test_value',
+            ],
+            'string-zero' => [
+                'ZERO_STR',
+                ['ZERO_STR' => '0'],
+                '0',
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array<string, array{string, array<string, mixed>, mixed, mixed}>
+     */
+    public static function serverParamDefaultValueCases(): array
+    {
+        return [
+            'array-when-param-missing' => [
+                'MISSING_PARAM',
+                [],
+                ['default' => 'array'],
+                ['default' => 'array'],
+            ],
+            'boolean-false-value-ignores-default' => [
+                'BOOL_PARAM',
+                ['BOOL_PARAM' => false],
+                true,
+                false,
+            ],
+            'boolean-when-param-missing' => [
+                'MISSING_PARAM',
+                [],
+                true,
+                true,
+            ],
+            'empty-string-ignores-default' => [
+                'EMPTY_PARAM',
+                ['EMPTY_PARAM' => ''],
+                'default_value',
+                '',
+            ],
+            'ignore-default-when-param-exists' => [
+                'EXISTING_PARAM',
+                ['EXISTING_PARAM' => 'actual_value'],
+                'default_value',
+                'actual_value',
+            ],
+            'integer-when-param-missing' => [
+                'MISSING_PARAM',
+                [],
+                42,
+                42,
+            ],
+            'null-param-value-ignores-default' => [
+                'NULL_PARAM',
+                ['NULL_PARAM' => null],
+                'default_value',
+                null,
+            ],
+            'null-when-param-missing' => [
+                'MISSING_PARAM',
+                [],
+                null,
+                null,
+            ],
+            'string-when-param-missing' => [
+                'MISSING_PARAM',
+                [],
+                'default_value',
+                'default_value',
             ],
         ];
     }

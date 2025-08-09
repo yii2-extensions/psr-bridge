@@ -11,6 +11,7 @@ use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, Uploaded
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
+use function array_key_exists;
 use function base64_decode;
 use function count;
 use function explode;
@@ -557,18 +558,20 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves a server parameter by name from the current request.
+     * Retrieves a server parameter by name from the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns the value of the specified server parameter from the current request context, or the provided default
-     * value if the parameter is not set.
+     * Returns the value of the specified server parameter from the PSR-7 adapter if present; otherwise, returns the
+     * value from the Yii2 environment.
      *
-     * This method enables seamless access to individual server parameters in both PSR-7 and Yii2 environments,
-     * supporting interoperability with modern HTTP stacks and legacy workflows.
+     * If the parameter is not set, the provided default value is returned.
+     *
+     * This method enables seamless access to server parameters in both PSR-7 and Yii2 environments, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
      *
      * @param string $name Name of the server parameter to retrieve.
      * @param mixed $default Default value to return if the parameter is not set.
      *
-     * @return mixed Value of the server parameter, or the default value if not present.
+     * @return mixed Value of the server parameter, or the default value if not set.
      *
      * Usage example:
      * ```php
@@ -577,7 +580,7 @@ final class Request extends \yii\web\Request
      */
     public function getServerParam(string $name, mixed $default = null): mixed
     {
-        return $this->getServerParams()[$name] ?? $default;
+        return array_key_exists($name, $this->getServerParams()) ? $this->getServerParams()[$name] : $default;
     }
 
     /**
