@@ -751,57 +751,12 @@ final class RequestProvider
     }
 
     /**
-     * @phpstan-return array<array-key, array{int|string|null, string|null}>
+     * @phpstan-return array<array-key, array{mixed, string|null}>
      */
     public static function remoteHostCases(): array
     {
         return [
-            'absent' => [
-                null,
-                null,
-            ],
-            'domain' => [
-                'api.example-service.com',
-                'api.example-service.com',
-            ],
-            'empty string' => [
-                '',
-                '',
-            ],
-            'numeric string' => [
-                '123',
-                '123',
-            ],
-            'string zero' => [
-                '0',
-                '0',
-            ],
-            'IPv4' => [
-                '192.168.1.100',
-                '192.168.1.100',
-            ],
-            'IPv6' => [
-                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-            ],
-            'localhost' => [
-                'localhost',
-                'localhost',
-            ],
-            'non-string' => [
-                123,
-                null,
-            ],
-        ];
-    }
-
-    /**
-     * @phpstan-return array<array-key, array{mixed, string|null}>
-     */
-    public static function serverNameCases(): array
-    {
-        return [
-            'absent' => [
+            'array-value' => [
                 [],
                 null,
             ],
@@ -814,12 +769,8 @@ final class RequestProvider
                 null,
             ],
             'domain' => [
-                'example.server.com',
-                'example.server.com',
-            ],
-            'empty array' => [
-                [],
-                null,
+                'api.example-service.com',
+                'api.example-service.com',
             ],
             'empty string' => [
                 '',
@@ -856,6 +807,79 @@ final class RequestProvider
             'numeric string' => [
                 '123',
                 '123',
+            ],
+            'object' => [
+                (object) ['foo' => 'bar'],
+                null,
+            ],
+            'string-zero' => [
+                '0',
+                '0',
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array<array-key, array{mixed, string|null}>
+     */
+    public static function serverNameCases(): array
+    {
+        return [
+            'array-value' => [
+                [],
+                null,
+            ],
+            'boolean-false' => [
+                false,
+                null,
+            ],
+            'boolean-true' => [
+                true,
+                null,
+            ],
+            'domain' => [
+                'example.server.com',
+                'example.server.com',
+            ],
+            'empty string' => [
+                '',
+                '',
+            ],
+            'float' => [
+                123.45,
+                null,
+            ],
+            'integer' => [
+                12345,
+                null,
+            ],
+            'integer-zero' => [
+                0,
+                null,
+            ],
+            'IPv4' => [
+                '192.168.1.100',
+                '192.168.1.100',
+            ],
+            'IPv6' => [
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+            ],
+            'localhost' => [
+                'localhost',
+                'localhost',
+            ],
+            'null' => [
+                null,
+                null,
+            ],
+            'numeric string' => [
+                '123',
+                '123',
+            ],
+            'object' => [
+                (object) ['foo' => 'bar'],
+                null,
             ],
             'string-zero' => [
                 '0',

@@ -115,7 +115,7 @@ final class ServerParamsPsr7Test extends TestCase
 
     #[DataProviderExternal(RequestProvider::class, 'remoteHostCases')]
     #[Group('remote-host')]
-    public function testReturnRemoteHostFromServerParamsCases(int|string|null $serverValue, string|null $expected): void
+    public function testReturnRemoteHostFromServerParamsCases(mixed $serverValue, string|null $expected): void
     {
         $request = new Request();
 
@@ -139,10 +139,8 @@ final class ServerParamsPsr7Test extends TestCase
 
     #[DataProviderExternal(RequestProvider::class, 'serverNameCases')]
     #[Group('server-name')]
-    public function testReturnServerNameFromServerParamsCases(
-        mixed $serverValue,
-        string|null $expected,
-    ): void {
+    public function testReturnServerNameFromServerParamsCases(mixed $serverValue, string|null $expected): void
+    {
         $request = new Request();
 
         $request->setPsr7Request(
