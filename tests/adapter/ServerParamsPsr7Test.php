@@ -137,6 +137,47 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    public function testReturnRemoteIPFromPsr7ServerParams(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                'https://old.example.com/api',
+                serverParams: ['REMOTE_ADDR' => '192.168.1.100'],
+            ),
+        );
+
+        self::assertSame(
+            '192.168.1.100',
+            $request->getRemoteIP(),
+            "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams'.",
+        );
+    }
+
+    public function testReturnRemoteIPFromPsr7ServerParamsOverridesGlobalServer(): void
+    {
+        $_SERVER['REMOTE_ADDR'] = '192.168.1.100';
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                'https://old.example.com/api',
+                serverParams: ['REMOTE_ADDR' => '10.0.0.1'],
+            ),
+        );
+
+        self::assertSame(
+            '10.0.0.1',
+            $request->getRemoteIP(),
+            "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams', not from global " .
+            '$_SERVER.',
+        );
+    }
+
     #[DataProviderExternal(RequestProvider::class, 'serverNameCases')]
     #[Group('server-name')]
     public function testReturnServerNameFromServerParamsCases(mixed $serverValue, string|null $expected): void

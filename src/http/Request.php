@@ -15,6 +15,7 @@ use function array_key_exists;
 use function base64_decode;
 use function count;
 use function explode;
+use function filter_var;
 use function is_array;
 use function is_string;
 use function mb_check_encoding;
@@ -476,14 +477,15 @@ final class Request extends \yii\web\Request
     /**
      * Retrieves the remote IP address for the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns the remote IP address as provided by the PSR-7 ServerRequestAdapter if the adapter is set.
+     * Returns the remote IP address as determined by the PSR-7 adapter if present, using the 'REMOTE_ADDR' server
+     * parameter.
      *
-     * If no adapter is present, falls back to the parent implementation.
+     * If no adapter is set, falls back to the parent implementation.
      *
      * This method enables seamless access to the remote IP address in both PSR-7 and Yii2 environments, supporting
      * interoperability with modern HTTP stacks and legacy workflows.
      *
-     * @return string|null Remote IP address for the current request, or `null` if not available.
+     * @return string|null Remote IP address for the current request, or `null` if not available or invalid.
      *
      * Usage example:
      * ```php
@@ -495,7 +497,15 @@ final class Request extends \yii\web\Request
         if ($this->adapter !== null) {
             $remoteIP = $this->getServerParam('REMOTE_ADDR');
 
-            return is_string($remoteIP) ? $remoteIP : null;
+            if (is_string($remoteIP) === false) {
+                return null;
+            }
+
+            if (filter_var($remoteIP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6) === false) {
+                return null;
+            }
+
+            return $remoteIP;
         }
 
         return parent::getRemoteIP();
