@@ -113,70 +113,6 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
-    #[Group('server-name')]
-    public function testReturnNullWhenPsr7RequestServerNameIsEmptyArray(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => []]),
-        );
-
-        self::assertNull(
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
-            'an empty array.',
-        );
-    }
-
-    #[Group('server-name')]
-    public function testReturnNullWhenPsr7RequestServerNameIsNotPresent(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['HTTP_HOST' => 'example.com']),
-        );
-
-        self::assertNull(
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
-            'not present.',
-        );
-    }
-
-    #[Group('server-name')]
-    public function testReturnNullWhenPsr7RequestServerNameIsNotString(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => 12345]),
-        );
-
-        self::assertNull(
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
-            'not a string.',
-        );
-    }
-
-    #[Group('server-name')]
-    public function testReturnNullWhenPsr7RequestServerNameIsNull(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => null]),
-        );
-
-        self::assertNull(
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
-            "'null'.",
-        );
-    }
-
     #[DataProviderExternal(RequestProvider::class, 'remoteHostCases')]
     #[Group('remote-host')]
     public function testReturnRemoteHostFromServerParamsCases(int|string|null $serverValue, string|null $expected): void
@@ -201,20 +137,29 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    #[DataProviderExternal(RequestProvider::class, 'serverNameCases')]
     #[Group('server-name')]
-    public function testReturnServerNameFromPsr7RequestWhenAdapterIsSetAndServerNamePresent(): void
-    {
+    public function testReturnServerNameFromServerParamsCases(
+        mixed $serverValue,
+        string|null $expected,
+    ): void {
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => 'example.server.com']),
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $serverValue]),
         );
 
+        $actual = $request->getServerName();
+
         self::assertSame(
-            'example.server.com',
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'example.server.com' from PSR-7 'serverParams' when adapter is set and " .
-            "'SERVER_NAME' is present as a string.",
+            $expected,
+            $actual,
+            sprintf(
+                "'getServerName()' should return '%s' when 'SERVER_NAME' is '%s' in PSR-7 'serverParams'. Got: '%s'",
+                var_export($expected, true),
+                var_export($serverValue, true),
+                var_export($actual, true),
+            ),
         );
     }
 
