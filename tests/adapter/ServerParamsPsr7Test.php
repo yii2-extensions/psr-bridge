@@ -113,21 +113,6 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
-    #[Group('server-param')]
-    public function testReturnNullWhenServerParamNotPresentInPsr7Request(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
-        );
-
-        self::assertNull(
-            $request->getServerParam('TEST_PARAM'),
-            "'getServerParam()' should return 'null' when the parameter is not present in PSR-7 'serverParams'.",
-        );
-    }
-
     #[DataProviderExternal(RequestProvider::class, 'remoteHostCases')]
     #[Group('remote-host')]
     public function testReturnRemoteHostFromServerParamsCases(mixed $serverValue, string|null $expected): void
@@ -176,19 +161,34 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    /**
+     * @phpstan-param array<string, mixed> $serverParams
+     */
+    #[DataProviderExternal(RequestProvider::class, 'serverParamCases')]
     #[Group('server-param')]
-    public function testReturnServerParamFromPsr7RequestWhenAdapterIsSet(): void
-    {
+    public function testReturnServerParamFromPsr7RequestCases(
+        string $paramName,
+        array $serverParams,
+        mixed $expected,
+    ): void {
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['TEST_PARAM' => 'test_value']),
+            FactoryHelper::createRequest('GET', '/test', serverParams: $serverParams),
         );
 
+        $actual = $request->getServerParam($paramName);
+
         self::assertSame(
-            'test_value',
-            $request->getServerParam('TEST_PARAM'),
-            "'getServerParam()' should return the value from PSR-7 'serverParams'.",
+            $expected,
+            $actual,
+            sprintf(
+                "'getServerParam('%s')' should return '%s' when PSR-7 'serverParams' contains '%s'. Got: '%s'",
+                $paramName,
+                var_export($expected, true),
+                var_export($serverParams, true),
+                var_export($actual, true),
+            ),
         );
     }
 

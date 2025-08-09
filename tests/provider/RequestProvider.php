@@ -889,6 +889,60 @@ final class RequestProvider
     }
 
     /**
+     * @phpstan-return array<array-key, array{string, array<string, mixed>, mixed}>
+     */
+    public static function serverParamCases(): array
+    {
+        return [
+            'absent' => [
+                'MISSING_PARAM',
+                [],
+                null,
+            ],
+            'array' => [
+                'ARRAY_PARAM',
+                ['ARRAY_PARAM' => ['key' => 'value']],
+                ['key' => 'value'],
+            ],
+            'boolean-false' => [
+                'BOOL_PARAM',
+                ['BOOL_PARAM' => false],
+                false,
+            ],
+            'boolean-true' => [
+                'BOOL_PARAM',
+                ['BOOL_PARAM' => true],
+                true,
+            ],
+            'empty-string' => [
+                'EMPTY_PARAM',
+                ['EMPTY_PARAM' => ''],
+                '',
+            ],
+            'float' => [
+                'FLOAT_PARAM',
+                ['FLOAT_PARAM' => 123.45],
+                123.45,
+            ],
+            'integer' => [
+                'REQUEST_TIME',
+                ['REQUEST_TIME' => 1_234_567_890],
+                1_234_567_890,
+            ],
+            'null' => [
+                'NULL_PARAM',
+                ['NULL_PARAM' => null],
+                null,
+            ],
+            'string' => [
+                'TEST_PARAM',
+                ['TEST_PARAM' => 'test_value'],
+                'test_value',
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return array<
      *     string,
      *     array{string, string, array<array-key, string>|null, array<array-key, string>, string}
