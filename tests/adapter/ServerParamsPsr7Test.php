@@ -10,6 +10,9 @@ use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function sprintf;
+use function var_export;
+
 #[Group('adapter')]
 #[Group('psr7-request')]
 final class ServerParamsPsr7Test extends TestCase
@@ -32,23 +35,15 @@ final class ServerParamsPsr7Test extends TestCase
             FactoryHelper::createRequest('POST', '/api/v1/posts', serverParams: ['REMOTE_HOST' => $host2]),
         );
 
-        $result1 = $request1->getRemoteHost();
-        $result2 = $request2->getRemoteHost();
-
         self::assertSame(
             $host1,
-            $result1,
+            $request1->getRemoteHost(),
             "First request instance should return its own 'REMOTE_HOST' value.",
         );
         self::assertSame(
             $host2,
-            $result2,
+            $request2->getRemoteHost(),
             "Second request instance should return its own 'REMOTE_HOST' value.",
-        );
-        self::assertNotSame(
-            $result1,
-            $result2,
-            "Different request instances should maintain separate 'REMOTE_HOST' values.",
         );
     }
 
@@ -59,6 +54,11 @@ final class ServerParamsPsr7Test extends TestCase
         $newHost = 'new.host.com';
 
         $request = new Request();
+
+        self::assertNull(
+            $request->getRemoteHost(),
+            "After 'reset' method and before setting a new PSR-7 request, 'getRemoteHost()' should be 'null'.",
+        );
 
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/first', serverParams: ['REMOTE_HOST' => $initialHost]),
@@ -123,13 +123,16 @@ final class ServerParamsPsr7Test extends TestCase
             FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => $serverValue]),
         );
 
+        $actual = $request->getRemoteHost();
+
         self::assertSame(
             $expected,
-            $request->getRemoteHost(),
+            $actual,
             sprintf(
-                "'getRemoteHost()' should return '%s' when 'REMOTE_HOST' is '%s' in PSR-7 'serverParams'.",
-                (string) $expected,
-                (string) $serverValue,
+                "'getRemoteHost()' should return '%s' when 'REMOTE_HOST' is '%s' in PSR-7 'serverParams'. Got: '%s'",
+                var_export($expected, true),
+                var_export($serverValue, true),
+                var_export($actual, true),
             ),
         );
     }

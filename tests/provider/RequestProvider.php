@@ -768,6 +768,14 @@ final class RequestProvider
                 '',
                 '',
             ],
+            'numeric string' => [
+                '123',
+                '123',
+            ],
+            'string zero' => [
+                '0',
+                '0',
+            ],
             'IPv4' => [
                 '192.168.1.100',
                 '192.168.1.100',
