@@ -4,16 +4,95 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\adapter;
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii2\extensions\psrbridge\http\Request;
+use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
-#[Group('http')]
+use function sprintf;
+use function var_export;
+
+#[Group('adapter')]
 #[Group('psr7-request')]
-#[Group('server-params')]
 final class ServerParamsPsr7Test extends TestCase
 {
+    #[Group('remote-host')]
+    public function testIndependentRequestsWithDifferentRemoteHosts(): void
+    {
+        $host1 = 'client1.example.com';
+        $host2 = 'client2.example.org';
+
+        $request1 = new Request();
+
+        $request1->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/api/v1/users', serverParams: ['REMOTE_HOST' => $host1]),
+        );
+
+        $request2 = new Request();
+
+        $request2->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/api/v1/posts', serverParams: ['REMOTE_HOST' => $host2]),
+        );
+
+        self::assertSame(
+            $host1,
+            $request1->getRemoteHost(),
+            "First request instance should return its own 'REMOTE_HOST' value.",
+        );
+        self::assertSame(
+            $host2,
+            $request2->getRemoteHost(),
+            "Second request instance should return its own 'REMOTE_HOST' value.",
+        );
+    }
+
+    #[Group('remote-host')]
+    public function testResetRemoteHostAfterRequestReset(): void
+    {
+        $initialHost = 'initial.host.com';
+        $newHost = 'new.host.com';
+
+        $request = new Request();
+
+        self::assertNull(
+            $request->getRemoteHost(),
+            "After 'reset' method and before setting a new PSR-7 request, 'getRemoteHost()' should be 'null'.",
+        );
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/first', serverParams: ['REMOTE_HOST' => $initialHost]),
+        );
+
+        $result1 = $request->getRemoteHost();
+
+        self::assertSame(
+            $initialHost,
+            $result1,
+            "'REMOTE_HOST' should return the initial host value from the first PSR-7 request.",
+        );
+
+        $request->reset();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/second', serverParams: ['REMOTE_HOST' => $newHost]),
+        );
+
+        $result2 = $request->getRemoteHost();
+
+        self::assertSame(
+            $newHost,
+            $result2,
+            "'REMOTE_HOST' should return the new host value after 'reset' method and setting a new PSR-7 request.",
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            "'REMOTE_HOST' values should be different after 'reset' method with new PSR-7 request data.",
+        );
+    }
+
+    #[Group('server-params')]
     public function testReturnEmptyServerParamsWhenAdapterIsSet(): void
     {
         $_SERVER = [
@@ -34,6 +113,31 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    #[DataProviderExternal(RequestProvider::class, 'remoteHostCases')]
+    #[Group('remote-host')]
+    public function testReturnRemoteHostFromServerParamsCases(int|string|null $serverValue, string|null $expected): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => $serverValue]),
+        );
+
+        $actual = $request->getRemoteHost();
+
+        self::assertSame(
+            $expected,
+            $actual,
+            sprintf(
+                "'getRemoteHost()' should return '%s' when 'REMOTE_HOST' is '%s' in PSR-7 'serverParams'. Got: '%s'",
+                var_export($expected, true),
+                var_export($serverValue, true),
+                var_export($actual, true),
+            ),
+        );
+    }
+
+    #[Group('server-params')]
     public function testReturnServerParamsFromPsr7RequestOverridesGlobalServer(): void
     {
         $_SERVER = [
@@ -86,6 +190,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    #[Group('server-params')]
     public function testReturnServerParamsFromPsr7RequestWhenAdapterIsSet(): void
     {
         $request = new Request();

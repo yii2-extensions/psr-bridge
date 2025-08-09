@@ -454,7 +454,7 @@ final class Request extends \yii\web\Request
      * This method enables seamless access to the remote host in both PSR-7 and Yii2 environments, supporting
      * interoperability with modern HTTP stacks and legacy workflows.
      *
-     * @return string|null Remote host name for the current request, or null if not available.
+     * @return string|null Remote host name for the current request, or `null` if not available.
      *
      * Usage example:
      * ```php
@@ -464,7 +464,9 @@ final class Request extends \yii\web\Request
     public function getRemoteHost(): string|null
     {
         if ($this->adapter !== null) {
-            return $this->getServerParam('REMOTE_HOST');
+            $remoteHost = $this->getServerParam('REMOTE_HOST');
+
+            return is_string($remoteHost) ? $remoteHost : null;
         }
 
         return parent::getRemoteHost();
