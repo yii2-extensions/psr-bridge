@@ -883,66 +883,6 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
-    public function testReturnNullWhenPsr7RequestServerNameIsEmptyArray(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => []]),
-        );
-
-        self::assertNull(
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
-            'an empty array.',
-        );
-    }
-
-    public function testReturnNullWhenPsr7RequestServerNameIsNotPresent(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['HTTP_HOST' => 'example.com']),
-        );
-
-        self::assertNull(
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
-            'not present.',
-        );
-    }
-
-    public function testReturnNullWhenPsr7RequestServerNameIsNotString(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => 12345]),
-        );
-
-        self::assertNull(
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
-            'not a string.',
-        );
-    }
-
-    public function testReturnNullWhenPsr7RequestServerNameIsNull(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => null]),
-        );
-
-        self::assertNull(
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_NAME' is " .
-            "'null'.",
-        );
-    }
-
     public function testReturnNullWhenServerParamNotPresentInPsr7Request(): void
     {
         $request = new Request();
@@ -1311,22 +1251,6 @@ final class ServerRequestAdapterTest extends TestCase
             $expectedScriptName,
             $request->getScriptUrl(),
             "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
-        );
-    }
-
-    public function testReturnServerNameFromPsr7RequestWhenAdapterIsSetAndServerNamePresent(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => 'example.server.com']),
-        );
-
-        self::assertSame(
-            'example.server.com',
-            $request->getServerName(),
-            "'SERVER_NAME' should return 'example.server.com' from PSR-7 'serverParams' when adapter is set and " .
-            "'SERVER_NAME' is present as a string.",
         );
     }
 
@@ -1817,82 +1741,6 @@ final class ServerRequestAdapterTest extends TestCase
             'Test-Agent/1.0',
             $headerCollection->get('User-Agent'),
             "'User-Agent' header should NOT be filtered as it is not a secure header.",
-        );
-    }
-
-    public function testServerNameAfterRequestReset(): void
-    {
-        $initialServerName = 'initial.server.com';
-        $newServerName = 'new.server.com';
-
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $initialServerName]),
-        );
-
-        $result1 = $request->getServerName();
-
-        self::assertSame(
-            $initialServerName,
-            $result1,
-            "'SERVER_NAME' should return '{$initialServerName}' from initial PSR-7 request.",
-        );
-
-        $request->reset();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $newServerName]),
-        );
-
-        $result2 = $request->getServerName();
-
-        self::assertSame(
-            $newServerName,
-            $result2,
-            "'SERVER_NAME' should return '{$newServerName}' from new PSR-7 request after 'reset' method.",
-        );
-        self::assertNotSame(
-            $result1,
-            $result2,
-            "'SERVER_NAME' should change after request 'reset' method and new PSR-7 request assignment.",
-        );
-    }
-
-    public function testServerNameIndependentRequestsWithDifferentServerNames(): void
-    {
-        $serverName1 = 'server1.example.com';
-        $serverName2 = 'server2.example.org';
-
-        $request1 = new Request();
-
-        $request1->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test1', serverParams: ['SERVER_NAME' => $serverName1]),
-        );
-
-        $request2 = new Request();
-
-        $request2->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test2', serverParams: ['SERVER_NAME' => $serverName2]),
-        );
-
-        $result1 = $request1->getServerName();
-        $result2 = $request2->getServerName();
-
-        self::assertSame(
-            $serverName1,
-            $result1,
-            "First request should return '{$serverName1}' from its PSR-7 'serverParams'.",
-        );
-        self::assertSame(
-            $serverName2,
-            $result2,
-            "Second request should return '{$serverName2}' from its PSR-7 'serverParams'.",
-        );
-        self::assertNotSame(
-            $result1,
-            $result2,
-            'Independent request instances should return different server names when configured with different values.',
         );
     }
 

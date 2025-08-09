@@ -536,7 +536,7 @@ final class Request extends \yii\web\Request
      * This method enables seamless access to the server name in both PSR-7 and Yii2 environments, supporting
      * interoperability with modern HTTP stacks and legacy workflows.
      *
-     * @return string|null Server name for the current request, or null if not available.
+     * @return string|null Server name for the current request, or `null` if not available.
      *
      * Usage example:
      * ```php
@@ -546,7 +546,9 @@ final class Request extends \yii\web\Request
     public function getServerName(): string|null
     {
         if ($this->adapter !== null) {
-            return $this->getServerParam('SERVER_NAME');
+            $serverName = $this->getServerParam('SERVER_NAME');
+
+            return is_string($serverName) ? $serverName : null;
         }
 
         return parent::getServerName();
