@@ -751,13 +751,21 @@ final class RequestProvider
     }
 
     /**
-     * @phpstan-return array<array-key, array{int|string|null, string|null}>
+     * @phpstan-return array<array-key, array{mixed, string|null}>
      */
     public static function remoteHostCases(): array
     {
         return [
             'absent' => [
+                [],
                 null,
+            ],
+            'boolean-false' => [
+                false,
+                null,
+            ],
+            'boolean-true' => [
+                true,
                 null,
             ],
             'domain' => [
@@ -768,13 +776,17 @@ final class RequestProvider
                 '',
                 '',
             ],
-            'numeric string' => [
-                '123',
-                '123',
+            'float' => [
+                123.45,
+                null,
             ],
-            'string zero' => [
-                '0',
-                '0',
+            'integer' => [
+                12345,
+                null,
+            ],
+            'integer-zero' => [
+                0,
+                null,
             ],
             'IPv4' => [
                 '192.168.1.100',
@@ -788,9 +800,17 @@ final class RequestProvider
                 'localhost',
                 'localhost',
             ],
-            'non-string' => [
-                123,
+            'null' => [
                 null,
+                null,
+            ],
+            'numeric string' => [
+                '123',
+                '123',
+            ],
+            'string-zero' => [
+                '0',
+                '0',
             ],
         ];
     }
@@ -816,10 +836,6 @@ final class RequestProvider
             'domain' => [
                 'example.server.com',
                 'example.server.com',
-            ],
-            'empty array' => [
-                [],
-                null,
             ],
             'empty string' => [
                 '',
