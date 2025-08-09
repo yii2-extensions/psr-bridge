@@ -822,6 +822,79 @@ final class RequestProvider
     /**
      * @phpstan-return array<array-key, array{mixed, string|null}>
      */
+    public static function remoteIPCases(): array
+    {
+        return [
+            'boolean-false' => [
+                false,
+                null,
+            ],
+            'boolean-true' => [
+                true,
+                null,
+            ],
+            'empty-array' => [
+                [],
+                null,
+            ],
+            'empty-string' => [
+                '',
+                null,
+            ],
+            'float' => [
+                123.45,
+                null,
+            ],
+            'integer' => [
+                12345,
+                null,
+            ],
+            'integer-zero' => [
+                0,
+                null,
+            ],
+            'IPv4' => [
+                '192.168.1.100',
+                '192.168.1.100',
+            ],
+            'IPv4-local' => [
+                '127.0.0.1',
+                '127.0.0.1',
+            ],
+            'IPv6' => [
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+            ],
+            'IPv6-compressed' => [
+                '::1',
+                '::1',
+            ],
+            'localhost' => [
+                'localhost',
+                null,
+            ],
+            'null' => [
+                null,
+                null,
+            ],
+            'numeric-string' => [
+                '123',
+                null,
+            ],
+            'object' => [
+                (object) ['foo' => 'bar'],
+                null,
+            ],
+            'string-zero' => [
+                '0',
+                null,
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array<array-key, array{mixed, string|null}>
+     */
     public static function serverNameCases(): array
     {
         return [
