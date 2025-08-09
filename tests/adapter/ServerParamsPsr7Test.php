@@ -89,6 +89,7 @@ final class ServerParamsPsr7Test extends TestCase
             "'REMOTE_HOST' values should be different after 'reset' method with new PSR-7 request data.",
         );
     }
+
     public function testReturnEmptyServerParamsWhenAdapterIsSet(): void
     {
         $_SERVER = [
