@@ -59,6 +59,16 @@ final class ServerParamsPsr7Test extends TestCase
 
         $serverParams = $request->getServerParams();
 
+        self::assertCount(
+            4,
+            $serverParams,
+            "Only parameters present in PSR-7 'serverParams' should be returned.",
+        );
+        self::assertSame(
+            '203.0.113.1',
+            $serverParams['HTTP_X_FORWARDED_FOR'] ?? null,
+            "'HTTP_X_FORWARDED_FOR' should be taken from PSR-7 'serverParams'.",
+        );
         self::assertSame(
             '10.0.0.50',
             $serverParams['REMOTE_ADDR'] ?? null,
@@ -66,8 +76,13 @@ final class ServerParamsPsr7Test extends TestCase
         );
         self::assertNull(
             $serverParams['REQUEST_TIME'] ?? null,
-            "Server parameter 'REQUEST_TIME' should be 'null' when not set in PSR-7 'serverParams', even if present " .
-            'in global $_SERVER.',
+            "Server parameter 'REQUEST_TIME' should be 'null' when explicitly set to 'null' in PSR-7 'serverParams', " .
+            'even if present in global $_SERVER.',
+        );
+        self::assertSame(
+            'new.example.com',
+            $serverParams['SERVER_NAME'] ?? null,
+            "'SERVER_NAME' should be taken from PSR-7 'serverParams'.",
         );
     }
 
@@ -88,6 +103,11 @@ final class ServerParamsPsr7Test extends TestCase
 
         $serverParams = $request->getServerParams();
 
+        self::assertCount(
+            2,
+            $serverParams,
+            "Only parameters present in PSR-7 'serverParams' should be returned.",
+        );
         self::assertSame(
             '203.0.113.1',
             $serverParams['HTTP_X_FORWARDED_FOR'] ?? null,
