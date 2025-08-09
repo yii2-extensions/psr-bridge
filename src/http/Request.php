@@ -557,18 +557,22 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves a server parameter value as a string or `null`.
+     * Retrieves a server parameter by name from the current request.
      *
-     * Returns the value of the specified server parameter from the current request server parameters array.
+     * Returns the value of the specified server parameter from the server parameters array, or `null` if the parameter
+     * is not set.
      *
-     * If the parameter is not set or is not a string, `null` is returned.
-     *
-     * This method provides type-safe access to individual server parameters ensuring compatibility with both PSR-7 and
-     * Yii2 environments.
+     * This method enables direct access to individual server parameters in both PSR-7 and Yii2 environments, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
      *
      * @param string $name Name of the server parameter to retrieve.
      *
-     * @return mixed Value of the server parameter as a string, or `null` if not set or not a string.
+     * @return mixed Value of the specified server parameter, or `null` if not set.
+     *
+     * Usage example:
+     * ```php
+     * $value = $request->getServerParam('REMOTE_ADDR');
+     * ```
      */
     public function getServerParam(string $name): mixed
     {
