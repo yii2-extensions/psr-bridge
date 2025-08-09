@@ -805,13 +805,17 @@ final class RequestProvider
                 [],
                 null,
             ],
-            'boolean false' => [
+            'boolean-false' => [
                 false,
                 null,
             ],
-            'boolean true' => [
+            'boolean-true' => [
                 true,
                 null,
+            ],
+            'domain' => [
+                'example.server.com',
+                'example.server.com',
             ],
             'empty array' => [
                 [],
@@ -821,23 +825,31 @@ final class RequestProvider
                 '',
                 '',
             ],
-            'float value' => [
+            'float' => [
                 123.45,
                 null,
             ],
-            'integer value' => [
+            'integer' => [
                 12345,
                 null,
             ],
-            'IPv4 address' => [
+            'integer-zero' => [
+                0,
+                null,
+            ],
+            'IPv4' => [
                 '192.168.1.100',
                 '192.168.1.100',
+            ],
+            'IPv6' => [
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
             ],
             'localhost' => [
                 'localhost',
                 'localhost',
             ],
-            'null value' => [
+            'null' => [
                 null,
                 null,
             ],
@@ -845,9 +857,9 @@ final class RequestProvider
                 '123',
                 '123',
             ],
-            'valid domain' => [
-                'example.server.com',
-                'example.server.com',
+            'string-zero' => [
+                '0',
+                '0',
             ],
         ];
     }
