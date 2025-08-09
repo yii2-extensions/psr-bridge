@@ -853,9 +853,17 @@ final class RequestProvider
                 0,
                 null,
             ],
+            'invalid-ip' => [
+                '999.999.999.999',
+                null,
+            ],
             'IPv4' => [
                 '192.168.1.100',
                 '192.168.1.100',
+            ],
+            'ipv4-with-port' => [
+                '10.0.0.1:8080',
+                null,
             ],
             'IPv4-local' => [
                 '127.0.0.1',
@@ -865,9 +873,17 @@ final class RequestProvider
                 '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
                 '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
             ],
+            'ipv6-bracketed' => [
+                '[::1]',
+                null,
+            ],
             'IPv6-compressed' => [
                 '::1',
                 '::1',
+            ],
+            'ipv6-with-port' => [
+                '[::1]:443',
+                null,
             ],
             'localhost' => [
                 'localhost',
@@ -877,7 +893,7 @@ final class RequestProvider
                 null,
                 null,
             ],
-            'numeric-string' => [
+            'numeric string' => [
                 '123',
                 null,
             ],
@@ -885,9 +901,17 @@ final class RequestProvider
                 (object) ['foo' => 'bar'],
                 null,
             ],
+            'spaces-around' => [
+                ' 127.0.0.1 ',
+                null,
+            ],
             'string-zero' => [
                 '0',
                 null,
+            ],
+            'zero-address' => [
+                '0.0.0.0',
+                '0.0.0.0',
             ],
         ];
     }
