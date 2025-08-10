@@ -632,7 +632,7 @@ final class Request extends \yii\web\Request
      *
      * @return array Array of uploaded files for the current request.
      *
-     * @phpstan-return array<UploadedFile[], mixed>
+     * @phpstan-return array<array<array-key, UploadedFile>, mixed>
      *
      * Usage example:
      * ```php
@@ -777,7 +777,7 @@ final class Request extends \yii\web\Request
      *
      * @phpstan-param array<array-key, mixed> $uploadedFiles Array of uploaded files or nested arrays to convert.
      *
-     * @phpstan-return array<UploadedFile[], mixed>
+     * @phpstan-return array<array<array-key, UploadedFile>, mixed>
      */
     private function convertPsr7ToUploadedFiles(array $uploadedFiles): array
     {
