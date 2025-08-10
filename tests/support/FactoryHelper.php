@@ -61,7 +61,7 @@ final class FactoryHelper
      * FactoryHelper::createRequest($method, $uri, $headers, $parsedBody, $serverParams);
      * ```
      *
-     * @phpstan-param array<string, int|string> $headers
+     * @phpstan-param array<string, array<int, string>|int|string> $headers
      * @phpstan-param array<string, mixed> $serverParams
      * @phpstan-param array<string, mixed>|object|null $parsedBody
      */
