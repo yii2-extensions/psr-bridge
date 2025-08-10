@@ -21,18 +21,19 @@ final class UploadedFilesPsr7Test extends TestCase
         $tmpPathFile1 = stream_get_meta_data($tmpFile1)['uri'];
         $tmpFileSize1 = filesize($tmpPathFile1);
 
+        self::assertIsInt(
+            $tmpFileSize1,
+            "'filesize' for 'test1.txt' should be an integer.",
+        );
+
         $tmpFile2 = $this->createTmpFile();
 
         $tmpPathFile2 = stream_get_meta_data($tmpFile2)['uri'];
         $tmpFileSize2 = filesize($tmpPathFile2);
 
-        self::assertNotFalse(
-            $tmpFileSize1,
-            "'filesize' for 'test1.txt' should not be 'false'.",
-        );
-        self::assertNotFalse(
+        self::assertIsInt(
             $tmpFileSize2,
-            "'filesize' for 'test2.php' should not be 'false'.",
+            "'filesize' for 'test2.php' should be an integer.",
         );
 
         $uploadedFiles = [
