@@ -7,6 +7,7 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 use PHPUnit\Framework\Attributes\Group;
 use Yii;
 use yii\base\{InvalidCallException, InvalidConfigException};
+use yii\base\Security;
 use yii\helpers\Json;
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\exception\Message;
@@ -270,6 +271,8 @@ final class CookiesPsr7Test extends TestCase
      */
     public function testReturnMultipleValidatedCookiesWhenValidationEnabledWithMultipleValidCookies(): void
     {
+        $security = new Security();
+
         $validationKey = 'test-validation-key-32-characters';
 
         $cookies = [
@@ -283,7 +286,7 @@ final class CookiesPsr7Test extends TestCase
 
         foreach ($cookies as $name => $value) {
             $data = [$name, $value];
-            $signedCookies[$name] = Yii::$app->getSecurity()->hashData(Json::encode($data), $validationKey);
+            $signedCookies[$name] = $security->hashData(Json::encode($data), $validationKey);
         }
 
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
@@ -369,6 +372,8 @@ final class CookiesPsr7Test extends TestCase
      */
     public function testReturnValidatedCookiesWhenValidationEnabledWithValidCookies(): void
     {
+        $security = new Security();
+
         $validationKey = 'test-validation-key-32-characters';
 
         // create a valid signed cookie using Yii security component
@@ -376,7 +381,8 @@ final class CookiesPsr7Test extends TestCase
         $cookieValue = 'abc123session';
         $data = [$cookieName, $cookieValue];
 
-        $signedCookieValue = Yii::$app->getSecurity()->hashData(Json::encode($data), $validationKey);
+        $signedCookieValue = $security->hashData(Json::encode($data), $validationKey);
+
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(
@@ -420,12 +426,14 @@ final class CookiesPsr7Test extends TestCase
      */
     public function testReturnValidatedCookieWithCorrectNamePropertyWhenValidationEnabled(): void
     {
+        $security = new Security();
+
         $validationKey = 'test-validation-key-32-characters';
         $cookieName = 'validated_session';
         $cookieValue = 'secure_session_value';
         $data = [$cookieName, $cookieValue];
 
-        $signedCookieValue = Yii::$app->getSecurity()->hashData(Json::encode($data), $validationKey);
+        $signedCookieValue = $security->hashData(Json::encode($data), $validationKey);
 
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
