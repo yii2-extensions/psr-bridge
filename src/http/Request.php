@@ -514,14 +514,15 @@ final class Request extends \yii\web\Request
     /**
      * Retrieves the script URL for the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns the script URL as an empty string for PSR-7 worker environments (such as RoadRunner, FrankenPHP, etc.)
-     * where no script file exists, preventing URL duplication as routing is handled internally. If not in worker mode,
-     * return the script name. Falls back to the parent implementation if no PSR-7 adapter is set.
+     * In worker environments (RoadRunner, FrankenPHP, etc.) with a PSR-7 adapter set, returns an empty string, since no
+     * script file exists and routing is handled by the worker.
+     *
+     * In traditional mode, returns 'SCRIPT_NAME'. Falls back to the parent implementation if no PSR-7 adapter is set.
      *
      * This method enables seamless interoperability with both PSR-7 and Yii2 environments, ensuring the correct script
      * URL resolution for modern HTTP stacks and legacy workflows.
      *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws InvalidConfigException if unable to determine the entry script URL.
      *
      * @return string Script URL for the current request, or an empty string in worker mode.
      *
@@ -532,10 +533,11 @@ final class Request extends \yii\web\Request
      */
     public function getScriptUrl(): string
     {
-        return match ($this->adapter !== null) {
-            true => $this->workerMode === true ? '' : $this->getScriptName(),
-            default => parent::getScriptUrl(),
-        };
+        if ($this->adapter !== null) {
+            return $this->workerMode ? '' : $this->getScriptName();
+        }
+
+        return parent::getScriptUrl();
     }
 
     /**
@@ -589,7 +591,9 @@ final class Request extends \yii\web\Request
      */
     public function getServerParam(string $name, mixed $default = null): mixed
     {
-        return array_key_exists($name, $this->getServerParams()) ? $this->getServerParams()[$name] : $default;
+        $params = $this->getServerParams();
+
+        return array_key_exists($name, $params) ? $params[$name] : $default;
     }
 
     /**
