@@ -61,7 +61,7 @@ final class FactoryHelper
      * FactoryHelper::createRequest($method, $uri, $headers, $parsedBody, $serverParams);
      * ```
      *
-     * @phpstan-param array<string, string> $headers
+     * @phpstan-param array<string, array<int, string>|int|string> $headers
      * @phpstan-param array<string, mixed> $serverParams
      * @phpstan-param array<string, mixed>|object|null $parsedBody
      */
@@ -104,7 +104,7 @@ final class FactoryHelper
      * FactoryHelper::createResponse($statusCode, $headers, $body, $protocol, $reasonPhrase);
      * ```
      *
-     * @phpstan-param array<string, array<int, string>|string> $headers
+     * @phpstan-param array<string, array<int, string>|int|string> $headers
      */
     public static function createResponse(
         int $statusCode = 200,
