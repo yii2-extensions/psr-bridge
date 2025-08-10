@@ -247,6 +247,7 @@ final class UploadedFilesPsr7Test extends TestCase
             }
         }
     }
+
     public function testReturnUploadedFilesWhenAdapterIsSet(): void
     {
         $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
