@@ -252,40 +252,44 @@ final class UploadedFilesPsr7Test extends TestCase
     public function testReturnUploadedFilesWhenAdapterIsSet(): void
     {
         $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
-        $file2 = dirname(__DIR__) . '/support/stub/files/test2.php';
         $size1 = filesize($file1);
+
+        self::assertIsInt(
+            $size1,
+            "'filesize' for 'test1.txt' should be an integer.",
+        );
+
+        $file2 = dirname(__DIR__) . '/support/stub/files/test2.php';
         $size2 = filesize($file2);
 
-        self::assertNotFalse(
-            $size1,
-            "'filesize' for 'test1.txt' should not be 'false'.",
-        );
-        self::assertNotFalse(
+        self::assertIsInt(
             $size2,
-            "'filesize' for 'test2.php' should not be 'false'.",
-        );
-
-        $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1, size: $size1);
-        $uploadedFile2 = FactoryHelper::createUploadedFile('test2.php', 'application/x-php', $file2, size: $size2);
-        $psr7Request = FactoryHelper::createRequest('POST', '/upload');
-
-        $psr7Request = $psr7Request->withUploadedFiles(
-            [
-                'file1' => $uploadedFile1,
-                'file2' => $uploadedFile2,
-            ],
+            "'filesize' for 'test2.php' should be an integer.",
         );
 
         $request = new Request();
 
-        $request->setPsr7Request($psr7Request);
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/upload')
+                ->withUploadedFiles(
+                    [
+                        'file1' => FactoryHelper::createUploadedFile(
+                            'test1.txt',
+                            'text/plain',
+                            $file1, size: $size1,
+                        ),
+                        'file2' => FactoryHelper::createUploadedFile(
+                            'test2.php',
+                            'application/x-php',
+                            $file2,
+                            size: $size2,
+                        ),
+                    ],
+                ),
+        );
 
         $uploadedFiles = $request->getUploadedFiles();
 
-        $expectedNames = [
-            'file1',
-            'file2',
-        ];
         $expectedUploadedFiles = [
             'file1' => [
                 'name' => 'test1.txt',
@@ -303,52 +307,18 @@ final class UploadedFilesPsr7Test extends TestCase
             ],
         ];
 
-        $runtimePath = dirname(__DIR__, 2) . '/runtime';
-
         foreach ($uploadedFiles as $name => $uploadedFile) {
-            self::assertContains(
-                $name,
-                $expectedNames,
-                "Uploaded file name '{$name}' should be in the expected names list.",
-            );
             self::assertInstanceOf(
                 UploadedFile::class,
                 $uploadedFile,
-                "Uploaded file '{$name}' should be an instance of '" . UploadedFile::class . "'.",
+                "Value for {$name} should be an instance of UploadedFile.",
             );
-            self::assertSame(
-                $expectedUploadedFiles[$name]['name'] ?? null,
-                $uploadedFile->name,
-                "Uploaded file '{$name}' should have the expected client filename.",
-            );
-            self::assertSame(
-                $expectedUploadedFiles[$name]['type'] ?? null,
-                $uploadedFile->type,
-                "Uploaded file '{$name}' should have the expected client media type.",
-            );
-            self::assertSame(
-                $expectedUploadedFiles[$name]['tempName'] ?? null,
-                $uploadedFile->tempName,
-                "Uploaded file '{$name}' should have the expected temporary name.",
-            );
-            self::assertSame(
-                $expectedUploadedFiles[$name]['error'] ?? null,
-                $uploadedFile->error,
-                "Uploaded file '{$name}' should have the expected error code.",
-            );
-            self::assertSame(
-                $expectedUploadedFiles[$name]['size'] ?? null,
-                $uploadedFile->size,
-                "Uploaded file '{$name}' should have the expected size.",
-            );
-            self::assertTrue(
-                $uploadedFile->saveAs("{$runtimePath}/{$uploadedFile->name}", false),
-                "Uploaded file '{$uploadedFile->name}' should be saved to the runtime directory successfully.",
-            );
-            self::assertFileExists(
-                "{$runtimePath}/{$uploadedFile->name}",
-                "Uploaded file '{$uploadedFile->name}' should exist in the runtime directory after saving.",
-            );
+
+            if (isset($expectedUploadedFiles[$name]) === false) {
+                self::fail("Expected uploaded files should contain the key '{$name}'.");
+            }
+
+            $this->assertUploadedFileProps($uploadedFile, $expectedUploadedFiles[$name]);
         }
     }
 
@@ -356,14 +326,20 @@ final class UploadedFilesPsr7Test extends TestCase
     {
         $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
 
-        $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1);
-        $psr7Request = FactoryHelper::createRequest('POST', '/upload');
-
-        $psr7Request = $psr7Request->withUploadedFiles(['test_file' => $uploadedFile1]);
-
         $request = new Request();
 
-        $request->setPsr7Request($psr7Request);
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/upload')
+                ->withUploadedFiles(
+                    [
+                        'test_file' => FactoryHelper::createUploadedFile(
+                            'test1.txt',
+                            'text/plain',
+                            $file1,
+                        ),
+                    ],
+                ),
+        );
 
         $uploadedFiles = $request->getUploadedFiles();
 
@@ -378,32 +354,63 @@ final class UploadedFilesPsr7Test extends TestCase
         self::assertInstanceOf(
             UploadedFile::class,
             $uploadedFile,
-            "Value for 'test_file' should be an instance of 'UploadedFile'.",
+            "Value for 'test_file' should be an instance of UploadedFile.",
         );
+
+        $this->assertUploadedFileProps(
+            $uploadedFile,
+            [
+                'error' => UPLOAD_ERR_OK,
+                'name' => 'test1.txt',
+                'size' => 0,
+                'tempName' => $file1,
+                'type' => 'text/plain',
+            ],
+        );
+    }
+
+    /**
+     * @phpstan-param array{error: int, name: string, size: int, tempName: string, type: string} $expected
+     */
+    private function assertUploadedFileProps(UploadedFile $uploadedFile, array $expected): void
+    {
         self::assertSame(
-            UPLOAD_ERR_OK,
+            $expected['error'],
             $uploadedFile->error,
-            "'UploadedFile' 'error' property should be 'UPLOAD_ERR_OK'.",
+            "UploadedFile 'error' property should be as expected, got '" . $expected['error'] . "'.",
         );
         self::assertSame(
-            'test1.txt',
+            $expected['name'],
             $uploadedFile->name,
-            "'UploadedFile' 'name' property should match the original filename.",
+            "UploadedFile 'name' property should be as expected, got '" . $expected['name'] . "'.",
         );
         self::assertSame(
-            0,
+            $expected['size'],
             $uploadedFile->size,
-            "'UploadedFile' 'size' should default to 0 when PSR-7 file 'getSize()' returns 'null'.",
+            "UploadedFile 'size' property should be as expected, got '" . $expected['size'] . "'.",
         );
         self::assertSame(
-            $file1,
-            $uploadedFile->tempName,
-            "'UploadedFile' 'tempName' should match the original file path.",
-        );
-        self::assertSame(
-            'text/plain',
+            $expected['type'],
             $uploadedFile->type,
-            "'UploadedFile' 'type' should match the original MIME type.",
+            "UploadedFile 'type' property should be as expected, got '" . $expected['type'] . "'.",
         );
+        self::assertSame(
+            $expected['tempName'],
+            $uploadedFile->tempName,
+            "UploadedFile 'tempName' property should be as expected, got '" . $expected['tempName'] . "'.",
+        );
+
+        $runtimePath = dirname(__DIR__, 2) . '/runtime';
+
+        self::assertTrue(
+            $uploadedFile->saveAs("{$runtimePath}/{$uploadedFile->name}", false),
+            "UploadedFile '{$uploadedFile->name}' should be saved to the runtime directory successfully.",
+        );
+        self::assertFileExists(
+            "{$runtimePath}/{$uploadedFile->name}",
+            "UploadedFile '{$uploadedFile->name}' should exist in the runtime directory after saving.",
+        );
+
+        unlink("{$runtimePath}/{$uploadedFile->name}");
     }
 }
