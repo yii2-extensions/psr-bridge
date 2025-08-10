@@ -32,7 +32,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = false;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
@@ -81,7 +81,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = false;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
@@ -124,7 +124,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = false;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test'),
@@ -154,7 +154,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = false;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
@@ -200,7 +200,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = false;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
@@ -255,7 +255,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = true;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
@@ -273,8 +273,6 @@ final class CookiesPsr7Test extends TestCase
     {
         $security = new Security();
 
-        $validationKey = 'test-validation-key-32-characters';
-
         $cookies = [
             'session_id' => 'session_value_123',
             'user_pref' => 'preference_value_456',
@@ -286,7 +284,7 @@ final class CookiesPsr7Test extends TestCase
 
         foreach ($cookies as $name => $value) {
             $data = [$name, $value];
-            $signedCookies[$name] = $security->hashData(Json::encode($data), $validationKey);
+            $signedCookies[$name] = $security->hashData(Json::encode($data), self::COOKIE_VALIDATION_KEY);
         }
 
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
@@ -296,7 +294,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = true;
-        $request->cookieValidationKey = $validationKey;
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
@@ -353,7 +351,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = false;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
@@ -374,7 +372,7 @@ final class CookiesPsr7Test extends TestCase
     {
         $security = new Security();
 
-        $validationKey = 'test-validation-key-32-characters';
+        $validationKey = self::COOKIE_VALIDATION_KEY;
 
         // create a valid signed cookie using Yii security component
         $cookieName = 'valid_session';
@@ -428,12 +426,11 @@ final class CookiesPsr7Test extends TestCase
     {
         $security = new Security();
 
-        $validationKey = 'test-validation-key-32-characters';
         $cookieName = 'validated_session';
         $cookieValue = 'secure_session_value';
         $data = [$cookieName, $cookieValue];
 
-        $signedCookieValue = $security->hashData(Json::encode($data), $validationKey);
+        $signedCookieValue = $security->hashData(Json::encode($data), self::COOKIE_VALIDATION_KEY);
 
         $psr7Request = FactoryHelper::createRequest('GET', '/test');
 
@@ -442,7 +439,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = true;
-        $request->cookieValidationKey = $validationKey;
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
@@ -499,7 +496,7 @@ final class CookiesPsr7Test extends TestCase
         $request = new Request();
 
         $request->enableCookieValidation = false;
-        $request->cookieValidationKey = 'test-validation-key-32-characters';
+        $request->cookieValidationKey = self::COOKIE_VALIDATION_KEY;
 
         $request->setPsr7Request($psr7Request);
 
