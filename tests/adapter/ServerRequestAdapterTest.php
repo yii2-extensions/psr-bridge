@@ -477,40 +477,6 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
-    {
-        $request = new Request(['workerMode' => false]);
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
-        );
-
-        self::assertEmpty(
-            $request->getScriptUrl(),
-            "Script URL should be empty when adapter is set in traditional mode without 'SCRIPT_NAME'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
-        );
-
-        self::assertEmpty(
-            $request->getScriptUrl(),
-            "Script URL should be empty when adapter is set in 'worker' mode (default).",
-        );
-    }
-
     public function testReturnEmptyStringFromHeaderWhenCsrfHeaderPresentButEmpty(): void
     {
         $request = new Request();
@@ -1176,26 +1142,6 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertEmpty(
             $request->getRawBody(),
             'Raw body should return empty string when PSR-7 request has no body content.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
-    {
-        $expectedScriptName = '/app/public/index.php';
-
-        $request = new Request(['workerMode' => false]);
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SCRIPT_NAME' => $expectedScriptName]),
-        );
-
-        self::assertSame(
-            $expectedScriptName,
-            $request->getScriptUrl(),
-            "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
         );
     }
 

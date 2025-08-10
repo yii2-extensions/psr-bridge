@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
+use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -89,6 +90,40 @@ final class ServerParamsPsr7Test extends TestCase
             $result1,
             $result2,
             "'REMOTE_HOST' values should be different after 'reset' method with new PSR-7 request data.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
+    {
+        $request = new Request(['workerMode' => false]);
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
+
+        self::assertEmpty(
+            $request->getScriptUrl(),
+            "Script URL should be empty when adapter is set in traditional mode without 'SCRIPT_NAME'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
+
+        self::assertEmpty(
+            $request->getScriptUrl(),
+            "Script URL should be empty when adapter is set in 'worker' mode (default).",
         );
     }
 
@@ -181,6 +216,26 @@ final class ServerParamsPsr7Test extends TestCase
                 var_export($serverValue, true),
                 var_export($actual, true),
             ),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
+    {
+        $expectedScriptName = '/app/public/index.php';
+
+        $request = new Request(['workerMode' => false]);
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SCRIPT_NAME' => $expectedScriptName]),
+        );
+
+        self::assertSame(
+            $expectedScriptName,
+            $request->getScriptUrl(),
+            "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
         );
     }
 

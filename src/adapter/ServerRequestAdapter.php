@@ -282,40 +282,6 @@ final class ServerRequestAdapter
     }
 
     /**
-     * Retrieves the script URL from server parameters, supporting both SAPI and worker environments.
-     *
-     * Returns the value of 'SCRIPT_NAME' from server parameters for traditional SAPI-based PSR-7 Application.
-     *
-     * For worker-based environments (such as RoadRunner, FrankenPHP), returns an empty string to prevent URL
-     * duplication, as routing is handled internally and no script file exists.
-     *
-     * This method ensures compatibility with both classic and modern PHP runtimes, providing the correct script URL
-     * context for Yii2 Routing and Request processing.
-     *
-     * @param bool $workerMode Whether the application is running in worker mode (RoadRunner, FrankenPHP, etc.).
-     *
-     * @return string Script URL of SAPI environments, or empty string for worker mode.
-     *
-     * Usage example:
-     * ```php
-     * $scriptUrl = $adapter->getScriptUrl(false);
-     * ```
-     */
-    public function getScriptUrl(bool $workerMode): string
-    {
-        $serverParams = $this->getServerParams();
-
-        // for traditional PSR-7 apps where 'SCRIPT_NAME' is available
-        if ($workerMode === false && isset($serverParams['SCRIPT_NAME']) && is_string($serverParams['SCRIPT_NAME'])) {
-            return $serverParams['SCRIPT_NAME'];
-        }
-
-        // for PSR-7 workers (RoadRunner, FrankenPHP, etc.) where no script file exists
-        // return empty to prevent URL duplication as routing is handled internally
-        return '';
-    }
-
-    /**
      * Retrieves server parameters from the PSR-7 ServerRequestInterface.
      *
      * Returns the server parameters as provided by the underlying PSR-7 ServerRequestInterface instance.
