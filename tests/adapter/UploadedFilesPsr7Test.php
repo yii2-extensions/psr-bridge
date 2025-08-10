@@ -145,17 +145,19 @@ final class UploadedFilesPsr7Test extends TestCase
     public function testReturnUploadedFilesRecursivelyConvertsNestedArrays(): void
     {
         $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';
-        $file2 = dirname(__DIR__) . '/support/stub/files/test2.php';
         $size1 = filesize($file1);
+
+        self::assertIsInt(
+            $size1,
+            "'filesize' for 'test1.txt' should be an integer.",
+        );
+
+        $file2 = dirname(__DIR__) . '/support/stub/files/test2.php';
         $size2 = filesize($file2);
 
-        self::assertNotFalse(
-            $size1,
-            "'filesize' for 'test1.txt' should not be 'false'.",
-        );
-        self::assertNotFalse(
+        self::assertIsInt(
             $size2,
-            "'filesize' for 'test2.php' should not be 'false'.",
+            "'filesize' for 'test2.php' should be an integer.",
         );
 
         $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1, size: $size1);
@@ -195,8 +197,6 @@ final class UploadedFilesPsr7Test extends TestCase
             ],
         ];
 
-        $runtimePath = dirname(__DIR__, 2) . '/runtime';
-
         foreach ($deepNestedUploadedFiles as $nestedUploadFiles) {
             if (is_array($nestedUploadFiles)) {
                 foreach ($nestedUploadFiles as $uploadedFiles) {
@@ -207,41 +207,12 @@ final class UploadedFilesPsr7Test extends TestCase
                                 $uploadedFile,
                                 "Uploaded file '{$name}' should be an instance of '" . UploadedFile::class . "'.",
                             );
-                            self::assertSame(
-                                $expectedUploadedFiles[$name]['name'] ?? null,
-                                $uploadedFile->name,
-                                "Uploaded file '{$name}' should have the expected client filename.",
-                            );
-                            self::assertSame(
-                                $expectedUploadedFiles[$name]['type'] ?? null,
-                                $uploadedFile->type,
-                                "Uploaded file '{$name}' should have the expected client media type.",
-                            );
-                            self::assertSame(
-                                $expectedUploadedFiles[$name]['tempName'] ?? null,
-                                $uploadedFile->tempName,
-                                "Uploaded file '{$name}' should have the expected temporary name.",
-                            );
-                            self::assertSame(
-                                $expectedUploadedFiles[$name]['error'] ?? null,
-                                $uploadedFile->error,
-                                "Uploaded file '{$name}' should have the expected error code.",
-                            );
-                            self::assertSame(
-                                $expectedUploadedFiles[$name]['size'] ?? null,
-                                $uploadedFile->size,
-                                "Uploaded file '{$name}' should have the expected size.",
-                            );
-                            self::assertTrue(
-                                $uploadedFile->saveAs("{$runtimePath}/{$uploadedFile->name}", false),
-                                "Uploaded file '{$uploadedFile->name}' should be saved to the runtime directory " .
-                                'successfully.',
-                            );
-                            self::assertFileExists(
-                                "{$runtimePath}/{$uploadedFile->name}",
-                                "Uploaded file '{$uploadedFile->name}' should exist in the runtime directory after " .
-                                'saving.',
-                            );
+
+                            if (isset($expectedUploadedFiles[$name]) === false) {
+                                self::fail("Expected uploaded files should contain the key '{$name}'.");
+                            }
+
+                            $this->assertUploadedFileProps($uploadedFile, $expectedUploadedFiles[$name]);
                         }
                     }
                 }
@@ -357,7 +328,6 @@ final class UploadedFilesPsr7Test extends TestCase
             $uploadedFile,
             "Value for 'test_file' should be an instance of UploadedFile.",
         );
-
         $this->assertUploadedFileProps(
             $uploadedFile,
             [
