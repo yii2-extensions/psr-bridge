@@ -53,8 +53,24 @@ final class HeadersPsr7Test extends TestCase
             'multipart/form-data; boundary=----WebKitFormBoundary',
             $request->getContentType(),
             "'getContentType()' should return the 'Content-Type' header from the PSR-7 request when present, " .
-            "overriding 'text/plain' from \$_SERVER[CONTENT_TYPE].",
+            "overriding 'text/plain' from \$_SERVER['CONTENT_TYPE'].",
         );
+    }
+
+    #[Group('csrf-token')]
+    public function testReturnCsrfTokenFromHeaderCaseInsensitive(): void
+    {
+        $csrfToken = 'case-insensitive-token';
+
+        $request = new Request();
+
+        $request->csrfHeader = 'X-CSRF-Token';
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('POST', '/test', ['x-csrf-token' => $csrfToken]),
+        );
+
+        self::assertSame($csrfToken, $request->getCsrfTokenFromHeader());
     }
 
     #[Group('csrf-token')]
