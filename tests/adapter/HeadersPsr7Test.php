@@ -10,7 +10,6 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 #[Group('adapter')]
-#[Group('psr7-request')]
 final class HeadersPsr7Test extends TestCase
 {
     #[Group('csrf-token')]

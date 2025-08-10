@@ -13,7 +13,6 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 #[Group('adapter')]
-#[Group('psr7-request')]
 #[Group('cookies')]
 final class CookiesPsr7Test extends TestCase
 {
