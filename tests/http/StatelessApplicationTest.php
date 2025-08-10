@@ -1021,6 +1021,16 @@ final class StatelessApplicationTest extends TestCase
         );
 
         self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/getcookies' with validation enabled.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getcookies'.",
+        );
+        self::assertSame(
             '[]',
             $response->getBody()->getContents(),
             'CookieCollection should be empty when validation is enabled but cookies are invalid.',
@@ -1382,6 +1392,17 @@ final class StatelessApplicationTest extends TestCase
                 ->withCookieParams($signedCookies),
         );
 
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaders()['content-type'][0] ?? '',
+            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getcookies'.",
+        );
+
         /**
          * @phpstan-var array<
          *   string,
@@ -1395,7 +1416,7 @@ final class StatelessApplicationTest extends TestCase
          *     httpOnly: bool,
          *     sameSite: string
          *   }
-         * >
+         * > $expectedCookies
          */
         $expectedCookies = Json::decode($response->getBody()->getContents());
 
@@ -1704,7 +1725,7 @@ final class StatelessApplicationTest extends TestCase
             {"valid_session":{"name":"valid_session","value":"abc123session","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
             JSON,
             $response->getBody()->getContents(),
-            "Response 'body' should match expected JSON string for cookie 'validated_session' on 'site/getcookies' " .
+            "Response 'body' should match expected JSON string for cookie 'valid_session' on 'site/getcookies' " .
             "route in 'StatelessApplication'.",
         );
     }

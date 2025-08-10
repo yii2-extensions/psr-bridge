@@ -711,7 +711,7 @@ final class ServerRequestAdapterTest extends TestCase
 
         $deepNestedUploadedFiles = $request->getUploadedFiles();
 
-        $expectedUpdloadedFiles = [
+        $expectedUploadedFiles = [
             'file1' => [
                 'name' => 'test1.txt',
                 'type' => 'text/plain',
@@ -741,27 +741,27 @@ final class ServerRequestAdapterTest extends TestCase
                                 "Uploaded file '{$name}' should be an instance of '" . UploadedFile::class . "'.",
                             );
                             self::assertSame(
-                                $expectedUpdloadedFiles[$name]['name'] ?? null,
+                                $expectedUploadedFiles[$name]['name'] ?? null,
                                 $uploadedFile->name,
                                 "Uploaded file '{$name}' should have the expected client filename.",
                             );
                             self::assertSame(
-                                $expectedUpdloadedFiles[$name]['type'] ?? null,
+                                $expectedUploadedFiles[$name]['type'] ?? null,
                                 $uploadedFile->type,
                                 "Uploaded file '{$name}' should have the expected client media type.",
                             );
                             self::assertSame(
-                                $expectedUpdloadedFiles[$name]['tempName'] ?? null,
+                                $expectedUploadedFiles[$name]['tempName'] ?? null,
                                 $uploadedFile->tempName,
                                 "Uploaded file '{$name}' should have the expected temporary name.",
                             );
                             self::assertSame(
-                                $expectedUpdloadedFiles[$name]['error'] ?? null,
+                                $expectedUploadedFiles[$name]['error'] ?? null,
                                 $uploadedFile->error,
                                 "Uploaded file '{$name}' should have the expected error code.",
                             );
                             self::assertSame(
-                                $expectedUpdloadedFiles[$name]['size'] ?? null,
+                                $expectedUploadedFiles[$name]['size'] ?? null,
                                 $uploadedFile->size,
                                 "Uploaded file '{$name}' should have the expected size.",
                             );
@@ -819,7 +819,7 @@ final class ServerRequestAdapterTest extends TestCase
             'file1',
             'file2',
         ];
-        $expectedUpdloadedFiles = [
+        $expectedUploadedFiles = [
             'file1' => [
                 'name' => 'test1.txt',
                 'type' => 'text/plain',
@@ -850,27 +850,27 @@ final class ServerRequestAdapterTest extends TestCase
                 "Uploaded file '{$name}' should be an instance of '" . UploadedFile::class . "'.",
             );
             self::assertSame(
-                $expectedUpdloadedFiles[$name]['name'] ?? null,
+                $expectedUploadedFiles[$name]['name'] ?? null,
                 $uploadedFile->name,
                 "Uploaded file '{$name}' should have the expected client filename.",
             );
             self::assertSame(
-                $expectedUpdloadedFiles[$name]['type'] ?? null,
+                $expectedUploadedFiles[$name]['type'] ?? null,
                 $uploadedFile->type,
                 "Uploaded file '{$name}' should have the expected client media type.",
             );
             self::assertSame(
-                $expectedUpdloadedFiles[$name]['tempName'] ?? null,
+                $expectedUploadedFiles[$name]['tempName'] ?? null,
                 $uploadedFile->tempName,
                 "Uploaded file '{$name}' should have the expected temporary name.",
             );
             self::assertSame(
-                $expectedUpdloadedFiles[$name]['error'] ?? null,
+                $expectedUploadedFiles[$name]['error'] ?? null,
                 $uploadedFile->error,
                 "Uploaded file '{$name}' should have the expected error code.",
             );
             self::assertSame(
-                $expectedUpdloadedFiles[$name]['size'] ?? null,
+                $expectedUploadedFiles[$name]['size'] ?? null,
                 $uploadedFile->size,
                 "Uploaded file '{$name}' should have the expected size.",
             );
