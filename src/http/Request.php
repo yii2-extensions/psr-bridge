@@ -777,7 +777,7 @@ final class Request extends \yii\web\Request
      *
      * @phpstan-param array<array-key, mixed> $uploadedFiles Array of uploaded files or nested arrays to convert.
      *
-     * @phpstan-return array<array<UploadedFile>, mixed>
+     * @phpstan-return array<UploadedFile[], mixed>
      */
     private function convertPsr7ToUploadedFiles(array $uploadedFiles): array
     {

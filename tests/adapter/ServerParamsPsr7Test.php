@@ -93,6 +93,40 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
+    {
+        $request = new Request(['workerMode' => false]);
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
+
+        self::assertEmpty(
+            $request->getScriptUrl(),
+            "Script URL should be empty when adapter is set in traditional mode without 'SCRIPT_NAME'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test'),
+        );
+
+        self::assertEmpty(
+            $request->getScriptUrl(),
+            "Script URL should be empty when adapter is set in 'worker' mode (default).",
+        );
+    }
+
     #[Group('server-params')]
     public function testReturnEmptyServerParamsWhenAdapterIsSet(): void
     {
@@ -182,6 +216,26 @@ final class ServerParamsPsr7Test extends TestCase
                 var_export($serverValue, true),
                 var_export($actual, true),
             ),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
+    {
+        $expectedScriptName = '/app/public/index.php';
+
+        $request = new Request(['workerMode' => false]);
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SCRIPT_NAME' => $expectedScriptName]),
+        );
+
+        self::assertSame(
+            $expectedScriptName,
+            $request->getScriptUrl(),
+            "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
         );
     }
 
@@ -440,60 +494,6 @@ final class ServerParamsPsr7Test extends TestCase
             $result1,
             $result2,
             'Independent request instances should return different server names when configured with different values.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
-    {
-        $request = new Request(['workerMode' => false]);
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
-        );
-
-        self::assertEmpty(
-            $request->getScriptUrl(),
-            "Script URL should be empty when adapter is set in traditional mode without 'SCRIPT_NAME'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
-        );
-
-        self::assertEmpty(
-            $request->getScriptUrl(),
-            "Script URL should be empty when adapter is set in 'worker' mode (default).",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
-    {
-        $expectedScriptName = '/app/public/index.php';
-
-        $request = new Request(['workerMode' => false]);
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SCRIPT_NAME' => $expectedScriptName]),
-        );
-
-        self::assertSame(
-            $expectedScriptName,
-            $request->getScriptUrl(),
-            "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
         );
     }
 }
