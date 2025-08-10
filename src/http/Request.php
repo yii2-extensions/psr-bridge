@@ -82,16 +82,16 @@ final class Request extends \yii\web\Request
      * attempts to extract and decode credentials from the 'Authorization' header, handling Apache php-cgi scenarios and
      * validating the decoded data for UTF-8 encoding and proper format.
      *
-     * Usage example:
-     * ```php
-     * [$username, $password] = $request->getAuthCredentials();
-     * ```
-     *
      * @return array Contains exactly two elements.
      *   - 0: username sent via HTTP authentication, `null` if the username is not given.
      *   - 1: password sent via HTTP authentication, `null` if the password is not given.
      *
      * @phpstan-return array{0: string|null, 1: string|null}
+     *
+     * Usage example:
+     * ```php
+     * [$username, $password] = $request->getAuthCredentials();
+     * ```
      */
     public function getAuthCredentials(): array
     {
@@ -155,7 +155,7 @@ final class Request extends \yii\web\Request
      *
      * @return array|object Request body parameters with the method override parameter removed if present.
      *
-     * @phpstan-return array<mixed, mixed>|object
+     * @phpstan-return array<array-key, mixed>|object
      *
      * Usage example:
      * ```php
@@ -317,7 +317,7 @@ final class Request extends \yii\web\Request
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @phpstan-return array<mixed, mixed>|object|null
+     * @phpstan-return array<array-key, mixed>|object|null
      *
      * Usage example:
      * ```php
@@ -512,18 +512,18 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves the script URL of the current request, supporting PSR-7 and Yii2 fallback.
+     * Retrieves the script URL for the current request, supporting PSR-7 and Yii2 fallback.
      *
-     * Returns the script URL as determined by the PSR-7 adapter if present, using the configured worker mode flag.
+     * Returns the script URL as an empty string for PSR-7 worker environments (such as RoadRunner, FrankenPHP, etc.)
+     * where no script file exists, preventing URL duplication as routing is handled internally. If not in worker mode,
+     * return the script name. Falls back to the parent implementation if no PSR-7 adapter is set.
      *
-     * If no adapter is set, falls back to the parent implementation.
-     *
-     * This method enables seamless access to the script URL in both PSR-7 and Yii2 environments, supporting
-     * interoperability with modern HTTP stacks and legacy workflows.
+     * This method enables seamless interoperability with both PSR-7 and Yii2 environments, ensuring the correct script
+     * URL resolution for modern HTTP stacks and legacy workflows.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return string Script URL of the current request.
+     * @return string Script URL for the current request, or an empty string in worker mode.
      *
      * Usage example:
      * ```php
@@ -532,11 +532,10 @@ final class Request extends \yii\web\Request
      */
     public function getScriptUrl(): string
     {
-        if ($this->adapter !== null) {
-            return $this->adapter->getScriptUrl($this->workerMode);
-        }
-
-        return parent::getScriptUrl();
+        return match ($this->adapter !== null) {
+            true => $this->workerMode === true ? '' : $this->getScriptName(),
+            default => parent::getScriptUrl(),
+        };
     }
 
     /**
@@ -633,7 +632,7 @@ final class Request extends \yii\web\Request
      *
      * @return array Array of uploaded files for the current request.
      *
-     * @phpstan-return array<array<UploadedFile>, mixed>
+     * @phpstan-return array<UploadedFile[], mixed>
      *
      * Usage example:
      * ```php
@@ -776,7 +775,7 @@ final class Request extends \yii\web\Request
      *
      * @return array Converted array of Yii2 UploadedFile instances, preserving keys and nesting.
      *
-     * @phpstan-param array<mixed, mixed> $uploadedFiles Array of uploaded files or nested arrays to convert.
+     * @phpstan-param array<array-key, mixed> $uploadedFiles Array of uploaded files or nested arrays to convert.
      *
      * @phpstan-return array<array<UploadedFile>, mixed>
      */
@@ -819,5 +818,23 @@ final class Request extends \yii\web\Request
                 'type' => $psrFile->getClientMediaType() ?? '',
             ],
         );
+    }
+
+    /**
+     * Retrieves the script name from the current server parameters.
+     *
+     * Returns the value of the 'SCRIPT_NAME' server parameter as a string, or an empty string if not set or not a
+     * string.
+     *
+     * This method provides a type-safe way to access the script name for the current request, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
+     *
+     * @return string Script name from the server parameters, or an empty string if unavailable.
+     */
+    private function getScriptName(): string
+    {
+        $scriptUrl = $this->getServerParam('SCRIPT_NAME');
+
+        return is_string($scriptUrl) ? $scriptUrl : '';
     }
 }
