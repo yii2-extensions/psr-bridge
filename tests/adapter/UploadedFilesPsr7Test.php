@@ -276,7 +276,8 @@ final class UploadedFilesPsr7Test extends TestCase
                         'file1' => FactoryHelper::createUploadedFile(
                             'test1.txt',
                             'text/plain',
-                            $file1, size: $size1,
+                            $file1,
+                            size: $size1,
                         ),
                         'file2' => FactoryHelper::createUploadedFile(
                             'test2.php',
