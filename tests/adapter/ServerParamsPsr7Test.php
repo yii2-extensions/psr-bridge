@@ -15,7 +15,6 @@ use function sprintf;
 use function var_export;
 
 #[Group('adapter')]
-#[Group('psr7-request')]
 final class ServerParamsPsr7Test extends TestCase
 {
     #[Group('remote-host')]

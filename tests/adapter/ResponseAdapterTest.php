@@ -29,7 +29,7 @@ use function time;
 use function unlink;
 use function urlencode;
 
-#[Group('http')]
+#[Group('adapter')]
 final class ResponseAdapterTest extends TestCase
 {
     protected function tearDown(): void
