@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\adapter;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Yii;
-use yii\base\{InvalidConfigException, Security};
+use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii\web\{Cookie, HeaderCollection};
 use yii2\extensions\psrbridge\exception\Message;
