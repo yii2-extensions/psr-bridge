@@ -16,7 +16,6 @@ use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
 use yii\web\{AssetManager, NotFoundHttpException, Session, UrlManager, User, View};
-use yii\web\Cookie;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;

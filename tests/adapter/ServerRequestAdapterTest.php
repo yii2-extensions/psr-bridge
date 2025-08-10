@@ -6,8 +6,8 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ServerRequestInterface;
-use yii\base\{InvalidConfigException};
-use yii\web\{UploadedFile};
+use yii\base\InvalidConfigException;
+use yii\web\UploadedFile;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
