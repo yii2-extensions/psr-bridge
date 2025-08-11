@@ -7,7 +7,6 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\http\Request;
-use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\provider\ServerParamsPsr7Provider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -148,7 +147,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
-    #[DataProviderExternal(RequestProvider::class, 'remoteHostCases')]
+    #[DataProviderExternal(ServerParamsPsr7Provider::class, 'remoteHostCases')]
     #[Group('remote-host')]
     public function testReturnRemoteHostFromServerParamsCases(mixed $serverValue, string|null $expected): void
     {
@@ -195,7 +194,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
-    #[DataProviderExternal(RequestProvider::class, 'remoteIPCases')]
+    #[DataProviderExternal(ServerParamsPsr7Provider::class, 'remoteIPCases')]
     #[Group('remote-ip')]
     public function testReturnRemoteIPFromServerParamsCases(mixed $serverValue, string|null $expected): void
     {
@@ -239,7 +238,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
-    #[DataProviderExternal(RequestProvider::class, 'serverNameCases')]
+    #[DataProviderExternal(ServerParamsPsr7Provider::class, 'serverNameCases')]
     #[Group('server-name')]
     public function testReturnServerNameFromServerParamsCases(mixed $serverValue, string|null $expected): void
     {
@@ -266,7 +265,7 @@ final class ServerParamsPsr7Test extends TestCase
     /**
      * @phpstan-param array<string, mixed> $serverParams
      */
-    #[DataProviderExternal(RequestProvider::class, 'serverParamCases')]
+    #[DataProviderExternal(ServerParamsPsr7Provider::class, 'serverParamCases')]
     #[Group('server-param')]
     public function testReturnServerParamFromPsr7RequestCases(
         string $paramName,
@@ -389,7 +388,7 @@ final class ServerParamsPsr7Test extends TestCase
     /**
      * @phpstan-param array<string, mixed> $serverParams
      */
-    #[DataProviderExternal(RequestProvider::class, 'serverParamDefaultValueCases')]
+    #[DataProviderExternal(ServerParamsPsr7Provider::class, 'serverParamDefaultValueCases')]
     #[Group('server-param')]
     public function testReturnServerParamWithDefaultFromPsr7RequestCases(
         string $paramName,
