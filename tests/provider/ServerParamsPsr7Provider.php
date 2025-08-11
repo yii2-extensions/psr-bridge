@@ -87,6 +87,14 @@ final class ServerParamsPsr7Provider
                 "'SERVER_PORT' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_PORT' " .
                 'is not a string.',
             ],
+            'Server port as integer when PSR-7 server port.' => [
+                [],
+                [],
+                [],
+                ['SERVER_PORT' => '443'],
+                443,
+                "'getServerPort()' should return integer value when 'SERVER_PORT' is a numeric string.",
+            ],
             'Server port as integer when PSR-7 server port is numeric string' => [
                 [],
                 [],
