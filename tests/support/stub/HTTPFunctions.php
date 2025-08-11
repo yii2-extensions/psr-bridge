@@ -64,6 +64,11 @@ final class HTTPFunctions
     private static int $headersSentLine = 0;
 
     /**
+     * Tracks the number of times {@see http_response_code()} was called.
+     */
+    private static int $httpResponseCodeCalls = 0;
+
+    /**
      * Tracks the HTTP response code.
      */
     private static int $responseCode = 200;
@@ -94,6 +99,11 @@ final class HTTPFunctions
     public static function getHeader(string $header): array
     {
         return self::$headers[strtolower($header)] ?? [];
+    }
+
+    public static function getHttpResponseCodeCalls(): int
+    {
+        return self::$httpResponseCodeCalls;
     }
 
     public static function hasHeader(string $header): bool
@@ -153,6 +163,8 @@ final class HTTPFunctions
 
     public static function http_response_code(int|null $response_code = 0): int
     {
+        self::$httpResponseCodeCalls++;
+
         if ($response_code > 0) {
             self::$responseCode = $response_code;
         }

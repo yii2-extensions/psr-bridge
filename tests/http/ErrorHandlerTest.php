@@ -68,6 +68,34 @@ final class ErrorHandlerTest extends TestCase
         }
     }
 
+    public function testHandleExceptionDoesNotCallHttpResponseCodeInCliSapi(): void
+    {
+        HTTPFunctions::reset();
+
+        $errorHandler = new ErrorHandler();
+        $errorHandler->discardExistingOutput = false;
+
+        $exception = new Exception('Test exception for CLI SAPI');
+
+        $response = $errorHandler->handleException($exception);
+
+        self::assertSame(
+            'cli',
+            HTTPFunctions::php_sapi_name(),
+            "Should return 'cli' as the SAPI name when running in CLI environment.",
+        );
+        self::assertSame(
+            0,
+            HTTPFunctions::getHttpResponseCodeCalls(),
+            "Should not call 'http_response_code()' in CLI SAPI; call count must remain '0'.",
+        );
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Should set status code to '500' for Exception in CLI SAPI.",
+        );
+    }
+
     public function testHandleExceptionResetsState(): void
     {
         $errorHandler = new ErrorHandler();

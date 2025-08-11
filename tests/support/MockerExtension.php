@@ -75,6 +75,13 @@ final class MockerExtension implements Extension
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\http',
+                'name' => 'http_response_code',
+                'function' => static fn(int|null $response_code = null): int => HTTPFunctions::http_response_code(
+                    $response_code,
+                ),
+            ],
+            [
+                'namespace' => 'yii2\extensions\psrbridge\http',
                 'name' => 'php_sapi_name',
                 'function' => static fn(): string => HTTPFunctions::php_sapi_name(),
             ],
