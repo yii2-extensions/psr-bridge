@@ -28,45 +28,41 @@ final class ErrorHandlerTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testClearOutputCleansAllBuffersInNonTestEnvironment(): void
     {
-        @runkit_constant_redefine('YII_ENV_TEST', false);
-
-        $errorHandler = new ErrorHandler();
-
-        $errorHandler->discardExistingOutput = false;
-
         $initialLevel = ob_get_level();
 
-        ob_start();
-        ob_start();
-        ob_start();
+        try {
+            @runkit_constant_redefine('YII_ENV_TEST', false);
 
-        $levelBeforeClear = ob_get_level();
+            $errorHandler = new ErrorHandler();
+            $errorHandler->discardExistingOutput = false;
 
-        self::assertGreaterThan(
-            $initialLevel,
-            $levelBeforeClear,
-            'Should have multiple output buffer levels before clearing.',
-        );
+            ob_start();
+            ob_start();
+            ob_start();
 
-        $errorHandler->clearOutput();
+            $levelBeforeClear = ob_get_level();
+            self::assertGreaterThan(
+                $initialLevel,
+                $levelBeforeClear,
+                'Should have multiple output buffer levels before clearing.',
+            );
 
-        $levelAfterClear = ob_get_level();
+            $errorHandler->clearOutput();
 
-        self::assertSame(
-            0,
-            $levelAfterClear,
-            "In non-test environment, 'clearOutput()' should clean all buffers to level '0', not level '1'.",
-        );
+            $levelAfterClear = ob_get_level();
+            self::assertSame(
+                0,
+                $levelAfterClear,
+                "In non-test environment, 'clearOutput()' should clean all buffers to level '0', not level '1'.",
+            );
+        } finally {
+            // restore PHPUnit expected buffering state
+            while (ob_get_level() < $initialLevel) {
+                ob_start();
+            }
 
-        ob_start();
-
-        self::assertSame(
-            $initialLevel,
-            ob_get_level(),
-            "After test, output buffer level should be restored to initial level {$initialLevel} for PHPUnit.",
-        );
-
-        @runkit_constant_redefine('YII_ENV_TEST', true);
+            @runkit_constant_redefine('YII_ENV_TEST', true);
+        }
     }
 
     public function testHandleExceptionResetsState(): void
