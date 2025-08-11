@@ -64,7 +64,7 @@ final class HTTPFunctions
     private static int $headersSentLine = 0;
 
     /**
-     * Tracks the number of times {@see http_response_code()} was called.
+     * Tracks the number of times {@see \http_response_code()} was called.
      */
     private static int $httpResponseCodeCalls = 0;
 

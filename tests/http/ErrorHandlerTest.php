@@ -68,6 +68,35 @@ final class ErrorHandlerTest extends TestCase
         }
     }
 
+    public function testHandleExceptionCallsHttpResponseCodeInNonCliSapi(): void
+    {
+        HTTPFunctions::set_sapi('apache2handler');
+
+        $errorHandler = new ErrorHandler();
+
+        $errorHandler->discardExistingOutput = false;
+
+        $exception = new Exception('Test exception for non-CLI SAPI');
+
+        $response = $errorHandler->handleException($exception);
+
+        self::assertSame(
+            'apache2handler',
+            HTTPFunctions::php_sapi_name(),
+            "Should return 'apache2handler' as the SAPI name when running in non-CLI environment.",
+        );
+        self::assertSame(
+            1,
+            HTTPFunctions::getHttpResponseCodeCalls(),
+            "Should call 'http_response_code()' exactly once in non-CLI SAPI; call count must be '1'.",
+        );
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Should set status code to '500' for Exception in non-CLI SAPI.",
+        );
+    }
+
     public function testHandleExceptionDoesNotCallHttpResponseCodeInCliSapi(): void
     {
         HTTPFunctions::set_sapi('cli');

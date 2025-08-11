@@ -14,7 +14,6 @@ use yii\web\HttpException;
 use function array_diff_key;
 use function array_flip;
 use function htmlspecialchars;
-use function http_response_code;
 use function ini_set;
 
 /**
