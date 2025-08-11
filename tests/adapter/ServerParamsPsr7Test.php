@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
+use yii2\extensions\psrbridge\tests\provider\ServerParamsPsr7Provider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -493,6 +494,112 @@ final class ServerParamsPsr7Test extends TestCase
             $result1,
             $result2,
             'Independent request instances should return different server names when configured with different values.',
+        );
+    }
+
+    #[Group('server-port')]
+    public function testServerPortAfterRequestReset(): void
+    {
+        $initialPort = 8080;
+        $newPort = 9090;
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $initialPort]),
+        );
+
+        $result1 = $request->getServerPort();
+
+        self::assertSame(
+            $initialPort,
+            $result1,
+            "'SERVER_PORT' should return '{$initialPort}' from initial PSR-7 request.",
+        );
+
+        $request->reset();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $newPort]),
+        );
+
+        $result2 = $request->getServerPort();
+
+        self::assertSame(
+            $newPort,
+            $result2,
+            "'SERVER_PORT' should return '{$newPort}' from new PSR-7 request after 'reset' method.",
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            "'SERVER_PORT' should change after request 'reset' method and new PSR-7 request assignment.",
+        );
+    }
+
+    /**
+     * @phpstan-param array<string, mixed> $requestConfig
+     * @phpstan-param array<string, mixed> $serverGlobal
+     * @phpstan-param array<string, array<int, string>|int|string> $headers
+     * @phpstan-param array<string, mixed> $serverParams
+     */
+    #[DataProviderExternal(ServerParamsPsr7Provider::class, 'serverPortCases')]
+    #[Group('server-port')]
+    public function testServerPortCases(
+        array $requestConfig,
+        array $serverGlobal,
+        array $headers,
+        array $serverParams,
+        int|null $expected,
+        string $message,
+    ): void {
+        $_SERVER = $serverGlobal;
+
+        $request = new Request($requestConfig);
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', $headers, serverParams: $serverParams),
+        );
+
+        self::assertSame($expected, $request->getServerPort(), $message);
+    }
+
+    #[Group('server-port')]
+    public function testServerPortIndependentRequestsWithDifferentPorts(): void
+    {
+        $port1 = 8080;
+        $port2 = 443;
+
+        $request1 = new Request();
+
+        $request1->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test1', serverParams: ['SERVER_PORT' => $port1]),
+        );
+
+        $request2 = new Request();
+
+        $request2->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test2', serverParams: ['SERVER_PORT' => $port2]),
+        );
+
+        $result1 = $request1->getServerPort();
+        $result2 = $request2->getServerPort();
+
+        self::assertSame(
+            $port1,
+            $result1,
+            "First request should return '{$port1}' from its PSR-7 'serverParams'.",
+        );
+        self::assertSame(
+            $port2,
+            $result2,
+            "Second request should return '{$port2}' from its PSR-7 'serverParams'.",
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            "Independent request instances should return different 'SERVER_PORT' when configured with different " .
+            'values.',
         );
     }
 }

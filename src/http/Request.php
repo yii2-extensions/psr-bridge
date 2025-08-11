@@ -17,6 +17,7 @@ use function count;
 use function explode;
 use function filter_var;
 use function is_array;
+use function is_numeric;
 use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
@@ -622,6 +623,56 @@ final class Request extends \yii\web\Request
 
         // fallback to '$_SERVER' for non-PSR7 environments
         return $_SERVER;
+    }
+
+    /**
+     * Retrieves the server port number for the current request, supporting PSR-7 and Yii2 fallback.
+     *
+     * Returns the port number as determined by the PSR-7 adapter if present, checking configured port headers and
+     * falling back to the 'SERVER_PORT' server parameter if no header is found.
+     *
+     * If no adapter is set, this method falls back to the parent implementation.
+     *
+     * This enables seamless access to the server port in both PSR-7 and Yii2 environments, supporting interoperability
+     * with modern HTTP stacks and legacy workflows.
+     *
+     * @return int|null Server port number, or `null` if unavailable.
+     *
+     * Usage example:
+     * ```php
+     * $port = $request->getServerPort();
+     * ```
+     */
+    public function getServerPort(): int|null
+    {
+        if ($this->adapter !== null) {
+            $headers = $this->getHeaders();
+
+            foreach ($this->portHeaders as $portHeader) {
+                if ($headers->has($portHeader)) {
+                    $headerPort = $headers->get($portHeader);
+
+                    if (is_string($headerPort)) {
+                        $ports = explode(',', $headerPort);
+                        $firstPort = trim($ports[0]);
+
+                        if (is_numeric($firstPort)) {
+                            $port = (int) $firstPort;
+
+                            if ($port >= 1 && $port <= 65535) {
+                                return $port;
+                            }
+                        }
+                    }
+                }
+            }
+
+            $port = $this->getServerParam('SERVER_PORT');
+
+            return is_numeric($port) ? (int) $port : null;
+        }
+
+        return parent::getServerPort();
     }
 
     /**
