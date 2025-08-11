@@ -172,7 +172,10 @@ final class ErrorHandler extends \yii\web\ErrorHandler
         $response->data = 'An internal server error occurred.';
 
         if (YII_DEBUG) {
-            $response->data = '<pre>' . htmlspecialchars($msg, ENT_QUOTES, Yii::$app->charset) . '</pre>';
+            $message = htmlspecialchars($msg, ENT_QUOTES, Yii::$app->charset);
+
+            $response->data = "<pre>{$message}</pre>";
+
             $safeServerVars = array_diff_key(
                 $_SERVER,
                 array_flip(

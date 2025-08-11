@@ -884,7 +884,12 @@ final class StatelessApplicationTest extends TestCase
         self::assertStringNotContainsString(
             '<pre>',
             $body,
-            'RAW format response should not contain HTML tags.',
+            "RAW format response should not contain HTML tag '<pre>'.",
+        );
+        self::assertStringNotContainsString(
+            '</pre>',
+            $body,
+            "RAW format response should not contain HTML tag '</pre>'.",
         );
     }
 
