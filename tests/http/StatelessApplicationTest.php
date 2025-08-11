@@ -10,7 +10,8 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtens
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use stdClass;
 use Yii;
-use yii\base\{Exception, InvalidConfigException, Security};
+use yii\base\Exception;
+use yii\base\{InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
@@ -741,8 +742,6 @@ final class StatelessApplicationTest extends TestCase
 
         $initialBufferLevel = ob_get_level();
 
-        HTTPFunctions::set_sapi('apache2handler');
-
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/trigger-exception',
@@ -795,8 +794,6 @@ final class StatelessApplicationTest extends TestCase
     {
         @runkit_constant_redefine('YII_DEBUG', false);
 
-        HTTPFunctions::set_sapi('apache2handler');
-
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/trigger-exception',
@@ -844,8 +841,6 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testRenderExceptionWithRawFormat(): void
     {
-        HTTPFunctions::set_sapi('apache2handler');
-
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/trigger-exception',
@@ -889,7 +884,12 @@ final class StatelessApplicationTest extends TestCase
         self::assertStringNotContainsString(
             '<pre>',
             $body,
-            'RAW format response should not contain HTML tags.',
+            "RAW format response should not contain HTML tag '<pre>'.",
+        );
+        self::assertStringNotContainsString(
+            '</pre>',
+            $body,
+            "RAW format response should not contain HTML tag '</pre>'.",
         );
     }
 
@@ -1086,9 +1086,9 @@ final class StatelessApplicationTest extends TestCase
         $response = $app->handle($request);
 
         self::assertSame(
-            200,
+            500,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' when 'ErrorHandler' is misconfigured and a nonexistent action is " .
+            "Response 'status code' should be '500' when 'ErrorHandler' is misconfigured and a nonexistent action is " .
             "requested in 'StatelessApplication'.",
         );
         self::assertSame(
