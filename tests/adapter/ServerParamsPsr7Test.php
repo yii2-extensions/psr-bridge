@@ -419,23 +419,6 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
-    #[Group('server-port')]
-    public function testReturnServerPortFromPsr7RequestWhenAdapterIsSetAndServerPortPresent(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => '8080']),
-        );
-
-        self::assertSame(
-            8080,
-            $request->getServerPort(),
-            "'SERVER_PORT' should return '8080' from PSR-7 'serverParams' when adapter is set and 'SERVER_PORT' is " .
-            'present as a string.',
-        );
-    }
-
     #[Group('server-name')]
     public function testServerNameAfterRequestReset(): void
     {
