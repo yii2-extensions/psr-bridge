@@ -70,9 +70,8 @@ final class ErrorHandlerTest extends TestCase
 
     public function testHandleExceptionDoesNotCallHttpResponseCodeInCliSapi(): void
     {
-        HTTPFunctions::reset();
-
         $errorHandler = new ErrorHandler();
+
         $errorHandler->discardExistingOutput = false;
 
         $exception = new Exception('Test exception for CLI SAPI');

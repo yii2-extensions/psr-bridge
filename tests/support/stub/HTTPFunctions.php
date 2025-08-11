@@ -184,6 +184,7 @@ final class HTTPFunctions
         self::$headersSent = false;
         self::$headersSentFile = '';
         self::$headersSentLine = 0;
+        self::$httpResponseCodeCalls = 0;
         self::$responseCode = 200;
         self::$sapi = 'cli';
         self::$streamGetContentsShouldFail = false;
