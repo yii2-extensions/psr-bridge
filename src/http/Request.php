@@ -646,9 +646,11 @@ final class Request extends \yii\web\Request
     public function getServerPort(): int|null
     {
         if ($this->adapter !== null) {
+            $headers = $this->getHeaders();
+
             foreach ($this->portHeaders as $portHeader) {
-                if ($this->headers->has($portHeader)) {
-                    $port = $this->headers->get($portHeader);
+                if ($headers->has($portHeader)) {
+                    $port = $headers->get($portHeader);
 
                     if (is_numeric($port)) {
                         return (int) $port;
