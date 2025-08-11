@@ -13,6 +13,8 @@ use yii2\extensions\psrbridge\http\{ErrorHandler, Response};
 use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function ob_get_level;
+use function ob_start;
 use function str_repeat;
 
 #[Group('http')]
@@ -34,13 +36,13 @@ final class ErrorHandlerTest extends TestCase
             @runkit_constant_redefine('YII_ENV_TEST', false);
 
             $errorHandler = new ErrorHandler();
-            $errorHandler->discardExistingOutput = false;
 
             ob_start();
             ob_start();
             ob_start();
 
             $levelBeforeClear = ob_get_level();
+
             self::assertGreaterThan(
                 $initialLevel,
                 $levelBeforeClear,
@@ -50,6 +52,7 @@ final class ErrorHandlerTest extends TestCase
             $errorHandler->clearOutput();
 
             $levelAfterClear = ob_get_level();
+
             self::assertSame(
                 0,
                 $levelAfterClear,
