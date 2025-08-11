@@ -69,11 +69,6 @@ final class HTTPFunctions
     private static int $responseCode = 200;
 
     /**
-     * Tracks the current SAPI name for simulation.
-     */
-    private static string $sapi = 'cli';
-
-    /**
      * Controls whether stream_get_contents should fail.
      */
     private static bool $streamGetContentsShouldFail = false;
@@ -160,11 +155,6 @@ final class HTTPFunctions
         return self::$responseCode;
     }
 
-    public static function php_sapi_name(): string
-    {
-        return self::$sapi;
-    }
-
     public static function reset(): void
     {
         self::$flushedTimes = 0;
@@ -173,7 +163,6 @@ final class HTTPFunctions
         self::$headersSentFile = '';
         self::$headersSentLine = 0;
         self::$responseCode = 200;
-        self::$sapi = 'cli';
         self::$streamGetContentsShouldFail = false;
     }
 
@@ -182,11 +171,6 @@ final class HTTPFunctions
         self::$headersSent = $value;
         self::$headersSentFile = $file;
         self::$headersSentLine = $line;
-    }
-
-    public static function set_sapi(string $sapi): void
-    {
-        self::$sapi = $sapi;
     }
 
     public static function set_stream_get_contents_should_fail(bool $shouldFail = true): void

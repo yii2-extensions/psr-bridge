@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
-use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, TestWith};
+use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use RuntimeException;
 use Throwable;
 use yii\base\{Exception, UserException};
@@ -145,36 +145,6 @@ final class ErrorHandlerTest extends TestCase
         self::assertNotEmpty(
             $response->data,
             'Should set response data with exception information.',
-        );
-    }
-
-    #[TestWith(['apache2handler'])]
-    #[TestWith(['cli'])]
-    public function testHandleExceptionWithHttpException(string $sapi): void
-    {
-        HTTPFunctions::set_sapi($sapi);
-
-        $errorHandler = new ErrorHandler();
-
-        $errorHandler->discardExistingOutput = false;
-
-        $exception = new HttpException(404, 'Page not found');
-
-        $response = $errorHandler->handleException($exception);
-
-        self::assertSame(
-            404,
-            $response->getStatusCode(),
-            "Should preserve HTTP status code from 'HttpException'.",
-        );
-        self::assertNotEmpty(
-            $response->data,
-            'Should set response data for HTTP exception.',
-        );
-        self::assertSame(
-            $sapi,
-            HTTPFunctions::php_sapi_name(),
-            "Should return correct SAPI name '{$sapi}' for 'HttpException'.",
         );
     }
 

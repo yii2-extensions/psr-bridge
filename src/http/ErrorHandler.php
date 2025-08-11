@@ -6,15 +6,12 @@ namespace yii2\extensions\psrbridge\http;
 
 use Throwable;
 use Yii;
-use yii\base\{InvalidRouteException, UserException};
-use yii\console\Exception;
+use yii\base\{Exception, InvalidRouteException, UserException};
 use yii\helpers\VarDumper;
-use yii\web\HttpException;
 
 use function array_diff_key;
 use function array_flip;
 use function htmlspecialchars;
-use function http_response_code;
 use function ini_set;
 
 /**
@@ -119,16 +116,6 @@ final class ErrorHandler extends \yii\web\ErrorHandler
 
         $this->unregister();
 
-        if (php_sapi_name() !== 'cli') {
-            $statusCode = 500;
-
-            if ($exception instanceof HttpException) {
-                $statusCode = $exception->statusCode;
-            }
-
-            http_response_code($statusCode);
-        }
-
         try {
             $this->logException($exception);
 
@@ -175,7 +162,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
      */
     protected function handleFallbackExceptionMessage($exception, $previousException): Response
     {
-        $response = $this->createErrorResponse();
+        $response = $this->createErrorResponse()->setStatusCode(500);
 
         $msg = "An Error occurred while handling another error:\n";
         $msg .= $exception;
