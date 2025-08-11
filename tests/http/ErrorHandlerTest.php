@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
-use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\TestWith;
+use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, TestWith};
 use RuntimeException;
 use Throwable;
 use yii\base\{Exception, UserException};
@@ -24,6 +23,50 @@ final class ErrorHandlerTest extends TestCase
         HTTPFunctions::reset();
 
         parent::tearDown();
+    }
+
+    #[RequiresPhpExtension('runkit7')]
+    public function testClearOutputCleansAllBuffersInNonTestEnvironment(): void
+    {
+        @runkit_constant_redefine('YII_ENV_TEST', false);
+
+        $errorHandler = new ErrorHandler();
+
+        $errorHandler->discardExistingOutput = false;
+
+        $initialLevel = ob_get_level();
+
+        ob_start();
+        ob_start();
+        ob_start();
+
+        $levelBeforeClear = ob_get_level();
+
+        self::assertGreaterThan(
+            $initialLevel,
+            $levelBeforeClear,
+            'Should have multiple output buffer levels before clearing.',
+        );
+
+        $errorHandler->clearOutput();
+
+        $levelAfterClear = ob_get_level();
+
+        self::assertSame(
+            0,
+            $levelAfterClear,
+            "In non-test environment, 'clearOutput()' should clean all buffers to level '0', not level '1'.",
+        );
+
+        ob_start();
+
+        self::assertSame(
+            $initialLevel,
+            ob_get_level(),
+            "After test, output buffer level should be restored to initial level {$initialLevel} for PHPUnit.",
+        );
+
+        @runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
     public function testHandleExceptionResetsState(): void
