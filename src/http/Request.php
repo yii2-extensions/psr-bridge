@@ -650,10 +650,19 @@ final class Request extends \yii\web\Request
 
             foreach ($this->portHeaders as $portHeader) {
                 if ($headers->has($portHeader)) {
-                    $port = $headers->get($portHeader);
+                    $headerPort = $headers->get($portHeader);
 
-                    if (is_numeric($port)) {
-                        return (int) $port;
+                    if (is_string($headerPort)) {
+                        $ports = explode(',', $headerPort);
+                        $firstPort = trim($ports[0]);
+
+                        if (is_numeric($firstPort)) {
+                            $port = (int) $firstPort;
+
+                            if ($port >= 1 && $port <= 65535) {
+                                return $port;
+                            }
+                        }
                     }
                 }
             }

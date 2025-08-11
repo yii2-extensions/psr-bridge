@@ -567,6 +567,38 @@ final class ServerParamsPsr7Test extends TestCase
     }
 
     #[Group('server-port')]
+    public function testReturnServerPortFromCommaSeparatedForwardedHeader(): void
+    {
+        $_SERVER = ['REMOTE_ADDR' => '127.0.0.1'];
+
+        $request = new Request(
+            [
+                'portHeaders' => ['X-Forwarded-Port'],
+                'secureHeaders' => ['X-Forwarded-Port'],
+                'trustedHosts' => ['127.0.0.1'],
+            ],
+        );
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                '/test',
+                ['X-Forwarded-Port' => '9443, 7443'],
+                serverParams: [
+                    'REMOTE_ADDR' => '127.0.0.1',
+                    'SERVER_PORT' => '80',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            9443,
+            $request->getServerPort(),
+            "'getServerPort()' should return the first port from a comma-separated 'X-Forwarded-Port' header.",
+        );
+    }
+
+    #[Group('server-port')]
     public function testReturnServerPortFromFirstValidForwardedHeaderWhenMultipleConfigured(): void
     {
         $_SERVER = ['REMOTE_ADDR' => '127.0.0.1'];
