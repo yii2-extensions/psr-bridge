@@ -49,6 +49,7 @@ final class ServerParamsPsr7Test extends TestCase
             "'getServerPort()' should ignore forwarded port header from untrusted hosts and use 'SERVER_PORT'.",
         );
     }
+
     #[Group('remote-host')]
     public function testIndependentRequestsWithDifferentRemoteHosts(): void
     {
