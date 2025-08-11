@@ -17,6 +17,38 @@ use function var_export;
 #[Group('adapter')]
 final class ServerParamsPsr7Test extends TestCase
 {
+    #[Group('server-port')]
+    public function testIgnoreForwardedPortWhenRequestFromUntrustedHost(): void
+    {
+        $_SERVER = ['REMOTE_ADDR' => '192.168.1.100']; // untrusted host
+
+        $request = new Request(
+            [
+                'portHeaders' => ['X-Forwarded-Port'],
+                'secureHeaders' => ['X-Forwarded-Port'],
+                'trustedHosts' => ['10.0.0.0/24'], // only trust this subnet
+            ],
+        );
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                '/test',
+                ['X-Forwarded-Port' => '443'], // should be filtered out
+                serverParams: [
+                    'REMOTE_ADDR' => '192.168.1.100',
+                    'SERVER_PORT' => '8080',
+                ],
+            ),
+        );
+
+        // when headers are filtered due to untrusted host, fallback to 'SERVER_PORT'
+        self::assertSame(
+            8080,
+            $request->getServerPort(),
+            "'getServerPort()' should ignore forwarded port header from untrusted hosts and use 'SERVER_PORT'.",
+        );
+    }
     #[Group('remote-host')]
     public function testIndependentRequestsWithDifferentRemoteHosts(): void
     {
@@ -144,6 +176,101 @@ final class ServerParamsPsr7Test extends TestCase
         self::assertEmpty(
             $request->getServerParams(),
             'Server parameters should be an empty array when using a PSR-7 request, ignoring global $_SERVER.',
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnForwardedPortWhenRequestFromTrustedProxy(): void
+    {
+        $_SERVER = ['REMOTE_ADDR' => '10.0.0.1']; // trusted proxy
+
+        $request = new Request(
+            [
+                'portHeaders' => ['X-Forwarded-Port'],
+                'trustedHosts' => ['10.0.0.0/24'], // trust this subnet
+            ],
+        );
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                '/test',
+                ['X-Forwarded-Port' => '443'],
+                serverParams: [
+                    'SERVER_PORT' => '8080',
+                    'REMOTE_ADDR' => '10.0.0.1',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            443,
+            $request->getServerPort(),
+            "'getServerPort()' should return forwarded port when request comes from trusted proxy.",
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnNullWhenPsr7RequestServerPortIsEmptyArray(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => []]),
+        );
+
+        self::assertNull(
+            $request->getServerPort(),
+            "'SERVER_PORT' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_PORT' is " .
+            'an empty array.',
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnNullWhenPsr7RequestServerPortIsNotPresent(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['HTTP_HOST' => 'example.com']),
+        );
+
+        self::assertNull(
+            $request->getServerPort(),
+            "'SERVER_PORT' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_PORT' is " .
+            'not present.',
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnNullWhenPsr7RequestServerPortIsNotString(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => ['invalid' => 'array']]),
+        );
+
+        self::assertNull(
+            $request->getServerPort(),
+            "'SERVER_PORT' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_PORT' is " .
+            'not a string.',
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnNullWhenPsr7RequestServerPortIsNull(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => null]),
+        );
+
+        self::assertNull(
+            $request->getServerPort(),
+            "'SERVER_PORT' should return 'null' from PSR-7 'serverParams' when adapter is set but 'SERVER_PORT' is " .
+            "'null'.",
         );
     }
 
@@ -418,6 +545,148 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    #[Group('server-port')]
+    public function testReturnServerPortAsIntegerWhenPsr7ServerPortIsNumericString(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => '443']),
+        );
+
+        self::assertSame(
+            443,
+            $request->getServerPort(),
+            "'getServerPort()' should return integer value when 'SERVER_PORT' is a numeric string.",
+        );
+        self::assertIsInt(
+            $request->getServerPort(),
+            "'getServerPort()' should return an integer type, not a string.",
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnServerPortFromFirstValidForwardedHeaderWhenMultipleConfigured(): void
+    {
+        $_SERVER = ['REMOTE_ADDR' => '127.0.0.1'];
+
+        $request = new Request(
+            [
+                'portHeaders' => [
+                    'X-Custom-Port',
+                    'X-Forwarded-Port',
+                    'X-Real-Port',
+                ],
+                'secureHeaders' => [
+                    'X-Custom-Port',
+                    'X-Forwarded-For',
+                    'X-Forwarded-Host',
+                    'X-Forwarded-Port',
+                    'X-Forwarded-Proto',
+                    'X-Real-Port',
+                ],
+                'trustedHosts' => ['127.0.0.1'],
+            ],
+        );
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                '/test',
+                [
+                    'X-Custom-Port' => '',
+                    'X-Forwarded-Port' => '9443',
+                    'X-Real-Port' => '7443',
+                ],
+                serverParams: [
+                    'REMOTE_ADDR' => '127.0.0.1',
+                    'SERVER_PORT' => '80',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            9443,
+            $request->getServerPort(),
+            "'getServerPort()' should return the port from the first valid forwarded header in the configured list.",
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnServerPortFromForwardedHeaderWhenAdapterIsSet(): void
+    {
+        $_SERVER = ['REMOTE_ADDR' => '127.0.0.1'];
+
+        $request = new Request(
+            [
+                'portHeaders' => ['X-Forwarded-Port'],
+                'trustedHosts' => ['127.0.0.1'],
+            ],
+        );
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                '/test',
+                ['X-Forwarded-Port' => '443'],
+                serverParams: [
+                    'REMOTE_ADDR' => '127.0.0.1',
+                    'SERVER_PORT' => '8080',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            443,
+            $request->getServerPort(),
+            "'getServerPort()' should return the port from 'X-Forwarded-Port' header when present, ignoring " .
+            "'SERVER_PORT' from PSR-7 'serverParams'.",
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnServerPortFromPsr7RequestWhenAdapterIsSetAndServerPortPresent(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => '8080']),
+        );
+
+        self::assertSame(
+            8080,
+            $request->getServerPort(),
+            "'SERVER_PORT' should return '8080' from PSR-7 'serverParams' when adapter is set and 'SERVER_PORT' is " .
+            'present as a string.',
+        );
+    }
+
+    #[Group('server-port')]
+    public function testReturnServerPortWhenAllForwardedHeadersAreNullOrMissing(): void
+    {
+        $request = new Request();
+
+        $request->portHeaders = [
+            'X-Custom-Port',
+            'X-Forwarded-Port',
+        ];
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'GET',
+                '/test',
+                ['X-Custom-Port' => ''], // first header is empty string
+                serverParams: ['SERVER_PORT' => '3000'],
+            ),
+        );
+
+        self::assertSame(
+            3000,
+            $request->getServerPort(),
+            "'getServerPort()' should fallback to 'SERVER_PORT' when all forwarded headers are 'null' or missing.",
+        );
+    }
+
     #[Group('server-name')]
     public function testServerNameAfterRequestReset(): void
     {
@@ -493,6 +762,85 @@ final class ServerParamsPsr7Test extends TestCase
             $result1,
             $result2,
             'Independent request instances should return different server names when configured with different values.',
+        );
+    }
+
+    #[Group('server-port')]
+    public function testServerPortAfterRequestReset(): void
+    {
+        $initialPort = 8080;
+        $newPort = 9090;
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $initialPort]),
+        );
+
+        $result1 = $request->getServerPort();
+
+        self::assertSame(
+            $initialPort,
+            $result1,
+            "'SERVER_PORT' should return '{$initialPort}' from initial PSR-7 request.",
+        );
+
+        $request->reset();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $newPort]),
+        );
+
+        $result2 = $request->getServerPort();
+
+        self::assertSame(
+            $newPort,
+            $result2,
+            "'SERVER_PORT' should return '{$newPort}' from new PSR-7 request after 'reset' method.",
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            "'SERVER_PORT' should change after request 'reset' method and new PSR-7 request assignment.",
+        );
+    }
+
+    #[Group('server-port')]
+    public function testServerPortIndependentRequestsWithDifferentPorts(): void
+    {
+        $port1 = 8080;
+        $port2 = 443;
+
+        $request1 = new Request();
+
+        $request1->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test1', serverParams: ['SERVER_PORT' => $port1]),
+        );
+
+        $request2 = new Request();
+
+        $request2->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/test2', serverParams: ['SERVER_PORT' => $port2]),
+        );
+
+        $result1 = $request1->getServerPort();
+        $result2 = $request2->getServerPort();
+
+        self::assertSame(
+            $port1,
+            $result1,
+            "First request should return '{$port1}' from its PSR-7 'serverParams'.",
+        );
+        self::assertSame(
+            $port2,
+            $result2,
+            "Second request should return '{$port2}' from its PSR-7 'serverParams'.",
+        );
+        self::assertNotSame(
+            $result1,
+            $result2,
+            "Independent request instances should return different 'SERVER_PORT' when configured with different " .
+            'values.',
         );
     }
 }
