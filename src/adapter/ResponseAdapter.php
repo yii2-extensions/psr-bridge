@@ -7,7 +7,6 @@ namespace yii2\extensions\psrbridge\adapter;
 use DateTimeInterface;
 use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface, StreamInterface};
 use yii\base\{InvalidConfigException, Security};
-use yii\helpers\Json;
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
@@ -22,6 +21,7 @@ use function is_numeric;
 use function is_resource;
 use function is_string;
 use function max;
+use function serialize;
 use function strtotime;
 use function time;
 use function urlencode;
@@ -280,7 +280,7 @@ final class ResponseAdapter
             ($expire === 0 || $expire >= time())
         ) {
             $value = $this->security->hashData(
-                Json::encode([$cookie->name, $cookie->value]),
+                serialize([$cookie->name, $cookie->value]),
                 $this->response->cookieValidationKey,
             );
         }
