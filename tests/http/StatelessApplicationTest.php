@@ -39,7 +39,6 @@ use function memory_get_usage;
 use function ob_get_level;
 use function ob_start;
 use function preg_quote;
-use function serialize;
 use function session_name;
 use function sprintf;
 use function str_starts_with;
@@ -1742,7 +1741,7 @@ final class StatelessApplicationTest extends TestCase
                 ->withCookieParams(
                     [
                         'validated_session' => $this->signCookie('validated_session', 'secure_session_value')],
-                    ),
+                ),
         );
 
         self::assertSame(
