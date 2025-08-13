@@ -39,6 +39,7 @@ use function memory_get_usage;
 use function ob_get_level;
 use function ob_start;
 use function preg_quote;
+use function serialize;
 use function session_name;
 use function sprintf;
 use function str_starts_with;
@@ -1373,7 +1374,7 @@ final class StatelessApplicationTest extends TestCase
 
         foreach ($cookies as $name => $value) {
             $data = [$name, $value];
-            $signedCookies[$name] = $security->hashData(Json::encode($data), self::COOKIE_VALIDATION_KEY);
+            $signedCookies[$name] = $security->hashData(serialize($data), self::COOKIE_VALIDATION_KEY);
         }
 
         $app = $this->statelessApplication(
@@ -1690,7 +1691,7 @@ final class StatelessApplicationTest extends TestCase
         $security = new Security();
 
         $signedCookieValue = $security->hashData(
-            Json::encode(['valid_session', 'abc123session']),
+            serialize(['valid_session', 'abc123session']),
             self::COOKIE_VALIDATION_KEY,
         );
 
@@ -1738,7 +1739,7 @@ final class StatelessApplicationTest extends TestCase
         $security = new Security();
 
         $signedCookieValue = $security->hashData(
-            Json::encode(['validated_session', 'secure_session_value']),
+            serialize(['validated_session', 'secure_session_value']),
             self::COOKIE_VALIDATION_KEY,
         );
 
