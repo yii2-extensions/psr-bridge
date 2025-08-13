@@ -275,10 +275,12 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
             $this->state = self::STATE_END;
 
-            return $this->terminate($response);
+            $psrResponse = $this->terminate($response);
         } catch (Throwable $e) {
-            return $this->terminate($this->handleError($e));
+            $psrResponse = $this->terminate($this->handleError($e));
         }
+
+        return $psrResponse;
     }
 
     /**
@@ -373,7 +375,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      * Resets the StatelessApplication state and prepares the Yii2 environment for handling a PSR-7 request.
      *
      * Performs a full reinitialization of the application state, including event tracking, error handler cleanup,
-     * session management, and PSR-7 request injection.
+     * request adapter reset, session management, and PSR-7 request injection.
      *
      * This method ensures that the application is ready to process a new stateless request in worker or SAPI
      * environments, maintaining strict type safety and compatibility with Yii2 core components.
@@ -406,6 +408,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->requestedParams = [];
 
         $this->errorHandler->setResponse($this->response);
+        $this->request->reset();
         $this->request->setPsr7Request($request);
 
         $this->session->close();
@@ -423,7 +426,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     /**
      * Finalizes the application lifecycle and converts the Yii2 Response to a PSR-7 ResponseInterface.
      *
-     * Cleans up registered events, resets uploaded files, flushes the logger, and resets the request state.
+     * Cleans up registered events, resets uploaded files, flushes the logger.
      *
      * This method ensures that all application resources are released and the response is converted to a PSR-7
      * ResponseInterface for interoperability with PSR-7 compatible HTTP stacks.
@@ -442,8 +445,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         UploadedFile::reset();
 
         Yii::getLogger()->flush(true);
-
-        $this->request->reset();
 
         return $response->getPsr7Response();
     }
