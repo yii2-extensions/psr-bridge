@@ -8,6 +8,7 @@ use HttpSoft\Message\{ResponseFactory, StreamFactory};
 use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use RuntimeException;
 use Yii;
+use yii\base\Security;
 use yii\caching\FileCache;
 use yii\helpers\ArrayHelper;
 use yii\log\FileTarget;
@@ -103,6 +104,13 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $this->tmpFiles[] = $tmpFile;
 
         return $tmpFile;
+    }
+
+    protected function signCookie(string $name, string $value): string
+    {
+        $security = new Security();
+
+        return $security->hashData(serialize([$name, $value]), self::COOKIE_VALIDATION_KEY);
     }
 
     /**
