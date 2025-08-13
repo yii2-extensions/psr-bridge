@@ -59,13 +59,13 @@ final class ResponseAdapter
      * @param Response $response Yii2 Response instance to adapt.
      * @param ResponseFactoryInterface $responseFactory PSR-7 ResponseFactoryInterface instance for response creation.
      * @param StreamFactoryInterface $streamFactory PSR-7 StreamFactoryInterface instance for body stream creation.
-     * @param Security $security Optional Security component for cookie validation. Defaults to a new instance.
+     * @param Security $security Optional Security component for cookie validation.
      */
     public function __construct(
         private readonly Response $response,
         private readonly ResponseFactoryInterface $responseFactory,
         private readonly StreamFactoryInterface $streamFactory,
-        private readonly Security $security = new Security(),
+        private readonly Security $security,
     ) {}
 
     /**

@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Group;
 use RuntimeException;
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidConfigException, Security};
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 use yii2\extensions\psrbridge\exception\Message;
@@ -54,6 +54,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -90,6 +91,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -139,6 +141,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -186,6 +189,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -238,6 +242,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -295,6 +300,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -339,6 +345,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -390,6 +397,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -477,6 +485,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -547,6 +556,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -604,6 +614,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -660,6 +671,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -737,6 +749,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -814,6 +827,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -865,6 +879,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -917,6 +932,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -965,6 +981,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1016,6 +1033,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1092,6 +1110,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1154,6 +1173,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1208,6 +1228,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1260,6 +1281,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1309,6 +1331,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1364,6 +1387,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1417,6 +1441,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1478,6 +1503,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1565,6 +1591,7 @@ final class ResponseAdapterTest extends TestCase
             $response1,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response1 = $adapter1->toPsr7();
@@ -1576,6 +1603,7 @@ final class ResponseAdapterTest extends TestCase
             $response2,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response2 = $adapter2->toPsr7();
@@ -1637,6 +1665,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1714,6 +1743,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1754,6 +1784,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
@@ -1781,6 +1812,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         HTTPFunctions::set_stream_get_contents_should_fail();
@@ -1803,6 +1835,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
@@ -1834,6 +1867,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
@@ -1859,6 +1893,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
@@ -1892,6 +1927,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
