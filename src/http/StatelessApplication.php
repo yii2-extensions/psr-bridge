@@ -21,7 +21,6 @@ use function is_array;
 use function memory_get_usage;
 use function method_exists;
 use function microtime;
-use function runkit_constant_redefine;
 use function sscanf;
 use function strtoupper;
 
@@ -390,7 +389,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     {
         // override 'YII_BEGIN_TIME' if possible for yii2-debug and other modules that depend on it
         if (function_exists('runkit_constant_redefine')) {
-            @runkit_constant_redefine('YII_BEGIN_TIME', microtime(true));
+            @\runkit_constant_redefine('YII_BEGIN_TIME', microtime(true));
         }
 
         $this->startEventTracking();
@@ -407,9 +406,16 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->requestedAction = null;
         $this->requestedParams = [];
 
+        // re-register error handler to reset its state
         $this->errorHandler->setResponse($this->response);
+
+        // reset and inject the PSR-7 request into the Yii2 Request adapter
         $this->request->reset();
         $this->request->setPsr7Request($request);
+
+        // synchronize cookie validation settings between request and response
+        $this->response->cookieValidationKey = $this->request->cookieValidationKey;
+        $this->response->enableCookieValidation = $this->request->enableCookieValidation;
 
         $this->session->close();
         $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';

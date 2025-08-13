@@ -9,13 +9,13 @@ use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\NotInstantiableException;
+use yii\helpers\Json;
 use yii\web\{Cookie, Session};
 use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function count;
-use function json_decode;
 use function str_contains;
 use function time;
 use function urlencode;
@@ -50,7 +50,12 @@ final class ResponseTest extends TestCase
         $eventsBefore = [];
         $eventsAfter = [];
 
-        $response = new Response();
+        $response = new Response(
+            [
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->content = 'Test content with session';
 
@@ -378,7 +383,12 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $response = new Response();
+        $response = new Response(
+            [
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->content = 'Test with default session params';
 
@@ -459,7 +469,7 @@ final class ResponseTest extends TestCase
 
         $psr7Response = $response->getPsr7Response();
         $body = (string) $psr7Response->getBody();
-        $decodedData = json_decode($body, true);
+        $decodedData = Json::decode($body);
 
         self::assertIsArray(
             $decodedData,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\http;
 
-use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
+use Psr\Http\Message\ResponseInterface;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\NotInstantiableException;
@@ -38,6 +38,18 @@ use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 final class Response extends \yii\web\Response
 {
     /**
+     * @var string A secret key used for cookie validation. This property must be set if {@see enableCookieValidation}
+     * is 'true'.
+     */
+    public string $cookieValidationKey = '';
+
+    /**
+     * @var bool Whether to enable cookie validation. If 'true', the response will validate cookies using the
+     * {@see cookieValidationKey}. This is recommended for security, especially when handling session cookies.
+     */
+    public bool $enableCookieValidation = false;
+
+    /**
      * Converts the Yii2 Response component to a PSR-7 ResponseInterface instance.
      *
      * Delegates the conversion process to a {@see ResponseAdapter}, triggering Yii2 Response lifecycle events and
@@ -63,10 +75,14 @@ final class Response extends \yii\web\Response
      */
     public function getPsr7Response(): ResponseInterface
     {
-        $adapter = new ResponseAdapter(
-            $this,
-            Yii::$container->get(ResponseFactoryInterface::class),
-            Yii::$container->get(StreamFactoryInterface::class),
+        $adapter = Yii::$container->get(
+            ResponseAdapter::class,
+            config: [
+                '__construct()' => [
+                    'response' => $this,
+                    'security' => Yii::$app->getSecurity(),
+                ],
+            ],
         );
 
         $this->trigger(self::EVENT_BEFORE_SEND);
