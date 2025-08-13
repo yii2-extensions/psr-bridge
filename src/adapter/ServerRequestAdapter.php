@@ -421,7 +421,7 @@ final class ServerRequestAdapter
                 $data = Yii::$app->getSecurity()->validateData($value, $validationKey);
 
                 if (is_string($data)) {
-                    $data = Json::decode($data);
+                    $data = unserialize($data);
                 }
 
                 if (is_array($data) && isset($data[0], $data[1]) && $data[0] === $name) {
