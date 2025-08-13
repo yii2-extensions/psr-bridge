@@ -7,7 +7,6 @@ namespace yii2\extensions\psrbridge\adapter;
 use Psr\Http\Message\ServerRequestInterface;
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\helpers\Json;
 use yii\web\{Cookie, HeaderCollection};
 use yii2\extensions\psrbridge\exception\Message;
 
@@ -16,6 +15,7 @@ use function in_array;
 use function is_array;
 use function is_string;
 use function strtoupper;
+use function unserialize;
 
 /**
  * Adapter for PSR-7 ServerRequestInterface to Yii2 Request component.
@@ -421,7 +421,7 @@ final class ServerRequestAdapter
                 $data = Yii::$app->getSecurity()->validateData($value, $validationKey);
 
                 if (is_string($data)) {
-                    $data = unserialize($data);
+                    $data = @unserialize($data);
                 }
 
                 if (is_array($data) && isset($data[0], $data[1]) && $data[0] === $name) {
