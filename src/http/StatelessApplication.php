@@ -275,10 +275,12 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
             $this->state = self::STATE_END;
 
-            return $this->terminate($response);
+            $response = $this->terminate($response);
         } catch (Throwable $e) {
-            return $this->terminate($this->handleError($e));
+            $response = $this->terminate($this->handleError($e));
         }
+
+        return $response;
     }
 
     /**
@@ -406,6 +408,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->requestedParams = [];
 
         $this->errorHandler->setResponse($this->response);
+        $this->request->reset();
         $this->request->setPsr7Request($request);
 
         $this->session->close();
@@ -442,8 +445,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         UploadedFile::reset();
 
         Yii::getLogger()->flush(true);
-
-        $this->request->reset();
 
         return $response->getPsr7Response();
     }
