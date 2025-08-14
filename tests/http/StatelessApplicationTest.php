@@ -956,7 +956,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertNotSame(
             $response1,
             $response2,
-            'Response component should be a different instance for each request, confirming stateless behavior in ' .
+            'PSR-7 Response should be a different instance for each request, confirming stateless behavior in ' .
             "'StatelessApplication'.",
         );
 
@@ -1007,7 +1007,10 @@ final class StatelessApplicationTest extends TestCase
         );
 
         // verify response headers are preserved correctly across adapter operations
-        $cookieHeaders = $response3->getHeader('Set-Cookie');
+        $cookieHeaders = array_filter(
+            $response3->getHeader('Set-Cookie'),
+            static fn (string $header): bool => str_starts_with($header, $app->session->getName()) === false,
+        );
 
         $hasCookieHeader = false;
 
