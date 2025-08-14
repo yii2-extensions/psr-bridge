@@ -954,9 +954,9 @@ final class StatelessApplicationTest extends TestCase
         $bridgeResponse2 = $app->response;
 
         self::assertNotSame(
-            $response1,
-            $response2,
-            'PSR-7 Response should be a different instance for each request, confirming stateless behavior in ' .
+            $bridgeResponse1,
+            $bridgeResponse2,
+            'Response component should be a different instance for each request, confirming stateless behavior in ' .
             "'StatelessApplication'.",
         );
 
@@ -965,6 +965,12 @@ final class StatelessApplicationTest extends TestCase
         $adapter3 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
 
         $bridgeResponse2->reset();
+
+        // after reset, adapter cache should be cleared
+        self::assertNull(
+            Assert::inaccessibleProperty($bridgeResponse2, 'adapter'),
+            "'reset()' should nullify the cached adapter before the next 'getPsr7Response()' call.",
+        );
 
         $bridgeResponse2->getPsr7Response();
         $adapter4 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
@@ -1024,7 +1030,7 @@ final class StatelessApplicationTest extends TestCase
 
         self::assertTrue(
             $hasCookieHeader,
-            "PSR-7 response should contain proper 'Set-Cookie' headers from Response component, confirming correct " .
+            "PSR-7 response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
             "adapter behavior in 'StatelessApplication'.",
         );
     }
