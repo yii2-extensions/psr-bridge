@@ -21,6 +21,7 @@ use function is_numeric;
 use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
+use function microtime;
 use function strncasecmp;
 
 /**
@@ -72,6 +73,23 @@ final class Request extends \yii\web\Request
      * Yii2 Request component.
      */
     private ServerRequestAdapter|null $adapter = null;
+
+    /**
+     * Request start time
+     */
+    private float|null $requestStartTime = null;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function init(): void
+    {
+        // capture request start time as early as possible
+        $this->requestStartTime = microtime(true);
+
+        parent::init();
+    }
+
 
     /**
      * Retrieves HTTP Basic authentication credentials from the current request.
@@ -891,5 +909,10 @@ final class Request extends \yii\web\Request
         $scriptUrl = $this->getServerParam('SCRIPT_NAME');
 
         return is_string($scriptUrl) ? $scriptUrl : '';
+    }
+
+    public function getRequestStartTime(): float
+    {
+        return $this->requestStartTime ??= microtime(true);
     }
 }
