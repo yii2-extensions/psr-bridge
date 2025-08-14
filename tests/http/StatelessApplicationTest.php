@@ -88,15 +88,15 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/captcha' route in " .
+            $response1->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/captcha' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=user-a-session; Path=/; HttpOnly; SameSite",
-            $response1->getHeaders()['Set-Cookie'][0] ?? '',
+            $response1->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain session 'ID' 'user-a-session' for 'site/captcha' route, " .
-                "ensuring correct session assignment in 'StatelessApplication'.",
+            "ensuring correct session assignment in 'StatelessApplication'.",
         );
 
         $captchaData1 = Json::decode($response1->getBody()->getContents());
@@ -143,13 +143,13 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/captcha' route for " .
-                "second user in 'StatelessApplication', confirming correct content type for JSON captcha response.",
+            $response2->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/captcha' route for " .
+            "second user in 'StatelessApplication', confirming correct content type for JSON captcha response.",
         );
         self::assertSame(
             "{$sessionName}=user-b-session; Path=/; HttpOnly; SameSite",
-            $response2->getHeaders()['Set-Cookie'][0] ?? '',
+            $response2->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain session 'ID' 'user-b-session' for 'site/captcha' route, " .
             "ensuring correct session assignment for second user in 'StatelessApplication'.",
         );
@@ -219,12 +219,12 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'image/png',
-            $response3->getHeaders()['content-type'][0] ?? '',
-            "Captcha image response 'content-type' should be 'image/png' for '{$url}' in 'StatelessApplication'.",
+            $response3->getHeaderLine('Content-Type'),
+            "Captcha image response 'Content-Type' should be 'image/png' for '{$url}' in 'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=user-a-session; Path=/; HttpOnly; SameSite",
-            $response3->getHeaders()['Set-Cookie'][0] ?? '',
+            $response3->getHeaderLine('Set-Cookie'),
             "Captcha image response 'Set-Cookie' should contain 'user-a-session' for '{$url}' in " .
             "'StatelessApplication'.",
         );
@@ -498,8 +498,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/captcha' route in " .
+            $response1->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/captcha' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
@@ -510,7 +510,7 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             "{$sessionName}=flash-user-a; Path=/; HttpOnly; SameSite",
-            $response1->getHeaders()['Set-Cookie'][0] ?? '',
+            $response1->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain session 'ID' 'flash-user-a' for 'site/setflash' route, " .
             "ensuring correct session assignment in 'StatelessApplication'.",
         );
@@ -536,13 +536,13 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getflash' route in " .
+            $response2->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getflash' route in " .
                 "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=flash-user-b; Path=/; HttpOnly; SameSite",
-            $response2->getHeaders()['Set-Cookie'][0] ?? '',
+            $response2->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain session 'ID' 'flash-user-b' for 'site/getflash' route, " .
             "ensuring correct session assignment in 'StatelessApplication'.",
         );
@@ -615,13 +615,13 @@ final class StatelessApplicationTest extends TestCase
             );
             self::assertSame(
                 'application/json; charset=UTF-8',
-                $response->getHeaders()['content-type'][0] ?? '',
-                "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsessiondata' route " .
-                "in 'StatelessApplication', confirming correct content type for JSON session data response in worker mode.",
+                $response->getHeaderLine('Content-Type'),
+                "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/setsessiondata' route " .
+                "in 'StatelessApplication', confirming correct 'Content-Type' for JSON session data response in worker mode.",
             );
             self::assertSame(
                 "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
-                $response->getHeaders()['Set-Cookie'][0] ?? '',
+                $response->getHeaderLine('Set-Cookie'),
                 "Response 'Set-Cookie' header should contain session 'ID' '{$sessionId}' for 'site/setsessiondata' " .
                 "route in 'StatelessApplication', ensuring correct session assignment in worker mode.",
             );
@@ -652,17 +652,17 @@ final class StatelessApplicationTest extends TestCase
             );
             self::assertSame(
                 'application/json; charset=UTF-8',
-                $response->getHeaders()['content-type'][0] ?? '',
+                $response->getHeaderLine('Content-Type'),
                 sprintf(
-                    "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsessiondata' " .
-                    "route in 'StatelessApplication', confirming correct content type for JSON session data response " .
+                    "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getsessiondata' " .
+                    "route in 'StatelessApplication', confirming correct 'Content-Type' for JSON session data response " .
                     "for session '%s' in worker mode.",
                     $sessionId,
                 ),
             );
             self::assertSame(
                 "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
-                $response->getHeaders()['Set-Cookie'][0] ?? '',
+                $response->getHeaderLine('Set-Cookie'),
                 sprintf(
                     "Response 'Set-Cookie' header should contain session 'ID' '%s' for 'site/getsessiondata' route " .
                     "in 'StatelessApplication', ensuring correct session assignment for session '%s' in worker mode.",
@@ -820,8 +820,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/html; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/html; charset=UTF-8' when 'errorAction' returns Response object.",
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/html; charset=UTF-8' when 'errorAction' returns Response object.",
         );
         Assert::equalsWithoutLE(
             <<<HTML
@@ -915,9 +915,7 @@ final class StatelessApplicationTest extends TestCase
             "Response 'status code' should be '200' for 'site/cookie' route in 'StatelessApplication'.",
         );
 
-        $cookies = $response->getHeaders()['set-cookie'] ?? [];
-
-        foreach ($cookies as $cookie) {
+        foreach ($response->getHeader('set-cookie') as $cookie) {
             // skip the session cookie header
             if (str_starts_with($cookie, $app->session->getName()) === false) {
                 $params = explode('; ', $cookie);
@@ -1027,8 +1025,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getcookies'.",
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies'.",
         );
         self::assertSame(
             '[]',
@@ -1093,8 +1091,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/html; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when ErrorHandler " .
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when ErrorHandler " .
             "action is invalid in 'StatelessApplication'.",
         );
         self::assertStringContainsString(
@@ -1302,8 +1300,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/query/foo?q=1' route in " .
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/query/foo?q=1' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
@@ -1339,7 +1337,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/update/123' route in " .
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/update/123' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
@@ -1396,8 +1394,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getcookies'.",
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies'.",
         );
 
         /**
@@ -1517,8 +1515,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/plain',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/plain' for 'site/file' route in 'StatelessApplication'.",
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/plain' for 'site/file' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'This is a test file content.',
@@ -1528,8 +1526,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'attachment; filename="testfile.txt"',
-            $response->getHeaders()['content-disposition'][0] ?? '',
-            "Response 'content-disposition' should be 'attachment; filename=\"testfile.txt\"' for 'site/file' route " .
+            $response->getHeaderLine('Content-Disposition'),
+            "Response 'Content-Disposition' should be 'attachment; filename=\"testfile.txt\"' for 'site/file' route " .
             "in 'StatelessApplication'.",
         );
     }
@@ -1557,8 +1555,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/plain',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/plain' for 'site/stream' route in 'StatelessApplication'.",
+            $response->getHeaderLine('Content-type'),
+            "Response 'Content-Type' should be 'text/plain' for 'site/stream' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'This is a test file content.',
@@ -1591,8 +1589,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             '/site/index',
-            $response->getHeaders()['location'][0] ?? '',
-            "Response 'location' header should be '/site/index' for redirect route 'site/redirect' in " .
+            $response->getHeaderLine('Location'),
+            "Response 'Location' header should be '/site/index' for redirect route 'site/redirect' in " .
             "'StatelessApplication'.",
         );
     }
@@ -1620,8 +1618,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'site/refresh#stateless',
-            $response->getHeaders()['location'][0] ?? '',
-            "Response 'location' header should be 'site/refresh#stateless' for redirect route 'site/refresh' in " .
+            $response->getHeaderLine('Location'),
+            "Response 'Location' header should be 'site/refresh#stateless' for redirect route 'site/refresh' in " .
             "'StatelessApplication'.",
         );
     }
@@ -1648,17 +1646,10 @@ final class StatelessApplicationTest extends TestCase
             "Response 'status code' should be '200' for 'site/deletecookie' route in 'StatelessApplication'.",
         );
 
-        $setCookieHeaders = $response->getHeaders()['Set-Cookie'] ?? [];
-
-        self::assertNotEmpty(
-            $setCookieHeaders,
-            "Response should contain 'Set-Cookie' headers for cookie deletion in 'StatelessApplication'.",
-        );
-
         $deletionHeaderFound = false;
         $deletionHeader = '';
 
-        foreach ($setCookieHeaders as $header) {
+        foreach ($response->getHeader('Set-Cookie') as $header) {
             // skip session cookie headers
             if (
                 str_starts_with($header, 'user_preference=') &&
@@ -1730,11 +1721,9 @@ final class StatelessApplicationTest extends TestCase
             "Response 'status code' should be '200' for 'site/multiplecookies' route in 'StatelessApplication'.",
         );
 
-        $setCookieHeaders = $response->getHeaders()['Set-Cookie'] ?? [];
-
         // filter out session cookies to focus on test cookies
         $testCookieHeaders = array_filter(
-            $setCookieHeaders,
+            $response->getHeader('Set-Cookie'),
             static fn(string $header): bool => str_starts_with($header, $app->session->getName()) === false,
         );
 
@@ -1785,8 +1774,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for JSON output.",
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for JSON output.",
         );
         self::assertSame(
             <<<JSON
@@ -1928,14 +1917,14 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
+            $response1->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
 
         self::assertSame(
             "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
-            $response1->getHeaders()['Set-Cookie'][0] ?? '',
+            $response1->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain '{$sessionId}' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
@@ -1958,13 +1947,13 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
+            $response2->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
-            $response2->getHeaders()['Set-Cookie'][0] ?? '',
+            $response2->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain '{$sessionId}' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
@@ -2017,13 +2006,13 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
+            $response1->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=session-user-a; Path=/; HttpOnly; SameSite",
-            $response1->getHeaders()['Set-Cookie'][0] ?? '',
+            $response1->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain 'session-user-a' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
@@ -2046,13 +2035,13 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
+            $response2->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=session-user-b; Path=/; HttpOnly; SameSite",
-            $response2->getHeaders()['Set-Cookie'][0] ?? '',
+            $response2->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain 'session-user-b' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
@@ -2093,10 +2082,9 @@ final class StatelessApplicationTest extends TestCase
         $app = $this->statelessApplication();
 
         $response = $app->handle($request);
-        $cookies = $response->getHeaders()['Set-Cookie'] ?? [];
         $sessionName = $app->session->getName();
         $cookie = array_filter(
-            $cookies,
+            $response->getHeader('Set-Cookie'),
             static fn(string $cookie): bool => str_starts_with($cookie, "{$sessionName}="),
         );
 
@@ -2293,8 +2281,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/html; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'Throwable' occurs " .
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when 'Throwable' occurs " .
             "during request handling in 'StatelessApplication'.",
         );
         self::assertStringContainsString(
@@ -2329,8 +2317,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/html; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/html; charset=UTF-8' for 'NotFoundHttpException' in " .
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for 'NotFoundHttpException' in " .
             "'StatelessApplication'.",
         );
         self::assertStringContainsString(
@@ -2430,8 +2418,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/html; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'Exception' " .
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when 'Exception' " .
             "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
         );
         Assert::equalsWithoutLE(
@@ -2489,8 +2477,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/html; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'UserException' " .
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when 'UserException' " .
             "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
         );
         Assert::equalsWithoutLE(
@@ -2545,8 +2533,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/html; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'text/html; charset=UTF-8' for error response when 'UserException'" .
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when 'UserException'" .
             "occurs and 'debug' mode is enabled in 'StatelessApplication'.",
         );
         Assert::equalsWithoutLE(
@@ -2603,8 +2591,8 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for error response when 'Exception'" .
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for error response when 'Exception'" .
             "occurs with JSON format in 'StatelessApplication'.",
         );
         self::assertStringNotContainsString(
@@ -2658,13 +2646,13 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/login' route in " .
+            $response1->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/login' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=user1-session; Path=/; HttpOnly; SameSite",
-            $response1->getHeaders()['Set-Cookie'][0] ?? '',
+            $response1->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain 'user1-session' for 'site/login' route in " .
             "'StatelessApplication'.",
         );
@@ -2696,13 +2684,13 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaders()['content-type'][0] ?? '',
-            "Response 'content-type' should be 'application/json; charset=UTF-8' for 'site/checkauth' route in " .
+            $response2->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/checkauth' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=user2-session; Path=/; HttpOnly; SameSite",
-            $response2->getHeaders()['Set-Cookie'][0] ?? '',
+            $response2->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain 'user2-session' for 'site/checkauth' route in " .
             "'StatelessApplication'.",
         );
