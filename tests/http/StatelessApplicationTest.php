@@ -10,8 +10,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtens
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use stdClass;
 use Yii;
-use yii\base\Exception;
-use yii\base\{InvalidConfigException, Security};
+use yii\base\{Exception, InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
@@ -33,6 +32,7 @@ use function explode;
 use function gc_disable;
 use function gc_enable;
 use function gc_status;
+use function implode;
 use function ini_get;
 use function ini_set;
 use function memory_get_usage;
@@ -738,7 +738,7 @@ final class StatelessApplicationTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
     {
-        @runkit_constant_redefine('YII_ENV_TEST', false);
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
 
         $initialBufferLevel = ob_get_level();
 
@@ -783,7 +783,7 @@ final class StatelessApplicationTest extends TestCase
             ob_start();
         }
 
-        @runkit_constant_redefine('YII_ENV_TEST', true);
+        @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
     /**
@@ -792,7 +792,7 @@ final class StatelessApplicationTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionWithErrorActionReturningResponseObject(): void
     {
-        @runkit_constant_redefine('YII_DEBUG', false);
+        @\runkit_constant_redefine('YII_DEBUG', false);
 
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -833,7 +833,7 @@ final class StatelessApplicationTest extends TestCase
             "Response 'body' should contain content from Response object returned by 'errorAction'.",
         );
 
-        @runkit_constant_redefine('YII_DEBUG', true);
+        @\runkit_constant_redefine('YII_DEBUG', true);
     }
 
     /**
@@ -1629,6 +1629,147 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnSetCookieHeadersForCookieDeletionWithEmptyValues(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/deletecookie',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/deletecookie' route in 'StatelessApplication'.",
+        );
+
+        $setCookieHeaders = $response->getHeaders()['Set-Cookie'] ?? [];
+
+        self::assertNotEmpty(
+            $setCookieHeaders,
+            "Response should contain 'Set-Cookie' headers for cookie deletion in 'StatelessApplication'.",
+        );
+
+        $deletionHeaderFound = false;
+        $deletionHeader = '';
+
+        foreach ($setCookieHeaders as $header) {
+            // skip session cookie headers
+            if (
+                str_starts_with($header, 'user_preference=') &&
+                str_starts_with($header, $app->session->getName()) === false
+            ) {
+                    $deletionHeaderFound = true;
+                    $deletionHeader = $header;
+
+                    break;
+                }
+        }
+
+        self::assertTrue(
+            $deletionHeaderFound,
+            "Response 'Set-Cookie' headers should contain cookie deletion header for 'user_preference' cookie in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'user_preference=',
+            $deletionHeader,
+            "Cookie deletion header should contain cookie name 'user_preference' for 'site/deletecookie' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'Path=/app',
+            $deletionHeader,
+            "Cookie deletion header should preserve 'Path=/app' attribute for 'user_preference' cookie in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'HttpOnly',
+            $deletionHeader,
+            "Cookie deletion header should preserve 'HttpOnly' attribute for 'user_preference' cookie in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'Secure',
+            $deletionHeader,
+            "Cookie deletion header should preserve 'Secure' attribute for 'user_preference' cookie in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'Expires=',
+            $deletionHeader,
+            "Cookie deletion header should contain 'Expires' attribute with past date for 'user_preference' cookie " .
+            "in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnSetCookieHeadersForMultipleCookieTypesIncludingDeletion(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/multiplecookies',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/multiplecookies' route in 'StatelessApplication'.",
+        );
+
+        $setCookieHeaders = $response->getHeaders()['Set-Cookie'] ?? [];
+
+        // filter out session cookies to focus on test cookies
+        $testCookieHeaders = array_filter(
+            $setCookieHeaders,
+            static fn(string $header): bool => str_starts_with($header, $app->session->getName()) === false,
+        );
+
+        self::assertCount(
+            2,
+            $testCookieHeaders,
+            "Response should contain exactly '2' non-session 'Set-Cookie' headers for 'site/multiplecookies' route " .
+            "in 'StatelessApplication'.",
+        );
+
+        $headerString = implode('|', $testCookieHeaders);
+
+        self::assertStringContainsString(
+            'theme=dark',
+            $headerString,
+            "Response 'Set-Cookie' headers should contain 'theme=dark' for 'site/multiplecookies' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            'old_session=',
+            $headerString,
+            "Response 'Set-Cookie' headers should contain 'old_session=' for cookie deletion in " .
+            "'site/multiplecookies' route in 'StatelessApplication'.",
+        );
+        self::assertStringNotContainsString(
+            'temp_data=',
+            $headerString,
+            "Response 'Set-Cookie' headers should NOT contain 'temp_data=' for deleted cookie in " .
+            "'site/multiplecookies' route in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnsJsonResponse(): void
     {
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
@@ -2260,7 +2401,7 @@ final class StatelessApplicationTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndException(): void
     {
-        @runkit_constant_redefine('YII_DEBUG', false);
+        @\runkit_constant_redefine('YII_DEBUG', false);
 
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -2310,7 +2451,7 @@ final class StatelessApplicationTest extends TestCase
             "and 'debug' mode is disabled with errorAction configured in 'StatelessApplication'.",
         );
 
-        @runkit_constant_redefine('YII_DEBUG', true);
+        @\runkit_constant_redefine('YII_DEBUG', true);
     }
 
     /**
@@ -2319,7 +2460,7 @@ final class StatelessApplicationTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testUseErrorViewLogicWithDebugFalseAndUserException(): void
     {
-        @runkit_constant_redefine('YII_DEBUG', false);
+        @\runkit_constant_redefine('YII_DEBUG', false);
 
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -2369,7 +2510,7 @@ final class StatelessApplicationTest extends TestCase
             "and 'debug' mode is disabled with errorAction configured in 'StatelessApplication'.",
         );
 
-        @runkit_constant_redefine('YII_DEBUG', true);
+        @\runkit_constant_redefine('YII_DEBUG', true);
     }
 
     /**

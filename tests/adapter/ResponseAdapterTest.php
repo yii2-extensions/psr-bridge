@@ -321,6 +321,113 @@ final class ResponseAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testCookieWithEmptyValueIsIncludedInHeaders(): void
+    {
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
+
+        $deletionCookie = new Cookie(
+            [
+                'name' => 'session_id',
+                'value' => '', // empty value for deletion
+                'expire' => time() - 3600, // past expiration date
+                'path' => '/',
+                'domain' => 'example.com',
+            ],
+        );
+
+        $response->cookies->add($deletionCookie);
+
+        $adapter = new ResponseAdapter(
+            $response,
+            FactoryHelper::createResponseFactory(),
+            FactoryHelper::createStreamFactory(),
+            new Security(),
+        );
+
+        $psr7Response = $adapter->toPsr7();
+        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
+
+        self::assertNotEmpty(
+            $setCookieHeaders,
+            "'Set-Cookie' header should be present when a cookie with an empty value is added for deletion.",
+        );
+
+        $deletionHeaderFound = false;
+
+        foreach ($setCookieHeaders as $header) {
+            if (str_starts_with($header, 'session_id=')) {
+                $deletionHeaderFound = true;
+
+                self::assertStringContainsString(
+                    'session_id=',
+                    $header,
+                    "'Set-Cookie' header for deletion should start with 'session_id=' and include the cookie name.",
+                );
+
+                break;
+            }
+        }
+
+        self::assertTrue(
+            $deletionHeaderFound,
+            "A 'Set-Cookie' header for the deletion cookie ('session_id=') must be present in the response headers.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testDeletionCookiesWithValidationEnabled(): void
+    {
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
+        $deletionCookie = new Cookie(
+            [
+                'name' => 'validated_session',
+                'value' => '', // empty value for deletion
+                'expire' => time() - 3600, // expired
+            ],
+        );
+
+        $response->cookies->add($deletionCookie);
+
+        $adapter = new ResponseAdapter(
+            $response,
+            FactoryHelper::createResponseFactory(),
+            FactoryHelper::createStreamFactory(),
+            new Security(),
+        );
+
+        $setCookieHeaders = $adapter->toPsr7()->getHeader('Set-Cookie');
+
+        self::assertNotEmpty(
+            $setCookieHeaders,
+            "'Set-Cookie' header should not be empty when a deletion cookie with validation is set.",
+        );
+
+        $headerStrings = implode('|', $setCookieHeaders);
+
+        self::assertStringContainsString(
+            'validated_session=',
+            $headerStrings,
+            "'Set-Cookie' header should include the 'validated_session' cookie for deletion with validation enabled.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFileStreamTakesPrecedenceOverContent(): void
     {
         $fileContent = 'File stream content';
@@ -1634,6 +1741,68 @@ final class ResponseAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testMultipleCookiesIncludingDeletionCookies(): void
+    {
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => false,
+            ],
+        );
+
+        $regularCookie = new Cookie(
+            [
+                'name' => 'theme',
+                'value' => 'dark',
+                'expire' => time() + 3600,
+            ],
+        );
+
+        $deletionCookie = new Cookie(
+            [
+                'name' => 'old_session',
+                'value' => '',
+                'expire' => time() - 3600,
+            ],
+        );
+
+        $response->cookies->add($regularCookie);
+        $response->cookies->add($deletionCookie);
+
+        $adapter = new ResponseAdapter(
+            $response,
+            FactoryHelper::createResponseFactory(),
+            FactoryHelper::createStreamFactory(),
+            new Security(),
+        );
+
+        $psr7Response = $adapter->toPsr7();
+        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
+
+        self::assertCount(
+            2,
+            $setCookieHeaders,
+            "Should be exactly two 'Set-Cookie' headers: one for the regular cookie and one for the deletion cookie.",
+        );
+
+        $headerStrings = implode('|', $setCookieHeaders);
+
+        self::assertStringContainsString(
+            'theme=dark',
+            $headerStrings,
+            "The 'Set-Cookie' headers should include the regular cookie with name 'theme' and value 'dark'.",
+        );
+        self::assertStringContainsString(
+            'old_session=',
+            $headerStrings,
+            "The 'Set-Cookie' headers should include the deletion cookie with name 'old_session' and an empty value.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testProduceMultipleCookieHeadersWhenAddingCookies(): void
     {
         $response = new Response(
@@ -1704,7 +1873,7 @@ final class ResponseAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testSkipCookieHeaderWhenValueEmpty(): void
+    public function testSkipCookieHeaderWhenValueIsNull(): void
     {
         $response = new Response(
             [
@@ -1750,19 +1919,27 @@ final class ResponseAdapterTest extends TestCase
         $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
 
         self::assertCount(
-            1,
+            2,
             $setCookieHeaders,
-            "PSR-7 response should include only cookies with non-empty values in the 'Set-Cookie' header.",
+            "Should only include 'Set-Cookie' headers for cookies with non-null values ('valid' and 'empty').",
         );
+
+        $headerStrings = implode('|', $setCookieHeaders);
+
         self::assertStringContainsString(
             'valid=',
-            $setCookieHeaders[0] ?? '',
-            "'Set-Cookie' header should contain the valid cookie.",
+            $headerStrings,
+            "'Set-Cookie' header should include the 'valid' cookie with its value.",
+        );
+        self::assertStringContainsString(
+            'empty=',
+            $headerStrings,
+            "'Set-Cookie' header should include the 'empty' cookie with an empty value.",
         );
         self::assertStringNotContainsString(
-            'valid=value',
-            $setCookieHeaders[0] ?? '',
-            "'Set-Cookie' header should contain hashed value when validation is enabled.",
+            'null=',
+            $headerStrings,
+            "'Set-Cookie' header should not include the 'null' cookie (value is 'null').",
         );
     }
 
