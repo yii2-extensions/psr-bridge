@@ -1065,15 +1065,34 @@ final class StatelessApplicationTest extends TestCase
                         $params[0],
                     ),
                 );
-                self::assertNotContains(
-                    $params[0],
-                    [
-                        'Secure',
-                        'HttpOnly',
-                    ],
+                self::assertStringContainsString(
+                    'Path=/',
+                    $cookie,
+                    "Cookie header should contain 'Path=/' for 'site/cookie' route.",
+                );
+                self::assertStringNotContainsString(
+                    'Secure',
+                    $cookie,
                     sprintf(
-                        "Cookie header should not contain 'Secure' or 'HttpOnly' flags for '%s', got '%s' for " .
-                        "'site/cookie' route.",
+                        "Cookie header should not contain 'Secure' flag for '%s', got '%s' for 'site/cookie' route.",
+                        $params[0],
+                        $cookie,
+                    ),
+                );
+                self::assertStringNotContainsString(
+                    'HttpOnly',
+                    $cookie,
+                    sprintf(
+                        "Cookie header should not contain 'HttpOnly' flag for '%s', got '%s' for 'site/cookie' route.",
+                        $params[0],
+                        $cookie,
+                    ),
+                );
+                self::assertStringContainsString(
+                    'SameSite=Lax',
+                    $cookie,
+                    sprintf(
+                        "Cookie header should contain 'SameSite=Lax' for '%s', got '%s' for 'site/cookie' route.",
                         $params[0],
                         $cookie,
                     ),
