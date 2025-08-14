@@ -40,6 +40,14 @@ use function filter_var;
 final class Response extends \yii\web\Response
 {
     /**
+     * PSR-7 ResponseAdapter for bridging PSR-7 ResponseInterface with Yii2 Response component.
+     *
+     * Adapter allows the Response class to access PSR-7 ResponseInterface data while maintaining compatibility with
+     * Yii2 Response component.
+     */
+    private ResponseAdapter|null $adapter = null;
+
+    /**
      * @var string A secret key used for cookie validation. This property must be set if {@see enableCookieValidation}
      * is 'true'.
      */
@@ -77,13 +85,6 @@ final class Response extends \yii\web\Response
      */
     public function getPsr7Response(): ResponseInterface
     {
-        $adapter = new ResponseAdapter(
-            $this,
-            Yii::$container->get(ResponseFactoryInterface::class),
-            Yii::$container->get(StreamFactoryInterface::class),
-            Yii::$app->getSecurity(),
-        );
-
         $this->trigger(self::EVENT_BEFORE_SEND);
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
@@ -106,6 +107,51 @@ final class Response extends \yii\web\Response
             $session->close();
         }
 
-        return $adapter->toPsr7();
+        return $this->getAdapter()->toPsr7();
+    }
+
+    /**
+     * Resets the PSR-7 ResponseAdapter instance for the current Response.
+     *
+     * Sets the internal {@see ResponseAdapter} property to `null`, ensuring that a new adapter will be created on the
+     * next access. This is useful for clearing cached adapter state between requests or after significant changes to
+     * the Response component.
+     *
+     * Usage example:
+     * ```php
+     * $response->reset();
+     * ```
+     */
+    public function reset(): void
+    {
+        $this->adapter = null;
+    }
+
+    /**
+     * Retrieves the PSR-7 ResponseAdapter instance for the current Response.
+     *
+     * Instantiates and returns a {@see ResponseAdapter} for bridging the Yii2 Response component with PSR-7
+     * ResponseInterface.
+     *
+     * The adapter is created on first access and cached for subsequent calls, ensuring a single instance per Response
+     * object.
+     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     *
+     * @return ResponseAdapter PSR-7 ResponseAdapter instance for the current Response.
+     */
+    private function getAdapter(): ResponseAdapter
+    {
+        if ($this->adapter === null) {
+            $this->adapter = new ResponseAdapter(
+                $this,
+                Yii::$container->get(ResponseFactoryInterface::class),
+                Yii::$container->get(StreamFactoryInterface::class),
+                Yii::$app->getSecurity(),
+            );
+        }
+
+        return $this->adapter;
     }
 }
