@@ -40,14 +40,6 @@ use function filter_var;
 final class Response extends \yii\web\Response
 {
     /**
-     * PSR-7 ResponseAdapter for bridging PSR-7 ResponseInterface with Yii2 Response component.
-     *
-     * Adapter allows the Response class to access PSR-7 ResponseInterface data while maintaining compatibility with
-     * Yii2 Response component.
-     */
-    private ResponseAdapter|null $adapter = null;
-
-    /**
      * @var string A secret key used for cookie validation. This property must be set if {@see enableCookieValidation}
      * is 'true'.
      */
@@ -58,6 +50,13 @@ final class Response extends \yii\web\Response
      * {@see cookieValidationKey}. This is recommended for security, especially when handling session cookies.
      */
     public bool $enableCookieValidation = false;
+    /**
+     * PSR-7 ResponseAdapter for bridging PSR-7 ResponseInterface with Yii2 Response component.
+     *
+     * Adapter allows the Response class to access PSR-7 ResponseInterface data while maintaining compatibility with
+     * Yii2 Response component.
+     */
+    private ResponseAdapter|null $adapter = null;
 
     /**
      * Converts the Yii2 Response component to a PSR-7 ResponseInterface instance.
