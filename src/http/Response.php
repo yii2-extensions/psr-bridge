@@ -11,8 +11,6 @@ use yii\di\NotInstantiableException;
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 
-use function filter_var;
-
 /**
  * HTTP Response extension with PSR-7 bridge support.
  *
@@ -50,6 +48,7 @@ final class Response extends \yii\web\Response
      * {@see cookieValidationKey}. This is recommended for security, especially when handling session cookies.
      */
     public bool $enableCookieValidation = false;
+
     /**
      * PSR-7 ResponseAdapter for bridging PSR-7 ResponseInterface with Yii2 Response component.
      *
@@ -88,7 +87,6 @@ final class Response extends \yii\web\Response
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
 
-
         if (Yii::$app->has('session') && ($session = Yii::$app->getSession())->getIsActive()) {
             $cookieParams = $session->getCookieParams();
 
@@ -97,8 +95,8 @@ final class Response extends \yii\web\Response
                 'value' => $session->getId(),
                 'path' => $cookieParams['path'] ?? '/',
                 'domain' => $cookieParams['domain'] ?? '',
-                'secure' => filter_var($cookieParams['secure'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'httpOnly' => filter_var($cookieParams['httponly'] ?? true, FILTER_VALIDATE_BOOLEAN),
+                'secure' => $cookieParams['secure'] ?? false,
+                'httpOnly' => $cookieParams['httponly'] ?? true,
                 'sameSite' => $cookieParams['samesite'] ?? Cookie::SAME_SITE_LAX,
             ];
 
