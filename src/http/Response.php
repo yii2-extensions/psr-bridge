@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\http;
 
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\NotInstantiableException;
@@ -77,14 +77,11 @@ final class Response extends \yii\web\Response
      */
     public function getPsr7Response(): ResponseInterface
     {
-        $adapter = Yii::$container->get(
-            ResponseAdapter::class,
-            config: [
-                '__construct()' => [
-                    'psrResponse' => $this,
-                    'security' => Yii::$app->getSecurity(),
-                ],
-            ],
+        $adapter = new ResponseAdapter(
+            $this,
+            Yii::$container->get(ResponseFactoryInterface::class),
+            Yii::$container->get(StreamFactoryInterface::class),
+            Yii::$app->getSecurity(),
         );
 
         $this->trigger(self::EVENT_BEFORE_SEND);
