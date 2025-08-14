@@ -79,7 +79,7 @@ final class Response extends \yii\web\Response
             ResponseAdapter::class,
             config: [
                 '__construct()' => [
-                    'response' => $this,
+                    'psrResponse' => $this,
                     'security' => Yii::$app->getSecurity(),
                 ],
             ],
