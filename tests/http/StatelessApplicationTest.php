@@ -920,11 +920,11 @@ final class StatelessApplicationTest extends TestCase
         $bridgeResponse1 = $app->response;
 
         // get PSR-7 response twice to test caching
+        $bridgeResponse1->getPsr7Response();
         $adapter1 = Assert::inaccessibleProperty($bridgeResponse1, 'adapter');
-        $bridgeResponse1->getPsr7Response();
 
-        $adapter2 = Assert::inaccessibleProperty($bridgeResponse1, 'adapter');
         $bridgeResponse1->getPsr7Response();
+        $adapter2 = Assert::inaccessibleProperty($bridgeResponse1, 'adapter');
 
         // verify adapter is cached (same instance across multiple calls)
         self::assertSame(
@@ -961,13 +961,13 @@ final class StatelessApplicationTest extends TestCase
         );
 
         // test 'reset()' functionality
-        $adapter3 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
         $bridgeResponse2->getPsr7Response();
+        $adapter3 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
 
         $bridgeResponse2->reset();
 
-        $adapter4 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
         $bridgeResponse2->getPsr7Response();
+        $adapter4 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
 
         self::assertNotSame(
             $adapter3,
@@ -995,8 +995,8 @@ final class StatelessApplicationTest extends TestCase
 
         $bridgeResponse3 = $app->response;
 
-        $adapter5 = Assert::inaccessibleProperty($bridgeResponse3, 'adapter');
         $bridgeResponse3->getPsr7Response();
+        $adapter5 = Assert::inaccessibleProperty($bridgeResponse3, 'adapter');
 
         // verify each request gets its own adapter instance
         self::assertNotSame(
