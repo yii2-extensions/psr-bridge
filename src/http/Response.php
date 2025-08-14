@@ -106,7 +106,7 @@ final class Response extends \yii\web\Response
             $session->close();
         }
 
-        return $this->getAdapter()->toPsr7();
+        return $this->createAdapter()->toPsr7();
     }
 
     /**
@@ -140,17 +140,13 @@ final class Response extends \yii\web\Response
      *
      * @return ResponseAdapter PSR-7 ResponseAdapter instance for the current Response.
      */
-    private function getAdapter(): ResponseAdapter
+    private function createAdapter(): ResponseAdapter
     {
-        if ($this->adapter === null) {
-            $this->adapter = new ResponseAdapter(
-                $this,
-                Yii::$container->get(ResponseFactoryInterface::class),
-                Yii::$container->get(StreamFactoryInterface::class),
-                Yii::$app->getSecurity(),
-            );
-        }
-
-        return $this->adapter;
+        return $this->adapter ??= new ResponseAdapter(
+            $this,
+            Yii::$container->get(ResponseFactoryInterface::class),
+            Yii::$container->get(StreamFactoryInterface::class),
+            Yii::$app->getSecurity(),
+        );
     }
 }
