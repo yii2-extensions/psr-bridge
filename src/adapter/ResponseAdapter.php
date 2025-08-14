@@ -143,7 +143,7 @@ final class ResponseAdapter
         }
 
         foreach ($this->psrResponse->getCookies() as $cookie) {
-            if ($cookie->value !== null && $cookie->value !== '') {
+            if ($cookie->value !== null) {
                 $headers[] = $this->formatCookieHeader($cookie);
             }
         }

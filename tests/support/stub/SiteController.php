@@ -14,6 +14,7 @@ use function htmlspecialchars;
 use function is_string;
 use function rewind;
 use function stream_get_meta_data;
+use function time;
 use function tmpfile;
 
 final class SiteController extends Controller
@@ -67,6 +68,24 @@ final class SiteController extends Controller
                 ],
             ),
         );
+    }
+
+    public function actionDeletecookie(): Response
+    {
+        $deletionCookie = new Cookie([
+            'name' => 'user_preference',
+            'value' => '', // empty value for deletion
+            'expire' => time() - 1, // just expired
+            'path' => '/app',
+            'httpOnly' => true,
+            'secure' => true,
+        ]);
+
+        $this->response->cookies->add($deletionCookie);
+
+        $this->response->format = Response::FORMAT_JSON;
+
+        return $this->response;
     }
 
     public function actionError(): string
@@ -222,6 +241,43 @@ final class SiteController extends Controller
         }
 
         return ['status' => 'error'];
+    }
+
+    public function actionMultiplecookies(): Response
+    {
+        $regularCookie = new Cookie(
+            [
+                'name' => 'theme',
+                'value' => 'dark',
+                'expire' => time() + 3600,
+            ],
+        );
+
+        // add a deletion cookie (empty value)
+        $deletionCookie = new Cookie(
+            [
+                'name' => 'old_session',
+                'value' => '',
+                'expire' => time() - 3600,
+            ],
+        );
+
+        // add another deletion cookie ('null' value)
+        $nullDeletionCookie = new Cookie(
+            [
+                'name' => 'temp_data',
+                'value' => null,
+                'expire' => time() - 3600,
+            ],
+        );
+
+        $this->response->cookies->add($regularCookie);
+        $this->response->cookies->add($deletionCookie);
+        $this->response->cookies->add($nullDeletionCookie);
+
+        $this->response->format = Response::FORMAT_JSON;
+
+        return $this->response;
     }
 
     public function actionPost(): mixed
