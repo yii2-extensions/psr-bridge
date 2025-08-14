@@ -1127,6 +1127,71 @@ final class ResponseAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testFormatCookieWithSameSiteNoneAutomaticallyAddsSecure(): void
+    {
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
+
+        $response->cookies->add(
+            new Cookie(
+                [
+                    'name' => 'samesite_none_cookie',
+                    'value' => 'samesite_none_value',
+                    'sameSite' => Cookie::SAME_SITE_NONE,
+                    'secure' => false, // explicitly set to `false`
+                ],
+            ),
+        );
+
+        $adapter = new ResponseAdapter(
+            $response,
+            FactoryHelper::createResponseFactory(),
+            FactoryHelper::createStreamFactory(),
+            new Security(),
+        );
+
+        $psr7Response = $adapter->toPsr7();
+        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
+
+        self::assertCount(
+            1,
+            $setCookieHeaders,
+            "Exactly one 'Set-Cookie' header present in the response when a cookie with 'SameSite=None' is added.",
+        );
+
+        $headerStrings = implode('|', $setCookieHeaders);
+
+        self::assertStringContainsString(
+            urlencode('samesite_none_cookie') . '=',
+            $headerStrings,
+            "'Set-Cookie' header should contain the encoded cookie 'name'.",
+        );
+        self::assertStringContainsString(
+            '; SameSite=None',
+            $headerStrings,
+            "'Set-Cookie' header should contain the 'SameSite=None' attribute.",
+        );
+        self::assertStringContainsString(
+            '; Secure',
+            $headerStrings,
+            "'Set-Cookie' header should automatically include the 'Secure' flag when 'SameSite=None' is set " .
+            '(browser requirement).',
+        );
+        self::assertStringNotContainsString(
+            '; Secure=',
+            $headerStrings,
+            "'Set-Cookie' header should contain 'Secure' flag without a value (not 'Secure=').",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFormatCookieWithSpecialCharacters(): void
     {
         $response = new Response(

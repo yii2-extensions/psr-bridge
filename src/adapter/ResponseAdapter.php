@@ -303,6 +303,11 @@ final class ResponseAdapter
             'SameSite' => $cookie->sameSite,
         ];
 
+        // if 'SameSite=None', ensure Secure is present (browser requirement)
+        if ($attributes['SameSite'] === Cookie::SAME_SITE_NONE && $attributes['Secure'] === null) {
+            $attributes['Secure'] = '';
+        }
+
         foreach ($attributes as $key => $val) {
             if ($val !== null) {
                 $header .= "; {$key}" . ($val !== '' ? "={$val}" : '');
