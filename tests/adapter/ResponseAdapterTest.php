@@ -554,10 +554,20 @@ final class ResponseAdapterTest extends TestCase
             $cookieHeader,
             "'Set-Cookie' header should contain the 'Secure' flag when set to 'true'.",
         );
+        self::assertStringNotContainsString(
+            '; Secure=',
+            $cookieHeader,
+            "'Set-Cookie' header should contain 'Secure' flag without a value (not 'Secure=').",
+        );
         self::assertStringContainsString(
             '; HttpOnly',
             $cookieHeader,
             "'Set-Cookie' header should contain the 'HttpOnly' flag when set to 'true'.",
+        );
+        self::assertStringNotContainsString(
+            '; HttpOnly=',
+            $cookieHeader,
+            "'Set-Cookie' header should contain 'HttpOnly' flag without a value (not 'HttpOnly=').",
         );
         self::assertStringContainsString(
             '; SameSite=Strict',

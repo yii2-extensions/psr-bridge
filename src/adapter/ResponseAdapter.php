@@ -298,7 +298,7 @@ final class ResponseAdapter
         $attributes = [
             'Path' => $cookie->path !== '' ? $cookie->path : null,
             'Domain' => $cookie->domain !== '' ? $cookie->domain : null,
-            'Secure' => $cookie->secure ? 'Secure' : null,
+            'Secure' => $cookie->secure ? '' : null,
             'HttpOnly' => $cookie->httpOnly ? '' : null,
             'SameSite' => $cookie->sameSite,
         ];

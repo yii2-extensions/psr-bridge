@@ -98,6 +98,7 @@ final class Response extends \yii\web\Response
                 'value' => $session->getId(),
                 'path' => $cookieParams['path'] ?? '/',
                 'domain' => $cookieParams['domain'] ?? '',
+                'secure' => $cookieParams['secure'] ?? false,
                 'sameSite' => $cookieParams['samesite'] ?? Cookie::SAME_SITE_LAX,
             ];
 
