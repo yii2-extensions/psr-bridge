@@ -915,7 +915,7 @@ final class StatelessApplicationTest extends TestCase
             "Response 'status code' should be '200' for 'site/cookie' route in 'StatelessApplication'.",
         );
 
-        foreach ($response->getHeader('set-cookie') as $cookie) {
+        foreach ($response->getHeader('Set-Cookie') as $cookie) {
             // skip the session cookie header
             if (str_starts_with($cookie, $app->session->getName()) === false) {
                 $params = explode('; ', $cookie);
@@ -1555,7 +1555,7 @@ final class StatelessApplicationTest extends TestCase
         );
         self::assertSame(
             'text/plain',
-            $response->getHeaderLine('Content-type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'text/plain' for 'site/stream' route in 'StatelessApplication'.",
         );
         self::assertSame(
