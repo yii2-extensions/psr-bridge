@@ -298,10 +298,15 @@ final class ResponseAdapter
         $attributes = [
             'Path' => $cookie->path !== '' ? $cookie->path : null,
             'Domain' => $cookie->domain !== '' ? $cookie->domain : null,
-            'Secure' => $cookie->secure ? 'Secure' : null,
+            'Secure' => $cookie->secure ? '' : null,
             'HttpOnly' => $cookie->httpOnly ? '' : null,
             'SameSite' => $cookie->sameSite,
         ];
+
+        // if 'SameSite=None', ensure Secure is present (browser requirement)
+        if ($attributes['SameSite'] === Cookie::SAME_SITE_NONE && $attributes['Secure'] === null) {
+            $attributes['Secure'] = '';
+        }
 
         foreach ($attributes as $key => $val) {
             if ($val !== null) {
