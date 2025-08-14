@@ -1060,9 +1060,22 @@ final class StatelessApplicationTest extends TestCase
                         'test2=test2',
                     ],
                     sprintf(
-                        "Cookie header should contain either 'test=test' or 'test2=test2', got '%s' for 'site/cookie' " .
-                        'route.',
+                        "Cookie header should contain either 'test=test' or 'test2=test2', got '%s' for " .
+                        "'site/cookie' route.",
                         $params[0],
+                    ),
+                );
+                self::assertNotContains(
+                    $params[0],
+                    [
+                        'Secure',
+                        'HttpOnly',
+                    ],
+                    sprintf(
+                        "Cookie header should not contain 'Secure' or 'HttpOnly' flags for '%s', got '%s' for " .
+                        "'site/cookie' route.",
+                        $params[0],
+                        $cookie,
                     ),
                 );
             }
