@@ -10,6 +10,9 @@ use yii\log\Logger;
 
 final class WorkerProfilingPanel extends ProfilingPanel
 {
+    /**
+     * @phpstan-return array<array-key, mixed>
+     */
     public function save(): array
     {
         $messages = $this->getLogMessages(Logger::LEVEL_PROFILE);

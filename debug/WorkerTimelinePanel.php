@@ -12,6 +12,9 @@ use function microtime;
 
 final class WorkerTimelinePanel extends TimelinePanel
 {
+    /**
+     * @phpstan-return array<array-key, mixed>
+     */
     public function save(): array
     {
         return [

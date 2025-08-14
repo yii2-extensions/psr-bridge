@@ -17,11 +17,14 @@ final class WorkerDebugModule extends Module
 
     public function init(): void
     {
-        $this->requestStartTime = microtime(true);
-
         parent::init();
+
+        $this->requestStartTime = microtime(true);
     }
 
+    /**
+     * @phpstan-return array<array-key, mixed>
+     */
     protected function corePanels(): array
     {
         $corePanels = parent::corePanels();
