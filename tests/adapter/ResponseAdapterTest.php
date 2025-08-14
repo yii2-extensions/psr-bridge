@@ -7,11 +7,11 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Group;
 use RuntimeException;
-use yii\base\InvalidConfigException;
-use yii\web\{Cookie, Response};
+use yii\base\{InvalidConfigException, Security};
+use yii\web\Cookie;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 use yii2\extensions\psrbridge\exception\Message;
-use yii2\extensions\psrbridge\http\Request;
+use yii2\extensions\psrbridge\http\{Request, Response};
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -34,8 +34,6 @@ final class ResponseAdapterTest extends TestCase
 {
     protected function tearDown(): void
     {
-        $this->closeApplication();
-
         HTTPFunctions::reset();
 
         parent::tearDown();
@@ -46,9 +44,7 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testConvertResponseWithContentFallsBackToRegularStream(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->content = null; // explicitly no content
 
@@ -58,6 +54,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -74,8 +71,6 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testConvertResponseWithFileStreamFullRange(): void
     {
-        $this->webApplication();
-
         $content = 'This is test content for streaming';
 
         $tempFile = $this->createTempFileWithContent($content);
@@ -86,7 +81,7 @@ final class ResponseAdapterTest extends TestCase
             'File handle should be a valid resource.',
         );
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, 0, strlen($content) - 1];
 
@@ -96,6 +91,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -120,8 +116,6 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testConvertResponseWithFileStreamLargeRange(): void
     {
-        $this->webApplication();
-
         // create content larger than typical buffer sizes
         $content = str_repeat('0123456789ABCDEF', 1000); // 16KB
         $tempFile = $this->createTempFileWithContent($content);
@@ -137,7 +131,7 @@ final class ResponseAdapterTest extends TestCase
 
         $expectedContent = substr($content, $begin, $end - $begin + 1);
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, $begin, $end];
 
@@ -147,6 +141,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -169,8 +164,6 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testConvertResponseWithFileStreamPartialRange(): void
     {
-        $this->webApplication();
-
         $content = 'This is a longer test content for range streaming tests';
 
         $tempFile = $this->createTempFileWithContent($content);
@@ -186,7 +179,7 @@ final class ResponseAdapterTest extends TestCase
 
         $expectedContent = substr($content, $begin, $end - $begin + 1);
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, $begin, $end];
 
@@ -196,6 +189,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -225,8 +219,6 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testConvertResponseWithFileStreamPreservesHeaders(): void
     {
-        $this->webApplication();
-
         $content = 'Content with headers preserved';
 
         $tempFile = $this->createTempFileWithContent($content);
@@ -237,7 +229,7 @@ final class ResponseAdapterTest extends TestCase
             'File handle should be a valid resource.',
         );
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, 0, strlen($content) - 1];
 
@@ -250,6 +242,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -284,8 +277,6 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testConvertResponseWithFileStreamSingleByte(): void
     {
-        $this->webApplication();
-
         $content = 'ABCDEFGHIJKLMNOP';
 
         $tempFile = $this->createTempFileWithContent($content);
@@ -297,9 +288,9 @@ final class ResponseAdapterTest extends TestCase
         $begin = 7;
         $end = 7;
 
-        $expectedContent = substr($content, $begin, 1);
+        $expectedContent = $content[$begin];
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, $begin, $end];
 
@@ -309,6 +300,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -331,8 +323,6 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFileStreamTakesPrecedenceOverContent(): void
     {
-        $this->webApplication();
-
         $fileContent = 'File stream content';
         $responseContent = 'Response content that should be ignored';
 
@@ -344,7 +334,7 @@ final class ResponseAdapterTest extends TestCase
             'File handle should be a valid resource.',
         );
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->content = $responseContent; // this should be ignored
         $response->stream = [$handle, 0, strlen($fileContent) - 1];
@@ -355,6 +345,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -377,11 +368,15 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithAllAttributes(): void
     {
-        $this->webApplication();
-
         $futureTime = time() + 3600;
 
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -402,6 +397,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -468,9 +464,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithBasicAttributes(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -485,6 +485,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -530,16 +531,6 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithDateTimeImmutableExpire(): void
     {
-        $this->webApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                    ],
-                ],
-            ],
-        );
-
         $pastDateTime = new DateTimeImmutable('-1 hour');
 
         $pastTimestamp = $pastDateTime->getTimestamp();
@@ -550,7 +541,13 @@ final class ResponseAdapterTest extends TestCase
             'expire' => $pastDateTime,
         ];
 
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
         $cookie = new Cookie($cookieConfig);
 
         $response->cookies->add($cookie);
@@ -559,6 +556,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -595,9 +593,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithDefaultValidation(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -612,6 +614,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -642,9 +645,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithEmptyOptionalAttributes(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -664,6 +671,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -719,9 +727,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithExpirationZero(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -737,6 +749,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -792,17 +805,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithExpireAtCurrentTime(): void
     {
-        $this->webApplication(
+        $response = new Response(
             [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                    ],
-                ],
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
             ],
         );
-
-        $response = new Response();
 
         $response->cookies->add(
             new Cookie(
@@ -818,6 +827,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -853,9 +863,7 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithExpiredMaxAge(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->cookies->add(
             new Cookie(
@@ -871,6 +879,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -901,19 +910,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithExpireSetToOne(): void
     {
-        $this->webApplication(
+        $response = new Response(
             [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                    ],
-                ],
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
             ],
         );
-
-
-        $response = new Response();
 
         $response->cookies->add(
             new Cookie(
@@ -929,6 +932,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -959,11 +963,9 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithFutureMaxAge(): void
     {
-        $this->webApplication();
-
         $futureTime = time() + 7200; // 2 hours from now
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->cookies->add(
             new Cookie(
@@ -979,6 +981,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1009,9 +1012,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithSpecialCharacters(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -1026,6 +1033,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1071,16 +1079,6 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithStringExpire(): void
     {
-        $this->webApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                    ],
-                ],
-            ],
-        );
-
         $futureTime = time() + 3600;
         $futureTimeString = date('Y-m-d H:i:s', $futureTime);
         $futureStrToTime = strtotime($futureTimeString);
@@ -1090,7 +1088,13 @@ final class ResponseAdapterTest extends TestCase
             "Future time string '$futureTimeString' should be a valid 'date/time' format.",
         );
 
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -1106,6 +1110,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1146,17 +1151,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithStringExpireOne(): void
     {
-        $this->webApplication(
+        $response = new Response(
             [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                    ],
-                ],
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
             ],
         );
-
-        $response = new Response();
 
         $response->cookies->add(
             new Cookie(
@@ -1172,6 +1173,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1203,19 +1205,14 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithValidationDisabled(): void
     {
-        $this->webApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => false,
-                    ],
-                ],
-            ],
-        );
-
         $pastTime = time() - 3600; // 1 hour ago (expired cookie)
 
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'enableCookieValidation' => false,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -1231,6 +1228,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1263,17 +1261,12 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithValidationDisabledNoKey(): void
     {
-        $this->webApplication(
+        $response = new Response(
             [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => false,
-                    ],
-                ],
+                'charset' => 'UTF-8',
+                'enableCookieValidation' => false,
             ],
         );
-
-        $response = new Response();
 
         $response->cookies->add(
             new Cookie(
@@ -1288,6 +1281,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1313,19 +1307,15 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithValidationEnabled(): void
     {
-        $this->webApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                    ],
-                ],
-            ],
-        );
-
         $pastTime = time() - 3600; // 1 hour ago (expired cookie)
 
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -1341,6 +1331,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1372,19 +1363,15 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithValidationEnabledFutureExpiration(): void
     {
-        $this->webApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                    ],
-                ],
-            ],
-        );
-
         $futureTime = time() + 3600; // 1 hour in the future
 
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -1400,6 +1387,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1437,9 +1425,7 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithZeroMaxAge(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->cookies->add(
             new Cookie(
@@ -1455,6 +1441,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1490,9 +1477,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatResponseWithCustomStatusAndCookie(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->setStatusCode(201, 'Created');
 
@@ -1512,6 +1503,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1561,17 +1553,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testHashCookieValueIncludingName(): void
     {
-        $this->webApplication(
+        $response1 = new Response(
             [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                    ],
-                ],
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
             ],
         );
-
-        $response1 = new Response();
 
         $response1->cookies->add(
             new Cookie(
@@ -1582,7 +1570,13 @@ final class ResponseAdapterTest extends TestCase
             ),
         );
 
-        $response2 = new Response();
+        $response2 = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response2->cookies->add(
             new Cookie(
@@ -1597,6 +1591,7 @@ final class ResponseAdapterTest extends TestCase
             $response1,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response1 = $adapter1->toPsr7();
@@ -1608,6 +1603,7 @@ final class ResponseAdapterTest extends TestCase
             $response2,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response2 = $adapter2->toPsr7();
@@ -1640,9 +1636,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testProduceMultipleCookieHeadersWhenAddingCookies(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -1665,6 +1665,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1705,9 +1706,13 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testSkipCookieHeaderWhenValueEmpty(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
 
         $response->cookies->add(
             new Cookie(
@@ -1738,6 +1743,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $psr7Response = $adapter->toPsr7();
@@ -1762,8 +1768,6 @@ final class ResponseAdapterTest extends TestCase
 
     public function testThrowExceptionWhenStreamFormatIsInvalid(): void
     {
-        $this->webApplication();
-
         $tempFile = $this->createTempFileWithContent('test');
         $handle = fopen($tempFile, 'rb');
 
@@ -1772,7 +1776,7 @@ final class ResponseAdapterTest extends TestCase
             'File handle should be a valid resource.',
         );
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, 0]; // missing end parameter
 
@@ -1780,6 +1784,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
@@ -1792,8 +1797,6 @@ final class ResponseAdapterTest extends TestCase
 
     public function testThrowExceptionWhenStreamGetContentsFailsToReadFile(): void
     {
-        $this->webApplication();
-
         $content = 'Test content for stream failure';
 
         $tempFile = $this->createTempFileWithContent($content);
@@ -1801,7 +1804,7 @@ final class ResponseAdapterTest extends TestCase
 
         self::assertIsResource($handle, 'File handle should be a valid resource.');
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, 0, strlen($content) - 1];
 
@@ -1809,9 +1812,10 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
-        HTTPFunctions::set_stream_get_contents_should_fail(true);
+        HTTPFunctions::set_stream_get_contents_should_fail();
 
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage(
@@ -1823,9 +1827,7 @@ final class ResponseAdapterTest extends TestCase
 
     public function testThrowExceptionWhenStreamHandleIsInvalid(): void
     {
-        $this->webApplication();
-
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = ['not-a-resource', 0, 100];
 
@@ -1833,6 +1835,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
@@ -1845,8 +1848,6 @@ final class ResponseAdapterTest extends TestCase
 
     public function testThrowExceptionWhenStreamRangeIsInvalid(): void
     {
-        $this->webApplication();
-
         $content = 'Test content';
 
         $tempFile = $this->createTempFileWithContent($content);
@@ -1858,7 +1859,7 @@ final class ResponseAdapterTest extends TestCase
         $begin = 5;
         $end = 4; // invalid: 'end' < 'begin'
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, $begin, $end];
 
@@ -1866,6 +1867,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
@@ -1878,14 +1880,12 @@ final class ResponseAdapterTest extends TestCase
 
     public function testThrowExceptionWhenStreamRangeIsInvalidWithNegativeBegin(): void
     {
-        $this->webApplication();
-
         $tempFile = $this->createTempFileWithContent('test content');
         $handle = fopen($tempFile, 'rb');
 
         self::assertIsResource($handle, 'File handle should be a valid resource.');
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, -1, 10]; // negative begin
 
@@ -1893,6 +1893,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);
@@ -1905,18 +1906,13 @@ final class ResponseAdapterTest extends TestCase
 
     public function testThrowExceptionWhenValidationKeyEmpty(): void
     {
-        $this->webApplication(
+        $response = new Response(
             [
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => true,
-                        'cookieValidationKey' => '',
-                    ],
-                ],
+                'charset' => 'UTF-8',
+                'enableCookieValidation' => true,
+                'cookieValidationKey' => '',
             ],
         );
-
-        $response = new Response();
 
         $response->cookies->add(
             new Cookie(
@@ -1931,6 +1927,7 @@ final class ResponseAdapterTest extends TestCase
             $response,
             FactoryHelper::createResponseFactory(),
             FactoryHelper::createStreamFactory(),
+            new Security(),
         );
 
         $this->expectException(InvalidConfigException::class);

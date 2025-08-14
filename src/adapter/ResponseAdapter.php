@@ -6,20 +6,22 @@ namespace yii2\extensions\psrbridge\adapter;
 
 use DateTimeInterface;
 use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface, StreamInterface};
-use Yii;
-use yii\base\InvalidConfigException;
-use yii\helpers\Json;
-use yii\web\{Cookie, Response};
+use yii\base\{InvalidConfigException, Security};
+use yii\web\Cookie;
 use yii2\extensions\psrbridge\exception\Message;
-use yii2\extensions\psrbridge\http\Request;
+use yii2\extensions\psrbridge\http\{Request, Response};
 
+use function count;
 use function fclose;
 use function fseek;
 use function gmdate;
+use function is_array;
+use function is_int;
 use function is_numeric;
 use function is_resource;
 use function is_string;
 use function max;
+use function serialize;
 use function strtotime;
 use function time;
 use function urlencode;
@@ -57,11 +59,13 @@ final class ResponseAdapter
      * @param Response $response Yii2 Response instance to adapt.
      * @param ResponseFactoryInterface $responseFactory PSR-7 ResponseFactoryInterface instance for response creation.
      * @param StreamFactoryInterface $streamFactory PSR-7 StreamFactoryInterface instance for body stream creation.
+     * @param Security $security Optional Security component for cookie validation.
      */
     public function __construct(
         private readonly Response $response,
         private readonly ResponseFactoryInterface $responseFactory,
         private readonly StreamFactoryInterface $streamFactory,
+        private readonly Security $security,
     ) {}
 
     /**
@@ -131,24 +135,16 @@ final class ResponseAdapter
     private function buildCookieHeaders(): array
     {
         $headers = [];
-        $request = Yii::$app->getRequest();
 
-        $enableValidation = $request->enableCookieValidation;
-        $validationKey = null;
-
-        if ($enableValidation) {
-            $validationKey = $request->cookieValidationKey;
-
-            if ($validationKey === '') {
-                throw new InvalidConfigException(
-                    Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage(Request::class),
-                );
-            }
+        if ($this->response->enableCookieValidation && $this->response->cookieValidationKey === '') {
+            throw new InvalidConfigException(
+                Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage(Request::class),
+            );
         }
 
         foreach ($this->response->getCookies() as $cookie) {
             if ($cookie->value !== null && $cookie->value !== '') {
-                $headers[] = $this->formatCookieHeader($cookie, $enableValidation, $validationKey);
+                $headers[] = $this->formatCookieHeader($cookie);
             }
         }
 
@@ -256,14 +252,12 @@ final class ResponseAdapter
      * compatibility with both Yii2 and PSR-7 HTTP stacks.
      *
      * @param Cookie $cookie Cookie instance to format.
-     * @param bool $enableValidation Whether to apply Yii2 Cookie validation.
-     * @param string|null $validationKey Validation key for hashing the cookie value if validation is enabled.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
      * @return string Formatted 'Set-Cookie' header string.
      */
-    private function formatCookieHeader(Cookie $cookie, bool $enableValidation, string|null $validationKey): string
+    private function formatCookieHeader(Cookie $cookie): string
     {
         $value = $cookie->value;
         $expire = $cookie->expire;
@@ -280,8 +274,15 @@ final class ResponseAdapter
             $expire = $expire->getTimestamp();
         }
 
-        if ($enableValidation && $validationKey !== null && ($expire === 0 || $expire >= time())) {
-            $value = Yii::$app->getSecurity()->hashData(Json::encode([$cookie->name, $cookie->value]), $validationKey);
+        if (
+            $this->response->enableCookieValidation &&
+            $this->response->cookieValidationKey !== '' &&
+            ($expire === 0 || $expire >= time())
+        ) {
+            $value = $this->security->hashData(
+                serialize([$cookie->name, $cookie->value]),
+                $this->response->cookieValidationKey,
+            );
         }
 
         $header = urlencode($cookie->name) . '=' . urlencode($value);

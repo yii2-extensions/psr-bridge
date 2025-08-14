@@ -1360,8 +1360,6 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testReturnMultipleValidatedCookiesWhenValidationEnabledWithMultipleValidCookies(): void
     {
-        $security = new Security();
-
         $cookies = [
             'session_id' => 'session_value_123',
             'user_pref' => 'preference_value_456',
@@ -1372,8 +1370,7 @@ final class StatelessApplicationTest extends TestCase
         $signedCookies = [];
 
         foreach ($cookies as $name => $value) {
-            $data = [$name, $value];
-            $signedCookies[$name] = $security->hashData(Json::encode($data), self::COOKIE_VALIDATION_KEY);
+            $signedCookies[$name] = $this->signCookie($name, $value);
         }
 
         $app = $this->statelessApplication(
@@ -1687,13 +1684,6 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testReturnValidatedCookiesWhenValidationEnabledWithValidCookies(): void
     {
-        $security = new Security();
-
-        $signedCookieValue = $security->hashData(
-            Json::encode(['valid_session', 'abc123session']),
-            self::COOKIE_VALIDATION_KEY,
-        );
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -1710,7 +1700,7 @@ final class StatelessApplicationTest extends TestCase
                 ->withCookieParams(
                     [
                         'invalid_cookie' => 'invalid_data',
-                        'valid_session' => $signedCookieValue,
+                        'valid_session' => $this->signCookie('valid_session', 'abc123session'),
                     ],
                 ),
         );
@@ -1735,13 +1725,6 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testReturnValidatedCookieWithCorrectNamePropertyWhenValidationEnabled(): void
     {
-        $security = new Security();
-
-        $signedCookieValue = $security->hashData(
-            Json::encode(['validated_session', 'secure_session_value']),
-            self::COOKIE_VALIDATION_KEY,
-        );
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -1755,7 +1738,10 @@ final class StatelessApplicationTest extends TestCase
 
         $response = $app->handle(
             FactoryHelper::createRequest('GET', 'site/getcookies')
-                ->withCookieParams(['validated_session' => $signedCookieValue]),
+                ->withCookieParams(
+                    [
+                        'validated_session' => $this->signCookie('validated_session', 'secure_session_value')],
+                ),
         );
 
         self::assertSame(
