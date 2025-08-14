@@ -896,6 +896,148 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testResponseAdapterCachingAndResetBehaviorAcrossMultipleRequests(): void
+    {
+        $app = $this->statelessApplication();
+
+        // first request - verify adapter caching behavior
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/index',
+        ];
+
+        $response1 = $app->handle(
+            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
+        );
+
+        self::assertSame(
+            200,
+            $response1->getStatusCode(),
+            "Response 'status code' should be '200' for first request to 'site/index' route in 'StatelessApplication'.",
+        );
+
+        // access the Response component to test adapter behavior
+        $bridgeResponse1 = $app->response;
+
+        // get PSR-7 response twice to test caching
+        $bridgeResponse1->getPsr7Response();
+        $adapter1 = Assert::inaccessibleProperty($bridgeResponse1, 'adapter');
+
+        $bridgeResponse1->getPsr7Response();
+        $adapter2 = Assert::inaccessibleProperty($bridgeResponse1, 'adapter');
+
+        // verify adapter is cached (same instance across multiple calls)
+        self::assertSame(
+            $adapter1,
+            $adapter2,
+            "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, " .
+            "confirming adapter caching behavior in 'StatelessApplication'.",
+        );
+
+        // second request with different route - verify stateless behavior
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/statuscode',
+        ];
+
+        $response2 = $app->handle(
+            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
+        );
+
+        self::assertSame(
+            201,
+            $response2->getStatusCode(),
+            "Response 'status code' should be '201' for second request to 'site/statuscode' route in 'StatelessApplication'.",
+        );
+
+        // verify that the Response component is fresh for each request (stateless)
+        $bridgeResponse2 = $app->response;
+
+        self::assertNotSame(
+            $bridgeResponse1,
+            $bridgeResponse2,
+            'Response component should be a different instance for each request, confirming stateless behavior in ' .
+            "'StatelessApplication'.",
+        );
+
+        // test 'reset()' functionality
+        $bridgeResponse2->getPsr7Response();
+        $adapter3 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
+
+        $bridgeResponse2->reset();
+
+        // after reset, adapter cache should be cleared
+        self::assertNull(
+            Assert::inaccessibleProperty($bridgeResponse2, 'adapter'),
+            "'reset()' should nullify the cached adapter before the next 'getPsr7Response()' call.",
+        );
+
+        $bridgeResponse2->getPsr7Response();
+        $adapter4 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
+
+        self::assertNotSame(
+            $adapter3,
+            $adapter4,
+            "'reset()' should force creation of a new adapter instance, resulting in different PSR-7 response " .
+            "objects before and after reset in 'StatelessApplication'.",
+        );
+
+        // third request - verify adapter isolation between requests
+        $_COOKIE = ['test_cookie' => 'test_value'];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/cookie',
+        ];
+
+        $response3 = $app->handle(
+            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
+        );
+
+        self::assertSame(
+            200,
+            $response3->getStatusCode(),
+            "Response 'status code' should be '200' for third request to 'site/cookie' route in 'StatelessApplication'.",
+        );
+
+        $bridgeResponse3 = $app->response;
+
+        $bridgeResponse3->getPsr7Response();
+        $adapter5 = Assert::inaccessibleProperty($bridgeResponse3, 'adapter');
+
+        // verify each request gets its own adapter instance
+        self::assertNotSame(
+            $adapter3,
+            $adapter5,
+            'Each request should get its own adapter instance, confirming adapter isolation between requests in ' .
+            "'StatelessApplication'.",
+        );
+
+        // verify response headers are preserved correctly across adapter operations
+        $cookieHeaders = array_filter(
+            $response3->getHeader('Set-Cookie'),
+            static fn(string $header): bool => str_starts_with($header, $app->session->getName()) === false,
+        );
+
+        $hasCookieHeader = false;
+
+        foreach ($cookieHeaders as $header) {
+            if (str_contains($header, 'test=test') || str_contains($header, 'test2=test2')) {
+                $hasCookieHeader = true;
+
+                break;
+            }
+        }
+
+        self::assertTrue(
+            $hasCookieHeader,
+            "PSR-7 response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
+            "adapter behavior in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnCookiesHeadersForSiteCookieRoute(): void
     {
         $_SERVER = [
@@ -927,9 +1069,41 @@ final class StatelessApplicationTest extends TestCase
                         'test2=test2',
                     ],
                     sprintf(
-                        "Cookie header should contain either 'test=test' or 'test2=test2', got '%s' for 'site/cookie' " .
-                        'route.',
+                        "Cookie header should contain either 'test=test' or 'test2=test2', got '%s' for " .
+                        "'site/cookie' route.",
                         $params[0],
+                    ),
+                );
+                self::assertStringContainsString(
+                    'Path=/',
+                    $cookie,
+                    "Cookie header should contain 'Path=/' for 'site/cookie' route.",
+                );
+                self::assertStringNotContainsString(
+                    'Secure',
+                    $cookie,
+                    sprintf(
+                        "Cookie header should not contain 'Secure' flag for '%s', got '%s' for 'site/cookie' route.",
+                        $params[0],
+                        $cookie,
+                    ),
+                );
+                self::assertStringNotContainsString(
+                    'HttpOnly',
+                    $cookie,
+                    sprintf(
+                        "Cookie header should not contain 'HttpOnly' flag for '%s', got '%s' for 'site/cookie' route.",
+                        $params[0],
+                        $cookie,
+                    ),
+                );
+                self::assertStringContainsString(
+                    'SameSite=Lax',
+                    $cookie,
+                    sprintf(
+                        "Cookie header should contain 'SameSite=Lax' for '%s', got '%s' for 'site/cookie' route.",
+                        $params[0],
+                        $cookie,
                     ),
                 );
             }
