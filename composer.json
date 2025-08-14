@@ -37,12 +37,12 @@
     },
     "autoload": {
         "psr-4": {
-            "yii2\\extensions\\debug\\": "debug",
             "yii2\\extensions\\psrbridge\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
+            "yii2\\extensions\\debug\\": "debug",
             "yii2\\extensions\\psrbridge\\tests\\": "tests"
         }
     },

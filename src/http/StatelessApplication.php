@@ -14,13 +14,11 @@ use yii\web\{Application, UploadedFile};
 
 use function array_merge;
 use function array_reverse;
-use function function_exists;
 use function gc_collect_cycles;
 use function ini_get;
 use function is_array;
 use function memory_get_usage;
 use function method_exists;
-use function microtime;
 use function sscanf;
 use function strtoupper;
 
@@ -387,11 +385,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      */
     protected function reset(ServerRequestInterface $request): void
     {
-        // override 'YII_BEGIN_TIME' if possible for yii2-debug and other modules that depend on it
-        if (function_exists('runkit_constant_redefine')) {
-            @\runkit_constant_redefine('YII_BEGIN_TIME', microtime(true));
-        }
-
         $this->startEventTracking();
 
         if ($this->has('errorHandler')) {

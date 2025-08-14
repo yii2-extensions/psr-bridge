@@ -80,17 +80,6 @@ final class Request extends \yii\web\Request
     private float|null $requestStartTime = null;
 
     /**
-     * {@inheritdoc}
-     */
-    public function init(): void
-    {
-        // capture request start time as early as possible
-        $this->requestStartTime = microtime(true);
-
-        parent::init();
-    }
-
-    /**
      * Retrieves HTTP Basic authentication credentials from the current request.
      *
      * Returns an array containing the username and password sent via HTTP authentication, supporting both standard PHP
@@ -529,6 +518,11 @@ final class Request extends \yii\web\Request
         return parent::getRemoteIP();
     }
 
+    public function getRequestStartTime(): float
+    {
+        return $this->requestStartTime ??= microtime(true);
+    }
+
     /**
      * Retrieves the script URL for the current request, supporting PSR-7 and Yii2 fallback.
      *
@@ -748,6 +742,14 @@ final class Request extends \yii\web\Request
         return parent::getUrl();
     }
 
+    public function init(): void
+    {
+        // capture request start time as early as possible
+        $this->requestStartTime = microtime(true);
+
+        parent::init();
+    }
+
     /**
      * Reset the PSR-7 ServerRequestInterface adapter to its initial state.
      *
@@ -908,10 +910,5 @@ final class Request extends \yii\web\Request
         $scriptUrl = $this->getServerParam('SCRIPT_NAME');
 
         return is_string($scriptUrl) ? $scriptUrl : '';
-    }
-
-    public function getRequestStartTime(): float
-    {
-        return $this->requestStartTime ??= microtime(true);
     }
 }
