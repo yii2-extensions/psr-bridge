@@ -1664,11 +1664,11 @@ final class StatelessApplicationTest extends TestCase
                 str_starts_with($header, 'user_preference=') &&
                 str_starts_with($header, $app->session->getName()) === false
             ) {
-                    $deletionHeaderFound = true;
-                    $deletionHeader = $header;
+                $deletionHeaderFound = true;
+                $deletionHeader = $header;
 
-                    break;
-                }
+                break;
+            }
         }
 
         self::assertTrue(
