@@ -20,6 +20,7 @@ final class WorkerDebugModule extends Module
         parent::init();
 
         $this->requestStartTime = microtime(true);
+        $this->viewPath = '@yii/debug/views';
     }
 
     /**
