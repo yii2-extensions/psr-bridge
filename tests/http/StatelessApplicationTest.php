@@ -1009,7 +1009,7 @@ final class StatelessApplicationTest extends TestCase
         // verify response headers are preserved correctly across adapter operations
         $cookieHeaders = array_filter(
             $response3->getHeader('Set-Cookie'),
-            static fn (string $header): bool => str_starts_with($header, $app->session->getName()) === false,
+            static fn(string $header): bool => str_starts_with($header, $app->session->getName()) === false,
         );
 
         $hasCookieHeader = false;
