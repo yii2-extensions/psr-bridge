@@ -90,7 +90,6 @@ final class Request extends \yii\web\Request
         parent::init();
     }
 
-
     /**
      * Retrieves HTTP Basic authentication credentials from the current request.
      *
