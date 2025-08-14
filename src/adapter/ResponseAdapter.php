@@ -56,13 +56,13 @@ final class ResponseAdapter
     /**
      * Creates a new instance of the {@see ResponseAdapter} class.
      *
-     * @param Response $response Yii2 Response instance to adapt.
+     * @param Response $psrResponse Yii2 Response instance to adapt.
      * @param ResponseFactoryInterface $responseFactory PSR-7 ResponseFactoryInterface instance for response creation.
      * @param StreamFactoryInterface $streamFactory PSR-7 StreamFactoryInterface instance for body stream creation.
      * @param Security $security Optional Security component for cookie validation.
      */
     public function __construct(
-        private readonly Response $response,
+        private readonly Response $psrResponse,
         private readonly ResponseFactoryInterface $responseFactory,
         private readonly StreamFactoryInterface $streamFactory,
         private readonly Security $security,
@@ -95,12 +95,12 @@ final class ResponseAdapter
     {
         // create base response
         $psr7Response = $this->responseFactory->createResponse(
-            $this->response->getStatusCode(),
-            $this->response->statusText,
+            $this->psrResponse->getStatusCode(),
+            $this->psrResponse->statusText,
         );
 
         /** @phpstan-var array<string, string[]> $headers */
-        $headers = $this->response->getHeaders()->toArray();
+        $headers = $this->psrResponse->getHeaders()->toArray();
 
         // add headers
         foreach ($headers as $name => $values) {
@@ -136,13 +136,13 @@ final class ResponseAdapter
     {
         $headers = [];
 
-        if ($this->response->enableCookieValidation && $this->response->cookieValidationKey === '') {
+        if ($this->psrResponse->enableCookieValidation && $this->psrResponse->cookieValidationKey === '') {
             throw new InvalidConfigException(
                 Message::COOKIE_VALIDATION_KEY_NOT_CONFIGURED->getMessage(Request::class),
             );
         }
 
-        foreach ($this->response->getCookies() as $cookie) {
+        foreach ($this->psrResponse->getCookies() as $cookie) {
             if ($cookie->value !== null && $cookie->value !== '') {
                 $headers[] = $this->formatCookieHeader($cookie);
             }
@@ -170,12 +170,12 @@ final class ResponseAdapter
     private function createBodyStream(): StreamInterface
     {
         // handle file streaming case (sendFile/sendStreamAsFile)
-        if ($this->response->stream !== null) {
+        if ($this->psrResponse->stream !== null) {
             return $this->createStreamFromFileHandle();
         }
 
         // handle regular content case
-        return $this->streamFactory->createStream($this->response->content ?? '');
+        return $this->streamFactory->createStream($this->psrResponse->content ?? '');
     }
 
     /**
@@ -198,7 +198,7 @@ final class ResponseAdapter
      */
     private function createStreamFromFileHandle(): StreamInterface
     {
-        $stream = $this->response->stream;
+        $stream = $this->psrResponse->stream;
 
         if (
             is_array($stream) === false ||
@@ -275,13 +275,13 @@ final class ResponseAdapter
         }
 
         if (
-            $this->response->enableCookieValidation &&
-            $this->response->cookieValidationKey !== '' &&
+            $this->psrResponse->enableCookieValidation &&
+            $this->psrResponse->cookieValidationKey !== '' &&
             ($expire === 0 || $expire >= time())
         ) {
             $value = $this->security->hashData(
                 serialize([$cookie->name, $cookie->value]),
-                $this->response->cookieValidationKey,
+                $this->psrResponse->cookieValidationKey,
             );
         }
 
