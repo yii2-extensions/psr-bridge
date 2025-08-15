@@ -75,7 +75,11 @@ final class Request extends \yii\web\Request
     private ServerRequestAdapter|null $adapter = null;
 
     /**
-     * Request start time
+     * Timestamp (in seconds since the Unix epoch) when the request was first accessed.
+     *
+     * Stores the request start time with microsecond precision, or `null` if not yet initialized.
+     *
+     * @var float|null
      */
     private float|null $requestStartTime = null;
 
