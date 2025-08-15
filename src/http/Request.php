@@ -768,13 +768,11 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Reset the PSR-7 ServerRequestInterface adapter to its initial state.
+     * Reset the PSR-7 ServerRequestAdapter instance and request start time for the current Request.
      *
-     * Sets the internal adapter property to `null`, removing any previously set PSR-7 ServerRequestInterface adapter
-     * and restoring the default behavior of the request component.
-     *
-     * This method is used to clear the PSR-7 bridge in worker mode, ensuring that subsequent request operations fall
-     * back to the parent Yii2 implementation.
+     * Sets the internal {@see ServerRequestAdapter} property and request start time to `null`, ensuring that a new
+     * adapter and start time will be created on the next access. This is useful for clearing cached adapter state and
+     * timing information between requests or after significant changes to the Request component.
      *
      * Usage example:
      * ```php
@@ -784,6 +782,7 @@ final class Request extends \yii\web\Request
     public function reset(): void
     {
         $this->adapter = null;
+        $this->requestStartTime = null;
     }
 
     /**
