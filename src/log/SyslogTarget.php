@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\logger;
+namespace yii2\extensions\psrbridge\log;
 
 use Yii;
 
