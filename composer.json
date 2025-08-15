@@ -33,7 +33,7 @@
         "yiisoft/yii2-debug": "^2.1"
     },
     "suggest": {
-        "ext-uopz": "*"
+        "yiisoft/yii2-debug": "Required to use yii2\\extensions\\debug\\WorkerDebugModule and its panels"
     },
     "autoload": {
         "psr-4": {
