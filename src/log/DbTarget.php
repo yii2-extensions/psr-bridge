@@ -18,7 +18,7 @@ final class DbTarget extends \yii\log\DbTarget
     {
         $this->messages = array_merge(
             $this->messages,
-            static::filterMessages($messages, $this->getLevels(), $this->categories, $this->except),
+            self::filterMessages($messages, $this->getLevels(), $this->categories, $this->except),
         );
 
         $count = count($this->messages);
