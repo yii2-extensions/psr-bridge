@@ -6,8 +6,6 @@ namespace yii2\extensions\debug;
 
 use yii\debug\Module;
 
-use function microtime;
-
 final class WorkerDebugModule extends Module
 {
     public function init(): void
