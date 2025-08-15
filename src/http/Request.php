@@ -831,6 +831,8 @@ final class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
+        $this->requestStartTime = microtime(true);
+
         $this->adapter = new ServerRequestAdapter($request);
     }
 

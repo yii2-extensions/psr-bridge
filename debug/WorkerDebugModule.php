@@ -10,16 +10,10 @@ use function microtime;
 
 final class WorkerDebugModule extends Module
 {
-    /**
-     * Request start time captured at module initialization
-     */
-    private float|null $requestStartTime = null;
-
     public function init(): void
     {
         parent::init();
 
-        $this->requestStartTime = microtime(true);
         $this->viewPath = '@yii/debug/views';
     }
 
@@ -34,10 +28,5 @@ final class WorkerDebugModule extends Module
         $corePanels['timeline'] = ['class' => WorkerTimelinePanel::class];
 
         return $corePanels;
-    }
-
-    public function getRequestStartTime(): float
-    {
-        return $this->requestStartTime ?? microtime(true);
     }
 }
