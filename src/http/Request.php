@@ -518,6 +518,23 @@ final class Request extends \yii\web\Request
         return parent::getRemoteIP();
     }
 
+    /**
+     * Retrieves the request start time as a float value.
+     *
+     * Returns the timestamp (in seconds with microsecond precision) when the request was first accessed.
+     *
+     * If the start time is not already set, it is initialized using {@see microtime()} on first call and cached for
+     * subsequent accesses.
+     *
+     * This method enables precise request timing for profiling, logging, and performance measurement.
+     *
+     * @return float Request start time in seconds with microsecond precision.
+     *
+     * Usage example:
+     * ```php
+     * $startTime = $request->getRequestStartTime();
+     * ```
+     */
     public function getRequestStartTime(): float
     {
         return $this->requestStartTime ??= microtime(true);
@@ -831,7 +848,7 @@ final class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
-        $this->requestStartTime = microtime(true);
+        $this->getRequestStartTime();
 
         $this->adapter = new ServerRequestAdapter($request);
     }
