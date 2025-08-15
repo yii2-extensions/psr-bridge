@@ -759,14 +759,6 @@ final class Request extends \yii\web\Request
         return parent::getUrl();
     }
 
-    public function init(): void
-    {
-        // capture request start time as early as possible
-        $this->requestStartTime = microtime(true);
-
-        parent::init();
-    }
-
     /**
      * Reset the PSR-7 ServerRequestAdapter instance and request start time for the current Request.
      *
