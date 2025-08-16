@@ -32,13 +32,6 @@ use function urlencode;
 #[Group('adapter')]
 final class ResponseAdapterTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        MockerFunctions::reset();
-
-        parent::tearDown();
-    }
-
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */

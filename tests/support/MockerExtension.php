@@ -57,13 +57,13 @@ final class MockerExtension implements Extension
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
-                'name' => 'header_list',
+                'name' => 'headers_list',
                 'function' => static fn(): array => MockerFunctions::headers_list(),
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
                 'name' => 'header_remove',
-                'function' => static fn() => MockerFunctions::header_remove(),
+                'function' => static fn(string|null $header = null) => MockerFunctions::header_remove($header),
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',

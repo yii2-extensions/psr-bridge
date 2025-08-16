@@ -6,7 +6,6 @@ namespace yii2\extensions\psrbridge\tests\emitter;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use PHPUnit\Framework\MockObject\{Exception, MockObject};
-use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\{ResponseInterface, StreamInterface};
 use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\emitter\SapiEmitter;
@@ -14,6 +13,7 @@ use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, O
 use yii2\extensions\psrbridge\tests\provider\EmitterProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
+use yii2\extensions\psrbridge\tests\TestCase;
 
 use function fopen;
 use function implode;
@@ -55,16 +55,6 @@ use function ob_start;
 #[Group('emitter')]
 final class SapiEmitterTest extends TestCase
 {
-    public static function tearDownAfterClass(): void
-    {
-        MockerFunctions::reset();
-    }
-
-    public function setUp(): void
-    {
-        MockerFunctions::reset();
-    }
-
     /**
      * @throws HeadersAlreadySentException if HTTP headers have already been sent to the client.
      * @throws OutputAlreadySentException if response output has already been emitted.
