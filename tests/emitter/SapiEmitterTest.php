@@ -13,7 +13,7 @@ use yii2\extensions\psrbridge\emitter\SapiEmitter;
 use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
 use yii2\extensions\psrbridge\tests\provider\EmitterProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
 use function fopen;
 use function implode;
@@ -57,12 +57,12 @@ final class SapiEmitterTest extends TestCase
 {
     public static function tearDownAfterClass(): void
     {
-        HTTPFunctions::reset();
+        MockerFunctions::reset();
     }
 
     public function setUp(): void
     {
-        HTTPFunctions::reset();
+        MockerFunctions::reset();
     }
 
     /**
@@ -77,17 +77,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             200,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should be '200' for content range response.",
         );
         self::assertCount(
             1,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             "Should have exactly one 'Content-Range' header.",
         );
         self::assertSame(
             ['Content-Range: bytes 0-3/8'],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             "'Content-Range' header should be set correctly.",
         );
         self::assertSame(
@@ -113,17 +113,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             200,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should match the specified code ('200').",
         );
         self::assertCount(
             1,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             "Should have exactly one 'Content-Range' header.",
         );
         self::assertSame(
             ['Content-Range: bytes 0-3/8'],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             "'Content-Range' header should be set correctly.",
         );
         self::assertSame(
@@ -148,17 +148,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             200,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should be '200' for default response.",
         );
         self::assertCount(
             0,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'No headers should be present.',
         );
         self::assertSame(
             [],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Headers list should be empty.',
         );
         self::assertSame(
@@ -183,17 +183,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             404,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should match the specified code ('404').",
         );
         self::assertCount(
             1,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Should have exactly one header entry.',
         );
         self::assertSame(
             ['X-Test: test'],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Header should match the specified header.',
         );
         self::assertSame(
@@ -229,7 +229,7 @@ final class SapiEmitterTest extends TestCase
         );
         self::assertSame(
             $code,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             'Status code should match the specified code.',
         );
     }
@@ -246,17 +246,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             $code,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should match the specified code ('404').",
         );
         self::assertCount(
             1,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Should have exactly one header entry.',
         );
         self::assertSame(
             ['X-Test: test'],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Header should match the specified header.',
         );
         self::assertSame(
@@ -281,17 +281,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             200,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should be '200' for default response.",
         );
         self::assertCount(
             0,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'No headers should be present.',
         );
         self::assertSame(
             [],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Headers list should be empty.',
         );
         self::assertSame(
@@ -316,17 +316,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             200,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should be '200'.",
         );
         self::assertCount(
             1,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Should have exactly one header.',
         );
         self::assertSame(
             ['Content-Range: bytes 0-3/8'],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Content-Range header should be set correctly.',
         );
         $this->expectOutputString(
@@ -355,7 +355,7 @@ final class SapiEmitterTest extends TestCase
         (new SapiEmitter(8192))->emit($response);
 
         $this->expectOutputString('');
-        self::assertSame(1, HTTPFunctions::getFlushTimes(), 'Stream should be flushed exactly once.');
+        self::assertSame(1, MockerFunctions::getFlushTimes(), 'Stream should be flushed exactly once.');
     }
 
     /**
@@ -374,7 +374,7 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             200,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should be '200' when adding multiple headers.",
         );
         self::assertSame(
@@ -383,7 +383,7 @@ final class SapiEmitterTest extends TestCase
                 'Set-Cookie: key-1=value-1',
                 'Set-Cookie: key-2=value-2',
             ],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             "Multiple 'Set-Cookie' headers should be preserved as separate headers without overwriting.",
         );
         self::assertSame(
@@ -417,7 +417,7 @@ final class SapiEmitterTest extends TestCase
                 'Set-Cookie: key-1=value-1',
                 'X-Custom: value1, value2',
             ],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Headers should be correctly formatted with multiple types and values.',
         );
     }
@@ -437,7 +437,7 @@ final class SapiEmitterTest extends TestCase
                 'Set-Cookie: cookie1=value1',
                 'Set-Cookie: cookie2=value2',
             ],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Multiple Set-Cookie headers should be preserved separately.',
         );
     }
@@ -461,12 +461,12 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             $code,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should be '{$code}' for no-body HTTP responses.",
         );
         self::assertSame(
             ['Content-Type: text/plain'],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Headers should be preserved even when body is suppressed.',
         );
         self::assertSame(
@@ -517,7 +517,7 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             ['Content-Range: bytes 0-3/8'],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             "'Content-Range' header should be set.",
         );
         $this->expectOutputString(
@@ -540,7 +540,7 @@ final class SapiEmitterTest extends TestCase
                 'Content-Type: text/plain',
                 'X-Custom-Header: value',
             ],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Headers should be normalized to canonical case format.',
         );
     }
@@ -557,17 +557,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             200,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should be '200' for default response.",
         );
         self::assertCount(
             0,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'No headers should be sent for a response without headers.',
         );
         self::assertSame(
             [],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Headers list should be empty for response without headers.',
         );
         self::assertSame(
@@ -592,17 +592,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             $code,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should match the specified code ('404').",
         );
         self::assertCount(
             1,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Should have exactly one header entry.',
         );
         self::assertSame(
             ['X-Test: test'],
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Header should match the specified header.',
         );
         self::assertSame(
@@ -640,17 +640,17 @@ final class SapiEmitterTest extends TestCase
 
         self::assertSame(
             200,
-            HTTPFunctions::http_response_code(),
+            MockerFunctions::http_response_code(),
             "Status code should be '200'.",
         );
         self::assertCount(
             count($expectedHeaders),
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Number of headers should match expected count.',
         );
         self::assertSame(
             $expectedHeaders,
-            HTTPFunctions::headers_list(),
+            MockerFunctions::headers_list(),
             'Headers should match expected values.',
         );
         $this->expectOutputString(
@@ -679,7 +679,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testThrowExceptionWhenHeadersAlreadySent(): void
     {
-        HTTPFunctions::set_headers_sent(true, 'file', 123);
+        MockerFunctions::set_headers_sent(true, 'file', 123);
 
         $this->expectException(HeadersAlreadySentException::class);
         $this->expectExceptionMessage(Message::UNABLE_TO_EMIT_RESPONSE_HEADERS_ALREADY_SENT->getMessage());

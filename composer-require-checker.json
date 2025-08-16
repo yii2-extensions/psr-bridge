@@ -1,9 +1,6 @@
 {
     "symbol-whitelist": [
         "runkit_constant_redefine",
-        "yii\\debug\\Module",
-        "yii\\debug\\panels\\ProfilingPanel",
-        "yii\\debug\\panels\\TimelinePanel",
         "YII_DEBUG",
         "YII_ENV_TEST"
     ]

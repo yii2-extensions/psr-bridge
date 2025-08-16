@@ -8,7 +8,6 @@ parameters:
     level: max
 
     paths:
-        - debug
         - src
         - tests
 

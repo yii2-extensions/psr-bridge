@@ -21,7 +21,6 @@ use function is_numeric;
 use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
-use function microtime;
 use function strncasecmp;
 
 /**
@@ -73,13 +72,6 @@ final class Request extends \yii\web\Request
      * Yii2 Request component.
      */
     private ServerRequestAdapter|null $adapter = null;
-
-    /**
-     * Timestamp (in seconds since the Unix epoch) when the request was first accessed.
-     *
-     * Stores the request start time with microsecond precision, or `null` if not yet initialized.
-     */
-    private float|null $requestStartTime = null;
 
     /**
      * Retrieves HTTP Basic authentication credentials from the current request.
@@ -521,28 +513,6 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves the request start time as a float value.
-     *
-     * Returns the timestamp (in seconds with microsecond precision) when the request was first accessed.
-     *
-     * If the start time is not already set, it is initialized using {@see microtime()} on first call and cached for
-     * subsequent accesses.
-     *
-     * This method enables precise request timing for profiling, logging, and performance measurement.
-     *
-     * @return float Request start time in seconds with microsecond precision.
-     *
-     * Usage example:
-     * ```php
-     * $startTime = $request->getRequestStartTime();
-     * ```
-     */
-    public function getRequestStartTime(): float
-    {
-        return $this->requestStartTime ??= microtime(true);
-    }
-
-    /**
      * Retrieves the script URL for the current request, supporting PSR-7 and Yii2 fallback.
      *
      * In worker environments (RoadRunner, FrankenPHP, etc.) with a PSR-7 adapter set, returns an empty string, since no
@@ -762,11 +732,13 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Reset the PSR-7 ServerRequestAdapter instance and request start time for the current Request.
+     * Reset the PSR-7 ServerRequestInterface adapter to its initial state.
      *
-     * Sets the internal {@see ServerRequestAdapter} property and request start time to `null`, ensuring that a new
-     * adapter and start time will be created on the next access. This is useful for clearing cached adapter state and
-     * timing information between requests or after significant changes to the Request component.
+     * Sets the internal adapter property to `null`, removing any previously set PSR-7 ServerRequestInterface adapter
+     * and restoring the default behavior of the request component.
+     *
+     * This method is used to clear the PSR-7 bridge in worker mode, ensuring that subsequent request operations fall
+     * back to the parent Yii2 implementation.
      *
      * Usage example:
      * ```php
@@ -776,7 +748,6 @@ final class Request extends \yii\web\Request
     public function reset(): void
     {
         $this->adapter = null;
-        $this->requestStartTime = null;
     }
 
     /**
@@ -841,9 +812,9 @@ final class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
-        $this->getRequestStartTime();
-
-        $this->adapter = new ServerRequestAdapter($request);
+        $this->adapter = new ServerRequestAdapter(
+            $request->withHeader('statelessAppStartTime', (string) microtime(true)),
+        );
     }
 
     /**

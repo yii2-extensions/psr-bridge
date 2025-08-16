@@ -8,8 +8,10 @@ use Yii;
 
 final class Logger extends \yii\log\Logger
 {
-    public function getElapsedTime()
+    public function getElapsedTime(): float
     {
-        return microtime(true) -  Yii::$app->request->getRequestStartTime();
+        $statelessAppStartTime = Yii::$app->request->getHeaders()->get('statelessAppStartTime') ?? YII_BEGIN_TIME;
+
+        return microtime(true) -  (float) $statelessAppStartTime;
     }
 }

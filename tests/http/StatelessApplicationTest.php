@@ -20,7 +20,7 @@ use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_fill;
@@ -53,7 +53,7 @@ final class StatelessApplicationTest extends TestCase
     {
         $this->closeApplication();
 
-        HTTPFunctions::reset();
+        MockerFunctions::reset();
 
         parent::tearDown();
     }

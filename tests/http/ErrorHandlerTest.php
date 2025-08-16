@@ -10,7 +10,7 @@ use Throwable;
 use yii\base\{Exception, UserException};
 use yii\web\HttpException;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Response};
-use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function ob_get_level;
@@ -22,7 +22,7 @@ final class ErrorHandlerTest extends TestCase
 {
     protected function tearDown(): void
     {
-        HTTPFunctions::reset();
+        MockerFunctions::reset();
 
         parent::tearDown();
     }
