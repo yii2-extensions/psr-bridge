@@ -14,7 +14,7 @@ use yii\helpers\ArrayHelper;
 use yii\log\FileTarget;
 use yii\web\{Application, JsonParser};
 use yii2\extensions\psrbridge\http\StatelessApplication;
-use yii2\extensions\psrbridge\tests\support\stub\Identity;
+use yii2\extensions\psrbridge\tests\support\stub\{Identity, MockerFunctions};
 
 use function fclose;
 use function tmpfile;
@@ -41,6 +41,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        MockerFunctions::reset();
 
         $this->originalServer = $_SERVER;
 

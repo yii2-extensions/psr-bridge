@@ -9,7 +9,7 @@ use PHPUnit\Event\TestSuite\{Started, StartedSubscriber};
 use PHPUnit\Runner\Extension\{Extension, Facade, ParameterCollection};
 use PHPUnit\TextUI\Configuration\Configuration;
 use Xepozz\InternalMocker\{Mocker, MockerState};
-use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
 /**
  * Custom configuration extension for mocking internal functions.
@@ -40,7 +40,7 @@ final class MockerExtension implements Extension
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
                 'name' => 'flush',
-                'function' => static fn() => HTTPFunctions::flush(),
+                'function' => static fn() => MockerFunctions::flush(),
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
@@ -49,7 +49,7 @@ final class MockerExtension implements Extension
                     string $string,
                     bool $replace = true,
                     int|null $http_response_code = null,
-                ) => HTTPFunctions::header(
+                ) => MockerFunctions::header(
                     $string,
                     $replace,
                     $http_response_code,
@@ -57,18 +57,18 @@ final class MockerExtension implements Extension
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
-                'name' => 'header_list',
-                'function' => static fn(): array => HTTPFunctions::headers_list(),
+                'name' => 'headers_list',
+                'function' => static fn(): array => MockerFunctions::headers_list(),
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
                 'name' => 'header_remove',
-                'function' => static fn() => HTTPFunctions::header_remove(),
+                'function' => static fn(string|null $header = null) => MockerFunctions::header_remove($header),
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
                 'name' => 'headers_sent',
-                'function' => static fn(&$file = null, &$line = null): bool => HTTPFunctions::headers_sent(
+                'function' => static fn(&$file = null, &$line = null): bool => MockerFunctions::headers_sent(
                     $file,
                     $line,
                 ),
@@ -76,9 +76,14 @@ final class MockerExtension implements Extension
             [
                 'namespace' => 'yii2\extensions\psrbridge\http',
                 'name' => 'http_response_code',
-                'function' => static fn(int|null $response_code = null): int => HTTPFunctions::http_response_code(
+                'function' => static fn(int|null $response_code = null): int => MockerFunctions::http_response_code(
                     $response_code,
                 ),
+            ],
+            [
+                'namespace' => 'yii2\extensions\psrbridge\http',
+                'name' => 'microtime',
+                'function' => static fn(bool $as_float = false): float|string => MockerFunctions::microtime($as_float),
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\adapter',
@@ -87,7 +92,7 @@ final class MockerExtension implements Extension
                     $resource,
                     int $maxlength = -1,
                     int $offset = -1,
-                ): mixed => HTTPFunctions::stream_get_contents(
+                ): mixed => MockerFunctions::stream_get_contents(
                     $resource,
                     $maxlength,
                     $offset,

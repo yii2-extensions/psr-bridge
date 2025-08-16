@@ -20,7 +20,7 @@ use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_fill;
@@ -53,7 +53,7 @@ final class StatelessApplicationTest extends TestCase
     {
         $this->closeApplication();
 
-        HTTPFunctions::reset();
+        MockerFunctions::reset();
 
         parent::tearDown();
     }
@@ -2404,6 +2404,46 @@ final class StatelessApplicationTest extends TestCase
             $smallLimit,
             $app->getMemoryLimit(),
             'Memory limit should handle small positive values correctly.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testSetsPsr7RequestWithStatelessAppStartTimeHeader(): void
+    {
+        $mockedTime = 1640995200.123456;
+
+        MockerFunctions::setMockedMicrotime($mockedTime);
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/index',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for successful 'StatelessApplication' handling.",
+        );
+
+        $psr7Request = $app->request->getPsr7Request();
+        $statelessAppStartTime = $psr7Request->getHeaderLine('statelessAppStartTime');
+
+        self::assertSame(
+            (string) $mockedTime,
+            $statelessAppStartTime,
+            "PSR-7 request should contain 'statelessAppStartTime' header with the mocked microtime value.",
+        );
+        self::assertTrue(
+            $psr7Request->hasHeader('statelessAppStartTime'),
+            "PSR-7 request should have 'statelessAppStartTime' header set during adapter creation.",
         );
     }
 

@@ -13,7 +13,7 @@ use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\support\stub\HTTPFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function fclose;
@@ -32,13 +32,6 @@ use function urlencode;
 #[Group('adapter')]
 final class ResponseAdapterTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        HTTPFunctions::reset();
-
-        parent::tearDown();
-    }
-
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
@@ -2067,7 +2060,7 @@ final class ResponseAdapterTest extends TestCase
             new Security(),
         );
 
-        HTTPFunctions::set_stream_get_contents_should_fail();
+        MockerFunctions::set_stream_get_contents_should_fail();
 
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage(

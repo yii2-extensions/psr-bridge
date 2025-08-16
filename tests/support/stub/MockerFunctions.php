@@ -10,31 +10,36 @@ use function str_starts_with;
 use function strtolower;
 
 /**
- * Mocks system HTTP functions for emitter and header testing with controlled state and inspection.
+ * Test double for system HTTP and environment functions with controlled state and inspection.
  *
- * Provides controlled replacements for core PHP HTTP header and response functions to facilitate testing of HTTP
- * emitter and response-related code without actual header output or side effects.
+ * Provides comprehensive mock implementations of core PHP HTTP header, response, and environment functions to enable
+ * deterministic and isolated testing of emitter, response, and SAPI-dependent logic without side effects or global
+ * state changes.
  *
- * This class allows tests to simulate and inspect HTTP header operations, response codes, output flushing,
- * and SAPI name retrieval by maintaining internal state and exposing methods to manipulate and query that state.
+ * This class allows tests to simulate, inspect, and manipulate HTTP header operations, response codes, output flushing,
+ * microtime, and stream reading by maintaining internal state and exposing static methods for fine-grained control.
  *
- * It enables validation of emitter logic, header management, response code handling, and SAPI simulation in isolation
- * from PHP global state.
+ * The mock covers all critical PHP functions used in HTTP emission and environment-sensitive code, ensuring that tests
+ * can validate emitter logic, header management, response code handling, output flushing, and time-dependent behavior
+ * in complete isolation from the PHP runtime.
  *
- * Key features.
- * - Complete simulation of {@see \header()}, {@see \headers_sent()}, {@see \header_remove()}, {@see \headers_list()},
- *   {@see \http_response_code()}, and {@see php_sapi_name()} for test reliability.
- * - Consistent behavior matching PHP's native functions for test reliability.
- * - File and line tracking for headers_sent simulation.
- * - Header inspection and manipulation for assertions.
- * - Simulated output flushing and flush count tracking.
- * - SAPI name simulation for emitter and environment testing.
+ * Key features:
+ * - Complete simulation of.
+ *   - {@see \flush()} (output flush count tracking)
+ *   - {@see \header()} (add/replace headers, response code)
+ *   - {@see \header_remove()} (single/all headers)
+ *   - {@see \headers_list()} (header inspection)
+ *   - {@see \headers_sent()} (with file/line tracking)
+ *   - {@see \http_response_code()} (get/set response code)
+ *   - {@see \microtime()} (mockable time for timing tests)
+ *   - {@see \stream_get_contents()} (controllable stream read/failure)
+ * - Consistent behavior matching PHP native functions for test reliability.
  * - State reset capability for test isolation and repeatability.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
-final class HTTPFunctions
+final class MockerFunctions
 {
     /**
      * Tracks the number of times {@see \flush()} was called.
@@ -64,6 +69,13 @@ final class HTTPFunctions
     private static int $headersSentLine = 0;
 
     /**
+     * Holds a mocked microtime value for testing purposes.
+     *
+     * If set, this value will be returned instead of the actual microtime.
+     */
+    private static float|null $mockedMicrotime = null;
+
+    /**
      * Tracks the HTTP response code.
      */
     private static int $responseCode = 200;
@@ -72,6 +84,11 @@ final class HTTPFunctions
      * Controls whether stream_get_contents should fail.
      */
     private static bool $streamGetContentsShouldFail = false;
+
+    public static function clearMockedMicrotime(): void
+    {
+        self::$mockedMicrotime = null;
+    }
 
     public static function flush(): void
     {
@@ -155,6 +172,15 @@ final class HTTPFunctions
         return self::$responseCode;
     }
 
+    public static function microtime(bool $as_float = false): float|string
+    {
+        if (self::$mockedMicrotime !== null) {
+            return $as_float ? self::$mockedMicrotime : (string) self::$mockedMicrotime;
+        }
+
+        return \microtime($as_float);
+    }
+
     public static function reset(): void
     {
         self::$flushedTimes = 0;
@@ -164,6 +190,7 @@ final class HTTPFunctions
         self::$headersSentLine = 0;
         self::$responseCode = 200;
         self::$streamGetContentsShouldFail = false;
+        self::clearMockedMicrotime();
     }
 
     public static function set_headers_sent(bool $value = false, string $file = '', int $line = 0): void
@@ -176,6 +203,11 @@ final class HTTPFunctions
     public static function set_stream_get_contents_should_fail(bool $shouldFail = true): void
     {
         self::$streamGetContentsShouldFail = $shouldFail;
+    }
+
+    public static function setMockedMicrotime(float $time): void
+    {
+        self::$mockedMicrotime = $time;
     }
 
     public static function stream_get_contents(mixed $resource, int $maxlength = -1, int $offset = -1): string|false
