@@ -792,15 +792,16 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Sets the PSR-7 ServerRequestInterface instance for the current request.
+     * Sets and bridges a PSR-7 ServerRequestInterface instance for the current request.
      *
-     * Assigns a new {@see ServerRequestAdapter} wrapping the provided PSR-7 ServerRequestInterface to enable PSR-7
+     * Wraps the provided PSR-7 {@see ServerRequestInterface} in a {@see ServerRequestAdapter} to enable full PSR-7
      * interoperability for the Yii2 Request component.
      *
-     * This method is used to bridge PSR-7 compatible HTTP stacks with Yii2, allowing request data to be accessed via
-     * the adapter.
+     * This method injects a stateless application start time header (`statelessAppStartTime`) into the request for
+     * tracing and debugging purposes.
      *
-     * Once set, all request operations will use the PSR-7 ServerRequestInterface until {@see reset()} is called.
+     * Once set, all request operations will use the PSR-7 ServerRequestInterface via the adapter until {@see reset()}
+     * is called.
      *
      * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to bridge.
      *
