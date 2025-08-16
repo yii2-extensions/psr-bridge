@@ -42,6 +42,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::setUp();
 
+        MockerFunctions::reset();
+
         $this->originalServer = $_SERVER;
 
         $_SERVER = [];
@@ -56,8 +58,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $_SERVER = $this->originalServer;
 
         $this->closeTmpFile(...$this->tmpFiles);
-
-        MockerFunctions::reset();
 
         parent::tearDown();
     }
