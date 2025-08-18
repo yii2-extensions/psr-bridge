@@ -108,7 +108,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         return $tmpFile;
     }
 
-    protected function signCookie(string $name, string $value): string
+    protected function signCookie(string $name, string|object $value): string
     {
         $security = new Security();
 

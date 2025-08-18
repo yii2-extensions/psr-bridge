@@ -1801,6 +1801,69 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnSerializedObjectAndPrimitiveCookiesForGetCookiesRoute(): void
+    {
+        $validCookie = $this->signCookie('validated_session', 'safe_value');
+
+        $cookieObject = new stdClass();
+
+        $cookieObject->property = 'object_value';
+
+        $objectCookie = $this->signCookie('object_session', $cookieObject);
+
+        $app = $this->statelessApplication([
+            'components' => [
+                'request' => [
+                    'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                    'enableCookieValidation' => true,
+                ],
+            ],
+        ]);
+
+        $response = $app->handle(
+            FactoryHelper::createRequest('GET', 'site/getcookies')
+                ->withCookieParams(
+                    [
+                        'object_session' => $objectCookie,
+                        'validated_session' => $validCookie,
+                    ],
+                ),
+        );
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Should return status code '200' for 'site/getcookies' route with serialized 'object' and primitive " .
+            'cookies.',
+        );
+
+        $responseBody = $response->getBody()->getContents();
+
+        self::assertStringContainsString(
+            'object_session',
+            $responseBody,
+            "Response should contain the 'object_session' cookie name.",
+        );
+        self::assertStringContainsString(
+            '{"__PHP_Incomplete_Class_Name":"stdClass","property":"object_value"}',
+            $responseBody,
+            "Object cookies should be converted to '__PHP_Incomplete_Class' for security.",
+        );
+        self::assertStringContainsString(
+            'validated_session',
+            $responseBody,
+            "Response should contain the 'validated_session' cookie name.",
+        );
+        self::assertStringContainsString(
+            'safe_value',
+            $responseBody,
+            'Response should contain the primitive value from the validated cookie.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnSetCookieHeadersForCookieDeletionWithEmptyValues(): void
     {
         $_SERVER = [
