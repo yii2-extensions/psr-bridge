@@ -1277,11 +1277,13 @@ final class StatelessApplicationTest extends TestCase
             "action is invalid in 'StatelessApplication'.",
         );
         self::assertStringContainsString(
-            <<<HTML
-            <pre>An Error occurred while handling another error:
-            yii\base\InvalidRouteException: Unable to resolve the request &quot;invalid/nonexistent-action&quot;.
-            HTML,
-            $response->getBody()->getContents(),
+            self::normalizeLineEndings(
+                <<<HTML
+                <pre>An Error occurred while handling another error:
+                yii\base\InvalidRouteException: Unable to resolve the request &quot;invalid/nonexistent-action&quot;.
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
             "Response 'body' should contain error message about 'An Error occurred while handling another error' and " .
             "the InvalidRouteException when errorHandler action is invalid in 'StatelessApplication'.",
         );
