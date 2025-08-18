@@ -19,9 +19,8 @@ name: mutation test
 
 jobs:
   mutation:
-    uses: php-forge/actions/.github/workflows/infection.yml@main
+    uses: php-forge/actions/.github/workflows/infection.yml@v1
     with:
-      command-coverage-options: --with-uncovered
       extensions: runkit7-4.0.0a6
       php-version: '["8.3"]'
       phpstan: true
