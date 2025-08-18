@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
-use PHPForge\Support\Assert;
+use PHPForge\Support\TestSupport;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use stdClass;
@@ -49,11 +49,11 @@ use const PHP_INT_MAX;
 #[Group('http')]
 final class StatelessApplicationTest extends TestCase
 {
+    use TestSupport;
+
     protected function tearDown(): void
     {
         $this->closeApplication();
-
-        MockerFunctions::reset();
 
         parent::tearDown();
     }
@@ -823,13 +823,15 @@ final class StatelessApplicationTest extends TestCase
             $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'text/html; charset=UTF-8' when 'errorAction' returns Response object.",
         );
-        Assert::equalsWithoutLE(
-            <<<HTML
-            <div id="custom-response-error">
-            Custom Response object from error action: Exception error message.
-            </div>
-            HTML,
-            $response->getBody()->getContents(),
+        self::assertSame(
+            self::normalizeLineEndings(
+                <<<HTML
+                <div id="custom-response-error">
+                Custom Response object from error action: Exception error message.
+                </div>
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
             "Response 'body' should contain content from Response object returned by 'errorAction'.",
         );
 
@@ -921,10 +923,12 @@ final class StatelessApplicationTest extends TestCase
 
         // get PSR-7 response twice to test caching
         $bridgeResponse1->getPsr7Response();
-        $adapter1 = Assert::inaccessibleProperty($bridgeResponse1, 'adapter');
+
+        $adapter1 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
 
         $bridgeResponse1->getPsr7Response();
-        $adapter2 = Assert::inaccessibleProperty($bridgeResponse1, 'adapter');
+
+        $adapter2 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
 
         // verify adapter is cached (same instance across multiple calls)
         self::assertSame(
@@ -962,18 +966,20 @@ final class StatelessApplicationTest extends TestCase
 
         // test 'reset()' functionality
         $bridgeResponse2->getPsr7Response();
-        $adapter3 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
+
+        $adapter3 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
 
         $bridgeResponse2->reset();
 
         // after reset, adapter cache should be cleared
         self::assertNull(
-            Assert::inaccessibleProperty($bridgeResponse2, 'adapter'),
+            self::inaccessibleProperty($bridgeResponse2, 'adapter'),
             "'reset()' should nullify the cached adapter before the next 'getPsr7Response()' call.",
         );
 
         $bridgeResponse2->getPsr7Response();
-        $adapter4 = Assert::inaccessibleProperty($bridgeResponse2, 'adapter');
+
+        $adapter4 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
 
         self::assertNotSame(
             $adapter3,
@@ -1002,7 +1008,8 @@ final class StatelessApplicationTest extends TestCase
         $bridgeResponse3 = $app->response;
 
         $bridgeResponse3->getPsr7Response();
-        $adapter5 = Assert::inaccessibleProperty($bridgeResponse3, 'adapter');
+
+        $adapter5 = self::inaccessibleProperty($bridgeResponse3, 'adapter');
 
         // verify each request gets its own adapter instance
         self::assertNotSame(
@@ -2740,19 +2747,21 @@ final class StatelessApplicationTest extends TestCase
             "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when 'Exception' " .
             "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
         );
-        Assert::equalsWithoutLE(
-            <<<HTML
-            <div id="custom-error-action">
-            Custom error page from errorAction.
-            <span class="exception-type">
-            yii\base\Exception
-            </span>
-            <span class="exception-message">
-            Exception error message.
-            </span>
-            </div>
-            HTML,
-            $response->getBody()->getContents(),
+        self::assertSame(
+            self::normalizeLineEndings(
+                <<<HTML
+                <div id="custom-error-action">
+                Custom error page from errorAction.
+                <span class="exception-type">
+                yii\base\Exception
+                </span>
+                <span class="exception-message">
+                Exception error message.
+                </span>
+                </div>
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
             "Response 'body' should contain 'Custom error page from errorAction' when 'Exception' is triggered " .
             "and 'debug' mode is disabled with errorAction configured in 'StatelessApplication'.",
         );
@@ -2799,19 +2808,21 @@ final class StatelessApplicationTest extends TestCase
             "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when 'UserException' " .
             "occurs and 'debug' mode is disabled in 'StatelessApplication'.",
         );
-        Assert::equalsWithoutLE(
-            <<<HTML
-            <div id="custom-error-action">
-            Custom error page from errorAction.
-            <span class="exception-type">
-            yii\base\UserException
-            </span>
-            <span class="exception-message">
-            User-friendly error message.
-            </span>
-            </div>
-            HTML,
-            $response->getBody()->getContents(),
+        self::assertSame(
+            self::normalizeLineEndings(
+                <<<HTML
+                <div id="custom-error-action">
+                Custom error page from errorAction.
+                <span class="exception-type">
+                yii\base\UserException
+                </span>
+                <span class="exception-message">
+                User-friendly error message.
+                </span>
+                </div>
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
             "Response 'body' should contain 'Custom error page from errorAction' when 'UserException' is triggered " .
             "and 'debug' mode is disabled with errorAction configured in 'StatelessApplication'.",
         );
@@ -2855,19 +2866,21 @@ final class StatelessApplicationTest extends TestCase
             "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when 'UserException'" .
             "occurs and 'debug' mode is enabled in 'StatelessApplication'.",
         );
-        Assert::equalsWithoutLE(
-            <<<HTML
-            <div id="custom-error-action">
-            Custom error page from errorAction.
-            <span class="exception-type">
-            yii\base\UserException
-            </span>
-            <span class="exception-message">
-            User-friendly error message.
-            </span>
-            </div>
-            HTML,
-            $response->getBody()->getContents(),
+        self::assertSame(
+            self::normalizeLineEndings(
+                <<<HTML
+                <div id="custom-error-action">
+                Custom error page from errorAction.
+                <span class="exception-type">
+                yii\base\UserException
+                </span>
+                <span class="exception-message">
+                User-friendly error message.
+                </span>
+                </div>
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
             "Response 'body' should contain 'User-friendly error message.' when 'UserException' is triggered and " .
             "'debug' mode is enabled in 'StatelessApplication'.",
         );
