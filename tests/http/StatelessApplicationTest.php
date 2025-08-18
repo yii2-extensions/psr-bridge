@@ -1801,6 +1801,110 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnSerializedObjectAndPrimitiveCookiesForGetCookiesRoute(): void
+    {
+        $cookieObject = new stdClass();
+
+        $cookieObject->property = 'object_value';
+
+        $app = $this->statelessApplication([
+            'components' => [
+                'request' => [
+                    'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                    'enableCookieValidation' => true,
+                ],
+            ],
+        ]);
+
+        $response = $app->handle(
+            FactoryHelper::createRequest('GET', 'site/getcookies')
+                ->withCookieParams(
+                    [
+                        'object_session' => $this->signCookie('object_session', $cookieObject),
+                        'validated_session' => $this->signCookie('validated_session', 'safe_value'),
+                    ],
+                ),
+        );
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Should return status code '200' for 'site/getcookies' route with serialized 'object' and primitive " .
+            'cookies.',
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route " .
+            'with validation enabled.',
+        );
+
+        $responseBody = $response->getBody()->getContents();
+
+        $cookies = Json::decode($responseBody);
+
+        self::assertIsArray(
+            $cookies,
+            "Response 'body' should be decodable to array of cookies for 'site/getcookies' route.",
+        );
+        self::assertArrayHasKey(
+            'object_session',
+            $cookies,
+            "Response should contain the 'object_session' cookie entry.",
+        );
+        self::assertArrayHasKey(
+            'validated_session',
+            $cookies,
+            "Response should contain the 'validated_session' cookie entry.",
+        );
+
+        $objectCookie = $cookies['object_session'] ?? null;
+
+        self::assertIsArray(
+            $objectCookie,
+            "'object_session' cookie payload should be an array.",
+        );
+        self::assertSame(
+            'object_session',
+            $objectCookie['name'] ?? null,
+            "Object cookie 'name' should be 'object_session'.",
+        );
+
+        $objectValue = $objectCookie['value'] ?? null;
+
+        self::assertIsArray(
+            $objectValue,
+            "Object cookie 'value' should be sanitized to an array (incomplete class representation).",
+        );
+        self::assertSame(
+            'stdClass',
+            $objectValue['__PHP_Incomplete_Class_Name'] ?? null,
+            "Sanitized object should include '__PHP_Incomplete_Class_Name' => 'stdClass'.",
+        );
+        self::assertSame(
+            'object_value',
+            $objectValue['property'] ?? null,
+            "Sanitized object should preserve the original 'property' value.",
+        );
+        self::assertIsArray(
+            $cookies['validated_session'] ?? null,
+            "'validated_session' cookie payload should be an array.",
+        );
+        self::assertSame(
+            'validated_session',
+            $cookies['validated_session']['name'] ?? null,
+            "Validated primitive cookie 'name' should be 'validated_session'.",
+        );
+        self::assertSame(
+            'safe_value',
+            $cookies['validated_session']['value'] ?? null,
+            "Validated primitive cookie should preserve its 'value' as 'safe_value'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnSetCookieHeadersForCookieDeletionWithEmptyValues(): void
     {
         $_SERVER = [
