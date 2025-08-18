@@ -1803,13 +1803,9 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testReturnSerializedObjectAndPrimitiveCookiesForGetCookiesRoute(): void
     {
-        $validCookie = $this->signCookie('validated_session', 'safe_value');
-
         $cookieObject = new stdClass();
 
         $cookieObject->property = 'object_value';
-
-        $objectCookie = $this->signCookie('object_session', $cookieObject);
 
         $app = $this->statelessApplication([
             'components' => [
@@ -1824,8 +1820,8 @@ final class StatelessApplicationTest extends TestCase
             FactoryHelper::createRequest('GET', 'site/getcookies')
                 ->withCookieParams(
                     [
-                        'object_session' => $objectCookie,
-                        'validated_session' => $validCookie,
+                        'object_session' => $this->signCookie('object_session', $cookieObject),
+                        'validated_session' => $this->signCookie('validated_session', 'safe_value'),
                     ],
                 ),
         );
@@ -1839,25 +1835,54 @@ final class StatelessApplicationTest extends TestCase
 
         $responseBody = $response->getBody()->getContents();
 
-        self::assertStringContainsString(
+        $cookies = Json::decode($responseBody);
+
+        self::assertIsArray(
+            $cookies,
+            "Response 'body' should be decodable to array of cookies for 'site/getcookies' route.",
+        );
+        self::assertArrayHasKey(
             'object_session',
-            $responseBody,
-            "Response should contain the 'object_session' cookie name.",
+            $cookies,
+            "Response should contain the 'object_session' cookie entry.",
         );
-        self::assertStringContainsString(
-            '{"__PHP_Incomplete_Class_Name":"stdClass","property":"object_value"}',
-            $responseBody,
-            "Object cookies should be converted to '__PHP_Incomplete_Class' for security.",
-        );
-        self::assertStringContainsString(
+        self::assertArrayHasKey(
             'validated_session',
-            $responseBody,
-            "Response should contain the 'validated_session' cookie name.",
+            $cookies,
+            "Response should contain the 'validated_session' cookie entry.",
         );
-        self::assertStringContainsString(
+
+        $objectCookie = $cookies['object_session'] ?? null;
+
+        self::assertIsArray(
+            $objectCookie,
+            "'object_session' cookie payload should be an array.",
+        );
+
+        $objectValue = $objectCookie['value'] ?? null;
+
+        self::assertIsArray(
+            $objectValue,
+            "Object cookie 'value' should be sanitized to an array (incomplete class representation).",
+        );
+        self::assertSame(
+            'stdClass',
+            $objectValue['__PHP_Incomplete_Class_Name'] ?? null,
+            "Sanitized object should include '__PHP_Incomplete_Class_Name' => 'stdClass'.",
+        );
+        self::assertSame(
+            'object_value',
+            $objectValue['property'] ?? null,
+            "Sanitized object should preserve the original 'property' value.",
+        );
+        self::assertIsArray(
+            $cookies['validated_session'] ?? null,
+            "'validated_session' cookie payload should be an array.",
+        );
+        self::assertSame(
             'safe_value',
-            $responseBody,
-            'Response should contain the primitive value from the validated cookie.',
+            $cookies['validated_session']['value'] ?? null,
+            "Validated primitive cookie should preserve its 'value' as 'safe_value'.",
         );
     }
 
