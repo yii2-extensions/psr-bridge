@@ -1832,6 +1832,12 @@ final class StatelessApplicationTest extends TestCase
             "Should return status code '200' for 'site/getcookies' route with serialized 'object' and primitive " .
             'cookies.',
         );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route " .
+            'with validation enabled.',
+        );
 
         $responseBody = $response->getBody()->getContents();
 
@@ -1858,6 +1864,11 @@ final class StatelessApplicationTest extends TestCase
             $objectCookie,
             "'object_session' cookie payload should be an array.",
         );
+        self::assertSame(
+            'object_session',
+            $objectCookie['name'] ?? null,
+            "Object cookie 'name' should be 'object_session'.",
+        );
 
         $objectValue = $objectCookie['value'] ?? null;
 
@@ -1878,6 +1889,11 @@ final class StatelessApplicationTest extends TestCase
         self::assertIsArray(
             $cookies['validated_session'] ?? null,
             "'validated_session' cookie payload should be an array.",
+        );
+        self::assertSame(
+            'validated_session',
+            $cookies['validated_session']['name'] ?? null,
+            "Validated primitive cookie 'name' should be 'validated_session'.",
         );
         self::assertSame(
             'safe_value',
