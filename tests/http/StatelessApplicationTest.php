@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
-use PHPForge\Support\TestSupport;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use stdClass;
@@ -49,8 +48,6 @@ use const PHP_INT_MAX;
 #[Group('http')]
 final class StatelessApplicationTest extends TestCase
 {
-    use TestSupport;
-
     protected function tearDown(): void
     {
         $this->closeApplication();
