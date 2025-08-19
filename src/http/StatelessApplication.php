@@ -7,7 +7,6 @@ namespace yii2\extensions\psrbridge\http;
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
-use Yii;
 use yii\base\{Event, InvalidConfigException};
 use yii\di\{Container, NotInstantiableException};
 use yii\web\{Application, UploadedFile};
@@ -49,6 +48,21 @@ use function strtoupper;
  */
 final class StatelessApplication extends Application implements RequestHandlerInterface
 {
+    /**
+     * Whether to flush the logger during application termination.
+     *
+     * When enabled (default), the logger will be flushed during the {@see terminate()} method, ensuring that all log
+     * messages are persisted immediately after request processing.
+     *
+     * This is the recommended behavior for production environments and worker-based applications.
+     *
+     * When disabled, log messages will remain in memory and may accumulate across multiple requests.
+     *
+     * **Warning**: Disabling logger flushing in production or worker environments may lead to memory leaks and log
+     * message loss in case of application crashes. Use with caution and ensure proper memory management.
+     */
+    public bool $flushLogger = true;
+
     /**
      * Version of the StatelessApplication.
      */
@@ -446,7 +460,9 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
         UploadedFile::reset();
 
-        Yii::getLogger()->flush(true);
+        if ($this->flushLogger) {
+            $this->getLog()->getLogger()->flush(true);
+        }
 
         return $response->getPsr7Response();
     }
