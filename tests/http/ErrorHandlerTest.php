@@ -66,7 +66,8 @@ final class ErrorHandlerTest extends TestCase
 
         $errorHandler->discardExistingOutput = false;
 
-        $response = new Response();
+        $response = new Response(['charset' => 'UTF-8']);
+
         $response->data = 'Pre-existing data that should be cleared';
 
         $response->setStatusCode(201);
