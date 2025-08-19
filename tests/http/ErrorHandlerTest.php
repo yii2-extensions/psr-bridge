@@ -60,6 +60,42 @@ final class ErrorHandlerTest extends TestCase
         }
     }
 
+    public function testHandleExceptionCallsClearOutputWhenEnabled(): void
+    {
+        $errorHandler = new ErrorHandler();
+
+        $errorHandler->discardExistingOutput = true;
+
+        ob_start();
+        echo 'This output should be cleared';
+        ob_start();
+        echo 'This nested output should also be cleared';
+
+        $levelBeforeHandling = ob_get_level();
+        self::assertGreaterThan(
+            0,
+            $levelBeforeHandling,
+            'Should have output buffers before handling exception.',
+        );
+
+        $exception = new Exception('Test exception for clearOutput verification');
+
+        $response = $errorHandler->handleException($exception);
+
+        $levelAfterHandling = ob_get_level();
+
+        self::assertLessThan(
+            $levelBeforeHandling,
+            $levelAfterHandling,
+            "Output buffers should be cleared when 'discardExistingOutput' is 'true'.",
+        );
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            'Should set correct status code after clearing output.',
+        );
+    }
+
     public function testHandleExceptionCallsUnregister(): void
     {
         $errorHandler = new ErrorHandler();
