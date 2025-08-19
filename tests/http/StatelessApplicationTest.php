@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
+use ErrorException;
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
@@ -907,61 +908,86 @@ final class StatelessApplicationTest extends TestCase
 
         $initialBufferLevel = ob_get_level();
 
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
+        $originalErrorHandler = set_error_handler(
+            static function ($severity, $message, $file, $line) {
+            if (str_contains($message, 'Undefined variable $exception')) {
+                throw new Exception('Undefined variable $exception');
+            }
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+            return false;
+            },
+        );
 
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'errorHandler' => [
-                        'errorAction' => null,
+        try {
+            $_SERVER = [
+                'REQUEST_METHOD' => 'GET',
+                'REQUEST_URI' => 'site/trigger-exception',
+            ];
+
+            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+            $app = $this->statelessApplication(
+                [
+                    'components' => [
+                        'errorHandler' => [
+                            'errorAction' => null,
+                        ],
                     ],
                 ],
-            ],
-        );
+            );
 
-        $response = $app->handle($request);
+            $response = $app->handle($request);
 
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Response 'status code' should be '500' when exception occurs and template rendering is used in " .
-            "'StatelessApplication'.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for exception template rendering in " .
-            "'StatelessApplication'.",
-        );
+            self::assertSame(
+                500,
+                $response->getStatusCode(),
+                "Response 'status code' should be '500' when exception occurs and template rendering is used in " .
+                "'StatelessApplication'.",
+            );
+            self::assertSame(
+                'text/html; charset=UTF-8',
+                $response->getHeaderLine('Content-Type'),
+                "Response 'Content-Type' should be 'text/html; charset=UTF-8' for exception template rendering in " .
+                "'StatelessApplication'.",
+            );
 
-        $responseBody = $response->getBody()->getContents();
+            $responseBody = $response->getBody()->getContents();
 
-        self::assertStringContainsString(
-            'yii\base\Exception',
-            $responseBody,
-            "Response 'body' should contain exception class when 'exception' parameter is passed to 'renderFile()'.",
-        );
-        self::assertStringContainsString(
-            'Exception error message.',
-            $responseBody,
-            "Response 'body' should contain exception message when 'exception' parameter is passed to 'renderFile()'.",
-        );
-        self::assertStringContainsString(
-            '[internal function]: yii2\extensions\psrbridge\tests\support\stub\SiteController-&gt;actionTriggerException()',
-            $responseBody,
-            "Response 'body' should contain exception trace when 'exception' parameter is passed to 'renderFile()'.",
-        );
+            self::assertStringContainsString(
+                'yii\base\Exception',
+                $responseBody,
+                "Response 'body' should contain exception class when 'exception' parameter is passed to 'renderFile()'.",
+            );
+            self::assertStringContainsString(
+                'Exception error message.',
+                $responseBody,
+                "Response 'body' should contain exception message when 'exception' parameter is passed to 'renderFile()'.",
+            );
+            self::assertStringContainsString(
+                '[internal function]: yii2\extensions\psrbridge\tests\support\stub\SiteController-&gt;actionTriggerException()',
+                $responseBody,
+                "Response 'body' should contain exception trace when 'exception' parameter is passed to 'renderFile()'.",
+            );
+        } finally {
+            if ($originalErrorHandler !== null) {
+                set_error_handler($originalErrorHandler);
 
-        while (ob_get_level() < $initialBufferLevel) {
-            ob_start();
+                self::assertStringNotContainsString(
+                    'Undefined variable $exception',
+                    $responseBody,
+                    "Response 'body' should not contain 'Undefined variable \$exception' after restoring original error " .
+                    "handler in 'StatelessApplication'.",
+                );
+            } else {
+                restore_error_handler();
+            }
+
+            while (ob_get_level() < $initialBufferLevel) {
+                ob_start();
+            }
+
+            @\runkit_constant_redefine('YII_ENV_TEST', true);
         }
-
-        @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
     /**
