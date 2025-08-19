@@ -469,6 +469,98 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testFiltersSensitiveServerVariablesInFallbackExceptionMessage(): void
+    {
+        $_SERVER = [
+            'API_KEY' => 'not-a-secret-api-key',
+            'AUTH_TOKEN' => 'dummy-bearer-token',
+            'DB_PASSWORD' => 'not-a-real-password',
+            'HTTP_HOST' => 'example.com',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/nonexistent-action',
+            'SAFE_VARIABLE' => 'this-should-appear',
+            'SECRET_KEY' => 'not-a-real-secret-key',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'invalid/nonexistent-action',
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' when 'ErrorHandler' triggers fallback exception handling in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseBody = $response->getBody()->getContents();
+
+        self::assertStringContainsString(
+            'An Error occurred while handling another error:',
+            $responseBody,
+            "Response 'body' should contain fallback error message when 'ErrorHandler' action is invalid in " .
+            "'StatelessApplication'.",
+        );
+
+        if (YII_DEBUG) {
+            self::assertStringContainsString(
+                "\n\$_SERVER = [",
+                $responseBody,
+                "Response 'body' should contain '\$_SERVER = [' in correct order (label before array) for fallback " .
+                "exception debug output in 'StatelessApplication'.",
+            );
+            self::assertStringNotContainsString(
+                'not-a-secret-api-key',
+                $responseBody,
+                "Response 'body' should NOT contain 'API_KEY' value in debug output for fallback exception in " .
+                "'StatelessApplication'.",
+            );
+            self::assertStringNotContainsString(
+                'dummy-bearer-token',
+                $responseBody,
+                "Response 'body' should NOT contain 'AUTH_TOKEN' value in debug output for fallback exception in " .
+                "'StatelessApplication'.",
+            );
+            self::assertStringNotContainsString(
+                'not-a-real-password',
+                $responseBody,
+                "Response 'body' should NOT contain 'DB_PASSWORD' value in debug output for fallback exception in " .
+                "'StatelessApplication'.",
+            );
+            self::assertStringContainsString(
+                'example.com',
+                $responseBody,
+                "Response 'body' should contain 'HTTP_HOST' value in debug output for fallback exception in " .
+                "'StatelessApplication'.",
+            );
+            self::assertStringNotContainsString(
+                'not-a-real-secret-key',
+                $responseBody,
+                "Response 'body' should NOT contain 'SECRET_KEY' value in debug output for fallback exception in " .
+                "'StatelessApplication'.",
+            );
+            self::assertStringContainsString(
+                'this-should-appear',
+                $responseBody,
+                "Response 'body' should contain 'SAFE_VARIABLE' value in debug output for fallback exception in " .
+                "'StatelessApplication'.",
+            );
+        }
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testFlashMessagesIsolationBetweenSessions(): void
     {
         $sessionName = session_name();
