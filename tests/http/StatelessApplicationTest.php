@@ -13,7 +13,7 @@ use yii\base\{Exception, InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\i18n\{Formatter, I18N};
-use yii\log\{Dispatcher, FileTarget};
+use yii\log\{Dispatcher, FileTarget, Logger};
 use yii\web\{AssetManager, NotFoundHttpException, Session, UrlManager, User, View};
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
@@ -615,7 +615,6 @@ final class StatelessApplicationTest extends TestCase
         );
 
         $response = $app->handle($request);
-
         $logMessages = $app->getLog()->getLogger()->messages;
 
         self::assertSame(
@@ -634,12 +633,14 @@ final class StatelessApplicationTest extends TestCase
         foreach ($logMessages as $logMessage) {
             if (
                 is_array($logMessage) &&
-                isset($logMessage[0], $logMessage[2]) &&
+                isset($logMessage[0], $logMessage[1], $logMessage[2]) &&
+                $logMessage[1] === Logger::LEVEL_ERROR &&
                 $logMessage[0] instanceof Exception &&
                 $logMessage[2] === $expectedCategory &&
                 str_contains($logMessage[0]->getMessage(), 'Exception error message.')
             ) {
                 $exceptionLogFound = true;
+
                 break;
             }
         }
