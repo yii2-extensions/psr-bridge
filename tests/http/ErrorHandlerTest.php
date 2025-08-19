@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
-use PHPForge\Support\TestSupport;
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use RuntimeException;
 use Throwable;
@@ -20,8 +19,6 @@ use function str_repeat;
 #[Group('http')]
 final class ErrorHandlerTest extends TestCase
 {
-    use TestSupport;
-
     #[RequiresPhpExtension('runkit7')]
     public function testClearOutputCleansAllBuffersInNonTestEnvironment(): void
     {

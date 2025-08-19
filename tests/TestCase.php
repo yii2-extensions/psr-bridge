@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests;
 
 use HttpSoft\Message\{ResponseFactory, StreamFactory};
+use PHPForge\Support\TestSupport;
 use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use RuntimeException;
 use Yii;
@@ -21,6 +22,8 @@ use function tmpfile;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
+    use TestSupport;
+
     /**
      * A secret key used for cookie validation in tests.
      */
