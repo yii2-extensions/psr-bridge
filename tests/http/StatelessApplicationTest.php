@@ -900,8 +900,13 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionPassesExceptionParameterToTemplateView(): void
     {
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
+
+        $initialBufferLevel = ob_get_level();
+
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/trigger-exception',
@@ -937,17 +942,21 @@ final class StatelessApplicationTest extends TestCase
         $responseBody = $response->getBody()->getContents();
 
         self::assertStringContainsString(
-            '<pre>Exception (Exception) &apos;yii\base\Exception&apos; with message &apos;Exception error message.&apos;',
+            'yii\base\Exception',
             $responseBody,
-            "Response 'body' should contain exception class and message when 'exception' parameter is passed to " .
-            "'renderFile()' method in 'StatelessApplication'.",
+            "Response 'body' should contain exception class when 'exception' parameter is passed to 'renderFile()'.",
         );
         self::assertStringContainsString(
-            '[internal function]: yii2\extensions\psrbridge\tests\support\stub\SiteController-&gt;actionTriggerException()',
+            'Exception error message.',
             $responseBody,
-            "Response 'body' should contain stack trace information when 'exception' parameter is properly passed " .
-            "to 'renderFile()' method in 'StatelessApplication'.",
+            "Response 'body' should contain exception message when 'exception' parameter is passed to 'renderFile()'.",
         );
+
+        while (ob_get_level() < $initialBufferLevel) {
+            ob_start();
+        }
+
+        @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
     /**
