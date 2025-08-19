@@ -139,7 +139,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
      * The provided Response will be used for error responses, preserving configuration such as format, charset, and
      * formatters. The Response will be cleared of any existing data before use.
      *
-     * @param Response $response Template response with desired configuration.
+     * @param Response $response Response instance with desired configuration.
      */
     public function setResponse(Response $response): void
     {

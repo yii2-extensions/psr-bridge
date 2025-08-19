@@ -86,8 +86,8 @@ final class ErrorHandlerTest extends TestCase
         self::assertNotSame(
             'Pre-existing data that should be cleared',
             $response->data,
-            "Response data should be 'Pre-existing data that should be cleared' when reusing existing response for " .
-            'error handling.',
+            "Response data should not be 'Pre-existing data that should be cleared' when reusing existing response " .
+            'for error handling.',
         );
         self::assertFalse(
             $response->getHeaders()->has('X-Another-Header'),
