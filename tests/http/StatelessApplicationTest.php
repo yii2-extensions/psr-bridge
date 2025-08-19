@@ -900,6 +900,59 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testRenderExceptionPassesExceptionParameterToTemplateView(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => null,
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' when exception occurs and template rendering is used in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for exception template rendering in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseBody = $response->getBody()->getContents();
+
+        self::assertStringContainsString(
+            '<pre>Exception (Exception) &apos;yii\base\Exception&apos; with message &apos;Exception error message.&apos;',
+            $responseBody,
+            "Response 'body' should contain exception class and message when 'exception' parameter is passed to " .
+            "'renderFile()' method in 'StatelessApplication'.",
+        );
+        self::assertStringContainsString(
+            '&apos;site/trigger-ex...&apos;',
+            $responseBody,
+            "Response 'body' should contain stack trace information when 'exception' parameter is properly passed " .
+            "to 'renderFile()' method in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
     {
