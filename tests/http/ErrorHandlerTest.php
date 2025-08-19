@@ -153,6 +153,36 @@ final class ErrorHandlerTest extends TestCase
         );
     }
 
+    public function testHandleExceptionSetsExceptionPropertyAndResetsIt(): void
+    {
+        $errorHandler = new ErrorHandler();
+
+        $errorHandler->discardExistingOutput = false;
+
+        $initialException = self::inaccessibleProperty($errorHandler, 'exception');
+
+        self::assertNull(
+            $initialException,
+            "Exception property should be 'null' initially.",
+        );
+
+        $exception = new Exception('Test exception for property verification');
+
+        $response = $errorHandler->handleException($exception);
+
+        $finalException = self::inaccessibleProperty($errorHandler, 'exception');
+
+        self::assertNull(
+            $finalException,
+            "Exception property should be reset to 'null' after handling exception.",
+        );
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            'Should set correct status code and reset exception property.',
+        );
+    }
+
     public function testHandleExceptionWithComplexMessage(): void
     {
         $errorHandler = new ErrorHandler();
