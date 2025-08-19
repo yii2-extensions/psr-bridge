@@ -514,10 +514,10 @@ final class StatelessApplicationTest extends TestCase
 
         if (YII_DEBUG) {
             self::assertStringContainsString(
-                '$_SERVER =',
+                "\n\$_SERVER = [",
                 $responseBody,
-                "Response 'body' should contain '\$_SERVER =' debug output for fallback exception in " .
-                "'StatelessApplication'.",
+                "Response 'body' should contain '\$_SERVER = [' in correct order (label before array) for fallback " .
+                "exception debug output in 'StatelessApplication'.",
             );
             self::assertStringNotContainsString(
                 'not-a-secret-api-key',
