@@ -943,7 +943,7 @@ final class StatelessApplicationTest extends TestCase
             "'renderFile()' method in 'StatelessApplication'.",
         );
         self::assertStringContainsString(
-            '&apos;site/trigger-ex...&apos;',
+            '[internal function]: yii2\extensions\psrbridge\tests\support\stub\SiteController-&gt;actionTriggerException()',
             $responseBody,
             "Response 'body' should contain stack trace information when 'exception' parameter is properly passed " .
             "to 'renderFile()' method in 'StatelessApplication'.",
