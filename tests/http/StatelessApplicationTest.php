@@ -952,10 +952,9 @@ final class StatelessApplicationTest extends TestCase
             "Response 'body' should contain exception message when 'exception' parameter is passed to 'renderFile()'.",
         );
         self::assertStringContainsString(
-            'yii2-extensions\psr-bridge\tests\support\stub\SiteController.php',
+            '[internal function]: yii2\extensions\psrbridge\tests\support\stub\SiteController-&gt;actionTriggerException()',
             $responseBody,
-            "Response 'body' should contain file path where exception occurred when 'exception' parameter is passed " .
-            "to 'renderFile()'.",
+            "Response 'body' should contain exception trace when 'exception' parameter is passed to 'renderFile()'.",
         );
 
         while (ob_get_level() < $initialBufferLevel) {
