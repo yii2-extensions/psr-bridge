@@ -234,6 +234,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
                 }
 
                 $file = $useErrorView ? $this->errorView : $this->exceptionView;
+
                 $response->data = $this->renderFile($file, ['exception' => $exception]);
             }
         } elseif ($response->format === Response::FORMAT_RAW) {

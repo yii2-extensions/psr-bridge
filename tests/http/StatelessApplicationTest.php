@@ -38,8 +38,11 @@ use function memory_get_usage;
 use function ob_get_level;
 use function ob_start;
 use function preg_quote;
+use function restore_error_handler;
 use function session_name;
+use function set_error_handler;
 use function sprintf;
+use function str_contains;
 use function str_starts_with;
 use function uniqid;
 
@@ -901,6 +904,105 @@ final class StatelessApplicationTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[RequiresPhpExtension('runkit7')]
+    public function testRenderExceptionPassesExceptionParameterToTemplateView(): void
+    {
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
+
+        $initialBufferLevel = ob_get_level();
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $warningsCaptured = [];
+
+        set_error_handler(
+            static function ($errno, $errstr, $errfile, $errline) use (&$warningsCaptured): bool {
+                if ($errno === E_WARNING || $errno === E_NOTICE) {
+                    $warningsCaptured[] = [
+                        'type' => $errno,
+                        'message' => $errstr,
+                        'file' => $errfile,
+                        'line' => $errline,
+                    ];
+                }
+
+                return false;
+            },
+        );
+
+        try {
+            $app = $this->statelessApplication(
+                [
+                    'components' => [
+                        'errorHandler' => [
+                            'errorAction' => null,
+                        ],
+                    ],
+                ],
+            );
+
+            $response = $app->handle($request);
+
+            $undefinedExceptionWarnings = array_filter(
+                $warningsCaptured,
+                static fn(array $warning): bool => str_contains($warning['message'], 'Undefined variable'),
+            );
+
+            self::assertEmpty(
+                $undefinedExceptionWarnings,
+                "Should be no 'Undefined variable' warnings, confirming that 'exception' parameter is defined in the " .
+                "view context when rendering exception in 'StatelessApplication'.",
+            );
+            self::assertSame(
+                500,
+                $response->getStatusCode(),
+                "Response 'status code' should be '500' when exception occurs and template rendering is used in " .
+                "'StatelessApplication'.",
+            );
+
+            $responseBody = $response->getBody()->getContents();
+
+            self::assertStringContainsString(
+                Exception::class,
+                $responseBody,
+                "Response 'body' should contain exception class when 'exception' parameter is passed to 'renderFile()'.",
+            );
+            self::assertStringContainsString(
+                'Stack trace:',
+                $responseBody,
+                "Response 'body' should contain 'Stack trace:' section, confirming exception object is available to template.",
+            );
+            self::assertStringContainsString(
+                'Exception error message.',
+                $responseBody,
+                "Response 'body' should contain the exact exception message 'Exception error message.', " .
+                'confirming the exception object was properly passed to the view.',
+            );
+            self::assertStringContainsString(
+                'SiteController.php',
+                $responseBody,
+                "Response 'body' should contain reference to 'SiteController.php' where the exception was thrown, " .
+                'confirming full exception details are available in the view.',
+            );
+        } finally {
+            restore_error_handler();
+
+            while (ob_get_level() < $initialBufferLevel) {
+                ob_start();
+            }
+
+            @\runkit_constant_redefine('YII_ENV_TEST', true);
+        }
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
     {
         @\runkit_constant_redefine('YII_ENV_TEST', false);
@@ -1627,6 +1729,9 @@ final class StatelessApplicationTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnJsonResponseWithQueryParamsForSiteQueryRoute(): void
     {
         $_GET = ['q' => '1'];
