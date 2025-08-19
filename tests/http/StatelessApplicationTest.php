@@ -472,14 +472,14 @@ final class StatelessApplicationTest extends TestCase
     public function testFiltersSensitiveServerVariablesInFallbackExceptionMessage(): void
     {
         $_SERVER = [
-            'API_KEY' => 'secret-api-key-12345',
-            'AUTH_TOKEN' => 'bearer-token-67890',
-            'DB_PASSWORD' => 'database-password-secret',
+            'API_KEY' => 'not-a-secret-api-key',
+            'AUTH_TOKEN' => 'dummy-bearer-token',
+            'DB_PASSWORD' => 'not-a-real-password',
             'HTTP_HOST' => 'example.com',
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/nonexistent-action',
             'SAFE_VARIABLE' => 'this-should-appear',
-            'SECRET_KEY' => 'application-secret-key',
+            'SECRET_KEY' => 'not-a-real-secret-key',
         ];
 
         $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
@@ -520,19 +520,19 @@ final class StatelessApplicationTest extends TestCase
                 "'StatelessApplication'.",
             );
             self::assertStringNotContainsString(
-                'secret-api-key-12345',
+                'not-a-secret-api-key',
                 $responseBody,
                 "Response 'body' should NOT contain 'API_KEY' value in debug output for fallback exception in " .
                 "'StatelessApplication'.",
             );
             self::assertStringNotContainsString(
-                'bearer-token-67890',
+                'dummy-bearer-token',
                 $responseBody,
                 "Response 'body' should NOT contain 'AUTH_TOKEN' value in debug output for fallback exception in " .
                 "'StatelessApplication'.",
             );
             self::assertStringNotContainsString(
-                'database-password-secret',
+                'not-a-real-password',
                 $responseBody,
                 "Response 'body' should NOT contain 'DB_PASSWORD' value in debug output for fallback exception in " .
                 "'StatelessApplication'.",
@@ -544,7 +544,7 @@ final class StatelessApplicationTest extends TestCase
                 "'StatelessApplication'.",
             );
             self::assertStringNotContainsString(
-                'application-secret-key',
+                'not-a-real-secret-key',
                 $responseBody,
                 "Response 'body' should NOT contain 'SECRET_KEY' value in debug output for fallback exception in " .
                 "'StatelessApplication'.",
