@@ -629,7 +629,7 @@ final class StatelessApplicationTest extends TestCase
         );
 
         $exceptionLogFound = false;
-        $expectedCategory = 'yii\base\Exception';
+        $expectedCategory = Exception::class;
 
         foreach ($logMessages as $logMessage) {
             if (
@@ -648,6 +648,10 @@ final class StatelessApplicationTest extends TestCase
             $exceptionLogFound,
             "Logger should contain an error log entry with category '{$expectedCategory}' and message 'Exception error message.' " .
             "when 'logException()' is called during exception handling in 'StatelessApplication'.",
+        );
+        self::assertFalse(
+            $app->flushLogger,
+            "Test must keep logger messages in memory to assert on them; 'flushLogger' should be 'false'.",
         );
     }
 
