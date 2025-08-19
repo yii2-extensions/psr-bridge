@@ -48,19 +48,19 @@ final class ErrorHandler extends \yii\web\ErrorHandler
     ];
 
     /**
-     * Template Response instance for error handling.
+     * Response instance for error handling.
      *
      * When set, this Response instance will be used as a base for error responses, preserving configured format,
      * formatters, and other settings.
      */
-    private Response|null $templateResponse = null;
+    private Response|null $response = null;
 
     /**
      * Clears all output buffers above the minimum required level.
      *
      * Iterates through all active output buffers and cleans them, ensuring that only the minimum buffer level remains.
      *
-     * This method is used to discard any existing output before rendering an error response, maintaining a clean output
+     * This method is used to discard any existing output before rendering an error Response, maintaining a clean output
      * state while preserving compatibility with the testing framework.
      *
      * **PHPUnit Compatibility.**
@@ -134,16 +134,16 @@ final class ErrorHandler extends \yii\web\ErrorHandler
     }
 
     /**
-     * Sets the template Response for error handling.
+     * Sets the Response for error handling.
      *
-     * The provided Response will be used as a template for error responses, preserving configuration such as format,
-     * charset, and formatters. The Response will be cleared of any existing data before use.
+     * The provided Response will be used for error responses, preserving configuration such as format, charset, and
+     * formatters. The Response will be cleared of any existing data before use.
      *
-     * @param Response $response Template response with desired configuration.
+     * @param Response $response Response instance with desired configuration.
      */
     public function setResponse(Response $response): void
     {
-        $this->templateResponse = $response;
+        $this->response = $response;
     }
 
     /**
@@ -249,13 +249,13 @@ final class ErrorHandler extends \yii\web\ErrorHandler
     /**
      * Creates a Response instance for error handling.
      *
-     * Uses the template Response if available, otherwise creates a new instance with default configuration.
+     * Uses the Response if available, otherwise creates a new instance with default configuration.
      *
      * @return Response Clean Response instance ready for error content.
      */
     private function createErrorResponse(): Response
     {
-        $response = $this->templateResponse ?? new Response($this->defaultResponseConfig);
+        $response = $this->response ?? new Response($this->defaultResponseConfig);
 
         $response->clear();
 

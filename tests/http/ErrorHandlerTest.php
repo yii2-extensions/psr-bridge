@@ -60,6 +60,45 @@ final class ErrorHandlerTest extends TestCase
         }
     }
 
+    public function testCreateErrorResponseClearsExistingResponseData(): void
+    {
+        $errorHandler = new ErrorHandler();
+
+        $errorHandler->discardExistingOutput = false;
+
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->data = 'Pre-existing data that should be cleared';
+
+        $response->setStatusCode(201);
+        $response->getHeaders()->set('X-Another-Header', 'another-value');
+        $response->getHeaders()->set('X-Custom-Header', 'custom-value');
+
+        $errorHandler->setResponse($response);
+
+        $response = $errorHandler->handleException(new Exception('Test exception for response clearing'));
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Should set status code to '500' after clearing existing response.",
+        );
+        self::assertNotSame(
+            'Pre-existing data that should be cleared',
+            $response->data,
+            "Response data should not be 'Pre-existing data that should be cleared' when reusing existing response " .
+            'for error handling.',
+        );
+        self::assertFalse(
+            $response->getHeaders()->has('X-Another-Header'),
+            'All custom headers should be cleared when reusing existing response for error handling.',
+        );
+        self::assertFalse(
+            $response->getHeaders()->has('X-Custom-Header'),
+            'Custom headers should be cleared when reusing existing response for error handling.',
+        );
+    }
+
     public function testHandleExceptionCallsClearOutputWhenEnabled(): void
     {
         $errorHandler = new ErrorHandler();
@@ -170,7 +209,7 @@ final class ErrorHandlerTest extends TestCase
         );
         self::assertIsString(
             $response->data,
-            'Should set response data as string for complex exception.',
+            'Should set Response data as string for complex exception.',
         );
     }
 
@@ -191,7 +230,7 @@ final class ErrorHandlerTest extends TestCase
         );
         self::assertNotNull(
             $response->data,
-            "Should set response data even for 'Exception' with empty message.",
+            "Should set Response data even for 'Exception' with empty message.",
         );
     }
 
@@ -212,7 +251,7 @@ final class ErrorHandlerTest extends TestCase
         );
         self::assertNotEmpty(
             $response->data,
-            'Should set response data with exception information.',
+            'Should set Response data with exception information.',
         );
     }
 
@@ -235,7 +274,7 @@ final class ErrorHandlerTest extends TestCase
         );
         self::assertNotEmpty(
             $response->data,
-            "Should set response data for 'Exception' with long message.",
+            "Should set Response data for 'Exception' with long message.",
         );
     }
 
@@ -270,7 +309,7 @@ final class ErrorHandlerTest extends TestCase
             }
             self::assertNotEmpty(
                 $response->data,
-                "Should set response data for exceptions {$index}.",
+                "Should set Response data for exceptions {$index}.",
             );
         }
     }
@@ -293,7 +332,7 @@ final class ErrorHandlerTest extends TestCase
         );
         self::assertNotEmpty(
             $response->data,
-            'Should set response data for nested exceptions.',
+            'Should set Response data for nested exceptions.',
         );
     }
 
@@ -314,7 +353,7 @@ final class ErrorHandlerTest extends TestCase
         );
         self::assertNotEmpty(
             $response->data,
-            'Should set response data for runtime exception.',
+            'Should set Response data for runtime exception.',
         );
     }
 
@@ -336,7 +375,7 @@ final class ErrorHandlerTest extends TestCase
             );
             self::assertIsString(
                 $response->data,
-                "Should set response data as string for 'Exception' with special trace.",
+                "Should set Response data as string for 'Exception' with special trace.",
             );
         }
     }
@@ -358,7 +397,7 @@ final class ErrorHandlerTest extends TestCase
         );
         self::assertNotEmpty(
             $response->data,
-            'Should set response data for user exception.',
+            'Should set Response data for user exception.',
         );
     }
 
@@ -379,7 +418,7 @@ final class ErrorHandlerTest extends TestCase
         );
         self::assertNotEmpty(
             $response->data,
-            "Should set response data for 'Exception' with zero code.",
+            "Should set Response data for 'Exception' with zero code.",
         );
     }
 
@@ -395,11 +434,11 @@ final class ErrorHandlerTest extends TestCase
 
         self::assertNotEmpty(
             $response->data,
-            'Should always set non-empty response data.',
+            'Should always set non-empty Response data.',
         );
         self::assertIsString(
             $response->data,
-            "'Response' data should be string.",
+            'Response data should be string.',
         );
     }
 
