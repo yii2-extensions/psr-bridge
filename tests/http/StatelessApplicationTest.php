@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
-use ErrorException;
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
