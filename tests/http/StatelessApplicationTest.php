@@ -2002,7 +2002,7 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnNullCredentialsWhenBasicAuthorizationHeaderHasInvalidBase64(): void
+    public function testReturnNullCredentialsWhenBasicAuthorizationHeaderHasInvalidBase64DueToMissingSpace(): void
     {
         $criticalBase64 = base64_encode('a:b'); // "YTpi"
 
