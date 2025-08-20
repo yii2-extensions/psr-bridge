@@ -1445,38 +1445,120 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testReturnCredentialsWhenValidBasicAuthorizationHeaderIsPresent(): void
     {
+        $app = $this->statelessApplication();
+
         $_SERVER = [
-            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode('testuser:testpass'),
+            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode('user:pass'),
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/auth',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-        $app = $this->statelessApplication();
-
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route with valid Basic 'HTTP_AUTHORIZATION' " .
-            "header in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route with 'Basic' " .
-            "'HTTP_AUTHORIZATION' header in 'StatelessApplication'.",
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/suth' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseData = Json::decode($response->getBody()->getContents());
+
+        self::assertIsArray(
+            $responseData,
+            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
+            "'StatelessApplication'.",
         );
         self::assertSame(
-            <<<JSON
-            {"username":"testuser","password":"testpass"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Response 'body' should return extracted credentials 'testuser' and 'testpass' when valid 'Basic' " .
-            "'HTTP_AUTHORIZATION' header is present, confirming correct 'mb_substr' extraction starting at position '6' " .
-            "(after 'Basic ') for 'site/auth' route in 'StatelessApplication'.",
+            'user',
+            $responseData['username'] ?? '',
+            "Should extract 'user' with correct 'Basic ' ('6' chars) prefix",
+        );
+        self::assertSame(
+            'pass',
+            $responseData['password'] ?? '',
+            "Should extract 'pass' with correct 'Basic ' ('6' chars) prefix",
+        );
+
+        $base64Token = base64_encode('user:pass'); // 'dXNlcjpwYXNz'
+
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => "Basic{$base64Token}", // 'BasicdXNlcjpwYXNz'
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/suth' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseData = Json::decode($response->getBody()->getContents());
+
+        self::assertIsArray(
+            $responseData,
+            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertNull(
+            $responseData['username'] ?? null,
+            "Should be 'null' when 'Basic' lacks space - 'mb_substr(6)' cuts into base64 token",
+        );
+        self::assertNull(
+            $responseData['password'] ?? null,
+            "Should be 'null' when 'Basic' lacks space - 'mb_substr(6)' cuts into base64 token",
+        );
+
+        $criticalBase64 = base64_encode('a:b'); // "YTpi"
+
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => "Basic{$criticalBase64}", // "BasicYTpi"
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/suth' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseData = Json::decode($response->getBody()->getContents());
+
+        self::assertIsArray(
+            $responseData,
+            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertNull(
+            $responseData['username'] ?? null,
+            'Should be null when cutting at position 6 produces invalid base64',
+        );
+        self::assertNull(
+            $responseData['password'] ?? null,
+            'Should be null when cutting at position 6 produces invalid base64',
         );
     }
 
