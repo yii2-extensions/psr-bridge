@@ -1917,6 +1917,45 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnPartialCredentialsWhenOnlyUsernameIsPresent(): void
+    {
+        $_SERVER = [
+            'PHP_AUTH_USER' => 'admin',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route with only 'PHP_AUTH_USER' set in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route with only " .
+            "'PHP_AUTH_USER' set in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            <<<JSON
+            {"username":"admin","password":null}
+            JSON,
+            $response->getBody()->getContents(),
+            "Response 'body' should return username 'admin' and 'null' password when only 'PHP_AUTH_USER' is " .
+            "present, confirming OR logic works correctly for 'site/auth' route in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnPhpIntMaxWhenMemoryLimitIsUnlimited(): void
     {
         $originalLimit = ini_get('memory_limit');
