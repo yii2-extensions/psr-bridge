@@ -1920,7 +1920,7 @@ final class StatelessApplicationTest extends TestCase
     public function testReturnNullCredentialsWhenAuthorizationHeaderHasInvalidBasicPrefix(): void
     {
         $_SERVER = [
-            'HTTP_AUTHORIZATION' => 'basi',
+            'HTTP_AUTHORIZATION' => 'basix ' . base64_encode('user:pass'),
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/auth',
         ];
@@ -1934,22 +1934,23 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route with invalid 'basi' Authorization header " .
+            "Response 'status code' should be '200' for 'site/auth' route with 'basix' 'HTTP_AUTHORIZATION' header " .
             "in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route with invalid " .
-            "'basi' Authorization header in 'StatelessApplication'.",
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route with 'basix' " .
+            "'HTTP_AUTHORIZATION' header in 'StatelessApplication'.",
         );
         self::assertSame(
             <<<JSON
             {"username":null,"password":null}
             JSON,
             $response->getBody()->getContents(),
-            "Response 'body' should return 'null' credentials when 'Authorization' header is only 'basi' instead of " .
-            "'basic', confirming that exactly '5' characters must match for 'site/auth' route in 'StatelessApplication'.",
+            "Response 'body' should return 'null' credentials when 'HTTP_AUTHORIZATION' header is 'basix' instead of " .
+            "'basic', confirming that exactly '5' characters must match (not just '4') for 'site/auth' route in " .
+            "'StatelessApplication'.",
         );
     }
 
