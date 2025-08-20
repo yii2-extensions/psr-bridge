@@ -74,11 +74,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/captcha',
         ];
 
-        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response1 = $app->handle($request1);
+        $response1 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -131,9 +129,7 @@ final class StatelessApplicationTest extends TestCase
             'QUERY_STRING' => 'refresh=1',
         ];
 
-        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-        $response2 = $app->handle($request2);
+        $response2 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -202,9 +198,7 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => $url,
         ];
 
-        $request3 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-        $response3 = $app->handle($request3);
+        $response3 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $imageContent = $response3->getBody()->getContents();
 
         self::assertSame(
@@ -244,11 +238,9 @@ final class StatelessApplicationTest extends TestCase
 
         ini_set('memory_limit', '100M');
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $memoryLimit = $app->getMemoryLimit();
 
         self::assertFalse(
@@ -281,11 +273,9 @@ final class StatelessApplicationTest extends TestCase
 
         ini_set('memory_limit', '2G');
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         $currentUsage = memory_get_usage(true);
 
@@ -334,9 +324,7 @@ final class StatelessApplicationTest extends TestCase
                 'REQUEST_URI' => "site/index?iteration={$i}",
             ];
 
-            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-            $response = $app->handle($request);
+            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
             $obj1 = new stdClass();
             $obj2 = new stdClass();
@@ -345,7 +333,7 @@ final class StatelessApplicationTest extends TestCase
             $obj2->ref = $obj1;
             $obj1->circular = $circular;
 
-            unset($circular, $obj1, $obj2, $request, $response);
+            unset($circular, $obj1, $obj2, $response);
         }
 
         $gcStatsBefore = gc_status();
@@ -391,11 +379,9 @@ final class StatelessApplicationTest extends TestCase
         ob_start();
         $levels[] = ob_get_level();
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertGreaterThanOrEqual(
             3,
@@ -485,8 +471,6 @@ final class StatelessApplicationTest extends TestCase
             'SECRET_KEY' => 'not-a-real-secret-key',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -497,7 +481,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             500,
@@ -575,34 +559,32 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/setflash',
         ];
 
-        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response1 = $app->handle($request1);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $sessionName = $app->session->getName();
 
         self::assertSame(
             200,
-            $response1->getStatusCode(),
+            $response->getStatusCode(),
             "Response 'status code' should be '200' for 'site/setflash' route, confirming successful flash message " .
             "set in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaderLine('Content-Type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/captcha' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             '{"status":"ok"}',
-            $response1->getBody()->getContents(),
+            $response->getBody()->getContents(),
             "Response 'body' should be '{\"status\":\"ok\"}' after setting flash message for 'site/setflash' route " .
             "in 'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=flash-user-a; Path=/; HttpOnly; SameSite",
-            $response1->getHeaderLine('Set-Cookie'),
+            $response->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain session 'ID' 'flash-user-a' for 'site/setflash' route, " .
             "ensuring correct session assignment in 'StatelessApplication'.",
         );
@@ -614,27 +596,25 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/getflash',
         ];
 
-        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
-        $response2 = $app->handle($request2);
-
-        $flashData = Json::decode($response2->getBody()->getContents());
+        $flashData = Json::decode($response->getBody()->getContents());
 
         self::assertSame(
             200,
-            $response2->getStatusCode(),
+            $response->getStatusCode(),
             "Response 'status code' should be '200' for 'site/getflash' route, confirming successful flash message " .
             "retrieval in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaderLine('Content-Type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getflash' route in " .
                 "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=flash-user-b; Path=/; HttpOnly; SameSite",
-            $response2->getHeaderLine('Set-Cookie'),
+            $response->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain session 'ID' 'flash-user-b' for 'site/getflash' route, " .
             "ensuring correct session assignment in 'StatelessApplication'.",
         );
@@ -659,8 +639,6 @@ final class StatelessApplicationTest extends TestCase
 
         ini_set('memory_limit', '-1');
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
         self::assertSame(
@@ -669,7 +647,7 @@ final class StatelessApplicationTest extends TestCase
             "Memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited) in 'StatelessApplication'.",
         );
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $app->clean();
 
         ini_set('memory_limit', $originalLimit);
@@ -684,8 +662,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/trigger-exception',
         ];
-
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
 
         $app = $this->statelessApplication(
             [
@@ -709,7 +685,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $logMessages = $app->getLog()->getLogger()->messages;
 
         self::assertSame(
@@ -771,9 +747,7 @@ final class StatelessApplicationTest extends TestCase
                 'REQUEST_URI' => 'site/setsessiondata',
             ];
 
-            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-            $response = $app->handle($request);
+            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
             self::assertSame(
                 200,
@@ -805,9 +779,7 @@ final class StatelessApplicationTest extends TestCase
                 'REQUEST_URI' => 'site/getsessiondata',
             ];
 
-            $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-            $response = $app->handle($request);
+            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
             self::assertSame(
                 200,
@@ -915,8 +887,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/trigger-exception',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $warningsCaptured = [];
 
         set_error_handler(
@@ -945,7 +915,7 @@ final class StatelessApplicationTest extends TestCase
                 ],
             );
 
-            $response = $app->handle($request);
+            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
             $undefinedExceptionWarnings = array_filter(
                 $warningsCaptured,
@@ -1016,8 +986,6 @@ final class StatelessApplicationTest extends TestCase
 
         $originalDisplayErrors = ini_get('display_errors');
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication([
             'components' => [
                 'errorHandler' => [
@@ -1026,7 +994,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         ]);
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             '1',
@@ -1066,8 +1034,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/trigger-exception',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -1078,7 +1044,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             500,
@@ -1115,8 +1081,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/trigger-exception',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -1130,7 +1094,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             500,
@@ -1319,11 +1283,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/cookie',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -1389,11 +1351,9 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testReturnCoreComponentsConfigurationAfterHandle(): void
     {
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             [
@@ -1538,11 +1498,9 @@ final class StatelessApplicationTest extends TestCase
 
         ini_set('memory_limit', '1G');
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertFalse(
             $app->clean(),
@@ -1563,8 +1521,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/nonexistent-action',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -1575,7 +1531,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             500,
@@ -1615,11 +1571,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/getcookies',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -1647,11 +1601,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/auth',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -1679,11 +1631,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/auth',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -1717,11 +1667,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/post',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -1754,11 +1702,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/get',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -1786,11 +1732,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/query/foo?q=1',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -1971,11 +1915,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/auth',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -2102,11 +2044,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/auth',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -2139,11 +2079,9 @@ final class StatelessApplicationTest extends TestCase
 
         ini_set('memory_limit', '-1');
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             PHP_INT_MAX,
@@ -2171,11 +2109,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/file',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -2211,11 +2147,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/stream',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -2245,11 +2179,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/redirect',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             302,
@@ -2274,11 +2206,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/refresh',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             302,
@@ -2407,11 +2337,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/deletecookie',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -2482,11 +2410,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/multiplecookies',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -2534,11 +2460,9 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testReturnsJsonResponse(): void
     {
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -2569,11 +2493,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/statuscode',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             201,
@@ -2676,28 +2598,26 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/setsession',
         ];
 
-        // first request - set session data
-        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response1 = $app->handle($request1);
+        // first request - set session data
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
-            $response1->getStatusCode(),
+            $response->getStatusCode(),
             "Response 'status code' should be '200' for 'site/setsession' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaderLine('Content-Type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
 
         self::assertSame(
             "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
-            $response1->getHeaderLine('Set-Cookie'),
+            $response->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain '{$sessionId}' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
@@ -2709,29 +2629,27 @@ final class StatelessApplicationTest extends TestCase
         ];
 
         // second request - same session ID should retrieve the data
-        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-        $response2 = $app->handle($request2);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
-            $response2->getStatusCode(),
+            $response->getStatusCode(),
             "Response 'status code' should be '200' for 'site/getsession' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaderLine('Content-Type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
-            $response2->getHeaderLine('Set-Cookie'),
+            $response->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain '{$sessionId}' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
 
-        $body = Json::decode($response2->getBody()->getContents());
+        $body = Json::decode($response->getBody()->getContents());
 
         self::assertIsArray(
             $body,
@@ -2765,27 +2683,25 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/setsession',
         ];
 
-        // first request - set a session value
-        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response1 = $app->handle($request1);
+        // first request - set a session value
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
-            $response1->getStatusCode(),
+            $response->getStatusCode(),
             "Response 'status code' should be '200' for 'site/setsession' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaderLine('Content-Type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=session-user-a; Path=/; HttpOnly; SameSite",
-            $response1->getHeaderLine('Set-Cookie'),
+            $response->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain 'session-user-a' for 'site/setsession' route in " .
             "'StatelessApplication'.",
         );
@@ -2797,29 +2713,27 @@ final class StatelessApplicationTest extends TestCase
         ];
 
         // second request - different session
-        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-        $response2 = $app->handle($request2);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
-            $response2->getStatusCode(),
+            $response->getStatusCode(),
             "Response 'status code' should be '200' for 'site/getsession' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaderLine('Content-Type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=session-user-b; Path=/; HttpOnly; SameSite",
-            $response2->getHeaderLine('Set-Cookie'),
+            $response->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain 'session-user-b' for 'site/getsession' route in " .
             "'StatelessApplication'.",
         );
 
-        $body = Json::decode($response2->getBody()->getContents());
+        $body = Json::decode($response->getBody()->getContents());
 
         self::assertIsArray(
             $body,
@@ -2850,11 +2764,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/getsession',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $sessionName = $app->session->getName();
         $cookie = array_filter(
             $response->getHeader('Set-Cookie'),
@@ -2882,11 +2794,9 @@ final class StatelessApplicationTest extends TestCase
     {
         $largeLimit = 2_147_483_647; // Near PHP_INT_MAX
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $app->setMemoryLimit($largeLimit);
 
         self::assertSame(
@@ -2907,11 +2817,9 @@ final class StatelessApplicationTest extends TestCase
 
         ini_set('memory_limit', '512M');
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $app->setMemoryLimit($customLimit);
 
         ini_set('memory_limit', '1G');
@@ -2932,11 +2840,9 @@ final class StatelessApplicationTest extends TestCase
     {
         $originalLimit = ini_get('memory_limit');
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $app->setMemoryLimit(0);
 
         ini_set('memory_limit', '256M');
@@ -2971,12 +2877,10 @@ final class StatelessApplicationTest extends TestCase
     {
         $memoryLimit = 268_435_456; // 256MB in bytes
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
         $app->setMemoryLimit($memoryLimit);
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             $memoryLimit,
@@ -2992,11 +2896,9 @@ final class StatelessApplicationTest extends TestCase
     {
         $smallLimit = 1024; // 1KB
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $app->setMemoryLimit($smallLimit);
 
         self::assertSame(
@@ -3020,11 +2922,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/index',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -3051,11 +2951,9 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testSetWebAndWebrootAliasesAfterHandleRequest(): void
     {
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             '',
@@ -3080,11 +2978,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'nonexistent/invalidaction',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             404,
@@ -3116,11 +3012,9 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/profile/123',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             404,
@@ -3152,8 +3046,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/profile/123',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -3164,7 +3056,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         $this->expectException(NotFoundHttpException::class);
         $this->expectExceptionMessage(Message::PAGE_NOT_FOUND->getMessage());
@@ -3180,8 +3072,6 @@ final class StatelessApplicationTest extends TestCase
     {
         $eventTriggered = false;
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
         $app->on(
@@ -3191,7 +3081,7 @@ final class StatelessApplicationTest extends TestCase
             },
         );
 
-        $app->handle($request);
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
     }
@@ -3209,8 +3099,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/trigger-exception',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -3221,7 +3109,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             500,
@@ -3270,8 +3158,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/trigger-user-exception',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -3282,7 +3168,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             500,
@@ -3328,8 +3214,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/trigger-user-exception',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -3340,7 +3224,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             500,
@@ -3384,8 +3268,6 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/trigger-exception',
         ];
 
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -3399,7 +3281,7 @@ final class StatelessApplicationTest extends TestCase
             ],
         );
 
-        $response = $app->handle($request);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $responseBody = $response->getBody()->getContents();
 
         self::assertSame(
@@ -3452,26 +3334,24 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/login',
         ];
 
-        $request1 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
         $app = $this->statelessApplication();
 
-        $response1 = $app->handle($request1);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
-            $response1->getStatusCode(),
+            $response->getStatusCode(),
             "Response 'status code' should be '200' for 'site/login' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response1->getHeaderLine('Content-Type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/login' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=user1-session; Path=/; HttpOnly; SameSite",
-            $response1->getHeaderLine('Set-Cookie'),
+            $response->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain 'user1-session' for 'site/login' route in " .
             "'StatelessApplication'.",
         );
@@ -3479,7 +3359,7 @@ final class StatelessApplicationTest extends TestCase
             <<<JSON
             {"status":"ok","username":"admin"}
             JSON,
-            $response1->getBody()->getContents(),
+            $response->getBody()->getContents(),
             "Response 'body' should contain valid JSON with 'status' and 'username' for successful login in " .
             "'StatelessApplication'.",
         );
@@ -3492,24 +3372,22 @@ final class StatelessApplicationTest extends TestCase
             'REQUEST_URI' => 'site/checkauth',
         ];
 
-        $request2 = FactoryHelper::createServerRequestCreator()->createFromGlobals();
-
-        $response2 = $app->handle($request2);
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
-            $response2->getStatusCode(),
+            $response->getStatusCode(),
             "Response 'status code' should be '200' for 'site/checkauth' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
-            $response2->getHeaderLine('Content-Type'),
+            $response->getHeaderLine('Content-Type'),
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/checkauth' route in " .
             "'StatelessApplication'.",
         );
         self::assertSame(
             "{$sessionName}=user2-session; Path=/; HttpOnly; SameSite",
-            $response2->getHeaderLine('Set-Cookie'),
+            $response->getHeaderLine('Set-Cookie'),
             "Response 'Set-Cookie' header should contain 'user2-session' for 'site/checkauth' route in " .
             "'StatelessApplication'.",
         );
@@ -3517,7 +3395,7 @@ final class StatelessApplicationTest extends TestCase
             <<<JSON
             {"isGuest":true,"identity":null}
             JSON,
-            $response2->getBody()->getContents(),
+            $response->getBody()->getContents(),
             "Response 'body' should indicate 'guest' status and 'null' identity for a new session in " .
             "'StatelessApplication'.",
         );
