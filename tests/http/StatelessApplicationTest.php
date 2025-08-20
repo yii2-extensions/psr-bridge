@@ -1443,6 +1443,52 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnCredentialsWhenValidBasicAuthorizationHeaderIsPresent(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode('user:pass'),
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseData = Json::decode($response->getBody()->getContents());
+
+        self::assertIsArray(
+            $responseData,
+            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'user',
+            $responseData['username'] ?? '',
+            "Should extract 'user' with correct 'Basic ' ('6' chars) prefix",
+        );
+        self::assertSame(
+            'pass',
+            $responseData['password'] ?? '',
+            "Should extract 'pass' with correct 'Basic ' ('6' chars) prefix",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnEmptyCookieCollectionWhenValidationEnabledWithInvalidCookies(): void
     {
         $app = $this->statelessApplication(
@@ -1950,6 +1996,98 @@ final class StatelessApplicationTest extends TestCase
             $response->getBody()->getContents(),
             "Response 'body' should return 'null' credentials when the 'HTTP_AUTHORIZATION' header does not start " .
             "with 'Basic ' (case-insensitive) for 'site/auth' route in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnNullCredentialsWhenBasicAuthorizationHeaderHasInvalidBase64DueToMissingSpace(): void
+    {
+        $criticalBase64 = base64_encode('a:b'); // "YTpi"
+
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => "Basic{$criticalBase64}", // "BasicYTpi"
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseData = Json::decode($response->getBody()->getContents());
+
+        self::assertIsArray(
+            $responseData,
+            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertNull(
+            $responseData['username'] ?? null,
+            'Should be null when cutting at position 6 produces invalid base64',
+        );
+        self::assertNull(
+            $responseData['password'] ?? null,
+            'Should be null when cutting at position 6 produces invalid base64',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnNullCredentialsWhenBasicAuthorizationHeaderLacksSpace(): void
+    {
+        $base64Token = base64_encode('user:pass'); // 'dXNlcjpwYXNz'
+
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => "Basic{$base64Token}", // 'BasicdXNlcjpwYXNz'
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseData = Json::decode($response->getBody()->getContents());
+
+        self::assertIsArray(
+            $responseData,
+            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertNull(
+            $responseData['username'] ?? null,
+            "Should be 'null' when 'Basic' lacks the required space after the scheme",
+        );
+        self::assertNull(
+            $responseData['password'] ?? null,
+            'Should be null when the Authorization header lacks a space after Basic (invalid base64 segment)',
         );
     }
 
