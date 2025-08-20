@@ -2024,7 +2024,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/suth' route in " .
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
             "'StatelessApplication'.",
         );
 
@@ -2070,7 +2070,7 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/suth' route in " .
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
             "'StatelessApplication'.",
         );
 
