@@ -1948,9 +1948,8 @@ final class StatelessApplicationTest extends TestCase
             {"username":null,"password":null}
             JSON,
             $response->getBody()->getContents(),
-            "Response 'body' should return 'null' credentials when 'HTTP_AUTHORIZATION' header is 'basix' instead of " .
-            "'basic', confirming that exactly '5' characters must match (not just '4') for 'site/auth' route in " .
-            "'StatelessApplication'.",
+            "Response 'body' should return 'null' credentials when the 'HTTP_AUTHORIZATION' header does not start " .
+            "with 'Basic ' (case-insensitive) for 'site/auth' route in 'StatelessApplication'.",
         );
     }
 
