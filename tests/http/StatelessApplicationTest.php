@@ -1443,6 +1443,46 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnCredentialsWhenValidBasicAuthorizationHeaderIsPresent(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode('testuser:testpass'),
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route with valid Basic 'HTTP_AUTHORIZATION' " .
+            "header in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route with 'Basic' " .
+            "'HTTP_AUTHORIZATION' header in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            <<<JSON
+            {"username":"testuser","password":"testpass"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Response 'body' should return extracted credentials 'testuser' and 'testpass' when valid 'Basic' " .
+            "'HTTP_AUTHORIZATION' header is present, confirming correct 'mb_substr' extraction starting at position '6' " .
+            "(after 'Basic ') for 'site/auth' route in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnEmptyCookieCollectionWhenValidationEnabledWithInvalidCookies(): void
     {
         $app = $this->statelessApplication(
