@@ -1917,6 +1917,45 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnNullCredentialsWhenAuthorizationHeaderHasInvalidBasicPrefix(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => 'basix ' . base64_encode('user:pass'),
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($request);
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route with 'basix' 'HTTP_AUTHORIZATION' header " .
+            "in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route with 'basix' " .
+            "'HTTP_AUTHORIZATION' header in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            <<<JSON
+            {"username":null,"password":null}
+            JSON,
+            $response->getBody()->getContents(),
+            "Response 'body' should return 'null' credentials when the 'HTTP_AUTHORIZATION' header does not start " .
+            "with 'Basic ' (case-insensitive) for 'site/auth' route in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnPartialCredentialsWhenOnlyUsernameIsPresent(): void
     {
         $_SERVER = [
