@@ -13,7 +13,6 @@ use yii2\extensions\psrbridge\exception\Message;
 
 use function array_key_exists;
 use function base64_decode;
-use function count;
 use function explode;
 use function filter_var;
 use function is_array;
@@ -127,10 +126,6 @@ final class Request extends \yii\web\Request
             }
 
             $parts = explode(':', $decoded, 2);
-
-            if (count($parts) < 2) {
-                return [$parts[0] === '' ? null : $parts[0], null];
-            }
 
             return [
                 $parts[0] === '' ? null : $parts[0],
