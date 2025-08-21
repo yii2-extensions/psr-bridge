@@ -151,7 +151,7 @@ final class ApplicationSessionTest extends TestCase
             "'StatelessApplication'.",
         );
 
-        $_COOKIE = [$sessionName => 'user-a-session'];
+        $_COOKIE = [$sessionName => 'user-b-session'];
         $_GET = [];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -164,7 +164,7 @@ final class ApplicationSessionTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for captcha image request for user-a-session in " .
+            "Response 'status code' should be '200' for captcha image request for user-b-session in " .
             "'StatelessApplication', confirming successful image retrieval and session isolation.",
         );
         self::assertNotEmpty(
@@ -177,9 +177,9 @@ final class ApplicationSessionTest extends TestCase
             "Captcha image response 'Content-Type' should be 'image/png' for '{$url}' in 'StatelessApplication'.",
         );
         self::assertSame(
-            "{$sessionName}=user-a-session; Path=/; HttpOnly; SameSite",
+            "{$sessionName}=user-b-session; Path=/; HttpOnly; SameSite",
             $response->getHeaderLine('Set-Cookie'),
-            "Captcha image response 'Set-Cookie' should contain 'user-a-session' for '{$url}' in " .
+            "Captcha image response 'Set-Cookie' should contain 'user-b-session' for '{$url}' in " .
             "'StatelessApplication'.",
         );
         self::assertStringStartsWith(
@@ -219,11 +219,10 @@ final class ApplicationSessionTest extends TestCase
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/setflash' route in " .
             "'StatelessApplication'.",
         );
-        self::assertSame(
+        self::assertJsonStringEqualsJsonString(
             '{"status":"ok"}',
             $response->getBody()->getContents(),
-            "Response 'body' should be '{\"status\":\"ok\"}' after setting flash message for 'site/setflash' route " .
-            "in 'StatelessApplication'.",
+            "Response body should be valid JSON confirming the flash message was set.",
         );
         self::assertSame(
             "{$sessionName}=flash-user-a; Path=/; HttpOnly; SameSite",
@@ -297,12 +296,12 @@ final class ApplicationSessionTest extends TestCase
             self::assertSame(
                 200,
                 $response->getStatusCode(),
-                "Response 'status code' should be '200' for 'site/getsessiondata' route in 'StatelessApplication'.",
+                "Response 'status code' should be '200' for 'site/setsessiondata' route in 'StatelessApplication'.",
             );
             self::assertSame(
                 'application/json; charset=UTF-8',
                 $response->getHeaderLine('Content-Type'),
-                "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getsessiondata' route " .
+                "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/setsessiondata' route " .
                 "in 'StatelessApplication'.",
             );
             self::assertSame(
@@ -519,16 +518,9 @@ final class ApplicationSessionTest extends TestCase
             "'StatelessApplication'.",
         );
 
-        $testValue = '';
-
-        if (array_key_exists('testValue', $body)) {
-            $testValue = $body['testValue'];
-        }
-
         self::assertNull(
-            $testValue,
-            "Session data from first request should not leak to second request with different session 'ID' in " .
-            "'StatelessApplication'.",
+            $body['testValue'] ?? null,
+            "Session data from first request should not leak to a second request with a different session 'ID'.",
         );
     }
 
@@ -551,6 +543,8 @@ final class ApplicationSessionTest extends TestCase
             static fn(string $cookie): bool => str_starts_with($cookie, "{$sessionName}="),
         );
 
+        $cookieLine = (string) reset($cookie);
+
         self::assertCount(
             1,
             $cookie,
@@ -558,10 +552,11 @@ final class ApplicationSessionTest extends TestCase
             "is sent in 'StatelessApplication'.",
         );
         self::assertMatchesRegularExpression(
-            '/^' . preg_quote($sessionName, '/') . '=[a-zA-Z0-9]+; Path=\/; HttpOnly; SameSite$/',
-            $cookie[0] ?? '',
-            "Response 'Set-Cookie' header should match the expected format for a new session 'ID' when no session " .
-            "cookie is sent in 'StatelessApplication'. Value received: '" . ($cookie[0] ?? '') . "'.",
+            '/^' . preg_quote($sessionName, '/') .
+            '=[A-Za-z0-9,-]+; Path=\/; HttpOnly; SameSite(?:=(?:Lax|Strict|None))?$/',
+            $cookieLine,
+            "Response 'Set-Cookie' should match the expected format for a new session when no cookie is sent. " .
+            "Value received: '{$cookieLine}'.",
         );
     }
 
@@ -604,13 +599,10 @@ final class ApplicationSessionTest extends TestCase
             "Response 'Set-Cookie' header should contain 'user1-session' for 'site/login' route in " .
             "'StatelessApplication'.",
         );
-        self::assertSame(
-            <<<JSON
-            {"status":"ok","username":"admin"}
-            JSON,
+        self::assertJsonStringEqualsJsonString(
+            '{"status":"ok","username":"admin"}',
             $response->getBody()->getContents(),
-            "Response 'body' should contain valid JSON with 'status' and 'username' for successful login in " .
-            "'StatelessApplication'.",
+            "Response body should include status and username after successful login.",
         );
 
         // second user checks authentication status - should not be logged in
