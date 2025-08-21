@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\tests\http;
+namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
+use ReflectionException;
 use Yii;
 use yii\base\{InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
@@ -17,7 +19,13 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
-final class StatelessApplicationCoreTest extends TestCase
+use function array_filter;
+use function dirname;
+use function str_contains;
+use function str_starts_with;
+
+#[Group('http')]
+final class ApplicationCoreTest extends TestCase
 {
     protected function tearDown(): void
     {
@@ -80,6 +88,7 @@ final class StatelessApplicationCoreTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the property does not exist or is inaccessible.
      */
     public function testResponseAdapterCachingAndResetBehaviorAcrossMultipleRequests(): void
     {
@@ -332,7 +341,7 @@ final class StatelessApplicationCoreTest extends TestCase
             "'@web' alias should be set to an empty string after handling a request in 'StatelessApplication'.",
         );
         self::assertSame(
-            dirname(__DIR__),
+            dirname(__DIR__, 2),
             Yii::getAlias('@webroot'),
             "'@webroot' alias should be set to the parent directory of the test directory after handling a request " .
             "in 'StatelessApplication'.",

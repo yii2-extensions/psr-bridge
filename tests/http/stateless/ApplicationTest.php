@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\tests\http;
+namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use stdClass;
@@ -43,7 +43,7 @@ use function uniqid;
 use const PHP_INT_MAX;
 
 #[Group('http')]
-final class StatelessApplicationTest extends TestCase
+final class ApplicationTest extends TestCase
 {
     protected function tearDown(): void
     {
