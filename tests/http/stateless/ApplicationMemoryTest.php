@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
+use PHPUnit\Framework\Attributes\Group;
 use stdClass;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -22,6 +23,7 @@ use function ob_start;
 
 use const PHP_INT_MAX;
 
+#[Group('http')]
 final class ApplicationMemoryTest extends TestCase
 {
     /**
