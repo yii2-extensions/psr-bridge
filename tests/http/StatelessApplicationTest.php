@@ -2297,7 +2297,7 @@ final class StatelessApplicationTest extends TestCase
     public function testReturnUsernameOnlyWhenNoColonSeparatorInCredentials(): void
     {
         $_SERVER = [
-            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode('usernameonly:'),
+            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode('usernameonly'),
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/auth',
         ];
