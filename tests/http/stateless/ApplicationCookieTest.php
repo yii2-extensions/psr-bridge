@@ -11,6 +11,7 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
+use function array_keys;
 use function implode;
 use function str_starts_with;
 
@@ -53,9 +54,12 @@ final class ApplicationCookieTest extends TestCase
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
             "'StatelessApplication'.",
         );
+
+        $payload = Json::decode($response->getBody()->getContents());
+
         self::assertSame(
-            '[]',
-            $response->getBody()->getContents(),
+            [],
+            $payload,
             'CookieCollection should be empty when validation is enabled but cookies are invalid.',
         );
     }
@@ -156,51 +160,51 @@ final class ApplicationCookieTest extends TestCase
          *     httpOnly: bool,
          *     sameSite: string
          *   }
-         * > $expectedCookies
+         * > $decodedCookies
          */
-        $expectedCookies = Json::decode($response->getBody()->getContents());
+        $decodedCookies = Json::decode($response->getBody()->getContents());
 
         self::assertCount(
             4,
-            $expectedCookies,
+            $decodedCookies,
             "Should return all '4' validated cookies, not just '1'.",
         );
 
         foreach ($cookies as $name => $value) {
             self::assertSame(
                 $name,
-                $expectedCookies[$name]['name'] ?? null,
+                $decodedCookies[$name]['name'] ?? '',
                 "Cookie name for '{$name}' should match the original cookie name in 'StatelessApplication'.",
             );
             self::assertSame(
                 $value,
-                $expectedCookies[$name]['value'],
+                $decodedCookies[$name]['value'],
                 "Cookie value for '{$name}' should match the original cookie value in 'StatelessApplication'.",
             );
             self::assertEmpty(
-                $expectedCookies[$name]['domain'],
+                $decodedCookies[$name]['domain'],
                 "Cookie 'domain' for '{$name}' should be an empty string in 'StatelessApplication'.",
             );
             self::assertNull(
-                $expectedCookies[$name]['expire'],
+                $decodedCookies[$name]['expire'],
                 "Cookie 'expire' for '{$name}' should be 'null' in 'StatelessApplication'.",
             );
             self::assertSame(
                 '/',
-                $expectedCookies[$name]['path'],
+                $decodedCookies[$name]['path'],
                 "Cookie 'path' for '{$name}' should be '/' in 'StatelessApplication'.",
             );
             self::assertFalse(
-                $expectedCookies[$name]['secure'],
+                $decodedCookies[$name]['secure'],
                 "Cookie 'secure' flag for '{$name}' should be 'false' in 'StatelessApplication'.",
             );
             self::assertTrue(
-                $expectedCookies[$name]['httpOnly'],
+                $decodedCookies[$name]['httpOnly'],
                 "Cookie 'httpOnly' flag for '{$name}' should be 'true' in 'StatelessApplication'.",
             );
             self::assertSame(
                 'Lax',
-                $expectedCookies[$name]['sameSite'],
+                $decodedCookies[$name]['sameSite'],
                 "Cookie 'sameSite' for '{$name}' should be 'Lax' in 'StatelessApplication'.",
             );
         }
@@ -283,10 +287,10 @@ final class ApplicationCookieTest extends TestCase
             $objectValue,
             "Object cookie 'value' should be sanitized to an array (incomplete class representation).",
         );
-        self::assertSame(
-            'stdClass',
-            $objectValue['__PHP_Incomplete_Class_Name'] ?? null,
-            "Sanitized object should include '__PHP_Incomplete_Class_Name' => 'stdClass'.",
+        self::assertEqualsCanonicalizing(
+            ['__PHP_Incomplete_Class_Name', 'property'],
+            array_keys($objectValue),
+            'Sanitized object should not contain unexpected keys.',
         );
         self::assertSame(
             'object_value',
@@ -417,7 +421,7 @@ final class ApplicationCookieTest extends TestCase
         // filter out session cookies to focus on test cookies
         $testCookieHeaders = array_filter(
             $response->getHeader('Set-Cookie'),
-            static fn(string $header): bool => str_starts_with($header, $app->session->getName()) === false,
+            static fn(string $header): bool => str_starts_with($header, $app->session->getName() . '=') === false,
         );
 
         self::assertCount(
