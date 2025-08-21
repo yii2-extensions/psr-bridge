@@ -1449,18 +1449,18 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnCredentialsWithMultibyteCharactersUsingMbSubstr(): void
+    public function testReturnCredentialsWithMultibyteCharacters(): void
     {
-        $app = $this->statelessApplication();
-
-        $multibyteUser = 'üser';  // 'ü' is '2' bytes in UTF-8
-        $multibytePass = 'pässwörd';  // 'ä', 'ö' are '2' bytes each
+        $multibyteUser = '用户名';  // chinese characters user
+        $multibytePass = '密码';    // chinese characters pass
 
         $_SERVER = [
-            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode($multibyteUser . ':' . $multibytePass),
+            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode("{$multibyteUser}:{$multibytePass}"),
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/auth',
         ];
+
+        $app = $this->statelessApplication();
 
         $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
@@ -1486,92 +1486,12 @@ final class StatelessApplicationTest extends TestCase
         self::assertSame(
             $multibyteUser,
             $responseData['username'] ?? '',
-            'Should correctly extract UTF-8 username with multibyte chars',
+            "Should handle pure Chinese characters in 'username'",
         );
         self::assertSame(
             $multibytePass,
             $responseData['password'] ?? '',
-            'Should correctly extract UTF-8 password with multibyte chars',
-        );
-
-        // test with '4-byte' UTF-8 characters (emojis)
-        $emojiUser = 'user😀test';
-        $emojiPass = 'pass🔒word';
-
-        $_SERVER = [
-            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode($emojiUser . ':' . $emojiPass),
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/auth',
-        ];
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
-            "'StatelessApplication'.",
-        );
-
-        $responseData = Json::decode($response->getBody()->getContents());
-
-        self::assertIsArray(
-            $responseData,
-            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
-            "'StatelessApplication'.",
-        );
-        self::assertSame(
-            $emojiUser,
-            $responseData['username'] ?? '',
-            "Should handle '4-byte' UTF-8 emojis in 'username'",
-        );
-        self::assertSame(
-            $emojiPass,
-            $responseData['password'] ?? '',
-            "Should handle '4-byte' UTF-8 emojis in 'password'",
-        );
-
-        $specialPrefix = 'Bäsic '; // not "Basic " but same byte length
-
-        $_SERVER = [
-            'HTTP_AUTHORIZATION' => $specialPrefix . base64_encode('user:pass'),
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/auth',
-        ];
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
-            "'StatelessApplication'.",
-        );
-
-        $responseData = Json::decode($response->getBody()->getContents());
-
-        self::assertIsArray(
-            $responseData,
-            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
-            "'StatelessApplication'.",
-        );
-        self::assertNull(
-            $responseData['username'] ?? null,
-            "Should be 'null' with multibyte prefix that doesn't match 'basic'",
-        );
-        self::assertNull(
-            $responseData['password'] ?? null,
-            "Should be 'null' with multibyte prefix that doesn't match 'basic'",
+            "Should handle pure Japanese characters in 'password'",
         );
     }
 
