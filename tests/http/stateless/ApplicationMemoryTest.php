@@ -313,7 +313,7 @@ final class ApplicationMemoryTest extends TestCase
      */
     public function testSetMemoryLimitWithLargePositiveValueMaintainsValue(): void
     {
-        $largeLimit = 2_147_483_647; // near 'PHP_INT_MAX'
+        $largeLimit = 2_147_483_647; // near '32-bit' 'INT_MAX'; well below '64-bit' 'PHP_INT_MAX'
 
         $app = $this->statelessApplication();
 
