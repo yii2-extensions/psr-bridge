@@ -1,0 +1,341 @@
+<?php
+
+declare(strict_types=1);
+
+namespace yii2\extensions\psrbridge\tests\http;
+
+use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
+use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
+use Yii;
+use yii\base\{InvalidConfigException, Security};
+use yii\di\NotInstantiableException;
+use yii\i18n\{Formatter, I18N};
+use yii\log\Dispatcher;
+use yii\web\{AssetManager, Session, UrlManager, User, View};
+use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
+use yii2\extensions\psrbridge\tests\support\FactoryHelper;
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
+use yii2\extensions\psrbridge\tests\TestCase;
+
+final class StatelessApplicationCoreTest extends TestCase
+{
+    protected function tearDown(): void
+    {
+        $this->closeApplication();
+
+        parent::tearDown();
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testContainerResolvesPsrFactoriesWithDefinitions(): void
+    {
+        $app = $this->statelessApplication([
+            'container' => [
+                'definitions' => [
+                    ServerRequestFactoryInterface::class => ServerRequestFactory::class,
+                    StreamFactoryInterface::class => StreamFactory::class,
+                    UploadedFileFactoryInterface::class => UploadedFileFactory::class,
+                ],
+            ],
+        ]);
+
+        $container = $app->container();
+
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertTrue(
+            $container->has(ServerRequestFactoryInterface::class),
+            "Container should have definition for 'ServerRequestFactoryInterface', ensuring PSR-7 request factory is " .
+            'available.',
+        );
+        self::assertTrue(
+            $container->has(StreamFactoryInterface::class),
+            "Container should have definition for 'StreamFactoryInterface', ensuring PSR-7 stream factory is " .
+            'available.',
+        );
+        self::assertTrue(
+            $container->has(UploadedFileFactoryInterface::class),
+            "Container should have definition for 'UploadedFileFactoryInterface', ensuring PSR-7 uploaded file " .
+            'factory is available.',
+        );
+        self::assertInstanceOf(
+            ServerRequestFactory::class,
+            $container->get(ServerRequestFactoryInterface::class),
+            "Container should resolve 'ServerRequestFactoryInterface' to an instance of 'ServerRequestFactory'.",
+        );
+        self::assertInstanceOf(
+            StreamFactory::class,
+            $container->get(StreamFactoryInterface::class),
+            "Container should resolve 'StreamFactoryInterface' to an instance of 'StreamFactory'.",
+        );
+        self::assertInstanceOf(
+            UploadedFileFactory::class,
+            $container->get(UploadedFileFactoryInterface::class),
+            "Container should resolve 'UploadedFileFactoryInterface' to an instance of 'UploadedFileFactory'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testResponseAdapterCachingAndResetBehaviorAcrossMultipleRequests(): void
+    {
+        $app = $this->statelessApplication();
+
+        // first request - verify adapter caching behavior
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/index',
+        ];
+
+        $response1 = $app->handle(
+            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
+        );
+
+        self::assertSame(
+            200,
+            $response1->getStatusCode(),
+            "Response 'status code' should be '200' for first request to 'site/index' route in 'StatelessApplication'.",
+        );
+
+        // access the Response component to test adapter behavior
+        $bridgeResponse1 = $app->response;
+
+        // get PSR-7 response twice to test caching
+        $bridgeResponse1->getPsr7Response();
+
+        $adapter1 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
+
+        $bridgeResponse1->getPsr7Response();
+
+        $adapter2 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
+
+        // verify adapter is cached (same instance across multiple calls)
+        self::assertSame(
+            $adapter1,
+            $adapter2,
+            "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, " .
+            "confirming adapter caching behavior in 'StatelessApplication'.",
+        );
+
+        // second request with different route - verify stateless behavior
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/statuscode',
+        ];
+
+        $response2 = $app->handle(
+            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
+        );
+
+        self::assertSame(
+            201,
+            $response2->getStatusCode(),
+            "Response 'status code' should be '201' for second request to 'site/statuscode' route in 'StatelessApplication'.",
+        );
+
+        // verify that the Response component is fresh for each request (stateless)
+        $bridgeResponse2 = $app->response;
+
+        self::assertNotSame(
+            $bridgeResponse1,
+            $bridgeResponse2,
+            'Response component should be a different instance for each request, confirming stateless behavior in ' .
+            "'StatelessApplication'.",
+        );
+
+        // test 'reset()' functionality
+        $bridgeResponse2->getPsr7Response();
+
+        $adapter3 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
+
+        $bridgeResponse2->reset();
+
+        // after reset, adapter cache should be cleared
+        self::assertNull(
+            self::inaccessibleProperty($bridgeResponse2, 'adapter'),
+            "'reset()' should nullify the cached adapter before the next 'getPsr7Response()' call.",
+        );
+
+        $bridgeResponse2->getPsr7Response();
+
+        $adapter4 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
+
+        self::assertNotSame(
+            $adapter3,
+            $adapter4,
+            "'reset()' should force creation of a new adapter instance, resulting in different PSR-7 response " .
+            "objects before and after reset in 'StatelessApplication'.",
+        );
+
+        // third request - verify adapter isolation between requests
+        $_COOKIE = ['test_cookie' => 'test_value'];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/cookie',
+        ];
+
+        $response3 = $app->handle(
+            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
+        );
+
+        self::assertSame(
+            200,
+            $response3->getStatusCode(),
+            "Response 'status code' should be '200' for third request to 'site/cookie' route in 'StatelessApplication'.",
+        );
+
+        $bridgeResponse3 = $app->response;
+
+        $bridgeResponse3->getPsr7Response();
+
+        $adapter5 = self::inaccessibleProperty($bridgeResponse3, 'adapter');
+
+        // verify each request gets its own adapter instance
+        self::assertNotSame(
+            $adapter3,
+            $adapter5,
+            'Each request should get its own adapter instance, confirming adapter isolation between requests in ' .
+            "'StatelessApplication'.",
+        );
+
+        // verify response headers are preserved correctly across adapter operations
+        $cookieHeaders = array_filter(
+            $response3->getHeader('Set-Cookie'),
+            static fn(string $header): bool => str_starts_with($header, $app->session->getName()) === false,
+        );
+
+        $hasCookieHeader = false;
+
+        foreach ($cookieHeaders as $header) {
+            if (str_contains($header, 'test=test') || str_contains($header, 'test2=test2')) {
+                $hasCookieHeader = true;
+
+                break;
+            }
+        }
+
+        self::assertTrue(
+            $hasCookieHeader,
+            "PSR-7 response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
+            "adapter behavior in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnCoreComponentsConfigurationAfterHandle(): void
+    {
+        $app = $this->statelessApplication();
+
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            [
+                'log' => [
+                    'class' => Dispatcher::class,
+                ],
+                'view' => [
+                    'class' => View::class,
+                ],
+                'formatter' => [
+                    'class' => Formatter::class,
+                ],
+                'i18n' => [
+                    'class' => I18N::class,
+                ],
+                'urlManager' => [
+                    'class' => UrlManager::class,
+                ],
+                'assetManager' => [
+                    'class' => AssetManager::class,
+                ],
+                'security' => [
+                    'class' => Security::class,
+                ],
+                'request' => [
+                    'class' => Request::class,
+                ],
+                'response' => [
+                    'class' => Response::class,
+                ],
+                'session' => [
+                    'class' => Session::class,
+                ],
+                'user' => [
+                    'class' => User::class,
+                ],
+                'errorHandler' => [
+                    'class' => ErrorHandler::class,
+                ],
+            ],
+            $app->coreComponents(),
+            "'coreComponents()' should return the expected mapping of component IDs to class definitions after " .
+            "handling a request in 'StatelessApplication'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testSetsPsr7RequestWithStatelessAppStartTimeHeader(): void
+    {
+        $mockedTime = 1640995200.123456;
+
+        MockerFunctions::setMockedMicrotime($mockedTime);
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/index',
+        ];
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for successful 'StatelessApplication' handling.",
+        );
+
+        $psr7Request = $app->request->getPsr7Request();
+        $statelessAppStartTime = $psr7Request->getHeaderLine('statelessAppStartTime');
+
+        self::assertSame(
+            (string) $mockedTime,
+            $statelessAppStartTime,
+            "PSR-7 request should contain 'statelessAppStartTime' header with the mocked microtime value.",
+        );
+        self::assertTrue(
+            $psr7Request->hasHeader('statelessAppStartTime'),
+            "PSR-7 request should have 'statelessAppStartTime' header set during adapter creation.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testSetWebAndWebrootAliasesAfterHandleRequest(): void
+    {
+        $app = $this->statelessApplication();
+
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            '',
+            Yii::getAlias('@web'),
+            "'@web' alias should be set to an empty string after handling a request in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            dirname(__DIR__),
+            Yii::getAlias('@webroot'),
+            "'@webroot' alias should be set to the parent directory of the test directory after handling a request " .
+            "in 'StatelessApplication'.",
+        );
+    }
+}
