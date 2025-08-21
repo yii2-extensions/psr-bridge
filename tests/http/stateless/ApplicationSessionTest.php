@@ -220,7 +220,9 @@ final class ApplicationSessionTest extends TestCase
             "'StatelessApplication'.",
         );
         self::assertJsonStringEqualsJsonString(
-            '{"status":"ok"}',
+            <<<JSON
+            {"status":"ok"}
+            JSON,
             $response->getBody()->getContents(),
             'Response body should be valid JSON confirming the flash message was set.',
         );
@@ -600,9 +602,11 @@ final class ApplicationSessionTest extends TestCase
             "'StatelessApplication'.",
         );
         self::assertJsonStringEqualsJsonString(
-            '{"status":"ok","username":"admin"}',
+            <<<JSON
+            {"status":"ok","username":"admin"}
+            JSON,
             $response->getBody()->getContents(),
-            'Response body should include status and username after successful login.',
+            "Response body should include 'status' and 'username' after successful login.",
         );
 
         // second user checks authentication status - should not be logged in
