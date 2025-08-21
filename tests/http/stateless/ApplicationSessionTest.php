@@ -636,7 +636,7 @@ final class ApplicationSessionTest extends TestCase
             "Response 'Set-Cookie' header should contain 'user2-session' for 'site/checkauth' route in " .
             "'StatelessApplication'.",
         );
-        self::assertSame(
+        self::assertJsonStringEqualsJsonString(
             <<<JSON
             {"isGuest":true,"identity":null}
             JSON,
