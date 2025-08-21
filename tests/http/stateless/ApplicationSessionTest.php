@@ -222,7 +222,7 @@ final class ApplicationSessionTest extends TestCase
         self::assertJsonStringEqualsJsonString(
             '{"status":"ok"}',
             $response->getBody()->getContents(),
-            "Response body should be valid JSON confirming the flash message was set.",
+            'Response body should be valid JSON confirming the flash message was set.',
         );
         self::assertSame(
             "{$sessionName}=flash-user-a; Path=/; HttpOnly; SameSite",
@@ -602,7 +602,7 @@ final class ApplicationSessionTest extends TestCase
         self::assertJsonStringEqualsJsonString(
             '{"status":"ok","username":"admin"}',
             $response->getBody()->getContents(),
-            "Response body should include status and username after successful login.",
+            'Response body should include status and username after successful login.',
         );
 
         // second user checks authentication status - should not be logged in
