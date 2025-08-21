@@ -1449,6 +1449,52 @@ final class StatelessApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnCredentialsWithMultibyteCharacters(): void
+    {
+        $_SERVER = [
+            'HTTP_AUTHORIZATION' => "basic\xC2\xA0" . base64_encode('user:pass'),
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/auth',
+        ];
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+
+        $responseData = Json::decode($response->getBody()->getContents());
+
+        self::assertIsArray(
+            $responseData,
+            "Response 'body' should be an array after decoding JSON response from 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertSame(
+            'user',
+            $responseData['username'] ?? '',
+            "Should handle multibyte characters in 'username'",
+        );
+        self::assertSame(
+            'pass',
+            $responseData['password'] ?? '',
+            "Should handle multibyte characters in 'password'",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnEmptyCookieCollectionWhenValidationEnabledWithInvalidCookies(): void
     {
         $app = $this->statelessApplication(
