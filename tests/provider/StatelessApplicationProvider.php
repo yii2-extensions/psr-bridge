@@ -24,6 +24,20 @@ final class StatelessApplicationProvider
                 "Response 'body' should be a JSON string with 'username' and 'password' for 'site/auth' route in " .
                 "'StatelessApplication'.",
             ],
+            'empty password' => [
+                'Basic ' . base64_encode('user:'),
+                <<<JSON
+                {"username":"user","password":null}
+                JSON,
+                "Response 'body' should be a JSON string with 'username' and 'password' as 'null' when password is empty.",
+            ],
+            'empty username' => [
+                'Basic ' . base64_encode(':pass'),
+                <<<JSON
+                {"username":null,"password":"pass"}
+                JSON,
+                "Response 'body' should be a JSON string with 'username' and 'password' when username is empty.",
+            ],
             'invalid scheme' => [
                 'basix ' . base64_encode('user:pass'),
                 <<<JSON
@@ -38,7 +52,7 @@ final class StatelessApplicationProvider
                 {"username":null,"password":null}
                 JSON,
                 "Response 'body' should be a JSON string with 'username' and 'password' as 'null' for malformed " .
-                "'HTTP_authorization' header in 'site/auth' route in 'StatelessApplication'.",
+                "'HTTP_AUTHORIZATION' header in 'site/auth' route in 'StatelessApplication'.",
             ],
             'missing space' => [
                 'Basic' . base64_encode('a:b'),
@@ -57,19 +71,19 @@ final class StatelessApplicationProvider
                 "'StatelessApplication'.",
             ],
             'no colon' => [
-                'Basic' . base64_encode('user:pass'),
+                'Basic ' . base64_encode('userpass'),
                 <<<JSON
-                {"username":null,"password":null}
+                {"username":"userpass","password":null}
                 JSON,
-                "Response 'body' should be a JSON string with 'username' and 'password' as 'null' for malformed " .
-                "'HTTP_AUTHORIZATION' header in 'site/auth' route in 'StatelessApplication'.",
+                "Response 'body' should be a JSON string with 'username' set and 'password' as 'null' when " .
+                "credentials contain no colon in 'HTTP_AUTHORIZATION' for 'site/auth' in 'StatelessApplication'.",
             ],
             'user' => [
                 'Basic ' . base64_encode('user:pass'),
                 <<<JSON
                 {"username":"user","password":"pass"}
                 JSON,
-                "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
+                "Response 'body' should be a JSON string with 'username' and 'password' for 'site/auth' route in " .
                 "'StatelessApplication'.",
             ],
             'username only' => [
