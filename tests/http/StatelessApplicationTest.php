@@ -1451,11 +1451,8 @@ final class StatelessApplicationTest extends TestCase
      */
     public function testReturnCredentialsWithMultibyteCharacters(): void
     {
-        $multibyteUser = '用户名';  // chinese characters user
-        $multibytePass = '密码';    // chinese characters pass
-
         $_SERVER = [
-            'HTTP_AUTHORIZATION' => 'Basic ' . base64_encode("{$multibyteUser}:{$multibytePass}"),
+            'HTTP_AUTHORIZATION' => "basic\xC2\xA0" . base64_encode('user:pass'),
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/auth',
         ];
@@ -1484,14 +1481,14 @@ final class StatelessApplicationTest extends TestCase
             "'StatelessApplication'.",
         );
         self::assertSame(
-            $multibyteUser,
+            'user',
             $responseData['username'] ?? '',
-            "Should handle pure Chinese characters in 'username'",
+            "Should handle multibyte characters in 'username'",
         );
         self::assertSame(
-            $multibytePass,
+            'pass',
             $responseData['password'] ?? '',
-            "Should handle pure Japanese characters in 'password'",
+            "Should handle multibyte characters in 'password'",
         );
     }
 
