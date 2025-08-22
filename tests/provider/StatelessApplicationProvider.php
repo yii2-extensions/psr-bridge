@@ -218,7 +218,7 @@ final class StatelessApplicationProvider
             $data['ultra large value 4GiB (64-bit only)'] = [
                 4_294_967_296,
                 "Memory limit should be set to exactly '4_294_967_296' bytes ('4GiB') when a positive value is " .
-                "provided on '64-bit'.",
+                "provided on '64-bit' builds.",
             ];
         }
 
