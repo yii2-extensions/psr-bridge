@@ -107,7 +107,7 @@ final class StatelessApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{bool, bool, string[], string, string}>
+     * @phpstan-return array<string, array{bool, bool, array<string, string>, string, string}>
      */
     public static function cookies(): array
     {
@@ -119,7 +119,7 @@ final class StatelessApplicationProvider
                 <<<JSON
                 {"valid_cookie":{"name":"valid_cookie","value":"valid_data","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
                 JSON,
-                "'Response body should contain the 'valid_cookie' cookie with its properties.",
+                "Response body should contain the 'valid_cookie' cookie with its properties.",
             ],
             'validation enabled with empty cookie' => [
                 true,
