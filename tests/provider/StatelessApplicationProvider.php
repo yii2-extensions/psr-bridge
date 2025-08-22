@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\provider;
 
+use stdClass;
 use yii2\extensions\psrbridge\http\StatelessApplication;
 
 use function base64_encode;
@@ -102,6 +103,89 @@ final class StatelessApplicationProvider
                 JSON,
                 "Response 'body' should be a JSON string with 'username' and 'password' for 'site/auth' route in " .
                 "'StatelessApplication'.",
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array<string, array{bool, bool, array<string, object|string>, string, string}>
+     */
+    public static function cookies(): array
+    {
+        $cookieWithObject = new stdClass();
+        $cookieWithObject->property = 'object_value';
+
+        return [
+            'validation disabled' => [
+                false,
+                false,
+                ['valid_cookie' => 'valid_data'],
+                <<<JSON
+                {"valid_cookie":{"name":"valid_cookie","value":"valid_data","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                "Response body should contain the 'valid_cookie' cookie with its properties.",
+            ],
+            'validation disabled with multiple cookies' => [
+                false,
+                false,
+                ['first' => 'value1', 'second' => 'value2', 'third' => 'value3'],
+                <<<JSON
+                {"first":{"name":"first","value":"value1","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"second":{"name":"second","value":"value2","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"third":{"name":"third","value":"value3","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                'Response body should contain all cookies when validation is disabled regardless of content.',
+            ],
+            'validation enabled with empty cookie' => [
+                true,
+                false,
+                ['empty_cookie' => ''],
+                <<<JSON
+                []
+                JSON,
+                'Response body should be an empty JSON array when cookie value is empty and validation is enabled.',
+            ],
+            'validation enabled with invalid cookie' => [
+                true,
+                false,
+                ['invalid_cookie' => 'invalid_data'],
+                <<<JSON
+                []
+                JSON,
+                'Response body should be an empty JSON array when cookie value is invalid and validation is enabled.',
+            ],
+            'validation enabled with valid object cookie' => [
+                true,
+                true,
+                [
+                    'object_cookie' => $cookieWithObject,
+                    'validated_session' => 'safe_value',
+                ],
+                <<<JSON
+                {"object_cookie":{"name":"object_cookie","value":{"__PHP_Incomplete_Class_Name":"stdClass","property":"object_value"},"domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"validated_session":{"name":"validated_session","value":"safe_value","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                'Response body should contain valid sanitize object cookie with its properties when validation is enabled.',
+            ],
+            'validation enabled with single valid signed cookie' => [
+                true,
+                true,
+                ['single_cookie' => 'single_value'],
+                <<<JSON
+                {"single_cookie":{"name":"single_cookie","value":"single_value","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                'Response body should contain single valid signed cookie with all properties.',
+            ],
+            'validation enabled with signed valid multiple cookies' => [
+                true,
+                true,
+                [
+                    'language' => 'en_US_012',
+                    'session_id' => 'session_value_123',
+                    'theme' => 'dark_theme_789',
+                    'user_pref' => 'preference_value_456',
+                ],
+                <<<JSON
+                {"language":{"name":"language","value":"en_US_012","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"session_id":{"name":"session_id","value":"session_value_123","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"theme":{"name":"theme","value":"dark_theme_789","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"user_pref":{"name":"user_pref","value":"preference_value_456","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                'Response body should contain signed cookies with their properties when validation is enabled.',
             ],
         ];
     }

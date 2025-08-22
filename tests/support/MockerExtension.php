@@ -98,6 +98,11 @@ final class MockerExtension implements Extension
                     $offset,
                 ),
             ],
+            [
+                'namespace' => 'yii2\extensions\psrbridge\tests\support\stub',
+                'name' => 'time',
+                'function' => static fn(): int => MockerFunctions::time(),
+            ],
         ];
 
         $mocker = new Mocker();
