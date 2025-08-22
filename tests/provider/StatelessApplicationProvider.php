@@ -121,6 +121,15 @@ final class StatelessApplicationProvider
                 JSON,
                 "Response body should contain the 'valid_cookie' cookie with its properties.",
             ],
+            'validation disabled with multiple cookies' => [
+                false,
+                false,
+                ['first' => 'value1', 'second' => 'value2', 'third' => 'value3'],
+                <<<JSON
+                {"first":{"name":"first","value":"value1","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"second":{"name":"second","value":"value2","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"third":{"name":"third","value":"value3","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                'Response body should contain all cookies when validation is disabled regardless of content.',
+            ],
             'validation enabled with empty cookie' => [
                 true,
                 false,
@@ -139,7 +148,16 @@ final class StatelessApplicationProvider
                 JSON,
                 'Response body should be an empty JSON array when cookie value is invalid and validation is enabled.',
             ],
-            'validation enabled with signed cookies' => [
+            'validation enabled with single valid signed cookie' => [
+                true,
+                true,
+                ['single_cookie' => 'single_value'],
+                <<<JSON
+                {"single_cookie":{"name":"single_cookie","value":"single_value","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                'Response body should contain single valid signed cookie with all properties.',
+            ],
+            'validation enabled with signed valid multiple cookies' => [
                 true,
                 true,
                 [

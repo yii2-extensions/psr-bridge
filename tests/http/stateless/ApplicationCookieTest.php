@@ -195,12 +195,12 @@ final class ApplicationCookieTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/deletecookie' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/deletecookie' route in " .
             "'StatelessApplication'.",
         );
 
@@ -274,12 +274,12 @@ final class ApplicationCookieTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/multiplecookies' route in 'StatelessApplication'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/multiplecookies' route in " .
             "'StatelessApplication'.",
         );
 
@@ -315,52 +315,6 @@ final class ApplicationCookieTest extends TestCase
             $headerString,
             "Response 'Set-Cookie' headers should NOT contain 'temp_data=' for deleted cookie in " .
             "'site/multiplecookies' route in 'StatelessApplication'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnValidatedCookiesWhenValidationEnabledWithValidCookies(): void
-    {
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                        'enableCookieValidation' => true,
-                    ],
-                ],
-            ],
-        );
-
-        $response = $app->handle(
-            FactoryHelper::createRequest('GET', 'site/getcookies')
-                ->withCookieParams(
-                    [
-                        'invalid_cookie' => 'invalid_data',
-                        'valid_session' => $this->signCookie('valid_session', 'abc123session'),
-                    ],
-                ),
-        );
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
-            "'StatelessApplication'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"valid_session":{"name":"valid_session","value":"abc123session","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
-            JSON,
-            $response->getBody()->getContents(),
-            "Response body should contain the 'valid_session' cookie with its properties.",
         );
     }
 }
