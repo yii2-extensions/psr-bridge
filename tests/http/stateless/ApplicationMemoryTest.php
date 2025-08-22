@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Group;
 use stdClass;
 use yii\base\InvalidConfigException;
+use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -313,52 +315,6 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testSetMemoryLimitWithLargePositiveValueMaintainsValue(): void
-    {
-        $largeLimit = 2_147_483_647; // near '32-bit' 'INT_MAX'; well below '64-bit' 'PHP_INT_MAX'
-
-        $app = $this->statelessApplication();
-
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-        $app->setMemoryLimit($largeLimit);
-
-        self::assertSame(
-            $largeLimit,
-            $app->getMemoryLimit(),
-            'Memory limit should handle large positive values correctly without overflow.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testSetMemoryLimitWithPositiveValueDisablesRecalculation(): void
-    {
-        $customLimit = 134_217_728; // '128MB' in bytes
-
-        $originalLimit = ini_get('memory_limit');
-
-        ini_set('memory_limit', '512M');
-
-        $app = $this->statelessApplication();
-
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-        $app->setMemoryLimit($customLimit);
-
-        ini_set('memory_limit', '1G');
-
-        self::assertSame(
-            $customLimit,
-            $app->getMemoryLimit(),
-            'Memory limit should remain unchanged when recalculation is disabled after setting positive value.',
-        );
-
-        ini_set('memory_limit', $originalLimit);
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testSetMemoryLimitWithPositiveValueOverridesSystemRecalculation(): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -392,41 +348,19 @@ final class ApplicationMemoryTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testSetMemoryLimitWithPositiveValueSetsLimitDirectly(): void
-    {
-        $memoryLimit = 268_435_456; // '256MB' in bytes
-
+    #[DataProviderExternal(StatelessApplicationProvider::class, 'memoryLimitPositive')]
+    public function testSetMemoryLimitWithPositiveValueSetsLimitDirectly(
+        int $memoryLimit,
+        string $assertionMessage,
+    ): void {
         $app = $this->statelessApplication();
 
         $app->setMemoryLimit($memoryLimit);
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
-        self::assertSame(
-            $memoryLimit,
-            $app->getMemoryLimit(),
-            'Memory limit should be set to the exact value when a positive limit is provided.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testSetMemoryLimitWithSmallPositiveValueSetsCorrectly(): void
-    {
-        $smallLimit = 1024; // '1KB'
-
-        $app = $this->statelessApplication();
+        self::assertSame($memoryLimit, $app->getMemoryLimit(), $assertionMessage);
 
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-        $app->setMemoryLimit($smallLimit);
 
-        self::assertSame(
-            $smallLimit,
-            $app->getMemoryLimit(),
-            'Memory limit should handle small positive values correctly.',
-        );
+        self::assertSame($memoryLimit, $app->getMemoryLimit(), $assertionMessage);
     }
 }
