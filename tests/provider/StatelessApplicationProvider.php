@@ -194,28 +194,34 @@ final class StatelessApplicationProvider
      */
     public static function memoryLimitPositive(): array
     {
-        return [
+        $data = [
             'small value 1KB' => [
-                1024,
                 1024,
                 "Memory limit should be set to exactly '1024' bytes ('1KB') when positive value is provided.",
             ],
             'medium value 128MB' => [
                 134_217_728,
-                134_217_728,
                 "Memory limit should be set to exactly '134_217_728' bytes ('128MB') when positive value is provided.",
             ],
             'large value 256MB' => [
-                268_435_456,
                 268_435_456,
                 "Memory limit should be set to exactly '268_435_456' bytes ('256MB') when positive value is provided.",
             ],
             'very large value near 32-bit INT_MAX' => [
                 2_147_483_647,
-                2_147_483_647,
                 'Memory limit should handle large positive values correctly without overflow when set to ' .
                 "'2_147_483_647' bytes.",
             ],
         ];
+
+        if (PHP_INT_SIZE >= 8) {
+            $data['ultra large value 4GiB (64-bit only)'] = [
+                4_294_967_296,
+                "Memory limit should be set to exactly '4_294_967_296' bytes ('4GiB') when a positive value is " .
+                "provided on '64-bit'.",
+            ];
+        }
+
+        return $data;
     }
 }

@@ -351,19 +351,16 @@ final class ApplicationMemoryTest extends TestCase
     #[DataProviderExternal(StatelessApplicationProvider::class, 'memoryLimitPositive')]
     public function testSetMemoryLimitWithPositiveValueSetsLimitDirectly(
         int $memoryLimit,
-        int $expectedLimit,
         string $assertionMessage,
     ): void {
         $app = $this->statelessApplication();
 
         $app->setMemoryLimit($memoryLimit);
 
+        self::assertSame($memoryLimit, $app->getMemoryLimit(), $assertionMessage);
+
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
-        self::assertSame(
-            $expectedLimit,
-            $app->getMemoryLimit(),
-            $assertionMessage,
-        );
+        self::assertSame($memoryLimit, $app->getMemoryLimit(), $assertionMessage);
     }
 }
