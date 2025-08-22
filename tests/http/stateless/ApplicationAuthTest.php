@@ -18,7 +18,7 @@ final class ApplicationAuthTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'authCredentials')]
-    public function testReturnAuthJsonResponseForHttpAuthorizationHeaders(
+    public function testReturnJsonBodyWithUsernameAndPasswordForHttpAuthorization(
         string $httpAuthorization,
         string $expectedJson,
         string $expectedAssertMessage,
