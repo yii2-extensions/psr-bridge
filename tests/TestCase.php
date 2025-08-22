@@ -111,11 +111,21 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         return $tmpFile;
     }
 
-    protected function signCookie(string $name, string|object $value): string
+    /**
+     * @phpstan-param array<string, string|object> $cookieParams
+     *
+     * @phpstan-return array<string, string>
+     */
+    protected function signCookies(array $cookieParams): array
     {
         $security = new Security();
+        $signed = [];
 
-        return $security->hashData(serialize([$name, $value]), self::COOKIE_VALIDATION_KEY);
+        foreach ($cookieParams as $name => $value) {
+            $signed[$name] = $security->hashData(serialize([$name, $value]), self::COOKIE_VALIDATION_KEY);
+        }
+
+        return $signed;
     }
 
     /**

@@ -33,13 +33,7 @@ final class ApplicationCookieTest extends TestCase
         string $expectedJson,
         string $expectedAssertMessage,
     ): void {
-        $cookies = $cookieParams;
-
-        if ($signedCookies) {
-            foreach ($cookieParams as $name => $value) {
-                $cookies[$name] = $this->signCookie($name, $value);
-            }
-        }
+        $cookies = $signedCookies ? $this->signCookies($cookieParams) : $cookieParams;
 
         $app = $this->statelessApplication(
             [
@@ -83,23 +77,26 @@ final class ApplicationCookieTest extends TestCase
 
         $cookieObject->property = 'object_value';
 
-        $app = $this->statelessApplication([
-            'components' => [
-                'request' => [
-                    'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                    'enableCookieValidation' => true,
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'request' => [
+                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                        'enableCookieValidation' => true,
+                    ],
                 ],
             ],
-        ]);
+        );
+
+        $cookies = $this->signCookies(
+            [
+                'object_session' => $cookieObject,
+                'validated_session' => 'safe_value',
+            ],
+        );
 
         $response = $app->handle(
-            FactoryHelper::createRequest('GET', 'site/getcookies')
-                ->withCookieParams(
-                    [
-                        'object_session' => $this->signCookie('object_session', $cookieObject),
-                        'validated_session' => $this->signCookie('validated_session', 'safe_value'),
-                    ],
-                ),
+            FactoryHelper::createRequest('GET', 'site/getcookies')->withCookieParams($cookies),
         );
 
         self::assertSame(
