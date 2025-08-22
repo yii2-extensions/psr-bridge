@@ -290,26 +290,31 @@ final class ApplicationMemoryTest extends TestCase
 
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
-        $firstCalculation = $app->getMemoryLimit();
+        $firstMemoryLimit = $app->getMemoryLimit();
+
+        self::assertSame(
+            268_435_456,
+            $firstMemoryLimit,
+            "Baseline should reflect '256M' ('268_435_456 bytes') before triggering recalculation.",
+        );
 
         $app->setMemoryLimit($memoryLimit);
 
         ini_set('memory_limit', '128M');
 
         // after setting non-positive value, it should recalculate from system
-        $secondCalculation = $app->getMemoryLimit();
+        $secondMemoryLimit = $app->getMemoryLimit();
 
         self::assertSame(
             134_217_728,
-            $secondCalculation,
-            "'getMemoryLimit()' should return '134_217_728' ('128M') after recalculation from system when " .
-            "'memory_limit' is set to non-positive value in 'StatelessApplication'.",
+            $secondMemoryLimit,
+            "'getMemoryLimit()' should return '128M' ('134_217_728 bytes') after recalculation from system when a " .
+            'non-positive override is applied.',
         );
         self::assertNotSame(
-            $firstCalculation,
-            $secondCalculation,
-            "'getMemoryLimit()' should return a different value after recalculation when 'memory_limit' changes in " .
-            "'StatelessApplication'.",
+            $firstMemoryLimit,
+            $secondMemoryLimit,
+            "'getMemoryLimit()' should return a different value after recalculation when the system limit changes.",
         );
 
         ini_set('memory_limit', $originalLimit);
