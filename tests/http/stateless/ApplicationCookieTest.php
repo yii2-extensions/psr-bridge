@@ -19,8 +19,9 @@ use function str_starts_with;
 final class ApplicationCookieTest extends TestCase
 {
     /**
-     * @phpstan-param array<string, string> $cookieParams
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
+     * @phpstan-param array<string, string|object> $cookieParams
      */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'cookies')]
     public function testReturnCookiesForValidationAndSignature(
