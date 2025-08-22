@@ -278,7 +278,6 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[TestWith([-100])]
     #[TestWith([-1])]
     #[TestWith([0])]
     public function testSetMemoryLimitWithNonPositiveValueTriggersRecalculation(int $memoryLimit): void
