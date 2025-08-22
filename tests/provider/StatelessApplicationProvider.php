@@ -107,6 +107,56 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * @phpstan-return array<string, array{bool, bool, string[], string, string}>
+     */
+    public static function cookies(): array
+    {
+        return [
+            'validation disabled' => [
+                false,
+                false,
+                ['valid_cookie' => 'valid_data'],
+                <<<JSON
+                {"valid_cookie":{"name":"valid_cookie","value":"valid_data","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                "'Response body should contain the 'valid_cookie' cookie with its properties.",
+            ],
+            'validation enabled with empty cookie' => [
+                true,
+                false,
+                ['empty_cookie' => ''],
+                <<<JSON
+                []
+                JSON,
+                'Response body should be an empty JSON array when cookie value is empty and validation is enabled.',
+            ],
+            'validation enabled with invalid cookie' => [
+                true,
+                false,
+                ['invalid_cookie' => 'invalid_data'],
+                <<<JSON
+                []
+                JSON,
+                'Response body should be an empty JSON array when cookie value is invalid and validation is enabled.',
+            ],
+            'validation enabled with signed cookies' => [
+                true,
+                true,
+                [
+                    'language' => 'en_US_012',
+                    'session_id' => 'session_value_123',
+                    'theme' => 'dark_theme_789',
+                    'user_pref' => 'preference_value_456',
+                ],
+                <<<JSON
+                {"language":{"name":"language","value":"en_US_012","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"session_id":{"name":"session_id","value":"session_value_123","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"theme":{"name":"theme","value":"dark_theme_789","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"user_pref":{"name":"user_pref","value":"preference_value_456","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                'Response body should contain signed cookies with their properties when validation is enabled.',
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return array<string, array{string}>
      */
     public static function eventDataProvider(): array

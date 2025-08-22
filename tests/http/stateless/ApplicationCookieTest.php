@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Group;
 use stdClass;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
+use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -20,16 +22,32 @@ use function str_starts_with;
 final class ApplicationCookieTest extends TestCase
 {
     /**
+     * @phpstan-param array<string, string> $cookieParams
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnEmptyCookieCollectionWhenValidationEnabledWithInvalidCookies(): void
+    #[DataProviderExternal(StatelessApplicationProvider::class, 'cookies')]
+    public function testReturnCookiesForValidationAndSignature(
+        bool $enableCookieValidation,
+        bool $signedCookies,
+        array $cookieParams,
+        string $expectedJson,
+        string $expectedAssertMessage,
+    ): void
     {
+        $signedCookieParams = [];
+
+        if ($signedCookies) {
+            foreach ($cookieParams as $name => $value) {
+                $signedCookieParams[$name] = $this->signCookie($name, $value);
+            }
+        }
+
         $app = $this->statelessApplication(
             [
                 'components' => [
                     'request' => [
                         'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                        'enableCookieValidation' => true,
+                        'enableCookieValidation' => $enableCookieValidation,
                     ],
                 ],
             ],
@@ -37,51 +55,8 @@ final class ApplicationCookieTest extends TestCase
 
         $response = $app->handle(
             FactoryHelper::createRequest('GET', 'site/getcookies')
-                ->withCookieParams(
-                    [
-                        'invalid_cookie' => 'invalid_data',
-                        'empty_cookie' => '',
-                    ],
-                ),
+                ->withCookieParams($signedCookieParams !== [] ? $signedCookieParams : $cookieParams)
         );
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
-            "'StatelessApplication'.",
-        );
-
-        $payload = Json::decode($response->getBody()->getContents());
-
-        self::assertSame(
-            [],
-            $payload,
-            'CookieCollection should be empty when validation is enabled but cookies are invalid.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnJsonResponseWithCookiesForSiteGetCookiesRoute(): void
-    {
-        $_COOKIE = [
-            'test' => 'test',
-        ];
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/getcookies',
-        ];
-
-        $app = $this->statelessApplication();
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -95,121 +70,10 @@ final class ApplicationCookieTest extends TestCase
             "'StatelessApplication'.",
         );
         self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"test":{"name":"test","value":"test","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
-            JSON,
+            $expectedJson,
             $response->getBody()->getContents(),
-            "Response body should contain the 'test' cookie with its properties.",
+            $expectedAssertMessage,
         );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnMultipleValidatedCookiesWhenValidationEnabledWithMultipleValidCookies(): void
-    {
-        $cookies = [
-            'language' => 'en_US_012',
-            'session_id' => 'session_value_123',
-            'theme' => 'dark_theme_789',
-            'user_pref' => 'preference_value_456',
-        ];
-
-        $signedCookies = [];
-
-        foreach ($cookies as $name => $value) {
-            $signedCookies[$name] = $this->signCookie($name, $value);
-        }
-
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                        'enableCookieValidation' => true,
-                    ],
-                ],
-            ],
-        );
-
-        $response = $app->handle(
-            FactoryHelper::createRequest('GET', 'site/getcookies')
-                ->withCookieParams($signedCookies),
-        );
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
-            "'StatelessApplication'.",
-        );
-
-        /**
-         * @phpstan-var array<
-         *   string,
-         *   array{
-         *     name: string,
-         *     value: string,
-         *     domain: string,
-         *     expire: ?int,
-         *     path: string,
-         *     secure: bool,
-         *     httpOnly: bool,
-         *     sameSite: string
-         *   }
-         * > $decodedCookies
-         */
-        $decodedCookies = Json::decode($response->getBody()->getContents());
-
-        self::assertCount(
-            4,
-            $decodedCookies,
-            "Should return all '4' validated cookies, not just '1'.",
-        );
-
-        foreach ($cookies as $name => $value) {
-            self::assertSame(
-                $name,
-                $decodedCookies[$name]['name'] ?? '',
-                "Cookie name for '{$name}' should match the original cookie name in 'StatelessApplication'.",
-            );
-            self::assertSame(
-                $value,
-                $decodedCookies[$name]['value'],
-                "Cookie value for '{$name}' should match the original cookie value in 'StatelessApplication'.",
-            );
-            self::assertEmpty(
-                $decodedCookies[$name]['domain'],
-                "Cookie 'domain' for '{$name}' should be an empty string in 'StatelessApplication'.",
-            );
-            self::assertNull(
-                $decodedCookies[$name]['expire'],
-                "Cookie 'expire' for '{$name}' should be 'null' in 'StatelessApplication'.",
-            );
-            self::assertSame(
-                '/',
-                $decodedCookies[$name]['path'],
-                "Cookie 'path' for '{$name}' should be '/' in 'StatelessApplication'.",
-            );
-            self::assertFalse(
-                $decodedCookies[$name]['secure'],
-                "Cookie 'secure' flag for '{$name}' should be 'false' in 'StatelessApplication'.",
-            );
-            self::assertTrue(
-                $decodedCookies[$name]['httpOnly'],
-                "Cookie 'httpOnly' flag for '{$name}' should be 'true' in 'StatelessApplication'.",
-            );
-            self::assertSame(
-                'Lax',
-                $decodedCookies[$name]['sameSite'],
-                "Cookie 'sameSite' for '{$name}' should be 'Lax' in 'StatelessApplication'.",
-            );
-        }
     }
 
     /**
@@ -498,50 +362,6 @@ final class ApplicationCookieTest extends TestCase
             JSON,
             $response->getBody()->getContents(),
             "Response body should contain the 'valid_session' cookie with its properties.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnValidatedCookieWithCorrectNamePropertyWhenValidationEnabled(): void
-    {
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                        'enableCookieValidation' => true,
-                    ],
-                ],
-            ],
-        );
-
-        $response = $app->handle(
-            FactoryHelper::createRequest('GET', 'site/getcookies')
-                ->withCookieParams(
-                    [
-                        'validated_session' => $this->signCookie('validated_session', 'secure_session_value')],
-                ),
-        );
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
-            "'StatelessApplication'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"validated_session":{"name":"validated_session","value":"secure_session_value","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
-            JSON,
-            $response->getBody()->getContents(),
-            "Response body should contain the 'validated_session' cookie with its properties.",
         );
     }
 }
