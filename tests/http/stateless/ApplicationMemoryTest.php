@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use PHPUnit\Framework\Attributes\DataProviderExternal;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
 use stdClass;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
@@ -228,42 +227,6 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testRecalculateMemoryLimitAfterResetAndIniChange(): void
-    {
-        $originalLimit = ini_get('memory_limit');
-
-        ini_set('memory_limit', '256M');
-
-        $app = $this->statelessApplication();
-
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        $firstCalculation = $app->getMemoryLimit();
-        $app->setMemoryLimit(0);
-
-        ini_set('memory_limit', '128M');
-
-        $secondCalculation = $app->getMemoryLimit();
-
-        self::assertSame(
-            134_217_728,
-            $secondCalculation,
-            "'getMemoryLimit()' should return '134_217_728' ('128M') after resetting and updating 'memory_limit' to " .
-            "'128M' in 'StatelessApplication'.",
-        );
-        self::assertNotSame(
-            $firstCalculation,
-            $secondCalculation,
-            "'getMemoryLimit()' should return a different value after recalculation when 'memory_limit' changes in " .
-            "'StatelessApplication'.",
-        );
-
-        ini_set('memory_limit', $originalLimit);
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testReturnFalseFromCleanWhenMemoryUsageIsBelowThreshold(): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -315,34 +278,39 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testSetMemoryLimitWithPositiveValueOverridesSystemRecalculation(): void
+    #[TestWith([-100])]
+    #[TestWith([-1])]
+    #[TestWith([0])]
+    public function testSetMemoryLimitWithNonPositiveValueTriggersRecalculation(int $memoryLimit): void
     {
         $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '256M');
 
         $app = $this->statelessApplication();
 
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-        $app->setMemoryLimit(0);
 
-        ini_set('memory_limit', '256M');
+        $firstCalculation = $app->getMemoryLimit();
 
-        $systemBasedLimit = $app->getMemoryLimit();
+        $app->setMemoryLimit($memoryLimit);
 
-        $customLimit = 104_857_600; // '100MB' in bytes (different from system)
+        ini_set('memory_limit', '128M');
 
-        $app->setMemoryLimit($customLimit);
-
-        ini_set('memory_limit', '512M');
+        // after setting non-positive value, it should recalculate from system
+        $secondCalculation = $app->getMemoryLimit();
 
         self::assertSame(
-            $customLimit,
-            $app->getMemoryLimit(),
-            'Memory limit should maintain custom value and ignore system changes when set to positive value.',
+            134_217_728,
+            $secondCalculation,
+            "'getMemoryLimit()' should return '134_217_728' ('128M') after recalculation from system when " .
+            "'memory_limit' is set to non-positive value in 'StatelessApplication'.",
         );
         self::assertNotSame(
-            $systemBasedLimit,
-            $app->getMemoryLimit(),
-            'Memory limit should override system-based calculation when positive value is set.',
+            $firstCalculation,
+            $secondCalculation,
+            "'getMemoryLimit()' should return a different value after recalculation when 'memory_limit' changes in " .
+            "'StatelessApplication'.",
         );
 
         ini_set('memory_limit', $originalLimit);
