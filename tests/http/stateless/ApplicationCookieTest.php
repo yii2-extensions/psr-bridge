@@ -32,8 +32,7 @@ final class ApplicationCookieTest extends TestCase
         array $cookieParams,
         string $expectedJson,
         string $expectedAssertMessage,
-    ): void
-    {
+    ): void {
         $signedCookieParams = [];
 
         if ($signedCookies) {
@@ -55,7 +54,7 @@ final class ApplicationCookieTest extends TestCase
 
         $response = $app->handle(
             FactoryHelper::createRequest('GET', 'site/getcookies')
-                ->withCookieParams($signedCookieParams !== [] ? $signedCookieParams : $cookieParams)
+                ->withCookieParams($signedCookieParams !== [] ? $signedCookieParams : $cookieParams),
         );
 
         self::assertSame(
