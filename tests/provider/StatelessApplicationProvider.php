@@ -190,7 +190,7 @@ final class StatelessApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{int, int, string}>
+     * @phpstan-return array<string, array{int, string}>
      */
     public static function memoryLimitPositive(): array
     {
