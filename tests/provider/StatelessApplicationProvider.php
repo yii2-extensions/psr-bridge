@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\provider;
 
 use stdClass;
-use yii2\extensions\psrbridge\http\StatelessApplication;
 
 use function base64_encode;
 
@@ -187,17 +186,6 @@ final class StatelessApplicationProvider
                 JSON,
                 'Response body should contain signed cookies with their properties when validation is enabled.',
             ],
-        ];
-    }
-
-    /**
-     * @phpstan-return array<string, array{string}>
-     */
-    public static function eventDataProvider(): array
-    {
-        return [
-            'after request' => [StatelessApplication::EVENT_AFTER_REQUEST],
-            'before request' => [StatelessApplication::EVENT_BEFORE_REQUEST],
         ];
     }
 }
