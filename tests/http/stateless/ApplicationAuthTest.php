@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
-use Psr\Http\Message\ResponseInterface;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -31,9 +30,22 @@ final class ApplicationAuthTest extends TestCase
 
         $app = $this->statelessApplication();
 
-        $this->assertAuthJson(
-            $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals()),
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
+            "'StatelessApplication'.",
+        );
+        self::assertJsonStringEqualsJsonString(
             $expectedJson,
+            $response->getBody()->getContents(),
             $expectedAssertMessage,
         );
     }
@@ -71,29 +83,6 @@ final class ApplicationAuthTest extends TestCase
             $response->getBody()->getContents(),
             "Response 'body' should be a JSON string with 'username' and 'password' as 'null' for 'PHP_AUTH_USER' " .
             "header in 'site/auth' route in 'StatelessApplication'.",
-        );
-    }
-
-    private function assertAuthJson(
-        ResponseInterface $response,
-        string $expectedJson,
-        string $expectedAssertMessage,
-    ): void {
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
-            "'StatelessApplication'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            $expectedJson,
-            $response->getBody()->getContents(),
-            $expectedAssertMessage,
         );
     }
 }
