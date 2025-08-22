@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use PHPUnit\Framework\Attributes\DataProviderExternal;
-use PHPUnit\Framework\Attributes\Group;
-use stdClass;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
@@ -14,7 +12,6 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
-use function array_keys;
 use function implode;
 use function str_starts_with;
 
@@ -65,112 +62,6 @@ final class ApplicationCookieTest extends TestCase
             $expectedJson,
             $response->getBody()->getContents(),
             $expectedAssertMessage,
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnSerializedObjectAndPrimitiveCookiesForGetCookiesRoute(): void
-    {
-        $cookieObject = new stdClass();
-
-        $cookieObject->property = 'object_value';
-
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'request' => [
-                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                        'enableCookieValidation' => true,
-                    ],
-                ],
-            ],
-        );
-
-        $cookies = $this->signCookies(
-            [
-                'object_session' => $cookieObject,
-                'validated_session' => 'safe_value',
-            ],
-        );
-
-        $response = $app->handle(
-            FactoryHelper::createRequest('GET', 'site/getcookies')->withCookieParams($cookies),
-        );
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
-            "'StatelessApplication'.",
-        );
-
-        $responseBody = $response->getBody()->getContents();
-
-        $cookies = Json::decode($responseBody);
-
-        self::assertIsArray(
-            $cookies,
-            "Response 'body' should be decodable to array of cookies for 'site/getcookies' route.",
-        );
-        self::assertArrayHasKey(
-            'object_session',
-            $cookies,
-            "Response should contain the 'object_session' cookie entry.",
-        );
-        self::assertArrayHasKey(
-            'validated_session',
-            $cookies,
-            "Response should contain the 'validated_session' cookie entry.",
-        );
-
-        $objectCookie = $cookies['object_session'] ?? null;
-
-        self::assertIsArray(
-            $objectCookie,
-            "'object_session' cookie payload should be an array.",
-        );
-        self::assertSame(
-            'object_session',
-            $objectCookie['name'] ?? null,
-            "Object cookie 'name' should be 'object_session'.",
-        );
-
-        $objectValue = $objectCookie['value'] ?? null;
-
-        self::assertIsArray(
-            $objectValue,
-            "Object cookie 'value' should be sanitized to an array (incomplete class representation).",
-        );
-        self::assertEqualsCanonicalizing(
-            ['__PHP_Incomplete_Class_Name', 'property'],
-            array_keys($objectValue),
-            'Sanitized object should not contain unexpected keys.',
-        );
-        self::assertSame(
-            'object_value',
-            $objectValue['property'] ?? null,
-            "Sanitized object should preserve the original 'property' value.",
-        );
-        self::assertIsArray(
-            $cookies['validated_session'] ?? null,
-            "'validated_session' cookie payload should be an array.",
-        );
-        self::assertSame(
-            'validated_session',
-            $cookies['validated_session']['name'] ?? null,
-            "Validated primitive cookie 'name' should be 'validated_session'.",
-        );
-        self::assertSame(
-            'safe_value',
-            $cookies['validated_session']['value'] ?? null,
-            "Validated primitive cookie should preserve its 'value' as 'safe_value'.",
         );
     }
 

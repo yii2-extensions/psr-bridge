@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\provider;
 
+use stdClass;
 use yii2\extensions\psrbridge\http\StatelessApplication;
 
 use function base64_encode;
@@ -107,10 +108,13 @@ final class StatelessApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{bool, bool, array<string, string>, string, string}>
+     * @phpstan-return array<string, array{bool, bool, array<string, object|string>, string, string}>
      */
     public static function cookies(): array
     {
+        $cookieWithObject = new stdClass();
+        $cookieWithObject->property = 'object_value';
+
         return [
             'validation disabled' => [
                 false,
@@ -147,6 +151,18 @@ final class StatelessApplicationProvider
                 []
                 JSON,
                 'Response body should be an empty JSON array when cookie value is invalid and validation is enabled.',
+            ],
+            'validation enabled with valid object cookie' => [
+                true,
+                true,
+                [
+                    'object_cookie' => $cookieWithObject,
+                    'validated_session' => 'safe_value',
+                ],
+                <<<JSON
+                {"object_cookie":{"name":"object_cookie","value":{"__PHP_Incomplete_Class_Name":"stdClass","property":"object_value"},"domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"validated_session":{"name":"validated_session","value":"safe_value","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
+                JSON,
+                'Response body should contain valid sanitize object cookie with its properties when validation is enabled.',
             ],
             'validation enabled with single valid signed cookie' => [
                 true,

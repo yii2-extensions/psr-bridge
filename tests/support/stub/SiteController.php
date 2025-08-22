@@ -19,6 +19,11 @@ use function tmpfile;
 final class SiteController extends Controller
 {
     /**
+     * Mock time for cookies.
+     */
+    private const MOCK_TIME = 1755867797;
+
+    /**
      * @phpstan-return array{password: string|null, username: string|null}
      */
     public function actionAuth(): array
@@ -74,7 +79,7 @@ final class SiteController extends Controller
 
     public function actionDeletecookie(): Response
     {
-        MockerFunctions::setMockedTime(1755867797);
+        MockerFunctions::setMockedTime(self::MOCK_TIME);
 
         $deletionCookie = new Cookie(
             [
