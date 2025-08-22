@@ -199,57 +199,13 @@ final class ApplicationCookieTest extends TestCase
             "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/deletecookie' route in " .
             "'StatelessApplication'.",
         );
-
-        $deletionHeaderFound = false;
-        $deletionHeader = '';
-
-        foreach ($response->getHeader('Set-Cookie') as $header) {
-            // skip session cookie headers
-            if (
-                str_starts_with($header, 'user_preference=') &&
-                str_starts_with($header, $app->session->getName()) === false
-            ) {
-                $deletionHeaderFound = true;
-                $deletionHeader = $header;
-
-                break;
-            }
-        }
-
-        self::assertTrue(
-            $deletionHeaderFound,
-            "Response 'Set-Cookie' headers should contain cookie deletion header for 'user_preference' cookie in " .
-            "'StatelessApplication'.",
-        );
-        self::assertStringContainsString(
-            'user_preference=',
-            $deletionHeader,
-            "Cookie deletion header should contain cookie name 'user_preference' for 'site/deletecookie' route in " .
-            "'StatelessApplication'.",
-        );
-        self::assertStringContainsString(
-            'Path=/app',
-            $deletionHeader,
-            "Cookie deletion header should preserve 'Path=/app' attribute for 'user_preference' cookie in " .
-            "'StatelessApplication'.",
-        );
-        self::assertStringContainsString(
-            'HttpOnly',
-            $deletionHeader,
-            "Cookie deletion header should preserve 'HttpOnly' attribute for 'user_preference' cookie in " .
-            "'StatelessApplication'.",
-        );
-        self::assertStringContainsString(
-            'Secure',
-            $deletionHeader,
-            "Cookie deletion header should preserve 'Secure' attribute for 'user_preference' cookie in " .
-            "'StatelessApplication'.",
-        );
-        self::assertStringContainsString(
-            'Expires=',
-            $deletionHeader,
-            "Cookie deletion header should contain 'Expires' attribute with past date for 'user_preference' cookie " .
-            "in 'StatelessApplication'.",
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            ["user_preference=; Expires=Fri, 22-Aug-2025 13:03:16 GMT; Max-Age=0; Path=/app; Secure; HttpOnly; SameSite=Lax"]
+            JSON,
+            Json::encode($response->getHeader('Set-Cookie')),
+            "Response 'Set-Cookie' headers should contain the deletion header for 'user_preference' cookie in " .
+            "'site/deletecookie' route in 'StatelessApplication'.",
         );
     }
 

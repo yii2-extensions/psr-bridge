@@ -14,7 +14,6 @@ use function htmlspecialchars;
 use function is_string;
 use function rewind;
 use function stream_get_meta_data;
-use function time;
 use function tmpfile;
 
 final class SiteController extends Controller
@@ -75,14 +74,18 @@ final class SiteController extends Controller
 
     public function actionDeletecookie(): Response
     {
-        $deletionCookie = new Cookie([
-            'name' => 'user_preference',
-            'value' => '', // empty value for deletion
-            'expire' => time() - 1, // just expired
-            'path' => '/app',
-            'httpOnly' => true,
-            'secure' => true,
-        ]);
+        MockerFunctions::setMockedTime(1755867797);
+
+        $deletionCookie = new Cookie(
+            [
+                'name' => 'user_preference',
+                'value' => '', // empty value for deletion
+                'expire' => time() - 1, // just expired
+                'path' => '/app',
+                'httpOnly' => true,
+                'secure' => true,
+            ],
+        );
 
         $this->response->cookies->add($deletionCookie);
 

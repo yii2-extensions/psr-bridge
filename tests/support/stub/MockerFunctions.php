@@ -17,7 +17,8 @@ use function strtolower;
  * state changes.
  *
  * This class allows tests to simulate, inspect, and manipulate HTTP header operations, response codes, output flushing,
- * microtime, and stream reading by maintaining internal state and exposing static methods for fine-grained control.
+ * microtime, time and stream reading by maintaining internal state and exposing static methods for fine-grained
+ * control.
  *
  * The mock covers all critical PHP functions used in HTTP emission and environment-sensitive code, ensuring that tests
  * can validate emitter logic, header management, response code handling, output flushing, and time-dependent behavior
@@ -25,14 +26,15 @@ use function strtolower;
  *
  * Key features:
  * - Complete simulation of.
- *   - {@see \flush()} (output flush count tracking)
- *   - {@see \header()} (add/replace headers, response code)
- *   - {@see \header_remove()} (single/all headers)
- *   - {@see \headers_list()} (header inspection)
- *   - {@see \headers_sent()} (with file/line tracking)
- *   - {@see \http_response_code()} (get/set response code)
- *   - {@see \microtime()} (mockable time for timing tests)
- *   - {@see \stream_get_contents()} (controllable stream read/failure)
+ *   - {@see \flush()} (output flush count tracking).
+ *   - {@see \header()} (add/replace headers, response code).
+ *   - {@see \header_remove()} (single/all headers).
+ *   - {@see \headers_list()} (header inspection).
+ *   - {@see \headers_sent()} (with file/line tracking).
+ *   - {@see \http_response_code()} (get/set response code).
+ *   - {@see \microtime()} (mockable time for timing tests).
+ *   - {@see \stream_get_contents()} (controllable stream read/failure).
+ *   - {@see \time()} (mockable time for timing tests).
  * - Consistent behavior matching PHP native functions for test reliability.
  * - State reset capability for test isolation and repeatability.
  *
@@ -74,6 +76,13 @@ final class MockerFunctions
      * If set, this value will be returned instead of the actual microtime.
      */
     private static float|null $mockedMicrotime = null;
+
+    /**
+     * Holds a mocked time value for testing purposes.
+     *
+     * If set, this value will be returned instead of the actual time.
+     */
+    private static int|null $mockedTime = null;
 
     /**
      * Tracks the HTTP response code.
@@ -188,6 +197,7 @@ final class MockerFunctions
         self::$headersSent = false;
         self::$headersSentFile = '';
         self::$headersSentLine = 0;
+        self::$mockedTime = null;
         self::$responseCode = 200;
         self::$streamGetContentsShouldFail = false;
         self::clearMockedMicrotime();
@@ -210,6 +220,11 @@ final class MockerFunctions
         self::$mockedMicrotime = $time;
     }
 
+    public static function setMockedTime(int $time): void
+    {
+        self::$mockedTime = $time;
+    }
+
     public static function stream_get_contents(mixed $resource, int $maxlength = -1, int $offset = -1): string|false
     {
         if (self::$streamGetContentsShouldFail) {
@@ -221,5 +236,14 @@ final class MockerFunctions
         }
 
         return \stream_get_contents($resource, $maxlength, $offset);
+    }
+
+    public static function time(): int
+    {
+        if (self::$mockedTime !== null) {
+            return self::$mockedTime;
+        }
+
+        return \time();
     }
 }
