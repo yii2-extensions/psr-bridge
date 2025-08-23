@@ -63,6 +63,7 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         @\runkit_constant_redefine('YII_DEBUG', true);
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
