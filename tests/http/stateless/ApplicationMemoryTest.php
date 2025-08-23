@@ -60,6 +60,7 @@ final class ApplicationMemoryTest extends TestCase
 
         ini_set('memory_limit', $originalLimit);
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
