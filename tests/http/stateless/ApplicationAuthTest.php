@@ -35,13 +35,12 @@ final class ApplicationAuthTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+            "Expected HTTP '200' for route 'site/auth'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
-            "'StatelessApplication'.",
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/auth'.",
         );
         self::assertJsonStringEqualsJsonString(
             $expectedJson,
@@ -68,21 +67,20 @@ final class ApplicationAuthTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+            "Expected HTTP '200' for route 'site/auth'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
-            "'StatelessApplication'.",
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/auth'.",
         );
         self::assertJsonStringEqualsJsonString(
             <<<JSON
             {"username":"admin","password":null}
             JSON,
             $response->getBody()->getContents(),
-            "Response 'body' should be a JSON string with 'username' and 'password' as 'null' for 'PHP_AUTH_USER' " .
-            "header in 'site/auth' route in 'StatelessApplication'.",
+            "Expected JSON body with 'username' and 'null' password when only 'PHP_AUTH_USER' is present for route " .
+            "'site/auth'.",
         );
     }
 }
