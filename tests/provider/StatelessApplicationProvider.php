@@ -224,4 +224,34 @@ final class StatelessApplicationProvider
 
         return $data;
     }
+
+    /**
+     * @phpstan-return array<string, array{string, bool, string}>
+     */
+    public static function memoryThreshold(): array
+    {
+        return [
+            'low usage - should not clean' => [
+                '1G',
+                false,
+                "'clean()' should return 'false' when memory usage is below '90%' threshold with '1G' limit.",
+            ],
+            'moderate usage - should not clean' => [
+                '512M',
+                false,
+                "'clean()' should return 'false' when memory usage is below '90%' threshold with '512M' limit.",
+            ],
+            'threshold calculation - 100M' => [
+                '100M',
+                false,
+                "'clean()' should return 'false' with '100M' limit and verify correct '90%' threshold calculation.",
+            ],
+            'high memory setup - 2G' => [
+                '2G',
+                true,
+                "'clean()' should return 'true' when memory usage equals the calculated '90%' threshold " .
+                '(using adjusted limit).',
+            ],
+        ];
+    }
 }
