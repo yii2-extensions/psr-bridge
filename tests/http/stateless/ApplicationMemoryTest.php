@@ -179,7 +179,7 @@ final class ApplicationMemoryTest extends TestCase
         self::assertSame(
             PHP_INT_MAX,
             $app->getMemoryLimit(),
-            "Memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited) in 'StatelessApplication'.",
+            "Before 'handle()' memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited).",
         );
 
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
@@ -188,7 +188,7 @@ final class ApplicationMemoryTest extends TestCase
         self::assertSame(
             PHP_INT_MAX,
             $app->getMemoryLimit(),
-            "Memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited) in 'StatelessApplication'.",
+            "After 'clean()' memory limit should remain 'PHP_INT_MAX' when set to '-1'.",
         );
 
         ini_set('memory_limit', $originalLimit);
