@@ -168,7 +168,7 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testGetMemoryLimitHandlesUnlimitedMemoryCorrectly(): void
+    public function testMemoryLimitHandlesUnlimitedValues(): void
     {
         $originalLimit = ini_get('memory_limit');
 
@@ -185,33 +185,10 @@ final class ApplicationMemoryTest extends TestCase
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
         $app->clean();
 
-        ini_set('memory_limit', $originalLimit);
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnPhpIntMaxWhenMemoryLimitIsUnlimited(): void
-    {
-        $originalLimit = ini_get('memory_limit');
-
-        ini_set('memory_limit', '-1');
-
-        $app = $this->statelessApplication();
-
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
         self::assertSame(
             PHP_INT_MAX,
             $app->getMemoryLimit(),
-            "'getMemoryLimit()' should return 'PHP_INT_MAX' when 'memory_limit' is set to '-1' (unlimited) in " .
-            "'StatelessApplication'.",
-        );
-        self::assertSame(
-            PHP_INT_MAX,
-            $app->getMemoryLimit(),
-            "'getMemoryLimit()' should remain 'PHP_INT_MAX' after handling a request with unlimited memory in " .
-            "'StatelessApplication'.",
+            "Memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited) in 'StatelessApplication'.",
         );
 
         ini_set('memory_limit', $originalLimit);
