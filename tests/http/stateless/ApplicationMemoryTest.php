@@ -82,7 +82,7 @@ final class ApplicationMemoryTest extends TestCase
         self::assertGreaterThanOrEqual(
             3,
             end($levels),
-            'Should have at least 3 output buffer levels before clearing output.',
+            "Should have at least '3' output buffer levels before clearing output.",
         );
 
         $app->errorHandler->clearOutput();
@@ -179,7 +179,7 @@ final class ApplicationMemoryTest extends TestCase
         self::assertSame(
             PHP_INT_MAX,
             $app->getMemoryLimit(),
-            "Before 'handle()' memory limit should be 'PHP_INT_MAX' when set to '-1' (unlimited).",
+            "Before 'handle()' memory limit should be PHP_INT_MAX when set to '-1' (unlimited).",
         );
 
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
@@ -188,7 +188,7 @@ final class ApplicationMemoryTest extends TestCase
         self::assertSame(
             PHP_INT_MAX,
             $app->getMemoryLimit(),
-            "After 'clean()' memory limit should remain 'PHP_INT_MAX' when set to '-1'.",
+            "After 'clean()' memory limit should remain PHP_INT_MAX when set to '-1'.",
         );
 
         ini_set('memory_limit', $originalLimit);
