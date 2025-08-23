@@ -64,72 +64,6 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testCleanTriggersGarbageCollectionAndReducesMemoryUsage(): void
-    {
-        $originalLimit = ini_get('memory_limit');
-
-        ini_set('memory_limit', '512M');
-
-        gc_disable();
-
-        $app = $this->statelessApplication();
-
-        for ($i = 0; $i < 25; $i++) {
-            $circular = new stdClass();
-
-            $circular->self = $circular;
-
-            $circular->data = array_fill(0, 100, "data-{$i}");
-
-            $_SERVER = [
-                'REQUEST_METHOD' => 'GET',
-                'REQUEST_URI' => "site/index?iteration={$i}",
-            ];
-
-            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-            $obj1 = new stdClass();
-            $obj2 = new stdClass();
-
-            $obj1->ref = $obj2;
-            $obj2->ref = $obj1;
-            $obj1->circular = $circular;
-
-            unset($circular, $obj1, $obj2, $response);
-        }
-
-        $gcStatsBefore = gc_status();
-        $memoryBefore = memory_get_usage(true);
-        $app->clean();
-        $memoryAfter = memory_get_usage(true);
-        $gcStatsAfter = gc_status();
-
-        gc_enable();
-
-        $cyclesCollected = $gcStatsAfter['collected'] - $gcStatsBefore['collected'];
-
-        self::assertGreaterThan(
-            0,
-            $cyclesCollected,
-            "'clean()' should trigger garbage collection that collects circular references, but no cycles were " .
-            "collected. This indicates 'gc_collect_cycles()' was not called in 'StatelessApplication'.",
-        );
-
-        $memoryDifference = $memoryAfter - $memoryBefore;
-
-        self::assertLessThanOrEqual(
-            1_048_576,
-            $memoryDifference,
-            "'clean()' should reduce memory usage through garbage collection. Memory increased by {$memoryDifference}" .
-            " bytes, suggesting 'gc_collect_cycles()' was not called in 'StatelessApplication'.",
-        );
-
-        ini_set('memory_limit', $originalLimit);
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testClearOutputCleansLocalBuffers(): void
     {
         $levels = [];
@@ -163,6 +97,72 @@ final class ApplicationMemoryTest extends TestCase
             $closed,
             "Should close all local output buffers after calling 'clearOutput()'.",
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[DataProviderExternal(StatelessApplicationProvider::class, 'garbageCollection')]
+    public function testGarbageCollectionWithDifferentLoads(
+        string $memoryLimit,
+        int $iterations,
+        bool $shouldCollectCycles,
+        string $assertionMessage,
+    ): void {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', $memoryLimit);
+
+        gc_disable();
+
+        $app = $this->statelessApplication();
+
+        for ($i = 0; $i < $iterations; $i++) {
+            $circular = new stdClass();
+
+            $circular->self = $circular;
+
+            $circular->data = array_fill(0, 100, "data-{$i}");
+
+            $_SERVER = [
+                'REQUEST_METHOD' => 'GET',
+                'REQUEST_URI' => "site/index?iteration={$i}",
+            ];
+
+            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+            $obj1 = new stdClass();
+            $obj2 = new stdClass();
+
+            $obj1->ref = $obj2;
+            $obj2->ref = $obj1;
+            $obj1->circular = $circular;
+
+            unset($circular, $obj1, $obj2, $response);
+        }
+
+        if ($shouldCollectCycles === false) {
+            $this->expectNotToPerformAssertions();
+        }
+
+        $gcStatsBefore = gc_status();
+        $memoryBefore = memory_get_usage(true);
+
+        $app->clean();
+
+        $memoryAfter = memory_get_usage(true);
+        $gcStatsAfter = gc_status();
+
+        gc_enable();
+
+        $cyclesCollected = $gcStatsAfter['collected'] - $gcStatsBefore['collected'];
+
+        if ($shouldCollectCycles) {
+            self::assertGreaterThan(0, $cyclesCollected, $assertionMessage);
+            self::assertLessThanOrEqual(1_048_576, $memoryAfter - $memoryBefore, $assertionMessage);
+        }
+
+        ini_set('memory_limit', $originalLimit);
     }
 
     /**
