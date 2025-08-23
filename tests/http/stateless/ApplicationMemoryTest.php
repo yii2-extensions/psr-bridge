@@ -48,7 +48,7 @@ final class ApplicationMemoryTest extends TestCase
             self::assertFalse($app->clean(), $assertionMessage);
         }
 
-        if ($memoryLimit === '2G') {
+        if ($shouldTriggerSpecialTest === true) {
             $currentUsage = memory_get_usage(true);
 
             $artificialLimit = (int) ($currentUsage / 0.9);

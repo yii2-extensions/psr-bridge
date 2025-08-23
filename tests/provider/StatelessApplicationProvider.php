@@ -249,7 +249,8 @@ final class StatelessApplicationProvider
             'high memory setup - 2G' => [
                 '2G',
                 true,
-                "Memory configuration with '2G' for exact threshold testing.",
+                "'clean()' should return 'true' when memory usage equals the calculated '90%' threshold " .
+                '(using adjusted limit).',
             ],
         ];
     }
