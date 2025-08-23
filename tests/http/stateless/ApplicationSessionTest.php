@@ -536,7 +536,7 @@ final class ApplicationSessionTest extends TestCase
             1,
             $cookie,
             "Response Set-Cookie header should contain exactly one '{$sessionName}' cookie when no session cookie " .
-            'is sent.'
+            'is sent.',
         );
         self::assertMatchesRegularExpression(
             '/^' . preg_quote($sessionName, '/') .
