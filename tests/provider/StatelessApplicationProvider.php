@@ -190,6 +190,33 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * @phpstan-return array<string, array{string, int, bool, string}>
+     */
+    public static function garbageCollection(): array
+    {
+        return [
+            'moderate load' => [
+                '256M',
+                15,
+                true,
+                "GC should be triggered with moderate object creation ('15' iterations) and '256M' limit.",
+            ],
+            'heavy load' => [
+                '512M',
+                25,
+                true,
+                "GC should be triggered with heavy object creation ('25' iterations) and '512M' limit.",
+            ],
+            'light load' => [
+                '1G',
+                5,
+                false,
+                "GC might not be needed with light object creation ('5' iterations) and '1G' limit.",
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return array<string, array{int, string}>
      */
     public static function memoryLimitPositive(): array
