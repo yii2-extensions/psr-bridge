@@ -6,11 +6,10 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, TestWith};
 use yii\base\{Exception, InvalidConfigException};
-use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
 use yii\web\NotFoundHttpException;
 use yii2\extensions\psrbridge\exception\Message;
-use yii2\extensions\psrbridge\http\{Response, StatelessApplication};
+use yii2\extensions\psrbridge\http\{StatelessApplication};
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
