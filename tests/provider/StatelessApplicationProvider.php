@@ -28,8 +28,8 @@ final class StatelessApplicationProvider
                 <<<JSON
                 {"username":"user","password":"pa:ss"}
                 JSON,
-                "Response body should be a JSON string with 'username' and 'password' where password may contain " .
-                'colon(s) in HTTP_AUTHORIZATION.',
+                "Response body should be a JSON string with 'username' and 'password' where the password may contain " .
+                "colon(s) in HTTP_AUTHORIZATION.",
             ],
             'empty password' => [
                 'Basic ' . base64_encode('user:'),
