@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii2\extensions\psrbridge\http\Response;
@@ -15,6 +15,54 @@ use yii2\extensions\psrbridge\tests\TestCase;
 #[Group('http')]
 final class ApplicationErrorHandlerTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[DataProviderExternal(StatelessApplicationProvider::class, 'errorViewLogic')]
+    #[RequiresPhpExtension('runkit7')]
+    public function testErrorViewLogic(
+        bool $debug,
+        string $route,
+        string $action,
+        int $expectedStatusCode,
+        string $expectedErrorViewContent,
+        string $expectedAssertMessage,
+    ): void {
+        @\runkit_constant_redefine('YII_DEBUG', $debug);
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => $route,
+        ];
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => ['errorAction' => $action],
+                ],
+            ],
+        );
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            $expectedStatusCode,
+            $response->getStatusCode(),
+            "Expected HTTP '{$expectedStatusCode}' for route '{$route}'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route '{$route}'.",
+        );
+        self::assertSame(
+            self::normalizeLineEndings($expectedErrorViewContent),
+            self::normalizeLineEndings($response->getBody()->getContents()),
+            $expectedAssertMessage,
+        );
+
+        @\runkit_constant_redefine('YII_DEBUG', true);
+    }
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */

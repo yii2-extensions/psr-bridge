@@ -191,6 +191,72 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * @phpstan-return array<string, array{bool, string, string, int, string, string}>
+     */
+    public static function errorViewLogic(): array
+    {
+        return [
+            'debug false with Exception' => [
+                false,
+                'site/trigger-exception',
+                'site/error',
+                500,
+                <<<HTML
+                <div id="custom-error-action">
+                Custom error page from errorAction.
+                <span class="exception-type">
+                yii\base\Exception
+                </span>
+                <span class="exception-message">
+                Exception error message.
+                </span>
+                </div>
+                HTML,
+                "Response body should contain 'Custom error page from errorAction' when Exception is triggered and " .
+                "YII_DEBUG mode is disabled with 'errorAction' configured.",
+            ],
+            'debug false with UserException' => [
+                false,
+                'site/trigger-user-exception',
+                'site/error',
+                500,
+                <<<HTML
+                <div id="custom-error-action">
+                Custom error page from errorAction.
+                <span class="exception-type">
+                yii\base\UserException
+                </span>
+                <span class="exception-message">
+                User-friendly error message.
+                </span>
+                </div>
+                HTML,
+                "Response body should contain 'Custom error page from errorAction' when UserException is triggered " .
+                "and YII_DEBUG mode is disabled with 'errorAction' configured.",
+            ],
+            'debug true with UserException' => [
+                true,
+                'site/trigger-user-exception',
+                'site/error',
+                500,
+                <<<HTML
+                <div id="custom-error-action">
+                Custom error page from errorAction.
+                <span class="exception-type">
+                yii\base\UserException
+                </span>
+                <span class="exception-message">
+                User-friendly error message.
+                </span>
+                </div>
+                HTML,
+                "Response body should contain 'Custom error page from errorAction' when UserException is triggered " .
+                "and YII_DEBUG mode is enabled with 'errorAction' configured.",
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return array<string, array{string, string, int, string, string[]}>
      */
     public static function exceptionRenderingFormats(): array
