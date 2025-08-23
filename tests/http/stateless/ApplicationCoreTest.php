@@ -243,7 +243,7 @@ final class ApplicationCoreTest extends TestCase
         self::assertTrue(
             $hasCookieHeader,
             "PSR-7 response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
-            "adapter behavior.",
+            'adapter behavior.',
         );
     }
 
@@ -297,7 +297,7 @@ final class ApplicationCoreTest extends TestCase
             ],
             $app->coreComponents(),
             "'coreComponents()' should return the expected mapping of component IDs to class definitions after " .
-            "handling a request.",
+            'handling a request.',
         );
     }
 
