@@ -148,7 +148,7 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             201,
             $response2->getStatusCode(),
-            "Expected HTTP '200' for route 'site/statuscode'.",
+            "Expected HTTP '201' for route 'site/statuscode'.",
         );
         self::assertSame(
             'text/html; charset=UTF-8',
@@ -361,7 +361,7 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             dirname(__DIR__, 2),
             Yii::getAlias('@webroot'),
-            "'@webroot' alias should be set to the parent directory of the test directory after handling a request,",
+            "'@webroot' alias should be set to the parent directory of the test directory after handling a request.",
         );
     }
 }
