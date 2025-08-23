@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use yii\base\{Exception, InvalidConfigException};
 use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
@@ -24,6 +24,7 @@ use function restore_error_handler;
 use function set_error_handler;
 use function str_contains;
 
+#[Group('http')]
 final class ApplicationErrorHandlerTest extends TestCase
 {
     /**
