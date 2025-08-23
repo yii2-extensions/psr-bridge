@@ -128,12 +128,12 @@ final class ApplicationSessionTest extends TestCase
         );
         self::assertNotNull(
             $hash2,
-            "Second captcha response 'hash2' should not be 'null'.",
+            "Second captcha response 'hash1' should not be 'null'.",
         );
         self::assertNotSame(
             $hash1,
             $hash2,
-            "Captcha 'hash1' for first user should not match 'hash2' for second user, ensuring session isolation.",
+            "Captcha 'hash1' for first user should not match 'hash1' for second user, ensuring session isolation.",
         );
 
         // also test that we can get the actual captcha image
@@ -342,7 +342,7 @@ final class ApplicationSessionTest extends TestCase
                 $expectedData,
                 $data['data'] ?? null,
                 "Session '{$sessionId}' should return its own data ('{$expectedData}') and not leak data between " .
-                'sessions in  multiple requests with different sessions.',
+                'sessions in multiple requests with different sessions.',
             );
         }
     }
@@ -535,7 +535,8 @@ final class ApplicationSessionTest extends TestCase
         self::assertCount(
             1,
             $cookie,
-            "Response Set-Cookie header should contain exactly one '{$sessionName}' cookie when no session cookie,",
+            "Response Set-Cookie header should contain exactly one '{$sessionName}' cookie when no session cookie " .
+            'is sent.'
         );
         self::assertMatchesRegularExpression(
             '/^' . preg_quote($sessionName, '/') .
