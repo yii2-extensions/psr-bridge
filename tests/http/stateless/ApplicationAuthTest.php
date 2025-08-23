@@ -35,13 +35,12 @@ final class ApplicationAuthTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/auth' route.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
-            "'StatelessApplication'.",
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route.",
         );
         self::assertJsonStringEqualsJsonString(
             $expectedJson,
@@ -68,13 +67,12 @@ final class ApplicationAuthTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/auth' route in 'StatelessApplication'.",
+            "Response 'status code' should be '200' for 'site/auth' route.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route in " .
-            "'StatelessApplication'.",
+            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/auth' route.",
         );
         self::assertJsonStringEqualsJsonString(
             <<<JSON
@@ -82,7 +80,7 @@ final class ApplicationAuthTest extends TestCase
             JSON,
             $response->getBody()->getContents(),
             "Response 'body' should be a JSON string with 'username' and 'password' as 'null' for 'PHP_AUTH_USER' " .
-            "header in 'site/auth' route in 'StatelessApplication'.",
+            "header in 'site/auth' route.",
         );
     }
 }
