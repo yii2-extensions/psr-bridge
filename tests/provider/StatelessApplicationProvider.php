@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\provider;
 
 use stdClass;
+use yii\base\Exception;
+use yii2\extensions\psrbridge\http\Response;
 
 use function base64_encode;
+
+use const PHP_INT_SIZE;
 
 final class StatelessApplicationProvider
 {
@@ -108,6 +112,7 @@ final class StatelessApplicationProvider
     public static function cookies(): array
     {
         $cookieWithObject = new stdClass();
+
         $cookieWithObject->property = 'object_value';
 
         return [
@@ -181,6 +186,43 @@ final class StatelessApplicationProvider
                 {"language":{"name":"language","value":"en_US_012","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"session_id":{"name":"session_id","value":"session_value_123","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"theme":{"name":"theme","value":"dark_theme_789","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"},"user_pref":{"name":"user_pref","value":"preference_value_456","domain":"","expire":null,"path":"/","secure":false,"httpOnly":true,"sameSite":"Lax"}}
                 JSON,
                 'Response body should contain signed cookies with their properties when validation is enabled.',
+            ],
+        ];
+    }
+
+    /**
+     * @phpstan-return array<string, array{string, string, int, string, array<string>}>
+     */
+    public static function exceptionRenderingFormats(): array
+    {
+        return [
+            'HTML format with exception' => [
+                Response::FORMAT_HTML,
+                'text/html; charset=UTF-8',
+                500,
+                'site/trigger-exception',
+                [
+                    Exception::class,
+                    'Exception error message.',
+                    'Stack trace:',
+                ],
+            ],
+            'JSON format with exception' => [
+                Response::FORMAT_JSON,
+                'application/json; charset=UTF-8',
+                500,
+                'site/trigger-exception',
+                ['"message"'],
+            ],
+            'RAW format with exception' => [
+                Response::FORMAT_RAW,
+                '',
+                500,
+                'site/trigger-exception',
+                [
+                    Exception::class,
+                    'Exception error message.',
+                ],
             ],
         ];
     }

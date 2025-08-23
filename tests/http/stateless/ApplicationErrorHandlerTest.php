@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use yii\base\{Exception, InvalidConfigException};
 use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
 use yii\web\NotFoundHttpException;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Response;
+use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -358,6 +359,84 @@ final class ApplicationErrorHandlerTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
+     * @phpstan-param string[] $expectedContent
+     */
+    #[DataProviderExternal(StatelessApplicationProvider::class, 'exceptionRenderingFormats')]
+    public function testRenderExceptionWithDifferentFormats(
+        string $format,
+        string $expectedContentType,
+        int $expectedStatusCode,
+        string $route,
+        array $expectedContent,
+    ): void {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => $route,
+        ];
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'response' => ['format' => $format],
+                    'errorHandler' => ['errorAction' => null],
+                ],
+            ],
+        );
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            $expectedStatusCode,
+            $response->getStatusCode(),
+            "Expected HTTP '{$expectedStatusCode}' for route '{$route}'.",
+        );
+        self::assertSame(
+            $expectedContentType,
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type '{$expectedContentType}' for route '{$route}'.",
+        );
+
+        $body = $response->getBody()->getContents();
+
+        foreach ($expectedContent as $content) {
+            self::assertStringContainsString(
+                $content,
+                $body,
+                "Response body should contain '{$content}' for {$format} format.",
+            );
+        }
+
+        if ($format === Response::FORMAT_RAW) {
+            self::assertStringNotContainsString(
+                '<pre>',
+                $body,
+                "RAW format response should not contain HTML tag '<pre>'.",
+            );
+            self::assertStringNotContainsString(
+                '</pre>',
+                $body,
+                "RAW format response should not contain HTML tag '</pre>'.",
+            );
+        }
+
+        if ($format === Response::FORMAT_JSON) {
+            $decodedResponse = Json::decode($body);
+
+            self::assertIsArray(
+                $decodedResponse,
+                'JSON response should be decodable to array',
+            );
+            self::assertArrayHasKey(
+                'message',
+                $decodedResponse,
+                'JSON error response should contain message key',
+            );
+        }
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionWithErrorActionReturningResponseObject(): void
@@ -402,61 +481,6 @@ final class ApplicationErrorHandlerTest extends TestCase
         );
 
         @\runkit_constant_redefine('YII_DEBUG', true);
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testRenderExceptionWithRawFormat(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
-
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'response' => ['format' => Response::FORMAT_RAW],
-                    'errorHandler' => ['errorAction' => null],
-                ],
-            ],
-        );
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Expected HTTP '500' for route 'site/trigger-exception'.",
-        );
-        self::assertEmpty(
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type empty string for route 'site/trigger-exception'.",
-        );
-
-        $body = $response->getBody()->getContents();
-
-        self::assertStringContainsString(
-            Exception::class,
-            $body,
-            'RAW format response should contain exception class name.',
-        );
-        self::assertStringContainsString(
-            'Exception error message.',
-            $body,
-            'RAW format response should contain exception message.',
-        );
-        self::assertStringNotContainsString(
-            '<pre>',
-            $body,
-            "RAW format response should not contain HTML tag '<pre>'.",
-        );
-        self::assertStringNotContainsString(
-            '</pre>',
-            $body,
-            "RAW format response should not contain HTML tag '</pre>'.",
-        );
     }
 
     /**
@@ -749,60 +773,6 @@ final class ApplicationErrorHandlerTest extends TestCase
             self::normalizeLineEndings($response->getBody()->getContents()),
             "Response body should contain 'User-friendly error message.' when 'UserException' is triggered and " .
             "'debug' mode is enabled.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testUseErrorViewLogicWithNonHtmlFormat(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
-
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'errorHandler' => ['errorAction' => 'site/error'],
-                    'response' => ['format' => Response::FORMAT_JSON],
-                ],
-            ],
-        );
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Expected HTTP '500' for route 'site/error'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/error''.",
-        );
-
-        $body = $response->getBody()->getContents();
-
-        self::assertStringNotContainsString(
-            'Custom error page from errorAction.',
-            $body,
-            "Response body should NOT contain 'Custom error page from errorAction' when format is JSON " .
-            "because 'useErrorView' should be 'false' regardless of YII_DEBUG or exception type.",
-        );
-
-        $decodedResponse = Json::decode($body);
-
-        self::assertIsArray(
-            $decodedResponse,
-            'JSON response should be decodable to array',
-        );
-        self::assertArrayHasKey(
-            'message',
-            $decodedResponse,
-            'JSON error response should contain message key',
         );
     }
 }
