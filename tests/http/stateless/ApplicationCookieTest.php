@@ -51,13 +51,12 @@ final class ApplicationCookieTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/getcookies' route in 'StatelessApplication'.",
+            "Expected HTTP '200' for route 'site/getcookies'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/getcookies' route in " .
-            "'StatelessApplication'.",
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/getcookies'.",
         );
         self::assertJsonStringEqualsJsonString(
             $expectedJson,
@@ -83,13 +82,12 @@ final class ApplicationCookieTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/deletecookie' route in 'StatelessApplication'.",
+            "Expected HTTP '200' for route 'site/deletecookie'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/deletecookie' route in " .
-            "'StatelessApplication'.",
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/deletecookie'.",
         );
         self::assertJsonStringEqualsJsonString(
             <<<JSON
@@ -97,7 +95,7 @@ final class ApplicationCookieTest extends TestCase
             JSON,
             Json::encode($response->getHeader('Set-Cookie')),
             "Response 'Set-Cookie' headers should contain the deletion header for 'user_preference' cookie in " .
-            "'site/deletecookie' route in 'StatelessApplication'.",
+            "'site/deletecookie' route.",
         );
     }
 
@@ -118,13 +116,12 @@ final class ApplicationCookieTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/multiplecookies' route in 'StatelessApplication'.",
+            "Expected HTTP '200' for route 'site/multiplecookies'.",
         );
         self::assertSame(
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for 'site/multiplecookies' route in " .
-            "'StatelessApplication'.",
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/multiplecookies'.",
         );
 
         // filter out session cookies to focus on test cookies
@@ -136,8 +133,7 @@ final class ApplicationCookieTest extends TestCase
         self::assertCount(
             2,
             $testCookieHeaders,
-            "Response should contain exactly '2' non-session 'Set-Cookie' headers for 'site/multiplecookies' route " .
-            "in 'StatelessApplication'.",
+            "Response should contain exactly '2' non-session 'Set-Cookie' headers for 'site/multiplecookies' route.",
         );
 
         $headerString = implode('|', $testCookieHeaders);
@@ -145,20 +141,19 @@ final class ApplicationCookieTest extends TestCase
         self::assertStringContainsString(
             'theme=dark',
             $headerString,
-            "Response 'Set-Cookie' headers should contain 'theme=dark' for 'site/multiplecookies' route in " .
-            "'StatelessApplication'.",
+            "Response 'Set-Cookie' headers should contain 'theme=dark' for 'site/multiplecookies' route,",
         );
         self::assertStringContainsString(
             'old_session=',
             $headerString,
             "Response 'Set-Cookie' headers should contain 'old_session=' for cookie deletion in " .
-            "'site/multiplecookies' route in 'StatelessApplication'.",
+            "'site/multiplecookies' route.",
         );
         self::assertStringNotContainsString(
             'temp_data=',
             $headerString,
             "Response 'Set-Cookie' headers should NOT contain 'temp_data=' for deleted cookie in " .
-            "'site/multiplecookies' route in 'StatelessApplication'.",
+            "'site/multiplecookies' route.",
         );
     }
 }
