@@ -94,7 +94,7 @@ final class ApplicationCookieTest extends TestCase
             ["user_preference=; Expires=Fri, 22-Aug-2025 13:03:16 GMT; Max-Age=0; Path=/app; Secure; HttpOnly; SameSite=Lax"]
             JSON,
             Json::encode($response->getHeader('Set-Cookie')),
-            "Response 'Set-Cookie' headers should contain the deletion header for 'user_preference' cookie in " .
+            "Response Set-Cookie headers should contain the deletion header for 'user_preference' cookie in " .
             "'site/deletecookie' route.",
         );
     }
@@ -133,7 +133,7 @@ final class ApplicationCookieTest extends TestCase
         self::assertCount(
             2,
             $testCookieHeaders,
-            "Response should contain exactly '2' non-session 'Set-Cookie' headers for 'site/multiplecookies' route.",
+            "Response should contain exactly '2' non-session Set-Cookie headers for 'site/multiplecookies' route.",
         );
 
         $headerString = implode('|', $testCookieHeaders);
@@ -141,18 +141,18 @@ final class ApplicationCookieTest extends TestCase
         self::assertStringContainsString(
             'theme=dark',
             $headerString,
-            "Response 'Set-Cookie' headers should contain 'theme=dark' for 'site/multiplecookies' route,",
+            "Response Set-Cookie headers should contain 'theme=dark' for 'site/multiplecookies' route,",
         );
         self::assertStringContainsString(
             'old_session=',
             $headerString,
-            "Response 'Set-Cookie' headers should contain 'old_session=' for cookie deletion in " .
+            "Response Set-Cookie headers should contain 'old_session=' for cookie deletion in " .
             "'site/multiplecookies' route.",
         );
         self::assertStringNotContainsString(
             'temp_data=',
             $headerString,
-            "Response 'Set-Cookie' headers should NOT contain 'temp_data=' for deleted cookie in " .
+            "Response Set-Cookie headers should NOT contain 'temp_data=' for deleted cookie in " .
             "'site/multiplecookies' route.",
         );
     }
