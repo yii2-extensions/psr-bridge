@@ -29,7 +29,7 @@ final class StatelessApplicationProvider
                 {"username":"user","password":"pa:ss"}
                 JSON,
                 "Response body should be a JSON string with 'username' and 'password' where password may contain " .
-                "colon(s) in HTTP_AUTHORIZATION.",
+                'colon(s) in HTTP_AUTHORIZATION.',
             ],
             'empty password' => [
                 'Basic ' . base64_encode('user:'),
@@ -52,7 +52,7 @@ final class StatelessApplicationProvider
                 {"username":null,"password":null}
                 JSON,
                 "Response body should be a JSON string with 'username' and 'password' as 'null' for invalid " .
-                "HTTP_AUTHORIZATION header.",
+                'HTTP_AUTHORIZATION header.',
             ],
             'lowercase scheme' => [
                 'basic ' . base64_encode('user:pass'),
@@ -67,7 +67,7 @@ final class StatelessApplicationProvider
                 {"username":null,"password":null}
                 JSON,
                 "Response body should be a JSON string with 'username' and 'password' as 'null' for malformed " .
-                "HTTP_AUTHORIZATION header.",
+                'HTTP_AUTHORIZATION header.',
             ],
             'missing space' => [
                 'Basic' . base64_encode('a:b'),
@@ -75,7 +75,7 @@ final class StatelessApplicationProvider
                 {"username":null,"password":null}
                 JSON,
                 "Response body should be a JSON string with 'username' and 'password' as 'null' for malformed " .
-                "HTTP_AUTHORIZATION header.",
+                'HTTP_AUTHORIZATION header.',
             ],
             'no colon' => [
                 'Basic ' . base64_encode('userpass'),
@@ -83,7 +83,7 @@ final class StatelessApplicationProvider
                 {"username":"userpass","password":null}
                 JSON,
                 "Response body should be a JSON string with 'username' set and 'password' as 'null' when " .
-                "credentials contain no colon in HTTP_AUTHORIZATION.",
+                'credentials contain no colon in HTTP_AUTHORIZATION.',
             ],
             'non-breaking space' => [
                 "basic\xC2\xA0" . base64_encode('user:pass'),
