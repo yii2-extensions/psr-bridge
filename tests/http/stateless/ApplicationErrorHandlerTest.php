@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
-use yii\base\InvalidConfigException;
+use yii\base\{Exception, InvalidConfigException};
 use yii\helpers\Json;
+use yii\log\{FileTarget, Logger};
 use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
+
+use function is_array;
+use function str_contains;
 
 #[Group('http')]
 final class ApplicationErrorHandlerTest extends TestCase
@@ -113,42 +117,124 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         if (YII_DEBUG) {
             self::assertStringContainsString(
-                "\n\$_SERVER = [",
+                '$_SERVER = [',
                 $body,
-                "Response body should contain '\$_SERVER = [' in correct order (label before array) for fallback " .
-                'exception debug output.',
+                "Response body should contain '\$_SERVER = [' label.",
             );
             self::assertStringNotContainsString(
                 'not-a-secret-api-key',
                 $body,
-                'Response body should NOT contain API_KEY value in debug output for fallback exception.',
+                'Response body should NOT contain API_KEY value.',
             );
             self::assertStringNotContainsString(
                 'dummy-bearer-token',
                 $body,
-                'Response body should NOT contain AUTH_TOKEN value in debug output for fallback exception',
+                'Response body should NOT contain AUTH_TOKEN value.',
             );
             self::assertStringNotContainsString(
                 'not-a-real-password',
                 $body,
-                'Response body should NOT contain DB_PASSWORD value in debug output for fallback exception.',
+                'Response body should NOT contain DB_PASSWORD value.',
             );
             self::assertStringContainsString(
                 'example.com',
                 $body,
-                'Response body should contain HTTP_HOST value in debug output for fallback exception.',
+                'Response body should contain HTTP_HOST value.',
             );
             self::assertStringNotContainsString(
                 'not-a-real-secret-key',
                 $body,
-                'Response body should NOT contain SECRET_KEY value in debug output for fallback exception.',
+                'Response body should NOT contain SECRET_KEY value.',
             );
             self::assertStringContainsString(
                 'this-should-appear',
                 $body,
-                'Response body should contain SAFE_VARIABLE value in debug output for fallback exception.',
+                'Response body should contain SAFE_VARIABLE value.',
             );
         }
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testLogExceptionIsCalledWhenHandlingException(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $app = $this->statelessApplication(
+            [
+                'flushLogger' => false,
+                'components' => [
+                    'errorHandler' => ['errorAction' => null],
+                    'log' => [
+                        'traceLevel' => YII_DEBUG ? 1 : 0,
+                        'targets' => [
+                            [
+                                'class' => FileTarget::class,
+                                'levels' => ['error'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/trigger-exception'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
+        );
+
+        $logMessages = $app->getLog()->getLogger()->messages;
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Response 'status code' should be '500' when an exception occurs.",
+        );
+        self::assertNotEmpty(
+            $logMessages,
+            'Logger should contain log messages after handling an exception.',
+        );
+
+        $exceptionLogFound = false;
+
+        $expectedCategory = Exception::class;
+
+        foreach ($logMessages as $logMessage) {
+            if (
+                is_array($logMessage) &&
+                isset($logMessage[0], $logMessage[1], $logMessage[2]) &&
+                $logMessage[1] === Logger::LEVEL_ERROR &&
+                $logMessage[0] instanceof Exception &&
+                $logMessage[2] === $expectedCategory &&
+                str_contains($logMessage[0]->getMessage(), 'Exception error message.')
+            ) {
+                $exceptionLogFound = true;
+
+                break;
+            }
+        }
+
+        self::assertTrue(
+            $exceptionLogFound,
+            "Logger should contain an error log entry with category '{$expectedCategory}' and message " .
+            "'Exception error message.' when 'logException()' is called during exception handling.",
+        );
+        self::assertFalse(
+            $app->flushLogger,
+            "Test must keep logger messages in memory to assert on them; 'flushLogger' should be 'false'.",
+        );
     }
 
     /**

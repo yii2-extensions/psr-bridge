@@ -6,7 +6,6 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, TestWith};
 use yii\base\{Exception, InvalidConfigException};
-use yii\log\{FileTarget, Logger};
 use yii\web\NotFoundHttpException;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\StatelessApplication;
@@ -33,80 +32,6 @@ final class ApplicationTest extends TestCase
         $this->closeApplication();
 
         parent::tearDown();
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testLogExceptionIsCalledWhenHandlingException(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
-
-        $app = $this->statelessApplication(
-            [
-                'flushLogger' => false,
-                'components' => [
-                    'errorHandler' => [
-                        'errorAction' => null,
-                    ],
-                    'log' => [
-                        'traceLevel' => YII_DEBUG ? 1 : 0,
-                        'targets' => [
-                            [
-                                'class' => FileTarget::class,
-                                'levels' => [
-                                    'error',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        );
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-        $logMessages = $app->getLog()->getLogger()->messages;
-
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Response 'status code' should be '500' when an exception occurs in 'StatelessApplication'.",
-        );
-        self::assertNotEmpty(
-            $logMessages,
-            "Logger should contain log messages after handling an exception in 'StatelessApplication'.",
-        );
-
-        $exceptionLogFound = false;
-        $expectedCategory = Exception::class;
-
-        foreach ($logMessages as $logMessage) {
-            if (
-                is_array($logMessage) &&
-                isset($logMessage[0], $logMessage[1], $logMessage[2]) &&
-                $logMessage[1] === Logger::LEVEL_ERROR &&
-                $logMessage[0] instanceof Exception &&
-                $logMessage[2] === $expectedCategory &&
-                str_contains($logMessage[0]->getMessage(), 'Exception error message.')
-            ) {
-                $exceptionLogFound = true;
-
-                break;
-            }
-        }
-
-        self::assertTrue(
-            $exceptionLogFound,
-            "Logger should contain an error log entry with category '{$expectedCategory}' and message 'Exception error message.' " .
-            "when 'logException()' is called during exception handling in 'StatelessApplication'.",
-        );
-        self::assertFalse(
-            $app->flushLogger,
-            "Test must keep logger messages in memory to assert on them; 'flushLogger' should be 'false'.",
-        );
     }
 
     /**
