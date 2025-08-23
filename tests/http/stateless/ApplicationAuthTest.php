@@ -79,8 +79,7 @@ final class ApplicationAuthTest extends TestCase
             {"username":"admin","password":null}
             JSON,
             $response->getBody()->getContents(),
-            "Expected JSON body with 'username' and 'null' password when only PHP_AUTH_USER is present for route " .
-            "'site/auth'.",
+            "Expected JSON body with 'username' and 'null' password when only PHP_AUTH_USER is present.",
         );
     }
 }
