@@ -56,33 +56,33 @@ final class ApplicationCoreTest extends TestCase
 
         self::assertTrue(
             $container->has(ServerRequestFactoryInterface::class),
-            "Container should have definition for 'ServerRequestFactoryInterface', ensuring PSR-7 request factory is " .
+            'Container should have definition for ServerRequestFactoryInterface, ensuring PSR-7 request factory is ' .
             'available.',
         );
         self::assertTrue(
             $container->has(StreamFactoryInterface::class),
-            "Container should have definition for 'StreamFactoryInterface', ensuring PSR-7 stream factory is " .
+            'Container should have definition for StreamFactoryInterface, ensuring PSR-7 stream factory is ' .
             'available.',
         );
         self::assertTrue(
             $container->has(UploadedFileFactoryInterface::class),
-            "Container should have definition for 'UploadedFileFactoryInterface', ensuring PSR-7 uploaded file " .
+            'Container should have definition for UploadedFileFactoryInterface, ensuring PSR-7 uploaded file ' .
             'factory is available.',
         );
         self::assertInstanceOf(
             ServerRequestFactory::class,
             $container->get(ServerRequestFactoryInterface::class),
-            "Container should resolve 'ServerRequestFactoryInterface' to an instance of 'ServerRequestFactory'.",
+            'Container should resolve ServerRequestFactoryInterface to an instance of ServerRequestFactory.',
         );
         self::assertInstanceOf(
             StreamFactory::class,
             $container->get(StreamFactoryInterface::class),
-            "Container should resolve 'StreamFactoryInterface' to an instance of 'StreamFactory'.",
+            'Container should resolve StreamFactoryInterface to an instance of StreamFactory.',
         );
         self::assertInstanceOf(
             UploadedFileFactory::class,
             $container->get(UploadedFileFactoryInterface::class),
-            "Container should resolve 'UploadedFileFactoryInterface' to an instance of 'UploadedFileFactory'.",
+            'Container should resolve UploadedFileFactoryInterface to an instance of UploadedFileFactory.',
         );
     }
 
@@ -107,7 +107,12 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             200,
             $response1->getStatusCode(),
-            "Response 'status code' should be '200' for first request to 'site/index' route in 'StatelessApplication'.",
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response1->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
         );
 
         // access the Response component to test adapter behavior
@@ -127,7 +132,7 @@ final class ApplicationCoreTest extends TestCase
             $adapter1,
             $adapter2,
             "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, " .
-            "confirming adapter caching behavior in 'StatelessApplication'.",
+            'confirming adapter caching behavior.',
         );
 
         // second request with different route - verify stateless behavior
@@ -143,7 +148,12 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             201,
             $response2->getStatusCode(),
-            "Response 'status code' should be '201' for second request to 'site/statuscode' route in 'StatelessApplication'.",
+            "Expected HTTP '200' for route 'site/statuscode'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response2->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/statuscode'.",
         );
 
         // verify that the Response component is fresh for each request (stateless)
@@ -152,8 +162,7 @@ final class ApplicationCoreTest extends TestCase
         self::assertNotSame(
             $bridgeResponse1,
             $bridgeResponse2,
-            'Response component should be a different instance for each request, confirming stateless behavior in ' .
-            "'StatelessApplication'.",
+            'Response component should be a different instance for each request, confirming stateless behavior.',
         );
 
         // test 'reset()' functionality
@@ -177,7 +186,7 @@ final class ApplicationCoreTest extends TestCase
             $adapter3,
             $adapter4,
             "'reset()' should force creation of a new adapter instance, resulting in different PSR-7 response " .
-            "objects before and after reset in 'StatelessApplication'.",
+            'objects before and after reset.',
         );
 
         // third request - verify adapter isolation between requests
@@ -194,7 +203,12 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             200,
             $response3->getStatusCode(),
-            "Response 'status code' should be '200' for third request to 'site/cookie' route in 'StatelessApplication'.",
+            "Expected HTTP '200' for route 'site/cookie'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response3->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/cookie'.",
         );
 
         $bridgeResponse3 = $app->response;
@@ -207,8 +221,7 @@ final class ApplicationCoreTest extends TestCase
         self::assertNotSame(
             $adapter3,
             $adapter5,
-            'Each request should get its own adapter instance, confirming adapter isolation between requests in ' .
-            "'StatelessApplication'.",
+            'Each request should get its own adapter instance, confirming adapter isolation between requests.',
         );
 
         // verify response headers are preserved correctly across adapter operations
@@ -230,7 +243,7 @@ final class ApplicationCoreTest extends TestCase
         self::assertTrue(
             $hasCookieHeader,
             "PSR-7 response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
-            "adapter behavior in 'StatelessApplication'.",
+            "adapter behavior.",
         );
     }
 
@@ -284,7 +297,7 @@ final class ApplicationCoreTest extends TestCase
             ],
             $app->coreComponents(),
             "'coreComponents()' should return the expected mapping of component IDs to class definitions after " .
-            "handling a request in 'StatelessApplication'.",
+            "handling a request.",
         );
     }
 
@@ -309,7 +322,12 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             200,
             $response->getStatusCode(),
-            "Response 'status code' should be '200' for successful 'StatelessApplication' handling.",
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
         );
 
         $psr7Request = $app->request->getPsr7Request();
@@ -338,13 +356,12 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             '',
             Yii::getAlias('@web'),
-            "'@web' alias should be set to an empty string after handling a request in 'StatelessApplication'.",
+            "'@web' alias should be set to an empty string after handling a request.",
         );
         self::assertSame(
             dirname(__DIR__, 2),
             Yii::getAlias('@webroot'),
-            "'@webroot' alias should be set to the parent directory of the test directory after handling a request " .
-            "in 'StatelessApplication'.",
+            "'@webroot' alias should be set to the parent directory of the test directory after handling a request,",
         );
     }
 }
