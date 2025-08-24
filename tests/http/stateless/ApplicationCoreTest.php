@@ -22,7 +22,6 @@ use yii2\extensions\psrbridge\tests\TestCase;
 use function array_filter;
 use function dirname;
 use function str_contains;
-use function str_starts_with;
 
 #[Group('http')]
 final class ApplicationCoreTest extends TestCase
@@ -240,7 +239,7 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             'test=test; Path=/; HttpOnly; SameSite=Lax test2=test2; Path=/; HttpOnly; SameSite=Lax',
             implode(' ', $cookieHeaders),
-            "PSR-7 Response Set-Cookie headers should match the expected values, confirming correct adapter behavior.",
+            'PSR-7 Response Set-Cookie headers should match the expected values, confirming correct adapter behavior.',
         );
     }
 
