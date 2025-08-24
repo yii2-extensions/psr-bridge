@@ -23,6 +23,31 @@ final class SiteController extends Controller
      */
     private const MOCK_TIME = 1755867797;
 
+    public function actionAddResponseForCookie(): void
+    {
+        $this->response->cookies->add(
+            new Cookie(
+                [
+                    'name' => 'test',
+                    'value' => 'test',
+                    'secure' => false,
+                    'httpOnly' => false,
+                ],
+            ),
+        );
+
+        $this->response->cookies->add(
+            new Cookie(
+                [
+                    'name' => 'test2',
+                    'value' => 'test2',
+                    'secure' => false,
+                    'httpOnly' => false,
+                ],
+            ),
+        );
+    }
+
     /**
      * @phpstan-return array{password: string|null, username: string|null}
      */
@@ -50,31 +75,6 @@ final class SiteController extends Controller
             'isGuest' => $user->isGuest,
             'identity' => $username,
         ];
-    }
-
-    public function actionCookie(): void
-    {
-        $this->response->cookies->add(
-            new Cookie(
-                [
-                    'name' => 'test',
-                    'value' => 'test',
-                    'secure' => false,
-                    'httpOnly' => false,
-                ],
-            ),
-        );
-
-        $this->response->cookies->add(
-            new Cookie(
-                [
-                    'name' => 'test2',
-                    'value' => 'test2',
-                    'secure' => false,
-                    'httpOnly' => false,
-                ],
-            ),
-        );
     }
 
     public function actionDeletecookie(): Response

@@ -193,7 +193,7 @@ final class ApplicationCoreTest extends TestCase
         $_COOKIE = ['test_cookie' => 'test_value'];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/cookie',
+            'REQUEST_URI' => 'site/add-response-for-cookie',
         ];
 
         $response3 = $app->handle(
