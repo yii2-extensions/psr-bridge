@@ -13,10 +13,6 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function explode;
-use function ini_get;
-use function ini_set;
-use function ob_get_level;
-use function ob_start;
 use function sprintf;
 use function str_starts_with;
 
