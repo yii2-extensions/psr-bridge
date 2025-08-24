@@ -420,40 +420,6 @@ final class ApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testThrowableOccursDuringRequestHandling(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'nonexistent/invalidaction',
-        ];
-
-        $app = $this->statelessApplication();
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            404,
-            $response->getStatusCode(),
-            "Response 'status code' should be '404' when handling a request to 'non-existent' route in " .
-            "'StatelessApplication', confirming proper error handling in catch block.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when 'Throwable' occurs " .
-            "during request handling in 'StatelessApplication'.",
-        );
-        self::assertStringContainsString(
-            '<pre>Not Found: Page not found.</pre>',
-            $response->getBody()->getContents(),
-            "Response 'body' should contain error message about 'Not Found: Page not found' when 'Throwable' occurs " .
-            "during request handling in 'StatelessApplication'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testThrowNotFoundHttpExceptionWhenStrictParsingDisabledAndRouteIsMissing(): void
     {
         $_SERVER = [

@@ -568,4 +568,36 @@ final class ApplicationErrorHandlerTest extends TestCase
             'the InvalidRouteException when errorHandler action is invalid.',
         );
     }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testThrowableOccursDuringRequestHandling(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'nonexistent/invalidaction',
+        ];
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            404,
+            $response->getStatusCode(),
+            "Expected HTTP '404' for route 'nonexistent/invalidaction'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'nonexistent/invalidaction'.",
+        );
+        self::assertStringContainsString(
+            '<pre>Not Found: Page not found.</pre>',
+            $response->getBody()->getContents(),
+            "Response body should contain error message about 'Not Found: Page not found' when Throwable occurs " .
+            'during request handling.',
+        );
+    }
 }
