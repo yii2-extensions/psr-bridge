@@ -184,8 +184,8 @@ final class ApplicationCoreTest extends TestCase
         self::assertNotSame(
             $adapter3,
             $adapter4,
-            "'reset()' should force creation of a new adapter instance, resulting in different PSR-7 Response " .
-            'objects before and after reset.',
+            "'reset()' should force creation of a new adapter instance; the cached adapter before and after reset " .
+            'must be different.',
         );
 
         // third request - verify adapter isolation between requests
