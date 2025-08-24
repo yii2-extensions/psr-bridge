@@ -356,44 +356,46 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         $originalDisplayErrors = ini_get('display_errors');
 
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'errorHandler' => ['errorAction' => null],
+        try {
+            $app = $this->statelessApplication(
+                [
+                    'components' => [
+                        'errorHandler' => ['errorAction' => null],
+                    ],
                 ],
-            ],
-        );
+            );
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Expected HTTP '500' for route 'site/trigger-exception'.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
-        );
-        self::assertSame(
-            '1',
-            ini_get('display_errors'),
-            "'display_errors' should be set to '1' when YII_DEBUG mode is enabled and rendering exception view.",
-        );
-        self::assertStringContainsString(
-            'yii\base\Exception: Exception error message.',
-            $response->getBody()->getContents(),
-            'Response should contain exception details when YII_DEBUG mode is enabled.',
-        );
+            self::assertSame(
+                500,
+                $response->getStatusCode(),
+                "Expected HTTP '500' for route 'site/trigger-exception'.",
+            );
+            self::assertSame(
+                'text/html; charset=UTF-8',
+                $response->getHeaderLine('Content-Type'),
+                "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
+            );
+            self::assertSame(
+                '1',
+                ini_get('display_errors'),
+                "'display_errors' should be set to '1' when YII_DEBUG mode is enabled and rendering exception view.",
+            );
+            self::assertStringContainsString(
+                'yii\base\Exception: Exception error message.',
+                $response->getBody()->getContents(),
+                'Response should contain exception details when YII_DEBUG mode is enabled.',
+            );
+        } finally {
+            ini_set('display_errors', $originalDisplayErrors);
 
-        ini_set('display_errors', $originalDisplayErrors);
+            while (ob_get_level() < $initialBufferLevel) {
+                ob_start();
+            }
 
-        while (ob_get_level() < $initialBufferLevel) {
-            ob_start();
+            @\runkit_constant_redefine('YII_ENV_TEST', true);
         }
-
-        @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
     /**
