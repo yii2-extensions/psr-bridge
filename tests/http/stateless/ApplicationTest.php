@@ -6,8 +6,6 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{Group, TestWith};
 use yii\base\InvalidConfigException;
-use yii\web\NotFoundHttpException;
-use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\StatelessApplication;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -415,34 +413,6 @@ final class ApplicationTest extends TestCase
             $response->getStatusCode(),
             "Response 'status code' should be '201' for 'site/statuscode' route in 'StatelessApplication'.",
         );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testThrowNotFoundHttpExceptionWhenStrictParsingEnabledAndRouteIsMissing(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/profile/123',
-        ];
-
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'urlManager' => [
-                        'enableStrictParsing' => true,
-                    ],
-                ],
-            ],
-        );
-
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        $this->expectException(NotFoundHttpException::class);
-        $this->expectExceptionMessage(Message::PAGE_NOT_FOUND->getMessage());
-
-        $app->request->resolve();
     }
 
     /**

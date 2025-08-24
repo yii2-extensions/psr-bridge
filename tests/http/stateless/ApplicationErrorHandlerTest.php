@@ -8,6 +8,8 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtens
 use yii\base\{Exception, InvalidConfigException};
 use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
+use yii\web\NotFoundHttpException;
+use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -631,5 +633,31 @@ final class ApplicationErrorHandlerTest extends TestCase
             "Response body should contain the default not found message '<pre>Not Found: Page not found.</pre>' " .
             'when a NotFoundHttpException is thrown.',
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testThrowNotFoundHttpExceptionWhenStrictParsingEnabledAndRouteIsMissing(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/profile/123',
+        ];
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'urlManager' => ['enableStrictParsing' => true],
+                ],
+            ],
+        );
+
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage(Message::PAGE_NOT_FOUND->getMessage());
+
+        $app->request->resolve();
     }
 }
