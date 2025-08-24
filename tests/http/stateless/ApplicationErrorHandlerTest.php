@@ -600,4 +600,36 @@ final class ApplicationErrorHandlerTest extends TestCase
             'during request handling.',
         );
     }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testThrowNotFoundHttpExceptionWhenStrictParsingDisabledAndRouteIsMissing(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/profile/123',
+        ];
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            404,
+            $response->getStatusCode(),
+            "Expected HTTP '404' for route 'site/profile/123'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/profile/123'.",
+        );
+        self::assertStringContainsString(
+            '<pre>Not Found: Page not found.</pre>',
+            $response->getBody()->getContents(),
+            "Response body should contain the default not found message '<pre>Not Found: Page not found.</pre>' " .
+            'when a NotFoundHttpException is thrown.',
+        );
+    }
 }
