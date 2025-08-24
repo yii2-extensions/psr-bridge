@@ -31,7 +31,7 @@ final class SiteController extends Controller
                     'name' => 'test',
                     'value' => 'test',
                     'secure' => false,
-                    'httpOnly' => false,
+                    'httpOnly' => true,
                 ],
             ),
         );
@@ -42,7 +42,7 @@ final class SiteController extends Controller
                     'name' => 'test2',
                     'value' => 'test2',
                     'secure' => false,
-                    'httpOnly' => false,
+                    'httpOnly' => true,
                 ],
             ),
         );
