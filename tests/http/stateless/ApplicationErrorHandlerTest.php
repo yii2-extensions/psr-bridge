@@ -28,6 +28,13 @@ use function str_contains;
 #[Group('http')]
 final class ApplicationErrorHandlerTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        $this->closeApplication();
+
+        parent::tearDown();
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
