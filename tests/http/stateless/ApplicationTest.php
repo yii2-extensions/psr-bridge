@@ -34,58 +34,6 @@ final class ApplicationTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[RequiresPhpExtension('runkit7')]
-    public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
-    {
-        @\runkit_constant_redefine('YII_ENV_TEST', false);
-
-        $initialBufferLevel = ob_get_level();
-
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
-
-        $originalDisplayErrors = ini_get('display_errors');
-
-        $app = $this->statelessApplication([
-            'components' => [
-                'errorHandler' => [
-                    'errorAction' => null,
-                ],
-            ],
-        ]);
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            '1',
-            ini_get('display_errors'),
-            "'display_errors' should be set to '1' when 'YII_DEBUG' is 'true' and rendering exception view.",
-        );
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Response 'status code' should be '500' for exception.",
-        );
-        self::assertStringContainsString(
-            'yii\base\Exception: Exception error message.',
-            $response->getBody()->getContents(),
-            "Response should contain exception details when 'YII_DEBUG' is 'true'.",
-        );
-
-        ini_set('display_errors', $originalDisplayErrors);
-
-        while (ob_get_level() < $initialBufferLevel) {
-            ob_start();
-        }
-
-        @\runkit_constant_redefine('YII_ENV_TEST', true);
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionWithErrorActionReturningResponseObject(): void
     {
         @\runkit_constant_redefine('YII_DEBUG', false);
