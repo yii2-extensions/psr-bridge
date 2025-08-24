@@ -22,7 +22,6 @@ use yii2\extensions\psrbridge\tests\TestCase;
 use function array_filter;
 use function dirname;
 use function str_contains;
-use function str_starts_with;
 
 #[Group('http')]
 final class ApplicationCoreTest extends TestCase
@@ -118,7 +117,7 @@ final class ApplicationCoreTest extends TestCase
         // access the Response component to test adapter behavior
         $bridgeResponse1 = $app->response;
 
-        // get PSR-7 response twice to test caching
+        // get PSR-7 Response twice to test caching
         $bridgeResponse1->getPsr7Response();
 
         $adapter1 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
@@ -185,15 +184,15 @@ final class ApplicationCoreTest extends TestCase
         self::assertNotSame(
             $adapter3,
             $adapter4,
-            "'reset()' should force creation of a new adapter instance, resulting in different PSR-7 response " .
-            'objects before and after reset.',
+            "'reset()' should force creation of a new adapter instance; the cached adapter before and after reset " .
+            'must be different.',
         );
 
         // third request - verify adapter isolation between requests
         $_COOKIE = ['test_cookie' => 'test_value'];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/cookie',
+            'REQUEST_URI' => 'site/add-cookies-to-response',
         ];
 
         $response3 = $app->handle(
@@ -203,12 +202,12 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             200,
             $response3->getStatusCode(),
-            "Expected HTTP '200' for route 'site/cookie'.",
+            "Expected HTTP '200' for route 'site/add-cookies-to-response'.",
         );
         self::assertSame(
             'text/html; charset=UTF-8',
             $response3->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/cookie'.",
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/add-cookies-to-response'.",
         );
 
         $bridgeResponse3 = $app->response;
@@ -224,26 +223,23 @@ final class ApplicationCoreTest extends TestCase
             'Each request should get its own adapter instance, confirming adapter isolation between requests.',
         );
 
+        $cookieHeaders = $response3->getHeader('Set-Cookie');
+
         // verify response headers are preserved correctly across adapter operations
-        $cookieHeaders = array_filter(
-            $response3->getHeader('Set-Cookie'),
-            static fn(string $header): bool => str_starts_with($header, $app->session->getName()) === false,
-        );
-
-        $hasCookieHeader = false;
-
-        foreach ($cookieHeaders as $header) {
-            if (str_contains($header, 'test=test') || str_contains($header, 'test2=test2')) {
-                $hasCookieHeader = true;
-
-                break;
-            }
-        }
+        $hasCookieHeader = array_filter(
+            $cookieHeaders,
+            static fn(string $h): bool => str_contains($h, 'test=test') || str_contains($h, 'test2=test2'),
+        ) !== [];
 
         self::assertTrue(
             $hasCookieHeader,
-            "PSR-7 response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
+            "PSR-7 Response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
             'adapter behavior.',
+        );
+        self::assertSame(
+            'test=test; Path=/; HttpOnly; SameSite=Lax test2=test2; Path=/; HttpOnly; SameSite=Lax',
+            implode(' ', $cookieHeaders),
+            'PSR-7 Response Set-Cookie headers should match the expected values, confirming correct adapter behavior.',
         );
     }
 

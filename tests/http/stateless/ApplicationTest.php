@@ -10,13 +10,10 @@ use yii2\extensions\psrbridge\http\StatelessApplication;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
-use function explode;
 use function ini_get;
 use function ini_set;
 use function ob_get_level;
 use function ob_start;
-use function sprintf;
-use function str_starts_with;
 
 #[Group('http')]
 final class ApplicationTest extends TestCase
@@ -84,79 +81,6 @@ final class ApplicationTest extends TestCase
             }
 
             @\runkit_constant_redefine('YII_ENV_TEST', true);
-        }
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnCookiesHeadersForSiteCookieRoute(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/cookie',
-        ];
-
-        $app = $this->statelessApplication();
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for 'site/cookie' route in 'StatelessApplication'.",
-        );
-
-        foreach ($response->getHeader('Set-Cookie') as $cookie) {
-            // skip the session cookie header
-            if (str_starts_with($cookie, $app->session->getName()) === false) {
-                $params = explode('; ', $cookie);
-
-                self::assertContains(
-                    $params[0],
-                    [
-                        'test=test',
-                        'test2=test2',
-                    ],
-                    sprintf(
-                        "Cookie header should contain either 'test=test' or 'test2=test2', got '%s' for " .
-                        "'site/cookie' route.",
-                        $params[0],
-                    ),
-                );
-                self::assertStringContainsString(
-                    'Path=/',
-                    $cookie,
-                    "Cookie header should contain 'Path=/' for 'site/cookie' route.",
-                );
-                self::assertStringNotContainsString(
-                    'Secure',
-                    $cookie,
-                    sprintf(
-                        "Cookie header should not contain 'Secure' flag for '%s', got '%s' for 'site/cookie' route.",
-                        $params[0],
-                        $cookie,
-                    ),
-                );
-                self::assertStringNotContainsString(
-                    'HttpOnly',
-                    $cookie,
-                    sprintf(
-                        "Cookie header should not contain 'HttpOnly' flag for '%s', got '%s' for 'site/cookie' route.",
-                        $params[0],
-                        $cookie,
-                    ),
-                );
-                self::assertStringContainsString(
-                    'SameSite=Lax',
-                    $cookie,
-                    sprintf(
-                        "Cookie header should contain 'SameSite=Lax' for '%s', got '%s' for 'site/cookie' route.",
-                        $params[0],
-                        $cookie,
-                    ),
-                );
-            }
         }
     }
 
