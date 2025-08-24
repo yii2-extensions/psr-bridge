@@ -94,7 +94,7 @@ final class ApplicationRoutingTest extends TestCase
 
         $response = $app->handle(
             FactoryHelper::createRequest(
-               method: 'GET',
+                method: 'GET',
                 uri: '/site/query/foo?q=1',
             ),
         );
