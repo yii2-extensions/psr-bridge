@@ -192,7 +192,7 @@ final class ApplicationCoreTest extends TestCase
         $_COOKIE = ['test_cookie' => 'test_value'];
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/add-response-for-cookie',
+            'REQUEST_URI' => 'site/add-cookies-to-response',
         ];
 
         $response3 = $app->handle(
@@ -202,12 +202,12 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             200,
             $response3->getStatusCode(),
-            "Expected HTTP '200' for route 'site/add-response-for-cookie'.",
+            "Expected HTTP '200' for route 'site/add-cookies-to-response'.",
         );
         self::assertSame(
             'text/html; charset=UTF-8',
             $response3->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/add-response-for-cookie'.",
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/add-cookies-to-response'.",
         );
 
         $bridgeResponse3 = $app->response;

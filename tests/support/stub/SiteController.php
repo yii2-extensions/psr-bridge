@@ -23,7 +23,7 @@ final class SiteController extends Controller
      */
     private const MOCK_TIME = 1755867797;
 
-    public function actionAddResponseForCookie(): void
+    public function actionAddCookiesToResponse(): void
     {
         $this->response->cookies->add(
             new Cookie(
