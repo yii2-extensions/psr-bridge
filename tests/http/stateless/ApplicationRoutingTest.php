@@ -17,20 +17,19 @@ final class ApplicationRoutingTest extends TestCase
      */
     public function testHandlePostParameters(): void
     {
-        $_POST = [
-            'foo' => 'bar',
-            'a' => [
-                'b' => 'c',
-            ],
-        ];
-        $_SERVER = [
-            'REQUEST_METHOD' => 'POST',
-            'REQUEST_URI' => 'site/post',
-        ];
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(
+            FactoryHelper::createRequest(
+                method: 'POST',
+                uri: '/site/post',
+                headers: ['Content-Type' => 'application/x-www-form-urlencoded'],
+                parsedBody: [
+                    'foo' => 'bar',
+                    'a' => ['b' => 'c'],
+                ],
+            ),
+        );
 
         self::assertSame(
             200,
@@ -42,7 +41,7 @@ final class ApplicationRoutingTest extends TestCase
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/post'.",
         );
-        self::assertSame(
+        self::assertJsonStringEqualsJsonString(
             <<<JSON
             {"foo":"bar","a":{"b":"c"}}
             JSON,
@@ -57,20 +56,14 @@ final class ApplicationRoutingTest extends TestCase
      */
     public function testHandleQueryParameters(): void
     {
-        $_GET = [
-            'foo' => 'bar',
-            'a' => [
-                'b' => 'c',
-            ],
-        ];
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/get',
-        ];
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(
+            FactoryHelper::createRequest(
+                method: 'GET',
+                uri: '/site/get?foo=bar&a[b]=c',
+            ),
+        );
 
         self::assertSame(
             200,
@@ -82,7 +75,7 @@ final class ApplicationRoutingTest extends TestCase
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/get'.",
         );
-        self::assertSame(
+        self::assertJsonStringEqualsJsonString(
             <<<JSON
             {"foo":"bar","a":{"b":"c"}}
             JSON,
@@ -97,15 +90,14 @@ final class ApplicationRoutingTest extends TestCase
      */
     public function testHandleRouteAndQueryParameters(): void
     {
-        $_GET = ['q' => '1'];
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/query/foo?q=1',
-        ];
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(
+            FactoryHelper::createRequest(
+               method: 'GET',
+                uri: '/site/query/foo?q=1',
+            ),
+        );
 
         self::assertSame(
             200,
@@ -117,8 +109,10 @@ final class ApplicationRoutingTest extends TestCase
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/query/foo?q=1'.",
         );
-        self::assertSame(
-            '{"test":"foo","q":"1","queryParams":{"test":"foo","q":"1"}}',
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"test":"foo","q":"1","queryParams":{"test":"foo","q":"1"}}
+            JSON,
             $response->getBody()->getContents(),
             "Response body should contain valid JSON with route and query parameters for 'site/query/foo?q=1' route.",
         );
@@ -129,12 +123,7 @@ final class ApplicationRoutingTest extends TestCase
      */
     public function testHandleRouteParameters(): void
     {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/update/123',
-        ];
-
-        $request = FactoryHelper::createServerRequestCreator()->createFromGlobals();
+        $request = FactoryHelper::createRequest(method: 'GET', uri: 'site/update/123');
 
         $app = $this->statelessApplication();
 
