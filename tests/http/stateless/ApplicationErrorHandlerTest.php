@@ -525,4 +525,47 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         @\runkit_constant_redefine('YII_DEBUG', true);
     }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnHtmlErrorResponseWhenErrorHandlerActionIsInvalid(): void
+    {
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/nonexistent-action',
+        ];
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => ['errorAction' => 'invalid/nonexistent-action'],
+                ],
+            ],
+        );
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/nonexistent-action'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/nonexistent-action'.",
+        );
+        self::assertStringContainsString(
+            self::normalizeLineEndings(
+                <<<HTML
+                <pre>An Error occurred while handling another error:
+                yii\base\InvalidRouteException: Unable to resolve the request &quot;invalid/nonexistent-action&quot;.
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
+            "Response body should contain error message about 'An Error occurred while handling another error' and " .
+            'the InvalidRouteException when errorHandler action is invalid.',
+        );
+    }
 }

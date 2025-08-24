@@ -102,53 +102,6 @@ final class ApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnHtmlErrorResponseWhenErrorHandlerActionIsInvalid(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/nonexistent-action',
-        ];
-
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'errorHandler' => [
-                        'errorAction' => 'invalid/nonexistent-action',
-                    ],
-                ],
-            ],
-        );
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Response 'status code' should be '500' when 'ErrorHandler' is misconfigured and a nonexistent action is " .
-            "requested in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'text/html; charset=UTF-8' for error response when ErrorHandler " .
-            "action is invalid in 'StatelessApplication'.",
-        );
-        self::assertStringContainsString(
-            self::normalizeLineEndings(
-                <<<HTML
-                <pre>An Error occurred while handling another error:
-                yii\base\InvalidRouteException: Unable to resolve the request &quot;invalid/nonexistent-action&quot;.
-                HTML,
-            ),
-            self::normalizeLineEndings($response->getBody()->getContents()),
-            "Response 'body' should contain error message about 'An Error occurred while handling another error' and " .
-            "the InvalidRouteException when errorHandler action is invalid in 'StatelessApplication'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testReturnJsonResponseWithPostParametersForSitePostRoute(): void
     {
         $_POST = [
