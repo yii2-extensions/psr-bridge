@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, TestWith};
-use yii\base\{InvalidConfigException};
+use PHPUnit\Framework\Attributes\{Group, TestWith};
+use yii\base\InvalidConfigException;
 use yii\web\NotFoundHttpException;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\StatelessApplication;
@@ -24,56 +24,6 @@ final class ApplicationTest extends TestCase
         $this->closeApplication();
 
         parent::tearDown();
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    #[RequiresPhpExtension('runkit7')]
-    public function testRenderExceptionWithErrorActionReturningResponseObject(): void
-    {
-        @\runkit_constant_redefine('YII_DEBUG', false);
-
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
-
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'errorHandler' => [
-                        'errorAction' => 'site/error-with-response',
-                    ],
-                ],
-            ],
-        );
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Response 'status code' should be '500' when 'errorAction' returns Response object.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'text/html; charset=UTF-8' when 'errorAction' returns Response object.",
-        );
-        self::assertSame(
-            self::normalizeLineEndings(
-                <<<HTML
-                <div id="custom-response-error">
-                Custom Response object from error action: Exception error message.
-                </div>
-                HTML,
-            ),
-            self::normalizeLineEndings($response->getBody()->getContents()),
-            "Response 'body' should contain content from Response object returned by 'errorAction'.",
-        );
-
-        @\runkit_constant_redefine('YII_DEBUG', true);
     }
 
     /**

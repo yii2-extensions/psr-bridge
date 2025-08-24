@@ -473,4 +473,54 @@ final class ApplicationErrorHandlerTest extends TestCase
             );
         }
     }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[RequiresPhpExtension('runkit7')]
+    public function testRenderExceptionWithErrorActionReturningResponseObject(): void
+    {
+        @\runkit_constant_redefine('YII_DEBUG', false);
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'site/error-with-response',
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/trigger-exception'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
+        );
+        self::assertSame(
+            self::normalizeLineEndings(
+                <<<HTML
+                <div id="custom-response-error">
+                Custom Response object from error action: Exception error message.
+                </div>
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
+            "Response body should contain content from Response object returned by 'errorAction'.",
+        );
+
+        @\runkit_constant_redefine('YII_DEBUG', true);
+    }
 }
