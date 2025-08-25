@@ -668,5 +668,4 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         $app->request->resolve();
     }
-
 }
