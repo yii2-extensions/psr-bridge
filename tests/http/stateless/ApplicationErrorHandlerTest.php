@@ -13,6 +13,7 @@ use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
@@ -355,6 +356,8 @@ final class ApplicationErrorHandlerTest extends TestCase
     public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
     {
         @\runkit_constant_redefine('YII_ENV_TEST', false);
+
+        MockerFunctions::setObEndCleanShouldFail(true);
 
         $bufferBeforeLevel = ob_get_level();
 
