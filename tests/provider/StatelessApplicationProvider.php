@@ -385,4 +385,68 @@ final class StatelessApplicationProvider
             ],
         ];
     }
+
+    /**
+     * @phpstan-return array<array{int|string, string|null, string}>
+     */
+    public static function remoteIPAddresses(): array
+    {
+        return [
+            'empty string' => [
+                '',
+                null,
+                "'getRemoteIP()' should return 'null' for empty IP address string.",
+            ],
+            'invalid IP address format' => [
+                '999.999.999.999',
+                null,
+                "'getRemoteIP()' should return 'null' for invalid IPv4 address '999.999.999.999'.",
+            ],
+            'malformed IPv6 address' => [
+                '2001:0db8:85a3::8a2e::7334',
+                null,
+                "'getRemoteIP()' should return 'null' for malformed IPv6 address '2001:0db8:85a3::8a2e::7334'.",
+            ],
+            'non-IP integer' => [
+                123456,
+                null,
+                "'getRemoteIP()' should return 'null' for non-IP integer '123456'.",
+            ],
+            'non-IP string' => [
+                'localhost',
+                null,
+                "'getRemoteIP()' should return 'null' for non-IP string 'localhost'.",
+            ],
+            'valid IPv4 address' => [
+                '192.168.1.1',
+                '192.168.1.1',
+                "'getRemoteIP()' should return '192.168.1.1' for valid IPv4 address.",
+            ],
+            'valid IPv4 loopback address' => [
+                '127.0.0.1',
+                '127.0.0.1',
+                "'getRemoteIP()' should return '127.0.0.1' for valid IPv4 loopback address.",
+            ],
+            'valid IPv6 address' => [
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                "'getRemoteIP()' should return '2001:0db8:85a3:0000:0000:8a2e:0370:7334' for valid IPv6 address.",
+            ],
+            'valid IPv6 compressed address' => [
+                '2001:db8::8a2e:370:7334',
+                '2001:db8::8a2e:370:7334',
+                "'getRemoteIP()' should return '2001:db8::8a2e:370:7334' for valid compressed IPv6 address.",
+            ],
+            'valid IPv6 loopback address' => [
+                '::1',
+                '::1',
+                "'getRemoteIP()' should return '::1' for valid IPv6 loopback address.",
+            ],
+            'valid public IPv4 address' => [
+                '8.8.8.8',
+                '8.8.8.8',
+                "'getRemoteIP()' should return '8.8.8.8' for valid public IPv4 address.",
+            ],
+        ];
+    }
 }
