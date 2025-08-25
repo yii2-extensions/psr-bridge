@@ -386,7 +386,6 @@ final class StatelessApplicationProvider
         ];
     }
 
-
     /**
      * @phpstan-return array<array{0: string, 1: string|null, 2: string}>
      */
