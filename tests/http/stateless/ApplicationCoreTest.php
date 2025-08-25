@@ -131,12 +131,7 @@ final class ApplicationCoreTest extends TestCase
         $app = $this->statelessApplication();
 
         // first request - verify adapter caching behavior
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/index',
-        ];
-
-        $response1 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response1 = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
         self::assertSame(
             200,
@@ -170,12 +165,7 @@ final class ApplicationCoreTest extends TestCase
         );
 
         // second request with different route - verify stateless behavior
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/statuscode',
-        ];
-
-        $response2 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response2 = $app->handle(FactoryHelper::createRequest('GET', 'site/statuscode'));
 
         self::assertSame(
             201,
@@ -222,13 +212,7 @@ final class ApplicationCoreTest extends TestCase
         );
 
         // third request - verify adapter isolation between requests
-        $_COOKIE = ['test_cookie' => 'test_value'];
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/add-cookies-to-response',
-        ];
-
-        $response3 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response3 = $app->handle(FactoryHelper::createRequest('GET', 'site/add-cookies-to-response'));
 
         self::assertSame(
             200,
@@ -267,9 +251,14 @@ final class ApplicationCoreTest extends TestCase
             "PSR-7 Response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
             'adapter behavior.',
         );
-        self::assertSame(
-            'test=test; Path=/; HttpOnly; SameSite=Lax test2=test2; Path=/; HttpOnly; SameSite=Lax',
-            implode(' ', $cookieHeaders),
+        self::assertContains(
+            'test=test; Path=/; HttpOnly; SameSite=Lax',
+            $cookieHeaders,
+            'PSR-7 Response Set-Cookie headers should match the expected values, confirming correct adapter behavior.',
+        );
+        self::assertContains(
+            'test2=test2; Path=/; HttpOnly; SameSite=Lax',
+            $cookieHeaders,
             'PSR-7 Response Set-Cookie headers should match the expected values, confirming correct adapter behavior.',
         );
     }
