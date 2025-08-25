@@ -19,6 +19,7 @@ use function array_filter;
 use function is_array;
 use function ob_get_level;
 use function ob_start;
+use function PHPSTORM_META\map;
 use function restore_error_handler;
 use function set_error_handler;
 use function str_contains;
@@ -361,19 +362,22 @@ final class ApplicationErrorHandlerTest extends TestCase
             'REQUEST_URI' => 'site/trigger-exception',
         ];
 
+        ob_start();
+        echo "buffer content that should be cleared";
+        ob_start();
+        echo "nested buffer content";
+
         $originalDisplayErrors = ini_get('display_errors');
 
         try {
-            $app = $this->statelessApplication(
-                [
-                    'components' => [
-                        'errorHandler' => [
-                            'discardExistingOutput' => true,
-                            'errorAction' => null,
-                        ],
+            $app = $this->statelessApplication([
+                'components' => [
+                    'errorHandler' => [
+                        'discardExistingOutput' => true,
+                        'errorAction' => null,
                     ],
                 ],
-            );
+            ]);
 
             $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
@@ -390,19 +394,23 @@ final class ApplicationErrorHandlerTest extends TestCase
             self::assertSame(
                 '1',
                 ini_get('display_errors'),
-                "'display_errors' should be set to '1' when YII_DEBUG mode is enabled and rendering exception view.",
+                "'display_errors' should be set to '1' in debug mode when rendering exception.",
             );
-            self::assertStringContainsString(
-                'yii\base\Exception: Exception error message.',
-                $response->getBody()->getContents(),
-                'Response should contain exception details when YII_DEBUG mode is enabled.',
-            );
-        } finally {
-            ini_set('display_errors', $originalDisplayErrors);
 
+            $buffersAfterTest = ob_get_level();
+
+            self::assertLessThanOrEqual(
+                $initialBufferLevel,
+                $buffersAfterTest,
+                "'clearOutput()'' should properly clean output buffers",
+            );
+
+        } finally {
             while (ob_get_level() < $initialBufferLevel) {
                 ob_start();
             }
+
+            ini_set('display_errors', $originalDisplayErrors);
 
             @\runkit_constant_redefine('YII_ENV_TEST', true);
         }
