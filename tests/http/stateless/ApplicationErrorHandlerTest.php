@@ -354,7 +354,7 @@ final class ApplicationErrorHandlerTest extends TestCase
     {
         @\runkit_constant_redefine('YII_ENV_TEST', false);
 
-        $initialBufferLevel = ob_get_level();
+        $bufferBeforeLevel = ob_get_level();
 
         $_SERVER = [
             'REQUEST_METHOD' => 'GET',
@@ -368,50 +368,56 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         $originalDisplayErrors = ini_get('display_errors');
 
-        try {
-            $app = $this->statelessApplication([
+        $app = $this->statelessApplication(
+            [
                 'components' => [
                     'errorHandler' => [
                         'discardExistingOutput' => true,
                         'errorAction' => null,
                     ],
                 ],
-            ]);
+            ],
+        );
 
-            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
-            self::assertSame(
-                500,
-                $response->getStatusCode(),
-                "Expected HTTP '500' for route 'site/trigger-exception'.",
-            );
-            self::assertSame(
-                'text/html; charset=UTF-8',
-                $response->getHeaderLine('Content-Type'),
-                "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
-            );
-            self::assertSame(
-                '1',
-                ini_get('display_errors'),
-                "'display_errors' should be set to '1' in debug mode when rendering exception.",
-            );
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/trigger-exception'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
+        );
+        self::assertSame(
+            '1',
+            ini_get('display_errors'),
+            "'display_errors' should be set to '1' in debug mode when rendering exception.",
+        );
 
-            $buffersAfterTest = ob_get_level();
+        $bufferAfterLevel = ob_get_level();
 
-            self::assertLessThanOrEqual(
-                $initialBufferLevel,
-                $buffersAfterTest,
-                "'clearOutput()'' should properly clean output buffers",
-            );
-        } finally {
-            while (ob_get_level() < $initialBufferLevel) {
-                ob_start();
-            }
+        self::assertLessThanOrEqual(
+            $bufferBeforeLevel,
+            $bufferAfterLevel,
+            "'clearOutput()' should properly clean output buffers",
+        );
 
-            ini_set('display_errors', $originalDisplayErrors);
-
-            @\runkit_constant_redefine('YII_ENV_TEST', true);
+        while (ob_get_level() < $bufferBeforeLevel) {
+            ob_start();
         }
+
+        self::assertSame(
+            $bufferBeforeLevel,
+            ob_get_level(),
+            'Output buffers should be restored to initial level.',
+        );
+
+        ini_set('display_errors', $originalDisplayErrors);
+
+        @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
     /**
