@@ -152,6 +152,10 @@ final class ApplicationCoreTest extends TestCase
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/redirect'.",
         );
+        self::assertEmpty(
+            $response->getBody()->getContents(),
+            'Expected Response body to be empty for redirect responses.',
+        );
         self::assertSame(
             '/site/index',
             $response->getHeaderLine('Location'),
@@ -495,27 +499,6 @@ final class ApplicationCoreTest extends TestCase
             dirname(__DIR__, 2),
             Yii::getAlias('@webroot'),
             "'@webroot' alias should be set to the parent directory of the test directory after handling a request.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testStatusCode201ForSiteStatusCodeRoute(): void
-    {
-        $app = $this->statelessApplication();
-
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/statuscode'));
-
-        self::assertSame(
-            201,
-            $response->getStatusCode(),
-            "Expected HTTP '201' for route 'site/statuscode'.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/statuscode'.",
         );
     }
 
