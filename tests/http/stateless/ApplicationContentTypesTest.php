@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
+use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+#[Group('http')]
 final class ApplicationContentTypesTest extends TestCase
 {
     /**
