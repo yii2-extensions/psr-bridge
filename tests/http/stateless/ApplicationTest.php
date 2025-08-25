@@ -140,34 +140,6 @@ final class ApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnsJsonResponse(): void
-    {
-        $app = $this->statelessApplication();
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Response 'status code' should be '200' for successful 'StatelessApplication' handling.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Response 'Content-Type' should be 'application/json; charset=UTF-8' for JSON output.",
-        );
-        self::assertSame(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Response 'body' should match expected JSON string '{\"hello\":\"world\"}'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testReturnsStatusCode201ForSiteStatusCodeRoute(): void
     {
         $_SERVER = [

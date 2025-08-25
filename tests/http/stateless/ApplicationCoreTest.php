@@ -115,6 +115,13 @@ final class ApplicationCoreTest extends TestCase
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
         );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
         self::assertSame(
             ['before', 'after'],
             $sequence,
@@ -142,6 +149,13 @@ final class ApplicationCoreTest extends TestCase
             'application/json; charset=UTF-8',
             $response1->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response1->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
         );
 
         // access the Response component to test adapter behavior
@@ -340,6 +354,13 @@ final class ApplicationCoreTest extends TestCase
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
         );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
 
         $psr7Request = $app->request->getPsr7Request();
         $statelessAppStartTime = $psr7Request->getHeaderLine('statelessAppStartTime');
@@ -373,6 +394,13 @@ final class ApplicationCoreTest extends TestCase
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
         );
         self::assertSame(
             '',
@@ -419,6 +447,13 @@ final class ApplicationCoreTest extends TestCase
             'application/json; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
         );
         self::assertSame(
             1,
