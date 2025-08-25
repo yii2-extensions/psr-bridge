@@ -13,7 +13,7 @@ final class ApplicationContentTypesTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testFileDownloadResponse(): void
+    public function testFileDownloadWhenRequestingFileRoute(): void
     {
         $app = $this->statelessApplication();
 
@@ -32,12 +32,38 @@ final class ApplicationContentTypesTest extends TestCase
         self::assertSame(
             'This is a test file content.',
             $response->getBody()->getContents(),
-            "Expected response 'body' to match plain text 'This is a test file content.'.",
+            "Expected Response body to match plain text 'This is a test file content.'.",
         );
         self::assertSame(
             'attachment; filename="testfile.txt"',
             $response->getHeaderLine('Content-Disposition'),
             "Expected Content-Disposition 'attachment; filename=\"testfile.txt\"'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testStreamContentWhenRequestingStreamRoute(): void
+    {
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/stream'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/stream'.",
+        );
+        self::assertSame(
+            'text/plain',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/plain' for route 'site/stream'.",
+        );
+        self::assertSame(
+            'This is a test file content.',
+            $response->getBody()->getContents(),
+            "Expected Response body to match plain text 'This is a test file content.'.",
         );
     }
 }
