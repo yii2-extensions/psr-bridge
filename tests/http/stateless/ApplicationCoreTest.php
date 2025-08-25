@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
-use PHPUnit\Framework\Attributes\{Group, TestWith};
+use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, TestWith};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
 use Yii;
@@ -21,6 +21,10 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
 use function dirname;
+use function ini_get;
+use function ini_set;
+use function ob_get_level;
+use function ob_start;
 use function str_contains;
 
 #[Group('http')]
@@ -127,6 +131,90 @@ final class ApplicationCoreTest extends TestCase
             $sequence,
             "BEFORE should precede AFTER during 'handle()'.",
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testRedirectWhenRouteIsSiteRedirect(): void
+    {
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/redirect'));
+
+        self::assertSame(
+            302,
+            $response->getStatusCode(),
+            "Expected HTTP '302' for route 'site/redirect'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/redirect'.",
+        );
+        self::assertEmpty(
+            $response->getBody()->getContents(),
+            'Expected Response body to be empty for redirect responses.',
+        );
+        self::assertSame(
+            '/site/index',
+            $response->getHeaderLine('Location'),
+            "Expected redirect to '/site/index'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[RequiresPhpExtension('runkit7')]
+    public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
+    {
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
+
+        $initialBufferLevel = ob_get_level();
+
+        $originalDisplayErrors = ini_get('display_errors');
+
+        try {
+            $app = $this->statelessApplication(
+                [
+                    'components' => [
+                        'errorHandler' => ['errorAction' => null],
+                    ],
+                ],
+            );
+
+            $response = $app->handle(FactoryHelper::createRequest('GET', 'site/trigger-exception'));
+
+            self::assertSame(
+                500,
+                $response->getStatusCode(),
+                "Expected HTTP '500' for route 'site/trigger-exception'.",
+            );
+            self::assertSame(
+                'text/html; charset=UTF-8',
+                $response->getHeaderLine('Content-Type'),
+                "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
+            );
+            self::assertSame(
+                '1',
+                ini_get('display_errors'),
+                "'display_errors' should be set to '1' when YII_DEBUG mode is enabled and rendering exception view.",
+            );
+            self::assertStringContainsString(
+                'yii\base\Exception: Exception error message.',
+                $response->getBody()->getContents(),
+                'Response should contain exception details when YII_DEBUG mode is enabled.',
+            );
+        } finally {
+            ini_set('display_errors', $originalDisplayErrors);
+
+            while (ob_get_level() < $initialBufferLevel) {
+                ob_start();
+            }
+
+            @\runkit_constant_redefine('YII_ENV_TEST', true);
+        }
     }
 
     /**
