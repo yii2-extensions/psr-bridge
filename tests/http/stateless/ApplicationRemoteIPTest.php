@@ -17,8 +17,8 @@ final class ApplicationRemoteIPTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'remoteIPAddresses')]
-    public function testReturnValidRemoteIPForIPv4AndIPv6Addresses(
-        string $remoteAddr,
+    public function testGetRemoteIPHandlesValidAndInvalidAddresses(
+        int|string $remoteAddr,
         string|null $expectedIP,
         string $assertionMessage,
     ): void {

@@ -387,7 +387,7 @@ final class StatelessApplicationProvider
     }
 
     /**
-     * @phpstan-return array<array{string, string|null, string}>
+     * @phpstan-return array<array{int|string, string|null, string}>
      */
     public static function remoteIPAddresses(): array
     {
@@ -406,6 +406,11 @@ final class StatelessApplicationProvider
                 '2001:0db8:85a3::8a2e::7334',
                 null,
                 "'getRemoteIP()' should return 'null' for malformed IPv6 address '2001:0db8:85a3::8a2e::7334'.",
+            ],
+            'non-IP integer' => [
+                123456,
+                null,
+                "'getRemoteIP()' should return 'null' for non-IP integer '123456'.",
             ],
             'non-IP string' => [
                 'localhost',
