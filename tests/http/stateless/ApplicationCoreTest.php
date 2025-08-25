@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{Group, TestWith};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
 use Yii;
@@ -14,7 +14,7 @@ use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
 use yii\web\{AssetManager, Session, UrlManager, User, View};
-use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
+use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response, StatelessApplication};
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -359,5 +359,28 @@ final class ApplicationCoreTest extends TestCase
             Yii::getAlias('@webroot'),
             "'@webroot' alias should be set to the parent directory of the test directory after handling a request.",
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith([StatelessApplication::EVENT_AFTER_REQUEST])]
+    #[TestWith([StatelessApplication::EVENT_BEFORE_REQUEST])]
+    public function testTriggerEventDuringHandle(string $eventName): void
+    {
+        $eventTriggered = false;
+
+        $app = $this->statelessApplication();
+
+        $app->on(
+            $eventName,
+            static function () use (&$eventTriggered): void {
+                $eventTriggered = true;
+            },
+        );
+
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
     }
 }
