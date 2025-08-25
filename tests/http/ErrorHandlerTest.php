@@ -70,6 +70,7 @@ final class ErrorHandlerTest extends TestCase
             }
         }
     }
+
     #[RequiresPhpExtension('runkit7')]
     public function testClearOutputCleansAllBuffersInNonTestEnvironment(): void
     {
