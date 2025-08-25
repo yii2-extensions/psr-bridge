@@ -99,9 +99,7 @@ final class ApplicationCoreTest extends TestCase
             'REQUEST_URI' => 'site/index',
         ];
 
-        $response1 = $app->handle(
-            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
-        );
+        $response1 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -140,9 +138,7 @@ final class ApplicationCoreTest extends TestCase
             'REQUEST_URI' => 'site/statuscode',
         ];
 
-        $response2 = $app->handle(
-            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
-        );
+        $response2 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             201,
@@ -195,9 +191,7 @@ final class ApplicationCoreTest extends TestCase
             'REQUEST_URI' => 'site/add-cookies-to-response',
         ];
 
-        $response3 = $app->handle(
-            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
-        );
+        $response3 = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -306,14 +300,9 @@ final class ApplicationCoreTest extends TestCase
 
         MockerFunctions::setMockedMicrotime($mockedTime);
 
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/index',
-        ];
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
         self::assertSame(
             200,
@@ -347,8 +336,18 @@ final class ApplicationCoreTest extends TestCase
     {
         $app = $this->statelessApplication();
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
         self::assertSame(
             '',
             Yii::getAlias('@web'),
@@ -370,20 +369,77 @@ final class ApplicationCoreTest extends TestCase
     {
         $invocations = 0;
         $sender = null;
+        $sequence = [];
 
         $app = $this->statelessApplication();
 
         $app->on(
             $eventName,
-            static function (Event $event) use (&$invocations, &$sender): void {
+            static function (Event $event) use (&$invocations, &$sequence, &$sender): void {
                 $invocations++;
                 $sender = $event->sender ?? null;
+                $sequence[] = $event->name;
             },
         );
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(1, $invocations, "Should trigger '{$eventName}' exactly once during handle().");
-        self::assertSame($app, $sender, 'Event sender should be the application instance.');
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertSame(
+            1,
+            $invocations,
+            "Should trigger '{$eventName}' exactly once during 'handle()'.",
+        );
+        self::assertSame(
+            $app,
+            $sender,
+            'Event sender should be the application instance.',
+        );
+    }
+
+    public function testEventOrderDuringHandle(): void
+    {
+        $app = $this->statelessApplication();
+        $sequence = [];
+
+        $app->on(
+            StatelessApplication::EVENT_BEFORE_REQUEST,
+            static function () use (&$sequence): void {
+                $sequence[] = 'before';
+            },
+        );
+        $app->on(
+            StatelessApplication::EVENT_AFTER_REQUEST,
+            static function () use (&$sequence): void {
+                $sequence[] = 'after';
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertSame(
+            ['before', 'after'],
+            $sequence,
+            "BEFORE should precede AFTER during 'handle()'.",
+        );
     }
 }
