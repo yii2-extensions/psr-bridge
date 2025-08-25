@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{Group, TestWith};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
 use Yii;
-use yii\base\{InvalidConfigException, Security};
+use yii\base\{Event, InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
 use yii\web\{AssetManager, Session, UrlManager, User, View};
-use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
+use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response, StatelessApplication};
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -85,6 +85,43 @@ final class ApplicationCoreTest extends TestCase
         );
     }
 
+    public function testEventOrderDuringHandle(): void
+    {
+        $app = $this->statelessApplication();
+        $sequence = [];
+
+        $app->on(
+            StatelessApplication::EVENT_BEFORE_REQUEST,
+            static function () use (&$sequence): void {
+                $sequence[] = 'before';
+            },
+        );
+        $app->on(
+            StatelessApplication::EVENT_AFTER_REQUEST,
+            static function () use (&$sequence): void {
+                $sequence[] = 'after';
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertSame(
+            ['before', 'after'],
+            $sequence,
+            "BEFORE should precede AFTER during 'handle()'.",
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if the property does not exist or is inaccessible.
@@ -94,14 +131,7 @@ final class ApplicationCoreTest extends TestCase
         $app = $this->statelessApplication();
 
         // first request - verify adapter caching behavior
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/index',
-        ];
-
-        $response1 = $app->handle(
-            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
-        );
+        $response1 = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
         self::assertSame(
             200,
@@ -135,14 +165,7 @@ final class ApplicationCoreTest extends TestCase
         );
 
         // second request with different route - verify stateless behavior
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/statuscode',
-        ];
-
-        $response2 = $app->handle(
-            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
-        );
+        $response2 = $app->handle(FactoryHelper::createRequest('GET', 'site/statuscode'));
 
         self::assertSame(
             201,
@@ -189,15 +212,7 @@ final class ApplicationCoreTest extends TestCase
         );
 
         // third request - verify adapter isolation between requests
-        $_COOKIE = ['test_cookie' => 'test_value'];
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/add-cookies-to-response',
-        ];
-
-        $response3 = $app->handle(
-            FactoryHelper::createServerRequestCreator()->createFromGlobals(),
-        );
+        $response3 = $app->handle(FactoryHelper::createRequest('GET', 'site/add-cookies-to-response'));
 
         self::assertSame(
             200,
@@ -236,9 +251,14 @@ final class ApplicationCoreTest extends TestCase
             "PSR-7 Response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
             'adapter behavior.',
         );
-        self::assertSame(
-            'test=test; Path=/; HttpOnly; SameSite=Lax test2=test2; Path=/; HttpOnly; SameSite=Lax',
-            implode(' ', $cookieHeaders),
+        self::assertContains(
+            'test=test; Path=/; HttpOnly; SameSite=Lax',
+            $cookieHeaders,
+            'PSR-7 Response Set-Cookie headers should match the expected values, confirming correct adapter behavior.',
+        );
+        self::assertContains(
+            'test2=test2; Path=/; HttpOnly; SameSite=Lax',
+            $cookieHeaders,
             'PSR-7 Response Set-Cookie headers should match the expected values, confirming correct adapter behavior.',
         );
     }
@@ -306,14 +326,9 @@ final class ApplicationCoreTest extends TestCase
 
         MockerFunctions::setMockedMicrotime($mockedTime);
 
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/index',
-        ];
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
         self::assertSame(
             200,
@@ -347,8 +362,18 @@ final class ApplicationCoreTest extends TestCase
     {
         $app = $this->statelessApplication();
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
         self::assertSame(
             '',
             Yii::getAlias('@web'),
@@ -358,6 +383,52 @@ final class ApplicationCoreTest extends TestCase
             dirname(__DIR__, 2),
             Yii::getAlias('@webroot'),
             "'@webroot' alias should be set to the parent directory of the test directory after handling a request.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith([StatelessApplication::EVENT_AFTER_REQUEST])]
+    #[TestWith([StatelessApplication::EVENT_BEFORE_REQUEST])]
+    public function testTriggerEventDuringHandle(string $eventName): void
+    {
+        $invocations = 0;
+        $sender = null;
+        $sequence = [];
+
+        $app = $this->statelessApplication();
+
+        $app->on(
+            $eventName,
+            static function (Event $event) use (&$invocations, &$sequence, &$sender): void {
+                $invocations++;
+                $sender = $event->sender ?? null;
+                $sequence[] = $event->name;
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertSame(
+            1,
+            $invocations,
+            "Should trigger '{$eventName}' exactly once during 'handle()'.",
+        );
+        self::assertSame(
+            $app,
+            $sender,
+            'Event sender should be the application instance.',
         );
     }
 }

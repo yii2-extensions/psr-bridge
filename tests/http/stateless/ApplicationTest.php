@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, TestWith};
+use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use yii\base\InvalidConfigException;
-use yii2\extensions\psrbridge\http\StatelessApplication;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -255,28 +254,5 @@ final class ApplicationTest extends TestCase
             $response->getStatusCode(),
             "Response 'status code' should be '201' for 'site/statuscode' route in 'StatelessApplication'.",
         );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    #[TestWith([StatelessApplication::EVENT_AFTER_REQUEST])]
-    #[TestWith([StatelessApplication::EVENT_BEFORE_REQUEST])]
-    public function testTriggerEventDuringHandle(string $eventName): void
-    {
-        $eventTriggered = false;
-
-        $app = $this->statelessApplication();
-
-        $app->on(
-            $eventName,
-            static function () use (&$eventTriggered): void {
-                $eventTriggered = true;
-            },
-        );
-
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
     }
 }
