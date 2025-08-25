@@ -497,7 +497,7 @@ final class Request extends \yii\web\Request
                 return null;
             }
 
-            if (filter_var($remoteIP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6) === false) {
+            if (filter_var($remoteIP, FILTER_VALIDATE_IP) === false) {
                 return null;
             }
 
