@@ -16,6 +16,8 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
+use function ini_get;
+use function ini_set;
 use function is_array;
 use function ob_get_level;
 use function ob_start;
@@ -344,6 +346,80 @@ final class ApplicationErrorHandlerTest extends TestCase
 
             @\runkit_constant_redefine('YII_ENV_TEST', true);
         }
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[RequiresPhpExtension('runkit7')]
+    public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
+    {
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
+
+        $bufferBeforeLevel = ob_get_level();
+
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/trigger-exception',
+        ];
+
+        ob_start();
+        echo 'buffer content that should be cleared';
+        ob_start();
+        echo 'nested buffer content';
+
+        $originalDisplayErrors = ini_get('display_errors');
+
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'discardExistingOutput' => true,
+                        'errorAction' => null,
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/trigger-exception'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
+        );
+        self::assertSame(
+            '1',
+            ini_get('display_errors'),
+            "'display_errors' should be set to '1' in debug mode when rendering exception.",
+        );
+
+        $bufferAfterLevel = ob_get_level();
+
+        self::assertLessThanOrEqual(
+            $bufferBeforeLevel,
+            $bufferAfterLevel,
+            "'clearOutput()' should properly clean output buffers",
+        );
+
+        while (ob_get_level() < $bufferBeforeLevel) {
+            ob_start();
+        }
+
+        self::assertSame(
+            $bufferBeforeLevel,
+            ob_get_level(),
+            'Output buffers should be restored to initial level.',
+        );
+
+        ini_set('display_errors', $originalDisplayErrors);
+
+        @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
     /**

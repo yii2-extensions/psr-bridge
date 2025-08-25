@@ -33,6 +33,7 @@ use function strtolower;
  *   - {@see \headers_sent()} (with file/line tracking).
  *   - {@see \http_response_code()} (get/set response code).
  *   - {@see \microtime()} (mockable time for timing tests).
+ *   - {@see \ob_end_clean()} (controllable success/failure).
  *   - {@see \stream_get_contents()} (controllable stream read/failure).
  *   - {@see \time()} (mockable time for timing tests).
  * - Consistent behavior matching PHP native functions for test reliability.
@@ -88,6 +89,7 @@ final class MockerFunctions
      * Tracks the number of times {@see \ob_end_clean()} was called.
      */
     private static int $obEndCleanCallCount = 0;
+
     /**
      * Indicates whether {@see \ob_end_clean()} should fail.
      */
@@ -201,9 +203,10 @@ final class MockerFunctions
 
     public static function ob_end_clean(): bool
     {
-        if (self::$obEndCleanShouldFail && self::$obEndCleanCallCount === 0) {
-            self::$obEndCleanCallCount++;
+        self::$obEndCleanCallCount++;
 
+        // simulate failure only on the first call after enabling
+        if (self::$obEndCleanShouldFail && self::$obEndCleanCallCount === 1) {
             return false;
         }
 
@@ -251,6 +254,10 @@ final class MockerFunctions
     public static function setObEndCleanShouldFail(bool $shouldFail = true): void
     {
         self::$obEndCleanShouldFail = $shouldFail;
+
+        if ($shouldFail) {
+            self::$obEndCleanCallCount = 0;
+        }
     }
 
     public static function stream_get_contents(mixed $resource, int $maxlength = -1, int $offset = -1): string|false
