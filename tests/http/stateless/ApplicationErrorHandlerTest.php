@@ -401,10 +401,10 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         $bufferAfterLevel = ob_get_level();
 
-        self::assertLessThanOrEqual(
-            $bufferBeforeLevel,
+        self::assertSame(
+            0,
             $bufferAfterLevel,
-            "'clearOutput()' should properly clean output buffers",
+            "Output buffers should be cleared to level '0' when 'discardExistingOutput' is 'true'.",
         );
 
         while (ob_get_level() < $bufferBeforeLevel) {
