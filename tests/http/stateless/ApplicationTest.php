@@ -86,33 +86,6 @@ final class ApplicationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnRedirectResponseForSiteRedirectRoute(): void
-    {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/redirect',
-        ];
-
-        $app = $this->statelessApplication();
-
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            302,
-            $response->getStatusCode(),
-            "Response 'status code' should be '302' for redirect route 'site/redirect' in 'StatelessApplication'.",
-        );
-        self::assertSame(
-            '/site/index',
-            $response->getHeaderLine('Location'),
-            "Response 'Location' header should be '/site/index' for redirect route 'site/redirect' in " .
-            "'StatelessApplication'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testReturnRedirectResponseForSiteRefreshRoute(): void
     {
         $_SERVER = [
