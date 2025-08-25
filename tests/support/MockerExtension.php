@@ -86,6 +86,11 @@ final class MockerExtension implements Extension
                 'function' => static fn(bool $as_float = false): float|string => MockerFunctions::microtime($as_float),
             ],
             [
+                'namespace' => 'yii2\extensions\psrbridge\http',
+                'name' => 'ob_end_clean',
+                'function' => static fn(): bool => MockerFunctions::ob_end_clean(),
+            ],
+            [
                 'namespace' => 'yii2\extensions\psrbridge\adapter',
                 'name' => 'stream_get_contents',
                 'function' => static fn(

@@ -10,6 +10,7 @@ use Throwable;
 use yii\base\{Exception, UserException};
 use yii\web\HttpException;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Response};
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function ob_get_level;
@@ -20,12 +21,62 @@ use function str_repeat;
 final class ErrorHandlerTest extends TestCase
 {
     #[RequiresPhpExtension('runkit7')]
+    public function test(): void
+    {
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
+
+        $initialBufferLevel = ob_get_level();
+
+        ob_start();
+        ob_start();
+
+        $errorHandler = new ErrorHandler(['discardExistingOutput' => true]);
+
+        $errorHandler->clearOutput();
+
+        self::assertSame(
+            0,
+            ob_get_level(),
+            "All output buffers should be cleared to level '0' in non-test environment.",
+        );
+
+        while (ob_get_level() < $initialBufferLevel) {
+            ob_start();
+        }
+
+        @\runkit_constant_redefine('YII_ENV_TEST', true);
+    }
+
+    public function testClearOutputCallsObCleanWhenObEndCleanFails(): void
+    {
+        MockerFunctions::setObEndCleanShouldFail(true);
+
+        ob_start();
+        ob_start();
+
+        $errorHandler = new ErrorHandler(['discardExistingOutput' => true]);
+
+        try {
+            $errorHandler->clearOutput();
+
+            self::assertSame(
+                1,
+                ob_get_level(),
+                "All output buffers should be cleared to level '1' in test environment.",
+            );
+        } finally {
+            while (ob_get_level() > 1) {
+                @ob_end_clean();
+            }
+        }
+    }
+    #[RequiresPhpExtension('runkit7')]
     public function testClearOutputCleansAllBuffersInNonTestEnvironment(): void
     {
         $initialLevel = ob_get_level();
 
         try {
-            @runkit_constant_redefine('YII_ENV_TEST', false);
+            @\runkit_constant_redefine('YII_ENV_TEST', false);
 
             $errorHandler = new ErrorHandler();
 
@@ -56,7 +107,7 @@ final class ErrorHandlerTest extends TestCase
                 ob_start();
             }
 
-            @runkit_constant_redefine('YII_ENV_TEST', true);
+            @\runkit_constant_redefine('YII_ENV_TEST', true);
         }
     }
 

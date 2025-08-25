@@ -86,9 +86,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
 
         while ($currentLevel > $minLevel) {
             if (@ob_end_clean() === false) {
-                // @codeCoverageIgnoreStart
                 ob_clean();
-                // @codeCoverageIgnoreEnd
             }
 
             $currentLevel = ob_get_level();

@@ -85,6 +85,15 @@ final class MockerFunctions
     private static int|null $mockedTime = null;
 
     /**
+     * Tracks the number of times {@see \ob_end_clean()} was called.
+     */
+    private static int $obEndCleanCallCount = 0;
+    /**
+     * Indicates whether {@see \ob_end_clean()} should fail.
+     */
+    private static bool $obEndCleanShouldFail = false;
+
+    /**
      * Tracks the HTTP response code.
      */
     private static int $responseCode = 200;
@@ -190,6 +199,17 @@ final class MockerFunctions
         return \microtime($as_float);
     }
 
+    public static function ob_end_clean(): bool
+    {
+        if (self::$obEndCleanShouldFail && self::$obEndCleanCallCount === 0) {
+            self::$obEndCleanCallCount++;
+
+            return false;
+        }
+
+        return @\ob_end_clean();
+    }
+
     public static function reset(): void
     {
         self::$flushedTimes = 0;
@@ -198,8 +218,11 @@ final class MockerFunctions
         self::$headersSentFile = '';
         self::$headersSentLine = 0;
         self::$mockedTime = null;
+        self::$obEndCleanCallCount = 0;
+        self::$obEndCleanShouldFail = false;
         self::$responseCode = 200;
         self::$streamGetContentsShouldFail = false;
+
         self::clearMockedMicrotime();
     }
 
@@ -223,6 +246,11 @@ final class MockerFunctions
     public static function setMockedTime(int $time): void
     {
         self::$mockedTime = $time;
+    }
+
+    public static function setObEndCleanShouldFail(bool $shouldFail = true): void
+    {
+        self::$obEndCleanShouldFail = $shouldFail;
     }
 
     public static function stream_get_contents(mixed $resource, int $maxlength = -1, int $offset = -1): string|false
