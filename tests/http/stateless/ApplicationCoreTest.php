@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\{Group, TestWith};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
 use Yii;
-use yii\base\{InvalidConfigException, Security};
+use yii\base\{Event, InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
@@ -368,19 +368,22 @@ final class ApplicationCoreTest extends TestCase
     #[TestWith([StatelessApplication::EVENT_BEFORE_REQUEST])]
     public function testTriggerEventDuringHandle(string $eventName): void
     {
-        $eventTriggered = false;
+        $invocations = 0;
+        $sender = null;
 
         $app = $this->statelessApplication();
 
         $app->on(
             $eventName,
-            static function () use (&$eventTriggered): void {
-                $eventTriggered = true;
+            static function (Event $event) use (&$invocations, &$sender): void {
+                $invocations++;
+                $sender = $event->sender ?? null;
             },
         );
 
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
-        self::assertTrue($eventTriggered, "Should trigger '{$eventName}' event during handle()");
+        self::assertSame(1, $invocations, "Should trigger '{$eventName}' exactly once during handle().");
+        self::assertSame($app, $sender, 'Event sender should be the application instance.');
     }
 }
