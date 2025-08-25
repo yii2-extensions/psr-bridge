@@ -19,7 +19,6 @@ use function array_filter;
 use function is_array;
 use function ob_get_level;
 use function ob_start;
-use function PHPSTORM_META\map;
 use function restore_error_handler;
 use function set_error_handler;
 use function str_contains;
@@ -363,9 +362,9 @@ final class ApplicationErrorHandlerTest extends TestCase
         ];
 
         ob_start();
-        echo "buffer content that should be cleared";
+        echo 'buffer content that should be cleared';
         ob_start();
-        echo "nested buffer content";
+        echo 'nested buffer content';
 
         $originalDisplayErrors = ini_get('display_errors');
 
@@ -404,7 +403,6 @@ final class ApplicationErrorHandlerTest extends TestCase
                 $buffersAfterTest,
                 "'clearOutput()'' should properly clean output buffers",
             );
-
         } finally {
             while (ob_get_level() < $initialBufferLevel) {
                 ob_start();
