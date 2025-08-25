@@ -85,6 +85,43 @@ final class ApplicationCoreTest extends TestCase
         );
     }
 
+    public function testEventOrderDuringHandle(): void
+    {
+        $app = $this->statelessApplication();
+        $sequence = [];
+
+        $app->on(
+            StatelessApplication::EVENT_BEFORE_REQUEST,
+            static function () use (&$sequence): void {
+                $sequence[] = 'before';
+            },
+        );
+        $app->on(
+            StatelessApplication::EVENT_AFTER_REQUEST,
+            static function () use (&$sequence): void {
+                $sequence[] = 'after';
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertSame(
+            ['before', 'after'],
+            $sequence,
+            "BEFORE should precede AFTER during 'handle()'.",
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if the property does not exist or is inaccessible.
@@ -403,43 +440,6 @@ final class ApplicationCoreTest extends TestCase
             $app,
             $sender,
             'Event sender should be the application instance.',
-        );
-    }
-
-    public function testEventOrderDuringHandle(): void
-    {
-        $app = $this->statelessApplication();
-        $sequence = [];
-
-        $app->on(
-            StatelessApplication::EVENT_BEFORE_REQUEST,
-            static function () use (&$sequence): void {
-                $sequence[] = 'before';
-            },
-        );
-        $app->on(
-            StatelessApplication::EVENT_AFTER_REQUEST,
-            static function () use (&$sequence): void {
-                $sequence[] = 'after';
-            },
-        );
-
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertSame(
-            ['before', 'after'],
-            $sequence,
-            "BEFORE should precede AFTER during 'handle()'.",
         );
     }
 }
