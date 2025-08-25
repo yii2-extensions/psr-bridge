@@ -387,7 +387,7 @@ final class StatelessApplicationProvider
     }
 
     /**
-     * @phpstan-return array<array{0: string, 1: string|null, 2: string}>
+     * @phpstan-return array<array{string, string|null, string}>
      */
     public static function remoteIPAddresses(): array
     {
