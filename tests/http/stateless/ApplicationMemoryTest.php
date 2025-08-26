@@ -210,7 +210,13 @@ final class ApplicationMemoryTest extends TestCase
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         $firstMemoryLimit = $app->getMemoryLimit();
+        $shouldRecalculateMemoryLimit = self::inaccessibleProperty($app, 'shouldRecalculateMemoryLimit');
 
+        self::assertFalse(
+            $shouldRecalculateMemoryLimit,
+            "'shouldRecalculateMemoryLimit' should remain 'false' after 'handle()' if 'setMemoryLimit()' was not " .
+            'called.',
+        );
         self::assertSame(
             268_435_456,
             $firstMemoryLimit,
@@ -218,6 +224,13 @@ final class ApplicationMemoryTest extends TestCase
         );
 
         $app->setMemoryLimit($memoryLimit);
+        $shouldRecalculateMemoryLimit = self::inaccessibleProperty($app, 'shouldRecalculateMemoryLimit');
+
+        self::assertTrue(
+            $shouldRecalculateMemoryLimit,
+            "'shouldRecalculateMemoryLimit' should be 'true' after calling 'setMemoryLimit()' with a non-positive " .
+            'value.',
+        );
 
         ini_set('memory_limit', '128M');
 
