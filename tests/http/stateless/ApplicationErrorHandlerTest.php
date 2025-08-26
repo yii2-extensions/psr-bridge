@@ -8,8 +8,6 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtens
 use yii\base\{Exception, InvalidConfigException};
 use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
-use yii\web\NotFoundHttpException;
-use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -48,11 +46,6 @@ final class ApplicationErrorHandlerTest extends TestCase
     ): void {
         @\runkit_constant_redefine('YII_DEBUG', $debug);
 
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => $route,
-        ];
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -61,7 +54,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', $route));
 
         self::assertSame(
             $expectedStatusCode,
@@ -173,11 +166,6 @@ final class ApplicationErrorHandlerTest extends TestCase
      */
     public function testLogExceptionIsCalledWhenHandlingException(): void
     {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
-
         $app = $this->statelessApplication(
             [
                 'flushLogger' => false,
@@ -196,7 +184,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/trigger-exception'));
 
         self::assertSame(
             500,
@@ -238,7 +226,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         self::assertTrue(
             $exceptionLogFound,
             "Logger should contain an error log entry with category '{$expectedCategory}' and message " .
-            "'Exception error message.' when 'logException()' is called during exception handling.",
+            "'Exception error message.'.",
         );
         self::assertFalse(
             $app->flushLogger,
@@ -255,11 +243,6 @@ final class ApplicationErrorHandlerTest extends TestCase
         @\runkit_constant_redefine('YII_ENV_TEST', false);
 
         $initialBufferLevel = ob_get_level();
-
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
 
         $warningsCaptured = [];
 
@@ -287,7 +270,7 @@ final class ApplicationErrorHandlerTest extends TestCase
                 ],
             );
 
-            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+            $response = $app->handle(FactoryHelper::createRequest('GET', '/site/trigger-exception'));
 
             self::assertSame(
                 500,
@@ -307,8 +290,7 @@ final class ApplicationErrorHandlerTest extends TestCase
 
             self::assertEmpty(
                 $undefinedExceptionWarnings,
-                "Should be no 'Undefined variable' warnings, confirming that exception parameter is defined in the " .
-                'view context when rendering exception.',
+                "Should be no 'Undefined variable' warnings.",
             );
 
             $responseBody = $response->getBody()->getContents();
@@ -316,24 +298,22 @@ final class ApplicationErrorHandlerTest extends TestCase
             self::assertStringContainsString(
                 Exception::class,
                 $responseBody,
-                "Response body should contain exception class when exception parameter is passed to 'renderFile()'.",
+                'Response body should contain exception class.',
             );
             self::assertStringContainsString(
                 'Stack trace:',
                 $responseBody,
-                "Response body should contain 'Stack trace:' section, confirming exception object is available to template.",
+                "Response body should contain 'Stack trace:' section.",
             );
             self::assertStringContainsString(
                 'Exception error message.',
                 $responseBody,
-                "Response body should contain the exact exception message 'Exception error message.', confirming " .
-                'the exception object was properly passed to the view.',
+                "Response body should contain the exact exception message 'Exception error message.'.",
             );
             self::assertStringContainsString(
                 'SiteController.php',
                 $responseBody,
-                "Response body should contain reference to 'SiteController.php' where the exception was throw, " .
-                'confirming full exception details are available in the view.',
+                "Response body should contain reference to 'SiteController.php'.",
             );
         } finally {
             restore_error_handler();
@@ -359,11 +339,6 @@ final class ApplicationErrorHandlerTest extends TestCase
         string $route,
         array $expectedContent,
     ): void {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => $route,
-        ];
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -373,7 +348,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', $route));
 
         self::assertSame(
             $expectedStatusCode,
@@ -432,22 +407,15 @@ final class ApplicationErrorHandlerTest extends TestCase
     {
         @\runkit_constant_redefine('YII_DEBUG', false);
 
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/trigger-exception',
-        ];
-
         $app = $this->statelessApplication(
             [
                 'components' => [
-                    'errorHandler' => [
-                        'errorAction' => 'site/error-with-response',
-                    ],
+                    'errorHandler' => ['errorAction' => 'site/error-with-response'],
                 ],
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/trigger-exception'));
 
         self::assertSame(
             500,
@@ -468,7 +436,7 @@ final class ApplicationErrorHandlerTest extends TestCase
                 HTML,
             ),
             self::normalizeLineEndings($response->getBody()->getContents()),
-            "Response body should contain content from Response object returned by 'errorAction'.",
+            'Response body should contain content from Response object.',
         );
 
         @\runkit_constant_redefine('YII_DEBUG', true);
@@ -479,11 +447,6 @@ final class ApplicationErrorHandlerTest extends TestCase
      */
     public function testReturnHtmlErrorResponseWhenErrorHandlerActionIsInvalid(): void
     {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/nonexistent-action',
-        ];
-
         $app = $this->statelessApplication(
             [
                 'components' => [
@@ -492,7 +455,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/nonexistent-action'));
 
         self::assertSame(
             500,
@@ -512,8 +475,7 @@ final class ApplicationErrorHandlerTest extends TestCase
                 HTML,
             ),
             self::normalizeLineEndings($response->getBody()->getContents()),
-            "Response body should contain error message about 'An Error occurred while handling another error' and " .
-            'the InvalidRouteException when errorHandler action is invalid.',
+            "Response body should contain error message about 'An Error occurred while handling another error'.",
         );
     }
 
@@ -522,14 +484,9 @@ final class ApplicationErrorHandlerTest extends TestCase
      */
     public function testThrowableOccursDuringRequestHandling(): void
     {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'nonexistent/invalidaction',
-        ];
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/nonexistent/invalidaction'));
 
         self::assertSame(
             404,
@@ -544,8 +501,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         self::assertStringContainsString(
             '<pre>Not Found: Page not found.</pre>',
             $response->getBody()->getContents(),
-            "Response body should contain error message about 'Not Found: Page not found' when Throwable occurs " .
-            'during request handling.',
+            "Response body should contain error message about 'Not Found: Page not found'.",
         );
     }
 
@@ -554,14 +510,9 @@ final class ApplicationErrorHandlerTest extends TestCase
      */
     public function testThrowNotFoundHttpExceptionWhenStrictParsingDisabledAndRouteIsMissing(): void
     {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/profile/123',
-        ];
-
         $app = $this->statelessApplication();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/profile/123'));
 
         self::assertSame(
             404,
@@ -576,34 +527,57 @@ final class ApplicationErrorHandlerTest extends TestCase
         self::assertStringContainsString(
             '<pre>Not Found: Page not found.</pre>',
             $response->getBody()->getContents(),
-            "Response body should contain the default not found message '<pre>Not Found: Page not found.</pre>' " .
-            'when a NotFoundHttpException is thrown.',
+            "Response body should contain the default not found message '<pre>Not Found: Page not found.</pre>'.",
         );
     }
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    #[RequiresPhpExtension('runkit7')]
     public function testThrowNotFoundHttpExceptionWhenStrictParsingEnabledAndRouteIsMissing(): void
     {
-        $_SERVER = [
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/profile/123',
-        ];
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
+
+        $initialBufferLevel = ob_get_level();
 
         $app = $this->statelessApplication(
             [
                 'components' => [
-                    'urlManager' => ['enableStrictParsing' => true],
+                    'errorHandler' => ['errorAction' => null],
+                    'response' => ['format' => Response::FORMAT_JSON],
+                    'urlManager' => [
+                        'enableStrictParsing' => true,
+                        'rules' => [],
+                    ],
                 ],
             ],
         );
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/profile/123'));
 
-        $this->expectException(NotFoundHttpException::class);
-        $this->expectExceptionMessage(Message::PAGE_NOT_FOUND->getMessage());
+        self::assertSame(
+            404,
+            $response->getStatusCode(),
+            "Expected HTTP '404' for route 'site/profile/123'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/profile/123'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"name":"Not Found","message":"Page not found in StatelessApplication.","code":0,"status":404,"type":"yii\\\\web\\\\NotFoundHttpException"}
+            JSON,
+            $response->getBody()->getContents(),
+            'Response body should contain JSON with NotFoundHttpException details.',
+        );
 
-        $app->request->resolve();
+        while (ob_get_level() < $initialBufferLevel) {
+            ob_start();
+        }
+
+        @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
 }

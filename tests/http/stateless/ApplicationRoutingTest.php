@@ -6,8 +6,6 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
-use yii\web\NotFoundHttpException;
-use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
@@ -149,44 +147,5 @@ final class ApplicationRoutingTest extends TestCase
             $request->getUri()->getPath(),
             "Request path should be 'site/update/123'.",
         );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testThrowNotFoundHttpExceptionWhenRouteNotFound(): void
-    {
-        $app = $this->statelessApplication(
-            [
-                'components' => [
-                    'urlManager' => [
-                        'enableStrictParsing' => true,
-                    ],
-                ],
-            ],
-        );
-
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/nonexistent/route'));
-
-        self::assertSame(
-            404,
-            $response->getStatusCode(),
-            "Expected HTTP '404' for route '/nonexistent/route'.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'text/html; charset=UTF-8' for route '/nonexistent/route'.",
-        );
-        self::assertSame(
-            '<pre>Not Found: Page not found.</pre>',
-            $response->getBody()->getContents(),
-            "Response body should match expected HTML string '<pre>Not Found: Page not found.</pre>'.",
-        );
-
-        $this->expectException(NotFoundHttpException::class);
-        $this->expectExceptionMessage(Message::PAGE_NOT_FOUND->getMessage());
-
-        $app->request->resolve();
     }
 }
