@@ -521,6 +521,11 @@ final class StatelessApplicationProvider
                 8080,
                 "'getServerPort()' should return '8080'.",
             ],
+            'whitespace only' => [
+                ['X-Forwarded-Port' => '   '],
+                null,
+                "'getServerPort()' should return 'null' for whitespace-only header value.",
+            ],
         ];
     }
 }

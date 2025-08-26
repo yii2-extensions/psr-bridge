@@ -59,10 +59,10 @@ final class ApplicationServerParamsTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @phpstan-param array<string, array<int, string>|int|string> $headers
+     * @phpstan-param array<string, string> $headers
      */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'serverPortHeaders')]
-    public function testGetServerPortHandlesValidServerPortFromHeaders(
+    public function testGetServerPortHandlesValidAndInvalidServerPortFromHeaders(
         array $headers,
         int|null $expectedPort,
         string $assertionMessage,
