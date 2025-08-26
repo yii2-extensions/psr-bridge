@@ -452,6 +452,16 @@ final class StatelessApplicationProvider
                 1024,
                 "'parseMemoryLimit('1024')' should return '1024 bytes' for plain numeric input.",
             ],
+            'space suffix edge case' => [
+                '1 ',
+                1,
+                "'parseMemoryLimit('1 ')' should handle space suffix correctly.",
+            ],
+            'space suffix with different number' => [
+                '256 ',
+                256,
+                "'parseMemoryLimit('256 ')' should multiply by '1' with space suffix.",
+            ],
             'special characters' => [
                 '@#$%',
                 0,
