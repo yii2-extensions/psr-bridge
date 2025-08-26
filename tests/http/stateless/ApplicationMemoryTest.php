@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
+use ReflectionException;
 use stdClass;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
@@ -194,41 +195,19 @@ final class ApplicationMemoryTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
-    public function testParseMemoryLimitReturnsPhpIntMaxForUnlimitedValue(): void
-    {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the method does not exist or is inaccessible.
+     */
+    #[DataProviderExternal(StatelessApplicationProvider::class, 'parseMemoryLimit')]
+    public function testParseMemoryLimitHandlesAllCasesCorrectly(
+        string $input,
+        int $expected,
+        string $assertionMessage,
+    ): void {
         $app = $this->statelessApplication();
 
-        self::assertSame(
-            PHP_INT_MAX,
-            self::invokeMethod($app, 'parseMemoryLimit', ['-1']),
-            "'parseMemoryLimit(-1)' must return PHP_INT_MAX for unlimited memory limit.",
-        );
-
-        $result64M = self::invokeMethod($app, 'parseMemoryLimit', ['64M']);
-
-        self::assertNotSame(
-            PHP_INT_MAX,
-            $result64M,
-            "'parseMemoryLimit(64M)' should not return PHP_INT_MAX.",
-        );
-        self::assertSame(
-            67_108_864,
-            $result64M,
-            "'parseMemoryLimit(64M)' should return ('64M') in bytes.",
-        );
-
-        $result1024 = self::invokeMethod($app, 'parseMemoryLimit', ['1024']);
-
-        self::assertSame(
-            1024,
-            $result1024,
-            "'parseMemoryLimit(1024)' should return ('1024 bytes').",
-        );
-        self::assertNotSame(
-            PHP_INT_MAX,
-            $result1024,
-            "'parseMemoryLimit(1024)' should not return PHP_INT_MAX.",
-        );
+        self::assertSame($expected, self::invokeMethod($app, 'parseMemoryLimit', [$input]), $assertionMessage);
     }
 
     /**
