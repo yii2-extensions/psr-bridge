@@ -387,6 +387,110 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * @phpstan-return array<string, array{string, int, string}>
+     */
+    public static function parseMemoryLimit(): array
+    {
+        return [
+            'empty string' => [
+                '',
+                0,
+                "'parseMemoryLimit('')' should return '0' when no parsing is possible.",
+            ],
+            'gigabytes lowercase' => [
+                '1g',
+                1_073_741_824,
+                "'parseMemoryLimit('1g')' should return '1_073_741_824 bytes'.",
+            ],
+            'gigabytes uppercase' => [
+                '2G',
+                2_147_483_648,
+                "'parseMemoryLimit('2G')' should return '2_147_483_648 bytes'.",
+            ],
+            'invalid string' => [
+                'abc',
+                0,
+                "'parseMemoryLimit('abc')' should return '0' when string starts with non-numeric characters.",
+            ],
+            'kilobytes lowercase' => [
+                '32k',
+                32_768,
+                "'parseMemoryLimit('32k')' should return '32_768 bytes'.",
+            ],
+            'kilobytes uppercase' => [
+                '64K',
+                65_536,
+                "'parseMemoryLimit('64K')' should return '65_536 bytes'.",
+            ],
+            'megabytes lowercase' => [
+                '64m',
+                67_108_864,
+                "'parseMemoryLimit('64m')' should return '67_108_864 bytes'.",
+            ],
+            'megabytes uppercase' => [
+                '128M',
+                134_217_728,
+                "'parseMemoryLimit('128M')' should return '134_217_728 bytes'.",
+            ],
+            'mixed case unknown suffix' => [
+                '50Z',
+                50,
+                "'parseMemoryLimit('50Z')' should return '50 bytes' for unknown suffix.",
+            ],
+            'number with space suffix should multiply by 1' => [
+                '512 ',
+                512,
+                "'parseMemoryLimit('512 ')' should handle space suffix correctly ('multiplier = 1').",
+            ],
+            'number with trailing characters' => [
+                '256MB',
+                268_435_456,
+                "'parseMemoryLimit('256MB')' should parse only first suffix 'M' and return '268_435_456 bytes'.",
+            ],
+            'plain number' => [
+                '1024',
+                1024,
+                "'parseMemoryLimit('1024')' should return '1024 bytes' for plain numeric input.",
+            ],
+            'space suffix edge case' => [
+                '1 ',
+                1,
+                "'parseMemoryLimit('1 ')' should handle space suffix correctly.",
+            ],
+            'space suffix with different number' => [
+                '256 ',
+                256,
+                "'parseMemoryLimit('256 ')' should multiply by '1' with space suffix.",
+            ],
+            'special characters' => [
+                '@#$%',
+                0,
+                "'parseMemoryLimit('@#\$%')' should return '0' when only special characters are present.",
+            ],
+            'unknown suffix lowercase' => [
+                '200x',
+                200,
+                "'parseMemoryLimit('200x')' should return '200 bytes'.",
+            ],
+            'unknown suffix' => [
+                '100T',
+                100,
+                "'parseMemoryLimit('100T')' should return '100 bytes' using fallback multiplier.",
+            ],
+            'unlimited' => [
+                '-1',
+                PHP_INT_MAX,
+                "'parseMemoryLimit('-1')' should return PHP_INT_MAX for unlimited memory.",
+            ],
+            'zero should work correctly' => [
+                '0',
+                0,
+                "'parseMemoryLimit('0')' should return '0 bytes'.",
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return array<array{int|string, string|null, string}>
      */
     public static function remoteIPAddresses(): array

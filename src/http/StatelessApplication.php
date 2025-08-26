@@ -359,7 +359,9 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     protected static function parseMemoryLimit(string $limit): int
     {
         if ($limit === '-1') {
+            // @codeCoverageIgnoreStart
             return PHP_INT_MAX;
+            // @codeCoverageIgnoreEnd
         }
 
         $number = 0;
@@ -369,7 +371,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
         if ($suffix !== null) {
             $multipliers = [
-                ' ' => 1,
                 'K' => 1024,
                 'M' => 1048576,
                 'G' => 1073741824,

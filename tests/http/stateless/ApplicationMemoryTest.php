@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
+use ReflectionException;
 use stdClass;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
@@ -192,6 +193,21 @@ final class ApplicationMemoryTest extends TestCase
         );
 
         ini_set('memory_limit', $originalLimit);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the method does not exist or is inaccessible.
+     */
+    #[DataProviderExternal(StatelessApplicationProvider::class, 'parseMemoryLimit')]
+    public function testParseMemoryLimitHandlesAllCasesCorrectly(
+        string $input,
+        int $expected,
+        string $assertionMessage,
+    ): void {
+        $app = $this->statelessApplication();
+
+        self::assertSame($expected, self::invokeMethod($app, 'parseMemoryLimit', [$input]), $assertionMessage);
     }
 
     /**
