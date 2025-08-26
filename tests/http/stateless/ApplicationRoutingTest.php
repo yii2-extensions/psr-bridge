@@ -46,8 +46,7 @@ final class ApplicationRoutingTest extends TestCase
             {"foo":"bar","a":{"b":"c"}}
             JSON,
             $response->getBody()->getContents(),
-            "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for " .
-            "'site/post' route.",
+            "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}'.",
         );
     }
 
@@ -80,8 +79,7 @@ final class ApplicationRoutingTest extends TestCase
             {"foo":"bar","a":{"b":"c"}}
             JSON,
             $response->getBody()->getContents(),
-            "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}' for " .
-            "'site/get' route.",
+            "Response body should match expected JSON string '{\"foo\":\"bar\",\"a\":{\"b\":\"c\"}}'.",
         );
     }
 
@@ -114,7 +112,7 @@ final class ApplicationRoutingTest extends TestCase
             {"test":"foo","q":"1","queryParams":{"test":"foo","q":"1"}}
             JSON,
             $response->getBody()->getContents(),
-            "Response body should contain valid JSON with route and query parameters for 'site/query/foo?q=1' route.",
+            'Response body should contain valid JSON with route and query parameters.',
         );
     }
 
@@ -142,12 +140,12 @@ final class ApplicationRoutingTest extends TestCase
         self::assertSame(
             '{"site/update":"123"}',
             $response->getBody()->getContents(),
-            "Response body should contain valid JSON with the route parameter for 'site/update/123' route.",
+            'Response body should contain valid JSON with the route parameter.',
         );
         self::assertSame(
             'site/update/123',
             $request->getUri()->getPath(),
-            "Request path should be 'site/update/123' for 'site/update/123' route.",
+            "Request path should be 'site/update/123'.",
         );
     }
 }
