@@ -194,6 +194,43 @@ final class ApplicationMemoryTest extends TestCase
         ini_set('memory_limit', $originalLimit);
     }
 
+    public function testParseMemoryLimitReturnsPhpIntMaxForUnlimitedValue(): void
+    {
+        $app = $this->statelessApplication();
+
+        self::assertSame(
+            PHP_INT_MAX,
+            self::invokeMethod($app, 'parseMemoryLimit', ['-1']),
+            "'parseMemoryLimit(-1)' must return PHP_INT_MAX for unlimited memory limit.",
+        );
+
+        $result64M = self::invokeMethod($app, 'parseMemoryLimit', ['64M']);
+
+        self::assertNotSame(
+            PHP_INT_MAX,
+            $result64M,
+            "'parseMemoryLimit(64M)' should not return PHP_INT_MAX.",
+        );
+        self::assertSame(
+            67_108_864,
+            $result64M,
+            "'parseMemoryLimit(64M)' should return ('64M') in bytes.",
+        );
+
+        $result1024 = self::invokeMethod($app, 'parseMemoryLimit', ['1024']);
+
+        self::assertSame(
+            1024,
+            $result1024,
+            "'parseMemoryLimit(1024)' should return ('1024 bytes').",
+        );
+        self::assertNotSame(
+            PHP_INT_MAX,
+            $result1024,
+            "'parseMemoryLimit(1024)' should not return PHP_INT_MAX.",
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
