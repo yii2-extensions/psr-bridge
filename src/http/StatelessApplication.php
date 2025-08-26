@@ -369,7 +369,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
 
         if ($suffix !== null) {
             $multipliers = [
-                ' ' => 1,
                 'K' => 1024,
                 'M' => 1048576,
                 'G' => 1073741824,
