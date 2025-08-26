@@ -226,7 +226,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         self::assertTrue(
             $exceptionLogFound,
             "Logger should contain an error log entry with category '{$expectedCategory}' and message " .
-            "'Exception error message.'.",
+            "'Exception error message'.",
         );
         self::assertFalse(
             $app->flushLogger,
