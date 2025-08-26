@@ -197,6 +197,53 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testSetMemoryLimitWithNonPositiveValueEnablesRecalculationFlag(): void
+    {
+        $originalLimit = ini_get('memory_limit');
+
+        ini_set('memory_limit', '128M');
+
+        $app = $this->statelessApplication();
+
+        $firstResult = $app->getMemoryLimit();
+
+        self::assertSame(
+            134_217_728,
+            $firstResult,
+            "Initial state should be ('128M').",
+        );
+
+        ini_set('memory_limit', '256M');
+
+        $unchangedResult = $app->getMemoryLimit();
+
+        self::assertSame(
+            $firstResult,
+            $unchangedResult,
+            "Without 'setMemoryLimit()' call, should not recalculate.",
+        );
+
+        $app->setMemoryLimit(0);
+        $recalculatedResult = $app->getMemoryLimit();
+
+        self::assertSame(
+            268_435_456,
+            $recalculatedResult,
+            "After 'setMemoryLimit(0)', 'getMemoryLimit()' should recalculate from new system limit ('256M').",
+        );
+
+        self::assertNotSame(
+            $firstResult,
+            $recalculatedResult,
+            "Result after 'setMemoryLimit(0)' should be different from cached value.",
+        );
+
+        ini_set('memory_limit', $originalLimit);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[TestWith([-1])]
     #[TestWith([0])]
     public function testSetMemoryLimitWithNonPositiveValueTriggersRecalculation(int $memoryLimit): void
