@@ -95,10 +95,16 @@ final class Response extends \yii\web\Response
                 'value' => $session->getId(),
                 'path' => $cookieParams['path'] ?? '/',
                 'domain' => $cookieParams['domain'] ?? '',
-                'secure' => $cookieParams['secure'] ?? false,
-                'httpOnly' => $cookieParams['httponly'] ?? true,
                 'sameSite' => $cookieParams['samesite'] ?? Cookie::SAME_SITE_LAX,
             ];
+
+            if (isset($cookieParams['httponly'])) {
+                $cookieConfig['httpOnly'] = $cookieParams['httponly'];
+            }
+
+            if (isset($cookieParams['secure'])) {
+                $cookieConfig['secure'] = $cookieParams['secure'];
+            }
 
             $this->cookies->add(new Cookie($cookieConfig));
             $session->close();
