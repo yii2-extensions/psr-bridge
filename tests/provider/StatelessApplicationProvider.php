@@ -449,4 +449,83 @@ final class StatelessApplicationProvider
             ],
         ];
     }
+
+    /**
+     * @phpstan-return array<string, array{array<string, string>, int|null, string}>
+     */
+    public static function serverPortHeaders(): array
+    {
+        return [
+            'empty' => [
+                ['X-Forwarded-Port' => ''],
+                null,
+                "'getServerPort()' should return 'null' for empty port header.",
+            ],
+            'maximum' => [
+                ['X-Forwarded-Port' => '65535'],
+                65535,
+                "'getServerPort()' should return '65535' for maximum valid port number.",
+            ],
+            'minimum' => [
+                ['X-Forwarded-Port' => '1'],
+                1,
+                "'getServerPort()' should return '1' for minimum valid port number.",
+            ],
+            'multiple ports comma separated' => [
+                ['X-Forwarded-Port' => '8080,9090,3000'],
+                8080,
+                "'getServerPort()' should return first port '8080' from comma-separated list.",
+            ],
+            'multiple ports with whitespace' => [
+                ['X-Forwarded-Port' => '  443  , 8080, 9090'],
+                443,
+                "'getServerPort()' should return first port '443' after trimming whitespace from comma-separated list.",
+            ],
+            'negative' => [
+                ['X-Forwarded-Port' => '-1'],
+                null,
+                "'getServerPort()' should return 'null' for negative port number '-1'.",
+            ],
+            'non-numeric port value' => [
+                ['X-Forwarded-Port' => 'abc'],
+                null,
+                "'getServerPort()' should return 'null' for non-numeric port value 'abc'.",
+            ],
+            'port above valid range' => [
+                ['X-Forwarded-Port' => '65536'],
+                null,
+                "'getServerPort()' should return 'null' for port '65536' above valid range.",
+            ],
+            'port with leading zeros' => [
+                ['X-Forwarded-Port' => '08080'],
+                8080,
+                "'getServerPort()' should return '8080' for port with leading zeros '08080'.",
+            ],
+            'port zero' => [
+                ['X-Forwarded-Port' => '0'],
+                null,
+                "'getServerPort()' should return 'null' for invalid port '0'.",
+            ],
+            'unsupported header should be ignored' => [
+                ['X-Custom-Port' => '9000'],
+                null,
+                "'getServerPort()' should return 'null' when unsupported header is provided.",
+            ],
+            'valid port from X-Forwarded-Port header with whitespace' => [
+                ['X-Forwarded-Port' => '  443  '],
+                443,
+                "'getServerPort()' should return '443' after trimming whitespace.",
+            ],
+            'valid port from X-Forwarded-Port header' => [
+                ['X-Forwarded-Port' => '8080'],
+                8080,
+                "'getServerPort()' should return '8080'.",
+            ],
+            'whitespace only' => [
+                ['X-Forwarded-Port' => '   '],
+                null,
+                "'getServerPort()' should return 'null' for whitespace-only header value.",
+            ],
+        ];
+    }
 }

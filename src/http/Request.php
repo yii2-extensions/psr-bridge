@@ -649,7 +649,8 @@ final class Request extends \yii\web\Request
 
                     if (is_string($headerPort)) {
                         $ports = explode(',', $headerPort);
-                        $firstPort = trim($ports[0]);
+
+                        $firstPort = $ports[0];
 
                         if (is_numeric($firstPort)) {
                             $port = (int) $firstPort;
