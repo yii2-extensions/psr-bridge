@@ -100,7 +100,7 @@ final class Response extends \yii\web\Response
                 'httponly' => 'httpOnly',
                 'path' => 'path',
                 'samesite' => 'sameSite',
-                'secure' => 'secure'
+                'secure' => 'secure',
             ];
 
             foreach ($paramMapping as $sessionKey => $configKey) {
