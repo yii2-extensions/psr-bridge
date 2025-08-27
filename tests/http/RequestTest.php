@@ -619,8 +619,6 @@ final class RequestTest extends TestCase
 
         $request->csrfHeader = 'X-CSRF-Token';
 
-        $request->reset();
-
         self::assertSame(
             'parent-csrf-token-456',
             $request->getCsrfTokenFromHeader(),
@@ -1598,9 +1596,6 @@ final class RequestTest extends TestCase
         $_SERVER['SCRIPT_NAME'] = '/test.php';
         $_SERVER['SCRIPT_FILENAME'] = '/path/to/test.php';
 
-        // ensure adapter is `null` (default state)
-        $request->reset();
-
         // verify the method executes without throwing exception when adapter is `null`
         self::assertSame(
             '/test.php',
@@ -1658,9 +1653,6 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/legacy/path?param=value';
 
         $request = new Request();
-
-        // ensure adapter is `null` (default state)
-        $request->reset();
 
         self::assertSame(
             '/legacy/path?param=value',

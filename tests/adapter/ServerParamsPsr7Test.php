@@ -72,8 +72,6 @@ final class ServerParamsPsr7Test extends TestCase
             "'REMOTE_HOST' should return the initial host value from the first PSR-7 request.",
         );
 
-        $request->reset();
-
         $request->setPsr7Request(
             FactoryHelper::createRequest('POST', '/second', serverParams: ['REMOTE_HOST' => $newHost]),
         );
@@ -438,8 +436,6 @@ final class ServerParamsPsr7Test extends TestCase
             "'SERVER_NAME' should return '{$initialServerName}' from initial PSR-7 request.",
         );
 
-        $request->reset();
-
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $newServerName]),
         );
@@ -515,8 +511,6 @@ final class ServerParamsPsr7Test extends TestCase
             $result1,
             "'SERVER_PORT' should return '{$initialPort}' from initial PSR-7 request.",
         );
-
-        $request->reset();
 
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $newPort]),

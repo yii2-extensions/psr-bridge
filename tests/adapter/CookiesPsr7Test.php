@@ -33,7 +33,6 @@ final class CookiesPsr7Test extends TestCase
         $request->setPsr7Request($psr7Request);
 
         $cookies1 = $request->getCookies();
-        $request->reset();
 
         $newPsr7Request = FactoryHelper::createRequest('GET', '/test');
 
