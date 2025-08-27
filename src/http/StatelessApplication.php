@@ -417,17 +417,14 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         // re-register error handler to reset its state
         $this->errorHandler->setResponse($this->response);
 
-        // reset and inject the PSR-7 request into the Yii2 Request adapter
-        $this->request->reset();
+        // inject the PSR-7 request into the Yii2 Request adapter
         $this->request->setPsr7Request($request);
 
         // synchronize cookie validation settings between request and response
         $this->response->cookieValidationKey = $this->request->cookieValidationKey;
         $this->response->enableCookieValidation = $this->request->enableCookieValidation;
 
-        // reset the PSR-7 adapter cache for the response
-        $this->response->reset();
-
+        // reset the session to ensure a clean state
         $this->session->close();
         $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
         $this->session->setId($sessionId);

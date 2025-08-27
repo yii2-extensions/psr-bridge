@@ -148,9 +148,6 @@ final class HeadersPsr7Test extends TestCase
     {
         $request = new Request();
 
-        // ensure adapter is `null` (default state)
-        $request->reset();
-
         self::assertNull(
             $request->getCsrfTokenFromHeader(),
             "CSRF token from header should return parent implementation result when adapter is 'null'.",

@@ -266,9 +266,6 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        // ensure adapter is `null` (default state)
-        $request->reset();
-
         self::assertEmpty(
             $request->getParsedBody(),
             "Parsed body should return empty array when PSR-7 request has no parsed body and adapter is 'null'.",
@@ -279,18 +276,12 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $request = new Request();
 
-        // ensure adapter is `null` (default state)
-        $request->reset();
-
         self::assertNotEmpty($request->getMethod(), "HTTP method should not be empty when adapter is 'null'.");
     }
 
     public function testReturnParentQueryParamsWhenAdapterIsNull(): void
     {
         $request = new Request();
-
-        // ensure adapter is `null` (default state)
-        $request->reset();
 
         self::assertEmpty(
             $request->getQueryParams(),
@@ -311,9 +302,6 @@ final class ServerRequestAdapterTest extends TestCase
     public function testReturnParentRawBodyWhenAdapterIsNull(): void
     {
         $request = new Request();
-
-        // ensure adapter is `null` (default state)
-        $request->reset();
 
         self::assertEmpty(
             $request->getRawBody(),

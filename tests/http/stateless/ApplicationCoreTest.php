@@ -254,14 +254,17 @@ final class ApplicationCoreTest extends TestCase
 
         $adapter1 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
 
-        $bridgeResponse1->getPsr7Response();
+        self::assertNotNull(
+            $adapter1,
+            'Response adapter must be initialized (non-null) after handling the first request.',
+        );
 
-        $adapter2 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
+        $bridgeResponse1->getPsr7Response();
 
         // verify adapter is cached (same instance across multiple calls)
         self::assertSame(
             $adapter1,
-            $adapter2,
+            self::inaccessibleProperty($bridgeResponse1, 'adapter'),
             "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, " .
             'confirming adapter caching behavior.',
         );
@@ -283,34 +286,24 @@ final class ApplicationCoreTest extends TestCase
         // verify that the Response component is fresh for each request (stateless)
         $bridgeResponse2 = $app->response;
 
+        // get PSR-7 Response twice to test caching and reset behavior
+        $bridgeResponse2->getPsr7Response();
+
+        $adapter2 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
+
+        self::assertNotNull(
+            $adapter2,
+            'Response adapter must be initialized (non-null) after handling the second request.',
+        );
         self::assertNotSame(
             $bridgeResponse1,
             $bridgeResponse2,
             'Response component should be a different instance for each request, confirming stateless behavior.',
         );
-
-        // test 'reset()' functionality
-        $bridgeResponse2->getPsr7Response();
-
-        $adapter3 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
-
-        $bridgeResponse2->reset();
-
-        // after reset, adapter cache should be cleared
-        self::assertNull(
-            self::inaccessibleProperty($bridgeResponse2, 'adapter'),
-            "'reset()' should nullify the cached adapter before the next 'getPsr7Response()' call.",
-        );
-
-        $bridgeResponse2->getPsr7Response();
-
-        $adapter4 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
-
         self::assertNotSame(
-            $adapter3,
-            $adapter4,
-            "'reset()' should force creation of a new adapter instance; the cached adapter before and after reset " .
-            'must be different.',
+            $adapter1,
+            $adapter2,
+            'Each request should get its own adapter instance, confirming stateless behavior.',
         );
 
         // third request - verify adapter isolation between requests
@@ -331,12 +324,20 @@ final class ApplicationCoreTest extends TestCase
 
         $bridgeResponse3->getPsr7Response();
 
-        $adapter5 = self::inaccessibleProperty($bridgeResponse3, 'adapter');
+        $adapter3 = self::inaccessibleProperty($bridgeResponse3, 'adapter');
 
-        // verify each request gets its own adapter instance
-        self::assertNotSame(
+        self::assertNotNull(
             $adapter3,
-            $adapter5,
+            'Response adapter must be initialized (non-null) after handling the third request.',
+        );
+        self::assertNotSame(
+            $bridgeResponse1,
+            $bridgeResponse3,
+            'Response component should be a different instance for each request, confirming stateless behavior.',
+        );
+        self::assertNotSame(
+            $adapter2,
+            $adapter3,
             'Each request should get its own adapter instance, confirming adapter isolation between requests.',
         );
 
