@@ -421,12 +421,17 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->response->enableCookieValidation = $this->request->enableCookieValidation;
 
         // reset the session to ensure a clean state
+        // @codeCoverageIgnoreStart
         $this->session->close();
+        // @codeCoverageIgnoreEnd
+
         $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
         $this->session->setId($sessionId);
 
         // start the session with the correct 'ID'
+        // @codeCoverageIgnoreStart
         $this->session->open();
+        // @codeCoverageIgnoreEnd
 
         $this->bootstrap();
 
