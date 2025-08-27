@@ -424,9 +424,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
         $this->response->cookieValidationKey = $this->request->cookieValidationKey;
         $this->response->enableCookieValidation = $this->request->enableCookieValidation;
 
-        // reset the PSR-7 adapter cache for the response
-        $this->response->reset();
-
+        // reset the session to ensure a clean state
         $this->session->close();
         $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
         $this->session->setId($sessionId);

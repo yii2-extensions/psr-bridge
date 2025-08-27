@@ -117,23 +117,6 @@ final class Response extends \yii\web\Response
     }
 
     /**
-     * Resets the PSR-7 ResponseAdapter instance for the current Response.
-     *
-     * Sets the internal {@see ResponseAdapter} property to `null`, ensuring that a new adapter will be created on the
-     * next access. This is useful for clearing cached adapter state between requests or after significant changes to
-     * the Response component.
-     *
-     * Usage example:
-     * ```php
-     * $response->reset();
-     * ```
-     */
-    public function reset(): void
-    {
-        $this->adapter = null;
-    }
-
-    /**
      * Retrieves the PSR-7 ResponseAdapter instance for the current Response.
      *
      * Instantiates and returns a {@see ResponseAdapter} for bridging the Yii2 Response component with PSR-7
