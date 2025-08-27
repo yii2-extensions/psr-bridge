@@ -265,16 +265,6 @@ final class ApplicationCoreTest extends TestCase
             "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, " .
             'confirming adapter caching behavior.',
         );
-        self::assertNotNull(
-            self::inaccessibleProperty($app->request, 'adapter'),
-            'Request component should have a non-null adapter after handling a request, confirming adapter ' .
-            'caching behavior.',
-        );
-        self::assertNotNull(
-            self::inaccessibleProperty($bridgeResponse1, 'adapter'),
-            'Response component should have a non-null adapter after handling a request, confirming adapter ' .
-            'caching behavior.',
-        );
 
         // second request with different route - verify stateless behavior
         $response2 = $app->handle(FactoryHelper::createRequest('GET', 'site/statuscode'));
@@ -372,6 +362,62 @@ final class ApplicationCoreTest extends TestCase
             'test2=test2; Path=/; HttpOnly; SameSite=Lax',
             $cookieHeaders,
             'PSR-7 Response Set-Cookie headers should match the expected values, confirming correct adapter behavior.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the property does not exist or is inaccessible.
+     */
+    public function testResponseAdapterExplicitResetBehavior(): void
+    {
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+
+        $responseComponent = $app->response;
+
+        $responseComponent->getPsr7Response();
+
+        $adapter1 = self::inaccessibleProperty($responseComponent, 'adapter');
+
+        self::assertNotNull(
+            $adapter1,
+            "Response adapter should exist after 'getPsr7Response()' call.",
+        );
+
+        $responseComponent->reset();
+
+        $adapterAfterReset = self::inaccessibleProperty($responseComponent, 'adapter');
+
+        self::assertNull(
+            $adapterAfterReset,
+            "Response adapter should be 'null' after explicit 'reset()' call.",
+        );
+
+        $responseComponent->getPsr7Response();
+
+        $adapter2 = self::inaccessibleProperty($responseComponent, 'adapter');
+
+        self::assertNotNull(
+            $adapter2,
+            "Response adapter should exist after second 'getPsr7Response()' call.",
+        );
+        self::assertNotSame(
+            $adapter1,
+            $adapter2,
+            'New adapter should be different instance after reset.',
         );
     }
 

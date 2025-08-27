@@ -728,25 +728,6 @@ final class Request extends \yii\web\Request
     }
 
     /**
-     * Reset the PSR-7 ServerRequestInterface adapter to its initial state.
-     *
-     * Sets the internal adapter property to `null`, removing any previously set PSR-7 ServerRequestInterface adapter
-     * and restoring the default behavior of the request component.
-     *
-     * This method is used to clear the PSR-7 bridge in worker mode, ensuring that subsequent request operations fall
-     * back to the parent Yii2 implementation.
-     *
-     * Usage example:
-     * ```php
-     * $request->reset();
-     * ```
-     */
-    public function reset(): void
-    {
-        $this->adapter = null;
-    }
-
-    /**
      * Resolves the current request into a route and parameters, supporting PSR-7 and Yii2 fallback.
      *
      * Parses the request using the Yii2 UrlManager and merges parameters with those from the PSR-7 adapter if present.
