@@ -254,6 +254,11 @@ final class ApplicationCoreTest extends TestCase
 
         $adapter1 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
 
+        self::assertNotNull(
+            $adapter1,
+            'Response adapter must be initialized (non-null) after handling the first request.',
+        );
+
         $bridgeResponse1->getPsr7Response();
 
         // verify adapter is cached (same instance across multiple calls)
@@ -286,6 +291,10 @@ final class ApplicationCoreTest extends TestCase
 
         $adapter2 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
 
+        self::assertNotNull(
+            $adapter2,
+            'Response adapter must be initialized (non-null) after handling the second request.',
+        );
         self::assertNotSame(
             $bridgeResponse1,
             $bridgeResponse2,
@@ -317,6 +326,10 @@ final class ApplicationCoreTest extends TestCase
 
         $adapter3 = self::inaccessibleProperty($bridgeResponse3, 'adapter');
 
+        self::assertNotNull(
+            $adapter3,
+            'Response adapter must be initialized (non-null) after handling the third request.',
+        );
         self::assertNotSame(
             $bridgeResponse1,
             $bridgeResponse3,
