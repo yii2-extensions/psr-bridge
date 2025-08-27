@@ -265,6 +265,16 @@ final class ApplicationCoreTest extends TestCase
             "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, " .
             'confirming adapter caching behavior.',
         );
+        self::assertNotNull(
+            self::inaccessibleProperty($app->request, 'adapter'),
+            'Request component should have a non-null adapter after handling a request, confirming adapter ' .
+            'caching behavior.',
+        );
+        self::assertNotNull(
+            self::inaccessibleProperty($bridgeResponse1, 'adapter'),
+            'Response component should have a non-null adapter after handling a request, confirming adapter ' .
+            'caching behavior.',
+        );
 
         // second request with different route - verify stateless behavior
         $response2 = $app->handle(FactoryHelper::createRequest('GET', 'site/statuscode'));
