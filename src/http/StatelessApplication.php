@@ -402,10 +402,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     {
         $this->startEventTracking();
 
-        if ($this->has('errorHandler')) {
-            $this->errorHandler->unregister();
-        }
-
         // parent constructor is called because StatelessApplication uses a custom initialization pattern
         // @phpstan-ignore-next-line
         parent::__construct($this->config);
