@@ -176,10 +176,10 @@ final class UploadedFileTest extends TestCase
             }
         }
 
-        self::assertGreaterThan(
+        self::assertSame(
             0,
             $stillOpenAfterReset,
-            "Resources should still be open after current 'reset()' implementation, showing the need for improvement.",
+            "All resources should be closed after `reset()` method.",
         );
     }
 

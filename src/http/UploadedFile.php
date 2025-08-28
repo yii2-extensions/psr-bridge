@@ -208,10 +208,10 @@ final class UploadedFile extends \yii\web\UploadedFile
      */
     public static function reset(): void
     {
+        self::closeResources();
+
         self::$_files = [];
         self::$psr7Adapter = null;
-
-        self::closeResources();
     }
 
     /**
