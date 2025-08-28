@@ -78,6 +78,41 @@ final class UploadedFileTest extends TestCase
         );
     }
 
+    public function testConvertPsr7FileWithNullSizeShouldDefaultToZero(): void
+    {
+        $tmpFile = $this->createTmpFile();
+
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+
+        $uploadedFileWithNullSize = FactoryHelper::createUploadedFileFactory()->createUploadedFile(
+            FactoryHelper::createStream($tmpPath),
+            null,
+            UPLOAD_ERR_CANT_WRITE,
+            'null-size-file.txt',
+            'text/plain',
+        );
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/post')
+                    ->withUploadedFiles(['null-size-file' => $uploadedFileWithNullSize]),
+            ),
+        );
+
+        $uploadedFile = UploadedFile::getInstanceByName('null-size-file');
+
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $uploadedFile,
+            "Should return an instance of UploadedFile with 'null' size.",
+        );
+        self::assertSame(
+            0,
+            $uploadedFile->size,
+            "Should default to exactly '0' when PSR-7 'getSize()' method returns 'null' in error condition.",
+        );
+    }
+
     public function testLegacyFilesLoadingWhenNotPsr7Adapter(): void
     {
         $_FILES = [
