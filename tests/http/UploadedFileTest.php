@@ -102,6 +102,42 @@ final class UploadedFileTest extends TestCase
 
         UploadedFile::setPsr7Adapter($adapter);
 
+        $allFiles = UploadedFile::getInstancesByName('files');
+
+        self::assertCount(
+            2,
+            $allFiles,
+            'Should return both files when querying by base name.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $allFiles[0] ?? null,
+            'Should return an instance of UploadedFile when a single file is uploaded.',
+        );
+        self::assertSame(
+            'file1.txt',
+            $allFiles[0]->name,
+            "Should preserve 'name' from PSR-7 UploadedFile.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $allFiles[1] ?? null,
+            'Should return an instance of UploadedFile when a single file is uploaded.',
+        );
+        self::assertSame(
+            'file2.txt',
+            $allFiles[1]->name,
+            "Should preserve 'name' from PSR-7 UploadedFile.",
+        );
+
+        $filesWithBrackets = UploadedFile::getInstancesByName('files[]');
+
+        self::assertCount(
+            2,
+            $filesWithBrackets,
+            "Should handle trailing '[]' notation.",
+        );
+
         $uploadFile1 = UploadedFile::getInstanceByName('files[0]');
 
         self::assertInstanceOf(

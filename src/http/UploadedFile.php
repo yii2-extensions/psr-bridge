@@ -12,7 +12,9 @@ use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use function is_array;
 use function is_resource;
 use function is_string;
+use function str_ends_with;
 use function str_starts_with;
+use function substr;
 
 /**
  * Uploaded file handler with PSR-7 bridge support.
@@ -173,6 +175,10 @@ final class UploadedFile extends \yii\web\UploadedFile
     {
         $files = self::loadFiles();
 
+        if (str_ends_with($name, '[]')) {
+            $name = substr($name, 0, -2);
+        }
+
         if (isset($files[$name])) {
             return [new self($files[$name])];
         }
@@ -189,11 +195,7 @@ final class UploadedFile extends \yii\web\UploadedFile
     }
 
     /**
-     * Resets the internal uploaded files cache and PSR-7 adapter state.
-     *
-     * Clears all cached uploaded file data and PSR-7 adapter references, ensuring a clean state for subsequent file
-     * handling operations. This method should be called to fully reset the file handling environment, including both
-     * legacy and PSR-7 file sources.
+     * Resets the internal uploaded files cache.
      *
      * Usage example:
      * ```php
@@ -203,8 +205,6 @@ final class UploadedFile extends \yii\web\UploadedFile
     public static function reset(): void
     {
         self::$_files = [];
-        self::$psr7Adapter = null;
-        self::$psr7FilesLoaded = false;
     }
 
     /**
