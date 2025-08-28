@@ -280,7 +280,7 @@ final class UploadedFile extends \yii\web\UploadedFile
                 'tempName' => '',
                 'tempResource' => null,
                 'type' => $psr7File->getClientMediaType() ?? '',
-                'size' => $psr7File->getSize() ?? 0,
+                'size' => (int) $psr7File->getSize(),
                 'error' => $error,
                 'fullPath' => null,
             ];
@@ -294,7 +294,7 @@ final class UploadedFile extends \yii\web\UploadedFile
             'tempName' => is_string($uri) ? $uri : '',
             'tempResource' => $stream->detach(),
             'type' => $psr7File->getClientMediaType() ?? '',
-            'size' => $psr7File->getSize() ?? 0,
+            'size' => (int) $psr7File->getSize(),
             'error' => $error,
             'fullPath' => null,
         ];
