@@ -2,16 +2,105 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\tests\http;
+namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\Group;
+use yii\base\InvalidConfigException;
+use yii2\extensions\psrbridge\creator\ServerRequestCreator;
 use yii2\extensions\psrbridge\http\UploadedFile;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function filesize;
+use function stream_get_meta_data;
+
 #[Group('http')]
 final class StatelessApplicationUploadedTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testCreateUploadedFileFromSuperglobalWhenMultipartFormDataPosted(): void
+    {
+        $tmpFile = $this->createTmpFile();
+
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+
+        $_FILES['avatar'] = [
+            'name' => 'profile.jpg',
+            'type' => 'image/jpeg',
+            'tmp_name' => $tmpPath,
+            'error' => UPLOAD_ERR_OK,
+            'size' => 1024,
+        ];
+        $_POST = ['action' => 'upload'];
+        $_SERVER = [
+            'CONTENT_TYPE' => 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW',
+            'HTTP_ACCEPT' => 'application/json',
+            'HTTP_HOST' => 'example.com',
+            'HTTP_USER_AGENT' => 'PHPUnit Test',
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_URI' => '/site/post',
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+        ];
+
+        $creator = new ServerRequestCreator(
+            FactoryHelper::createServerRequestFactory(),
+            FactoryHelper::createStreamFactory(),
+            FactoryHelper::createUploadedFileFactory(),
+        );
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle($creator->createFromGlobals());
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route '/site/post'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route '/site/post'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"action": "upload"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected PSR-7 Response body '{\"action\":\"upload\"}'.",
+        );
+
+        $uploadedFiles = UploadedFile::getInstancesByName('avatar');
+
+        foreach ($uploadedFiles as $uploadedFile) {
+            self::assertSame(
+                'profile.jpg',
+                $uploadedFile->name,
+                'Should preserve \'name\' from $_FILES.',
+            );
+            self::assertSame(
+                'image/jpeg',
+                $uploadedFile->type,
+                'Should preserve \'type\' from $_FILES.',
+            );
+            self::assertSame(
+                1024,
+                $uploadedFile->size,
+                'Should preserve \'size\' from $_FILES.',
+            );
+            self::assertSame(
+                UPLOAD_ERR_OK,
+                $uploadedFile->error,
+                'Should preserve \'error\' from $_FILES.',
+            );
+        }
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testUploadedFilesAreResetBetweenRequests(): void
     {
         $tmpFile1 = $this->createTmpFile();
@@ -82,19 +171,18 @@ final class StatelessApplicationUploadedTest extends TestCase
             $response->getBody()->getContents(),
             'Expected PSR-7 Response body to be empty for POST request with no uploaded files.',
         );
-
         self::assertEmpty(
             UploadedFile::getInstancesByName('file1'),
             'PSR-7 Request should NOT have uploaded files from previous request.',
         );
 
-        $tmpFile3 = $this->createTmpFile();
+        $tmpFile2 = $this->createTmpFile();
 
-        $tmpPath3 = stream_get_meta_data($tmpFile3)['uri'];
-        $size3 = filesize($tmpPath3);
+        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
+        $size2 = filesize($tmpPath2);
 
         self::assertIsInt(
-            $size3,
+            $size2,
             'Temporary file should have a valid size greater than zero.',
         );
 
@@ -105,8 +193,8 @@ final class StatelessApplicationUploadedTest extends TestCase
                         'file2' => FactoryHelper::createUploadedFile(
                             'test3.txt',
                             'text/plain',
-                            $tmpPath3,
-                            size: $size3,
+                            $tmpPath2,
+                            size: $size2,
                         ),
                     ],
                 ),
