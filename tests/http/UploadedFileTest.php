@@ -64,6 +64,65 @@ final class UploadedFileTest extends TestCase
         );
     }
 
+    public function testResetMethodShouldCloseDetachedResources(): void
+    {
+        $tmpFile = $this->createTmpFile();
+
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+        file_put_contents($tmpPath, 'Test content for reset method test');
+
+        $uploadedFile = FactoryHelper::createUploadedFile(
+            'reset-test.txt',
+            'text/plain',
+            FactoryHelper::createStream($tmpPath),
+            UPLOAD_ERR_OK,
+            32,
+        );
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/post')
+                    ->withUploadedFiles(['reset-test' => $uploadedFile]),
+            ),
+        );
+
+        $uploadedFile = UploadedFile::getInstanceByName('reset-test');
+
+        self::assertNotNull(
+            $uploadedFile,
+            'Should retrieve uploaded file for reset test.',
+        );
+
+        $resourcesBeforeReset = [];
+
+        foreach (UploadedFile::$_files as $fileData) {
+            if (isset($fileData['tempResource']) && is_resource($fileData['tempResource'])) {
+                $resourcesBeforeReset[] = $fileData['tempResource'];
+            }
+        }
+
+        self::assertNotEmpty(
+            $resourcesBeforeReset,
+            'Should have detached resources before reset.',
+        );
+
+        UploadedFile::reset();
+
+        $stillOpenAfterReset = 0;
+
+        foreach ($resourcesBeforeReset as $resource) {
+            if (is_resource($resource)) {
+                $stillOpenAfterReset++;
+            }
+        }
+
+        self::assertGreaterThan(
+            0,
+            $stillOpenAfterReset,
+            "Resources should still be open after current 'reset()' implementation, showing the need for improvement.",
+        );
+    }
+
     public function testReturnUploadedFileInstanceWhenMultipleFilesAreUploadedViaPsr7(): void
     {
         $tmpFile1 = $this->createTmpFile();
@@ -167,65 +226,6 @@ final class UploadedFileTest extends TestCase
             $uploadFile1,
             $uploadFile2,
             'Should return different instances for different files.',
-        );
-    }
-
-    public function testResetMethodShouldCloseDetachedResources(): void
-    {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-        file_put_contents($tmpPath, 'Test content for reset method test');
-
-        $uploadedFile = FactoryHelper::createUploadedFile(
-            'reset-test.txt',
-            'text/plain',
-            FactoryHelper::createStream($tmpPath),
-            UPLOAD_ERR_OK,
-            32
-        );
-
-        UploadedFile::setPsr7Adapter(
-            new ServerRequestAdapter(
-                FactoryHelper::createRequest('POST', 'site/post')
-                    ->withUploadedFiles(['reset-test' => $uploadedFile])
-            ),
-        );
-
-        $uploadedFile = UploadedFile::getInstanceByName('reset-test');
-
-        self::assertNotNull(
-            $uploadedFile,
-            'Should retrieve uploaded file for reset test.',
-        );
-
-        $resourcesBeforeReset = [];
-
-        foreach (UploadedFile::$_files as $fileData) {
-            if (isset($fileData['tempResource']) && is_resource($fileData['tempResource'])) {
-                $resourcesBeforeReset[] = $fileData['tempResource'];
-            }
-        }
-
-        self::assertNotEmpty(
-            $resourcesBeforeReset,
-            'Should have detached resources before reset.',
-        );
-
-        UploadedFile::reset();
-
-        $stillOpenAfterReset = 0;
-
-        foreach ($resourcesBeforeReset as $resource) {
-            if (is_resource($resource)) {
-                $stillOpenAfterReset++;
-            }
-        }
-
-        self::assertGreaterThan(
-            0,
-            $stillOpenAfterReset,
-            "Resources should still be open after current 'reset()' implementation, showing the need for improvement.",
         );
     }
 }
