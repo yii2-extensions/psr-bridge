@@ -16,6 +16,13 @@ use const UPLOAD_ERR_OK;
 
 final class UploadedFileTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        UploadedFile::reset();
+    }
+
     public function testConvertPsr7FileWithErrorShouldNotThrowException(): void
     {
         $tmpFile = $this->createTmpFile();
@@ -82,8 +89,6 @@ final class UploadedFileTest extends TestCase
                 'size' => 100,
             ],
         ];
-
-        UploadedFile::reset();
 
         $uploadFile = UploadedFile::getInstanceByName('upload');
 
