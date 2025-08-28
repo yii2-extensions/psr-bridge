@@ -213,7 +213,7 @@ final class FactoryHelper
      *
      * @param string $name Client filename.
      * @param string $type Client media type.
-     * @param string|StreamInterface $tmpName Temporary file name or stream.
+     * @param StreamInterface|string $tmpName Temporary file name or stream.
      * @param int $error Upload error code.
      * @param int $size File size.
      *
