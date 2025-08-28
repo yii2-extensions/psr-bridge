@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\http;
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, UploadedFile};
+use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
@@ -793,6 +793,8 @@ final class Request extends \yii\web\Request
         $this->adapter = new ServerRequestAdapter(
             $request->withHeader('statelessAppStartTime', (string) microtime(true)),
         );
+
+        UploadedFile::setPsr7Adapter($this->adapter);
     }
 
     /**
@@ -851,6 +853,7 @@ final class Request extends \yii\web\Request
                 'size' => $psrFile->getSize(),
                 'tempName' => $psrFile->getStream()->getMetadata('uri') ?? '',
                 'type' => $psrFile->getClientMediaType() ?? '',
+                'tempResource' => $psrFile->getStream()->detach(),
             ],
         );
     }
