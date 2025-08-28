@@ -247,7 +247,7 @@ final class UploadedFile extends \yii\web\UploadedFile
     private static function closeResources(): void
     {
         foreach (self::$_files as $entry) {
-            if (isset($entry['tempResource']) && is_resource($entry['tempResource'])) {
+            if (is_resource($entry['tempResource'])) {
                 @fclose($entry['tempResource']);
             }
         }
