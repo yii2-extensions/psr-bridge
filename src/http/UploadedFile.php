@@ -64,11 +64,6 @@ final class UploadedFile extends \yii\web\UploadedFile
     private static ServerRequestAdapter|null $psr7Adapter = null;
 
     /**
-     * Flag indicating whether PSR-7 files have been loaded into the internal cache.
-     */
-    private static bool $psr7FilesLoaded = false;
-
-    /**
      * Returns the instance of the uploaded file associated with the specified model attribute.
      *
      * Retrieves the uploaded file instance for the given model and attribute, supporting array-indexed attribute names
@@ -238,7 +233,6 @@ final class UploadedFile extends \yii\web\UploadedFile
 
         self::$_files = [];
         self::$psr7Adapter = $adapter;
-        self::$psr7FilesLoaded = false;
     }
 
     /**
@@ -333,10 +327,8 @@ final class UploadedFile extends \yii\web\UploadedFile
     private static function loadFiles(): array
     {
         if (self::$_files === []) {
-            if (self::$psr7Adapter !== null && self::$psr7FilesLoaded === false) {
+            if (self::$psr7Adapter !== null) {
                 self::loadPsr7Files();
-
-                self::$psr7FilesLoaded = true;
             } elseif (self::$psr7Adapter === null) {
                 self::loadLegacyFiles();
             }

@@ -179,7 +179,7 @@ final class UploadedFileTest extends TestCase
         self::assertSame(
             0,
             $stillOpenAfterReset,
-            'All resources should be closed after `reset()` method.',
+            "All resources should be closed after 'reset()' method.",
         );
     }
 
