@@ -16,6 +16,61 @@ use const UPLOAD_ERR_OK;
 
 final class UploadedFileTest extends TestCase
 {
+    public function testConvertPsr7FileWithErrorShouldNotThrowException(): void
+    {
+        $tmpFile = $this->createTmpFile();
+
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+
+        $uploadedFileWithError = FactoryHelper::createUploadedFile(
+            'error-file.txt',
+            'text/plain',
+            FactoryHelper::createStream($tmpPath),
+            UPLOAD_ERR_CANT_WRITE,
+            100,
+        );
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/post')
+                    ->withUploadedFiles(['error-file' => $uploadedFileWithError]),
+            ),
+        );
+
+        $uploadedFile = UploadedFile::getInstanceByName('error-file');
+
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $uploadedFile,
+            'Should return an instance of UploadedFile even when there is an upload error.',
+        );
+        self::assertSame(
+            'error-file.txt',
+            $uploadedFile->name,
+            "Should preserve the original file 'name' even when there is an upload error.",
+        );
+        self::assertSame(
+            'text/plain',
+            $uploadedFile->type,
+            "Should preserve the original file 'type' even when there is an upload error.",
+        );
+        self::assertSame(
+            '',
+            $uploadedFile->tempName,
+            'Should have an empty tempName when there is an upload error.',
+        );
+        self::assertSame(
+            UPLOAD_ERR_CANT_WRITE,
+            $uploadedFile->error,
+            'Should preserve the upload error code from PSR-7 UploadedFile.',
+        );
+        self::assertSame(
+            100,
+            $uploadedFile->size,
+            "Should preserve the original file 'size' even when there is an upload error.",
+        );
+    }
+
     public function testLegacyFilesLoadingWhenNotPsr7Adapter(): void
     {
         $_FILES = [

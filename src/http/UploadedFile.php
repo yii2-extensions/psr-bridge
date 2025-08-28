@@ -278,6 +278,20 @@ final class UploadedFile extends \yii\web\UploadedFile
      */
     private static function convertPsr7FileToLegacyFormat(UploadedFileInterface $psr7File): array
     {
+        $error = $psr7File->getError();
+
+        if ($error !== UPLOAD_ERR_OK) {
+            return [
+                'name' => $psr7File->getClientFilename() ?? '',
+                'tempName' => '',
+                'tempResource' => null,
+                'type' => $psr7File->getClientMediaType() ?? '',
+                'size' => $psr7File->getSize() ?? 0,
+                'error' => $error,
+                'fullPath' => null,
+            ];
+        }
+
         $stream = $psr7File->getStream();
         $uri = $stream->getMetadata('uri');
 
@@ -287,7 +301,7 @@ final class UploadedFile extends \yii\web\UploadedFile
             'tempResource' => $stream->detach(),
             'type' => $psr7File->getClientMediaType() ?? '',
             'size' => $psr7File->getSize() ?? 0,
-            'error' => $psr7File->getError(),
+            'error' => $error,
             'fullPath' => null,
         ];
     }
