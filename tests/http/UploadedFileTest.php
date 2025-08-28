@@ -28,6 +28,8 @@ final class UploadedFileTest extends TestCase
             ],
         ];
 
+        UploadedFile::reset();
+
         $uploadFile = UploadedFile::getInstanceByName('upload');
 
         self::assertInstanceOf(
