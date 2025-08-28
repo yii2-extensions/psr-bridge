@@ -89,7 +89,7 @@ final class UploadedFile extends \yii\web\UploadedFile
      * }
      * ```
      */
-    public static function getInstance($model, $attribute): UploadedFile|null
+    public static function getInstance($model, $attribute): self|null
     {
         $name = Html::getInputName($model, $attribute);
 
@@ -112,7 +112,7 @@ final class UploadedFile extends \yii\web\UploadedFile
      * }
      * ```
      */
-    public static function getInstanceByName($name): UploadedFile|null
+    public static function getInstanceByName($name): self|null
     {
         $files = self::loadFiles();
 
@@ -320,13 +320,13 @@ final class UploadedFile extends \yii\web\UploadedFile
      * The method handles both single files and array structures, preserving the original Yii2 logic.
      *
      * @param string $key Key for identifying uploaded file (sub-array index).
-     * @param string[]|string $names File name(s) provided by PHP.
-     * @param string[]|string $tempNames Temporary file name(s) provided by PHP.
-     * @param string[]|string $types File type(s) provided by PHP.
-     * @param int[]|int $sizes File size(s) provided by PHP.
-     * @param int[]|int $errors Uploading issue(s) provided by PHP.
+     * @param string|string[] $names File name(s) provided by PHP.
+     * @param string|string[] $tempNames Temporary file name(s) provided by PHP.
+     * @param string|string[] $types File type(s) provided by PHP.
+     * @param int|int[] $sizes File size(s) provided by PHP.
+     * @param int|int[] $errors Uploading issue(s) provided by PHP.
      * @param mixed[]|string|null $fullPaths Full path(s) as submitted by the browser/PHP.
-     * @param mixed[]|mixed $tempResources Resource(s) of temporary file(s) provided by PHP.
+     * @param mixed|mixed[] $tempResources Resource(s) of temporary file(s) provided by PHP.
      */
     private static function loadFilesRecursiveInternal(
         string $key,
@@ -435,7 +435,7 @@ final class UploadedFile extends \yii\web\UploadedFile
      * error code mapping and stream resource handling.
      *
      * @param string $name Field name for the uploaded file(s).
-     * @param UploadedFileInterface|mixed[] $file PSR-7 UploadedFileInterface or array of files.
+     * @param mixed[]|UploadedFileInterface $file PSR-7 UploadedFileInterface or array of files.
      */
     private static function processPsr7File(string $name, UploadedFileInterface|array $file): void
     {
