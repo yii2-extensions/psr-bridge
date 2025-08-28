@@ -189,24 +189,6 @@ final class UploadedFile extends \yii\web\UploadedFile
     }
 
     /**
-     * Resets the internal uploaded files cache and PSR-7 adapter state.
-     *
-     * Clears all cached uploaded file data and PSR-7 adapter references, ensuring a clean state for subsequent file
-     * handling operations. This method should be called to fully reset the file handling environment, including both
-     * legacy and PSR-7 file sources.
-     *
-     * Usage example:
-     * ```php
-     * UploadedFile::reset();
-     * ```
-     */
-    public static function reset(): void
-    {
-        self::$_files = [];
-        self::$psr7FilesLoaded = false;
-    }
-
-    /**
      * Sets the PSR-7 ServerRequestAdapter for file handling.
      *
      * Configures the bridge to use PSR-7 UploadedFileInterface data instead of reading from $_FILES global.

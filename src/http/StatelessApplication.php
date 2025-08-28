@@ -441,7 +441,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     /**
      * Finalizes the application lifecycle and converts the Yii2 Response to a PSR-7 ResponseInterface.
      *
-     * Cleans up registered events, resets uploaded files, flushes the logger.
+     * Cleans up registered events, and flushes the logger.
      *
      * This method ensures that all application resources are released and the response is converted to a PSR-7
      * ResponseInterface for interoperability with PSR-7 compatible HTTP stacks.
@@ -456,8 +456,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     protected function terminate(Response $response): ResponseInterface
     {
         $this->cleanupEvents();
-
-        UploadedFile::reset();
 
         if ($this->flushLogger) {
             $this->getLog()->getLogger()->flush(true);
