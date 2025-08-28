@@ -53,8 +53,6 @@ final class UploadedFile extends \yii\web\UploadedFile
      *     fullPath: string|null
      *   }
      * >
-     *
-     * @phpstan-ignore property.phpDocType
      */
     public static $_files = [];
 
