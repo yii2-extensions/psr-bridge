@@ -777,8 +777,7 @@ final class Request extends \yii\web\Request
      * This method injects a stateless application start time header (`statelessAppStartTime`) into the request for
      * tracing and debugging purposes.
      *
-     * Once set, all request operations will use the PSR-7 ServerRequestInterface via the adapter until {@see reset()}
-     * is called.
+     * Once set, all request operations will use the PSR-7 ServerRequestInterface via the adapter until is called.
      *
      * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to bridge.
      *

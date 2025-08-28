@@ -9,6 +9,7 @@ use yii\base\{Model};
 use yii\helpers\Html;
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 
+use function fclose;
 use function is_array;
 use function is_resource;
 use function is_string;
@@ -29,7 +30,6 @@ use function substr;
  * Key features.
  * - Compatible with both legacy and modern PHP runtimes.
  * - Conversion utilities for PSR-7 UploadedFileInterface to Yii2 format.
- * - Immutable, type-safe access to uploaded file metadata and streams.
  * - Internal cache for efficient file lookup and repeated access.
  * - PSR-7 ServerRequestAdapter integration for file handling without global state.
  *
@@ -195,11 +195,11 @@ final class UploadedFile extends \yii\web\UploadedFile
     }
 
     /**
-     * Resets the internal uploaded files cache and PSR-7 adapter state.
+     * Resets the internal uploaded files cache, PSR-7 adapter state, and closes any open tempResource handles.
      *
-     * Clears all cached uploaded file data and PSR-7 adapter references, ensuring a clean state for subsequent file
-     * handling operations. This method should be called to fully reset the file handling environment, including both
-     * legacy and PSR-7 file sources.
+     * Clears all cached uploaded file data, PSR-7 adapter references and closes any open tempResource handles, ensuring
+     * a clean state for subsequent file handling operations. This method should be called to fully reset the file
+     * handling environment, including both legacy and PSR-7 file sources.
      *
      * Usage example:
      * ```php
@@ -210,6 +210,8 @@ final class UploadedFile extends \yii\web\UploadedFile
     {
         self::$_files = [];
         self::$psr7Adapter = null;
+
+        self::closeResources();
     }
 
     /**
@@ -232,9 +234,23 @@ final class UploadedFile extends \yii\web\UploadedFile
      */
     public static function setPsr7Adapter(ServerRequestAdapter $adapter): void
     {
+        self::closeResources();
+
         self::$_files = [];
         self::$psr7Adapter = $adapter;
         self::$psr7FilesLoaded = false;
+    }
+
+    /**
+     * Closes any open tempResource handles stored in the internal cache.
+     */
+    private static function closeResources(): void
+    {
+        foreach (self::$_files as $entry) {
+            if (isset($entry['tempResource']) && is_resource($entry['tempResource'])) {
+                @fclose($entry['tempResource']);
+            }
+        }
     }
 
     /**
@@ -304,9 +320,9 @@ final class UploadedFile extends \yii\web\UploadedFile
     {
         if (self::$_files === []) {
             if (self::$psr7Adapter !== null && self::$psr7FilesLoaded === false) {
-                self::$psr7FilesLoaded = true;
-
                 self::loadPsr7Files();
+
+                self::$psr7FilesLoaded = true;
             } elseif (self::$psr7Adapter === null) {
                 self::loadLegacyFiles();
             }
