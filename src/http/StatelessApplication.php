@@ -9,7 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use yii\base\{Event, InvalidConfigException};
 use yii\di\{Container, NotInstantiableException};
-use yii\web\{Application, UploadedFile};
+use yii\web\Application;
 
 use function array_merge;
 use function array_reverse;
