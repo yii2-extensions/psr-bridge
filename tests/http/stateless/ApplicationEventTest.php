@@ -23,11 +23,27 @@ final class ApplicationEventTest extends TestCase
     {
         $app = $this->statelessApplication();
 
-        $mockComponent1 = new class {
+        // capture the global 'off()' call sequence to validate reverse cleanup order (LIFO)
+        $offSequence = [];
+
+        $mockComponent1 = new class ($offSequence) {
             /**
              * @phpstan-var mixed[]
              */
             public array $offCalls = [];
+
+            /**
+             * @phpstan-var array<int,string>
+             */
+            public array $seq = [];
+
+            /**
+             * @param array<int,string> $seq
+             */
+            public function __construct(array &$seq)
+            {
+                $this->seq = &$seq;
+            }
 
             /**
              * @phpstan-ignore-next-line
@@ -37,14 +53,28 @@ final class ApplicationEventTest extends TestCase
             public function off(string $name): void
             {
                 $this->offCalls[] = $name;
+                $this->seq[] = $name;
             }
         };
 
-        $mockComponent2 = new class {
+        $mockComponent2 = new class ($offSequence) {
             /**
              * @phpstan-var mixed[]
              */
             public array $offCalls = [];
+
+            /**
+             * @phpstan-var array<int,string>
+             */
+            public array $seq = [];
+
+            /**
+             * @param array<int,string> $seq
+             */
+            public function __construct(array &$seq)
+            {
+                $this->seq = &$seq;
+            }
 
             /**
              * @phpstan-ignore-next-line
@@ -54,6 +84,7 @@ final class ApplicationEventTest extends TestCase
             public function off(string $name): void
             {
                 $this->offCalls[] = $name;
+                $this->seq[] = $name;
             }
         };
 
@@ -106,6 +137,11 @@ final class ApplicationEventTest extends TestCase
             'test.event2',
             $mockComponent2->offCalls,
             "Expected event 'test.event2' to be unregistered.",
+        );
+        self::assertSame(
+            ['test.event2', 'test.event1'],
+            $offSequence,
+            'Events should be unregistered in reverse registration order (LIFO).',
         );
         $this->assertEmptyRegisteredEvents(
             $app,
@@ -197,72 +233,6 @@ final class ApplicationEventTest extends TestCase
             2,
             $eventsCaptured,
             'Expected no additional BEFORE/AFTER events should be captured on the second request after cleanup.',
-        );
-        $this->assertEmptyRegisteredEvents(
-            $app,
-            'Events should be cleaned after request.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     * @throws ReflectionException if the property does not exist or is inaccessible.
-     */
-    public function testEventTrackingSystemCapturesInternalEvents(): void
-    {
-        $internalEventCaptured = false;
-
-        $app = $this->statelessApplication();
-
-        $this->assertEmptyRegisteredEvents(
-            $app,
-            'Should start with empty registered events.',
-        );
-
-        $eventComponent = new EventComponent();
-
-        $app->set('eventComponent', $eventComponent);
-
-        $eventComponent->on(
-            EventComponent::EVENT_TEST_INTERNAL,
-            static function () use (&$internalEventCaptured): void {
-                $internalEventCaptured = true;
-            },
-        );
-
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
-        );
-
-        $component = $app->get('eventComponent');
-
-        self::assertInstanceOf(
-            EventComponent::class,
-            $component,
-            'Event component should be an instance of EventComponent.',
-        );
-
-        $component->triggerTestEvent();
-
-        self::assertTrue(
-            $internalEventCaptured,
-            'Internal event should be captured.',
         );
         $this->assertEmptyRegisteredEvents(
             $app,
@@ -365,6 +335,72 @@ final class ApplicationEventTest extends TestCase
             'app_before_2',
             $eventsTriggered,
             "Expected new before event 'app_before_2' to be triggered.",
+        );
+        $this->assertEmptyRegisteredEvents(
+            $app,
+            'Events should be cleaned after request.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the property does not exist or is inaccessible.
+     */
+    public function testInternalComponentEventListenerFiresOutsideRequest(): void
+    {
+        $internalEventCaptured = false;
+
+        $app = $this->statelessApplication();
+
+        $this->assertEmptyRegisteredEvents(
+            $app,
+            'Should start with empty registered events.',
+        );
+
+        $eventComponent = new EventComponent();
+
+        $app->set('eventComponent', $eventComponent);
+
+        $eventComponent->on(
+            EventComponent::EVENT_TEST_INTERNAL,
+            static function () use (&$internalEventCaptured): void {
+                $internalEventCaptured = true;
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
+
+        $component = $app->get('eventComponent');
+
+        self::assertInstanceOf(
+            EventComponent::class,
+            $component,
+            'Event component should be an instance of EventComponent.',
+        );
+
+        $component->triggerTestEvent();
+
+        self::assertTrue(
+            $internalEventCaptured,
+            'Internal event should be captured.',
         );
         $this->assertEmptyRegisteredEvents(
             $app,
