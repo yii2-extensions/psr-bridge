@@ -12,7 +12,7 @@ use Yii;
 use yii\base\{InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
-use yii\log\Dispatcher;
+use yii\log\{Dispatcher, FileTarget};
 use yii\web\{AssetManager, Session, UrlManager, User, View};
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response, StatelessApplication};
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
@@ -21,18 +21,40 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
 use function dirname;
+use function file_exists;
 use function ini_get;
 use function ini_set;
 use function ob_get_level;
 use function ob_start;
 use function str_contains;
+use function unlink;
 
 #[Group('http')]
 final class ApplicationCoreTest extends TestCase
 {
+    /**
+     * Path to the log file used in tests.
+     */
+    private string $logFile = '';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->logFile = dirname(__DIR__, 2) . '/runtime/log/flush-test.log';
+
+        if (file_exists($this->logFile)) {
+            unlink($this->logFile);
+        }
+    }
+
     protected function tearDown(): void
     {
         $this->closeApplication();
+
+        if (file_exists($this->logFile)) {
+            unlink($this->logFile);
+        }
 
         parent::tearDown();
     }
@@ -130,6 +152,75 @@ final class ApplicationCoreTest extends TestCase
             ['before', 'after'],
             $sequence,
             "BEFORE should precede AFTER during 'handle()'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testFlushImmediateWritesLogsToFileImmediately(): void
+    {
+        $app = $this->statelessApplication(
+            [
+                'flushLogger' => true,
+                'components' => [
+                    'log' => [
+                        'traceLevel' => 0,
+                        'targets' => [
+                            [
+                                'class' => FileTarget::class,
+                                'levels' => ['info'],
+                                'logFile' => $this->logFile,
+                                'maxFileSize' => 1024,
+                                'maxLogFiles' => 1,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $app->on(
+            'afterRequest',
+            static function (): void {
+                Yii::info('Test log message after request.', 'test');
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
+        self::assertFileExists(
+            $this->logFile,
+            "Log file should exist after 'flush(true)'.",
+        );
+
+        $content = file_get_contents($this->logFile);
+
+        self::assertIsString(
+            $content,
+            'Log file content should be a string.',
+        );
+        self::assertStringContainsString(
+            'Test log message after request.',
+            $content,
+            "Log message should be written to file immediately with 'flush(true)'.",
         );
     }
 
@@ -457,11 +548,11 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             (string) $mockedTime,
             $statelessAppStartTime,
-            "PSR-7 request should contain 'statelessAppStartTime' header with the mocked microtime value.",
+            "PSR-7 Request should contain 'statelessAppStartTime' header with the mocked microtime value.",
         );
         self::assertTrue(
             $psr7Request->hasHeader('statelessAppStartTime'),
-            "PSR-7 request should have 'statelessAppStartTime' header set during adapter creation.",
+            "PSR-7 Request should have 'statelessAppStartTime' header set during adapter creation.",
         );
     }
 
