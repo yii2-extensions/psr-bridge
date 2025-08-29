@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\http;
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, UploadedFile};
+use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
@@ -777,8 +777,7 @@ final class Request extends \yii\web\Request
      * This method injects a stateless application start time header (`statelessAppStartTime`) into the request for
      * tracing and debugging purposes.
      *
-     * Once set, all request operations will use the PSR-7 ServerRequestInterface via the adapter until {@see reset()}
-     * is called.
+     * Once set, all request operations will use the PSR-7 ServerRequestInterface via the adapter until is called.
      *
      * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to bridge.
      *
@@ -793,6 +792,8 @@ final class Request extends \yii\web\Request
         $this->adapter = new ServerRequestAdapter(
             $request->withHeader('statelessAppStartTime', (string) microtime(true)),
         );
+
+        UploadedFile::setPsr7Adapter($this->adapter);
     }
 
     /**
@@ -851,6 +852,7 @@ final class Request extends \yii\web\Request
                 'size' => $psrFile->getSize(),
                 'tempName' => $psrFile->getStream()->getMetadata('uri') ?? '',
                 'type' => $psrFile->getClientMediaType() ?? '',
+                'tempResource' => $psrFile->getStream()->detach(),
             ],
         );
     }

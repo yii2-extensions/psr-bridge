@@ -213,7 +213,7 @@ final class FactoryHelper
      *
      * @param string $name Client filename.
      * @param string $type Client media type.
-     * @param string $tmpName Temporary file name.
+     * @param StreamInterface|string $tmpName Temporary file name or stream.
      * @param int $error Upload error code.
      * @param int $size File size.
      *
@@ -227,7 +227,7 @@ final class FactoryHelper
     public static function createUploadedFile(
         string $name = '',
         string $type = '',
-        string $tmpName = '',
+        string|StreamInterface $tmpName = '',
         int $error = 0,
         int $size = 0,
     ): UploadedFileInterface {

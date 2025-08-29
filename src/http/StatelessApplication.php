@@ -9,7 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use yii\base\{Event, InvalidConfigException};
 use yii\di\{Container, NotInstantiableException};
-use yii\web\{Application, UploadedFile};
+use yii\web\Application;
 
 use function array_merge;
 use function array_reverse;
@@ -387,7 +387,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      * Resets the StatelessApplication state and prepares the Yii2 environment for handling a PSR-7 request.
      *
      * Performs a full reinitialization of the application state, including event tracking, error handler cleanup,
-     * request adapter reset, session management, and PSR-7 request injection.
+     * request adapter reset, session management, uploaded file state reset, and PSR-7 request injection.
      *
      * This method ensures that the application is ready to process a new stateless request in worker or SAPI
      * environments, maintaining strict type safety and compatibility with Yii2 core components.
@@ -401,6 +401,9 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     protected function reset(ServerRequestInterface $request): void
     {
         $this->startEventTracking();
+
+        // reset UploadedFile static state to avoid cross-request contamination
+        UploadedFile::reset();
 
         // parent constructor is called because StatelessApplication uses a custom initialization pattern
         // @phpstan-ignore-next-line
@@ -441,7 +444,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     /**
      * Finalizes the application lifecycle and converts the Yii2 Response to a PSR-7 ResponseInterface.
      *
-     * Cleans up registered events, resets uploaded files, flushes the logger.
+     * Cleans up registered events, and flushes the logger.
      *
      * This method ensures that all application resources are released and the response is converted to a PSR-7
      * ResponseInterface for interoperability with PSR-7 compatible HTTP stacks.
@@ -456,8 +459,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     protected function terminate(Response $response): ResponseInterface
     {
         $this->cleanupEvents();
-
-        UploadedFile::reset();
 
         if ($this->flushLogger) {
             $this->getLog()->getLogger()->flush(true);

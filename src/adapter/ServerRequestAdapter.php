@@ -313,7 +313,7 @@ final class ServerRequestAdapter
      *
      * @return array Uploaded files from the PSR-7 ServerRequestInterface.
      *
-     * @phpstan-return array<mixed, mixed>
+     * @phpstan-return array<array-key, mixed>
      *
      * Usage example:
      * ```php
