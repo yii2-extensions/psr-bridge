@@ -22,6 +22,7 @@ use yii2\extensions\psrbridge\tests\TestCase;
 use function array_filter;
 use function dirname;
 use function file_exists;
+use function file_get_contents;
 use function ini_get;
 use function ini_set;
 use function ob_get_level;
@@ -169,6 +170,7 @@ final class ApplicationCoreTest extends TestCase
                         'targets' => [
                             [
                                 'class' => FileTarget::class,
+                                'categories' => ['test'],
                                 'levels' => ['info'],
                                 'logFile' => $this->logFile,
                                 'maxFileSize' => 1024,
@@ -181,7 +183,7 @@ final class ApplicationCoreTest extends TestCase
         );
 
         $app->on(
-            'afterRequest',
+            StatelessApplication::EVENT_AFTER_REQUEST,
             static function (): void {
                 Yii::info('Test log message after request.', 'test');
             },
@@ -209,6 +211,10 @@ final class ApplicationCoreTest extends TestCase
         self::assertFileExists(
             $this->logFile,
             "Log file should exist after 'flush(true)'.",
+        );
+        self::assertFileIsReadable(
+            $this->logFile,
+            'Log file should be readable.',
         );
 
         $content = file_get_contents($this->logFile);
