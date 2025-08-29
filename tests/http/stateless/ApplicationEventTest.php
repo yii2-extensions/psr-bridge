@@ -9,6 +9,7 @@ use ReflectionException;
 use yii\base\{Event, InvalidConfigException};
 use yii2\extensions\psrbridge\http\StatelessApplication;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
+use yii2\extensions\psrbridge\tests\support\stub\EventComponent;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 #[Group('http')]
@@ -89,26 +90,26 @@ final class ApplicationEventTest extends TestCase
         self::assertCount(
             1,
             $mockComponent1->offCalls,
-            "First component should have 'off()' method called",
+            'Expected only one event to be triggered.',
         );
         self::assertCount(
             1,
             $mockComponent2->offCalls,
-            "Second component should have 'off()' method called",
+            'Expected only one event to be triggered.',
         );
         self::assertContains(
             'test.event1',
             $mockComponent1->offCalls,
-            "First component should have 'off()' called for 'test.event1'",
+            "Expected event 'test.event1' to be unregistered.",
         );
         self::assertContains(
             'test.event2',
             $mockComponent2->offCalls,
-            "Second component should have 'off()' called for 'test.event2'",
+            "Expected event 'test.event2' to be unregistered.",
         );
         $this->assertEmptyRegisteredEvents(
             $app,
-            "Registered events array should be empty after 'cleanup()' call in 'handle()' method.",
+            'Events should be cleaned after request.',
         );
     }
 
@@ -129,7 +130,6 @@ final class ApplicationEventTest extends TestCase
                 $eventsCaptured[] = "before_request_{$version}";
             },
         );
-
         $app->on(
             StatelessApplication::EVENT_AFTER_REQUEST,
             static function (Event $event) use (&$eventsCaptured): void {
@@ -160,21 +160,21 @@ final class ApplicationEventTest extends TestCase
         self::assertCount(
             2,
             $eventsCaptured,
-            'Should capture both BEFORE_REQUEST and AFTER_REQUEST events.',
+            'Expected both events to be triggered.',
         );
         self::assertContains(
             'before_request_0.1.0',
             $eventsCaptured,
-            "Should contain BEFORE_REQUEST event for version '0.1.0'",
+            "Expected new before event 'before_request_0.1.0' to be triggered.",
         );
         self::assertContains(
             'after_request_0.1.0',
             $eventsCaptured,
-            "Should contain AFTER_REQUEST event for version '0.1.0'",
+            "Expected new after event 'after_request_0.1.0' to be triggered.",
         );
         $this->assertEmptyRegisteredEvents(
             $app,
-            'Events should be cleaned up after first request',
+            'Events should be cleaned after request.',
         );
 
         $response = $app->handle(FactoryHelper::createRequest('GET', '/site/statuscode'));
@@ -195,7 +195,175 @@ final class ApplicationEventTest extends TestCase
         );
         $this->assertEmptyRegisteredEvents(
             $app,
-            'Events should be cleaned up after second request',
+            'Events should be cleaned after request.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the property does not exist or is inaccessible.
+     */
+    public function testEventTrackingSystemCapturesInternalEvents(): void
+    {
+        $internalEventCaptured = false;
+
+        $app = $this->statelessApplication();
+
+        $this->assertEmptyRegisteredEvents(
+            $app,
+            'Should start with empty registered events.',
+        );
+
+        $eventComponent = new EventComponent();
+
+        $app->set('eventComponent', $eventComponent);
+
+        $eventComponent->on(
+            'test.internal.event',
+            static function () use (&$internalEventCaptured): void {
+                $internalEventCaptured = true;
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
+
+        $component = $app->get('eventComponent');
+
+        self::assertInstanceOf(
+            EventComponent::class,
+            $component,
+            'Event component should be an instance of EventComponent.',
+        );
+
+        $component->triggerTestEvent();
+
+        self::assertTrue(
+            $internalEventCaptured,
+            'Internal event should be captured.',
+        );
+        $this->assertEmptyRegisteredEvents(
+            $app,
+            'Events should be cleaned after request.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testGlobalEventCleanupWithoutSystemInterference(): void
+    {
+        $app = $this->statelessApplication();
+
+        $eventsTriggered = [];
+
+        $app->on(
+            StatelessApplication::EVENT_BEFORE_REQUEST,
+            static function () use (&$eventsTriggered): void {
+                $eventsTriggered[] = 'app_before';
+            },
+        );
+        $app->on(
+            StatelessApplication::EVENT_AFTER_REQUEST,
+            static function () use (&$eventsTriggered): void {
+                $eventsTriggered[] = 'app_after';
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
+        self::assertCount(
+            2,
+            $eventsTriggered,
+            'Expected both events to be triggered.',
+        );
+        self::assertContains(
+            'app_before',
+            $eventsTriggered,
+            "Expected new before event 'app_before' to be triggered.",
+        );
+        self::assertContains(
+            'app_after',
+            $eventsTriggered,
+            "Expected new after event 'app_after' to be triggered.",
+        );
+        $this->assertEmptyRegisteredEvents(
+            $app,
+            'Events should be cleaned after request.',
+        );
+
+        $eventsTriggered = [];
+
+        $app->on(
+            StatelessApplication::EVENT_BEFORE_REQUEST,
+            static function () use (&$eventsTriggered): void {
+                $eventsTriggered[] = 'app_before_2';
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/statuscode'));
+
+        self::assertSame(
+            201,
+            $response->getStatusCode(),
+            "Expected HTTP '201' for route 'site/statuscode'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/statuscode'.",
+        );
+        self::assertEmpty(
+            $response->getBody()->getContents(),
+            'Expected Response body should be empty.',
+        );
+        self::assertCount(
+            1,
+            $eventsTriggered,
+            'Expected only one event to be triggered.',
+        );
+        self::assertContains(
+            'app_before_2',
+            $eventsTriggered,
+            "Expected new before event 'app_before_2' to be triggered.",
+        );
+        $this->assertEmptyRegisteredEvents(
+            $app,
+            'Events should be cleaned after request.',
         );
     }
 
@@ -243,12 +411,17 @@ final class ApplicationEventTest extends TestCase
         self::assertSame(
             1,
             $invocations,
-            "Should trigger '{$eventName}' exactly once during 'handle()' method.",
+            'Expected only one event to be triggered.',
+        );
+        self::assertContains(
+            $eventName,
+            $sequence,
+            "Expected new event '{$eventName}' to be triggered.",
         );
         self::assertSame(
             $app,
             $sender,
-            'Event sender should be the application instance.',
+            'Events should be cleaned after request.',
         );
     }
 
