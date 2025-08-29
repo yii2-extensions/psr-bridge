@@ -232,7 +232,7 @@ final class ApplicationEventTest extends TestCase
         self::assertCount(
             2,
             $eventsCaptured,
-            'Expected no additional BEFORE/AFTER events should be captured on the second request after cleanup.',
+            'No additional BEFORE/AFTER events should be captured on the second request after cleanup.',
         );
         $this->assertEmptyRegisteredEvents(
             $app,
