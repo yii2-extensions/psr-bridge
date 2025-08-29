@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
-use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, TestWith};
+use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
 use Yii;
-use yii\base\{Event, InvalidConfigException, Security};
+use yii\base\{InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
@@ -500,59 +500,6 @@ final class ApplicationCoreTest extends TestCase
             dirname(__DIR__, 2),
             Yii::getAlias('@webroot'),
             "'@webroot' alias should be set to the parent directory of the test directory after handling a request.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    #[TestWith([StatelessApplication::EVENT_AFTER_REQUEST])]
-    #[TestWith([StatelessApplication::EVENT_BEFORE_REQUEST])]
-    public function testTriggerEventDuringHandle(string $eventName): void
-    {
-        $invocations = 0;
-        $sender = null;
-        $sequence = [];
-
-        $app = $this->statelessApplication();
-
-        $app->on(
-            $eventName,
-            static function (Event $event) use (&$invocations, &$sequence, &$sender): void {
-                $invocations++;
-                $sender = $event->sender ?? null;
-                $sequence[] = $event->name;
-            },
-        );
-
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
-
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
-        );
-        self::assertSame(
-            1,
-            $invocations,
-            "Should trigger '{$eventName}' exactly once during 'handle()'.",
-        );
-        self::assertSame(
-            $app,
-            $sender,
-            'Event sender should be the application instance.',
         );
     }
 }

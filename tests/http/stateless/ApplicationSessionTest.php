@@ -376,7 +376,6 @@ final class ApplicationSessionTest extends TestCase
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/setsession'.",
         );
-
         self::assertSame(
             "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
             $response->getHeaderLine('Set-Cookie'),

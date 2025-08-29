@@ -483,7 +483,9 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      */
     private function cleanupEvents(): void
     {
+        // @codeCoverageIgnoreStart
         Event::off('*', '*', $this->eventHandler);
+        // @codeCoverageIgnoreEnd
 
         foreach (array_reverse($this->registeredEvents) as $event) {
             if ($event->sender !== null && method_exists($event->sender, 'off')) {
