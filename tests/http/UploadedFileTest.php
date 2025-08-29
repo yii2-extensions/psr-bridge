@@ -31,18 +31,20 @@ final class UploadedFileTest extends TestCase
 
         $tmpPath = stream_get_meta_data($tmpFile)['uri'];
 
-        $uploadedFileWithError = FactoryHelper::createUploadedFile(
-            'error-file.txt',
-            'text/plain',
-            FactoryHelper::createStream($tmpPath),
-            UPLOAD_ERR_CANT_WRITE,
-            100,
-        );
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/post')
-                    ->withUploadedFiles(['error-file' => $uploadedFileWithError]),
+                ->withUploadedFiles(
+                    [
+                        'error-file' => FactoryHelper::createUploadedFile(
+                            'error-file.txt',
+                            'text/plain',
+                            FactoryHelper::createStream($tmpPath),
+                            UPLOAD_ERR_CANT_WRITE,
+                            100,
+                        ),
+                    ],
+                ),
             ),
         );
 
@@ -66,12 +68,12 @@ final class UploadedFileTest extends TestCase
         self::assertSame(
             '',
             $uploadedFile->tempName,
-            'Should have an empty tempName when there is an upload error.',
+            "Should have an empty 'tempName' when there is an upload error.",
         );
         self::assertSame(
             UPLOAD_ERR_CANT_WRITE,
             $uploadedFile->error,
-            'Should preserve the upload error code from PSR-7 UploadedFile.',
+            "Should preserve the upload 'error' code from PSR-7 UploadedFile.",
         );
         self::assertSame(
             100,
@@ -86,18 +88,20 @@ final class UploadedFileTest extends TestCase
 
         $tmpPath = stream_get_meta_data($tmpFile)['uri'];
 
-        $uploadedFileWithNullSize = FactoryHelper::createUploadedFileFactory()->createUploadedFile(
-            FactoryHelper::createStream($tmpPath),
-            null,
-            UPLOAD_ERR_CANT_WRITE,
-            'null-size-file.txt',
-            'text/plain',
-        );
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/post')
-                    ->withUploadedFiles(['null-size-file' => $uploadedFileWithNullSize]),
+                ->withUploadedFiles(
+                    [
+                        'null-size-file' => FactoryHelper::createUploadedFileFactory()->createUploadedFile(
+                            FactoryHelper::createStream($tmpPath),
+                            null,
+                            UPLOAD_ERR_CANT_WRITE,
+                            'null-size-file.txt',
+                            'text/plain',
+                        ),
+                    ],
+                ),
             ),
         );
 
@@ -112,6 +116,615 @@ final class UploadedFileTest extends TestCase
             0,
             $uploadedFile->size,
             "Should default to exactly '0' when PSR-7 'getSize()' method returns 'null' in error condition.",
+        );
+    }
+
+    public function testGetInstancesWithModelAndArrayAttributeReturnsArrayForArrayIndexedUpload(): void
+    {
+        $_FILES = [
+            'UploadedFileModel[files][0]' => [
+                'name' => 'array-indexed-1.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/phparray1',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 180,
+            ],
+            'UploadedFileModel[files][1]' => [
+                'name' => 'array-indexed-2.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/phparray2',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 220,
+            ],
+        ];
+
+        $files = UploadedFile::getInstances(new UploadedFileModel(), 'files');
+
+        self::assertCount(
+            2,
+            $files,
+            'Should return an array with two files for array-indexed attribute upload.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for first file in array-indexed upload.',
+        );
+        self::assertSame(
+            'array-indexed-1.txt',
+            $files[0]->name,
+            'Should preserve \'name\' from $_FILES for first file in array-indexed upload.',
+        );
+        self::assertSame(
+            180,
+            $files[0]->size,
+            'Should preserve \'size\' from $_FILES for first file in array-indexed upload.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[1] ?? null,
+            'Should return an instance of UploadedFile for second file in array-indexed upload.',
+        );
+        self::assertSame(
+            'array-indexed-2.txt',
+            $files[1]->name,
+            'Should preserve \'name\' from $_FILES for second file in array-indexed upload.',
+        );
+        self::assertSame(
+            220,
+            $files[1]->size,
+            'Should preserve \'size\' from $_FILES for second file in array-indexed upload.',
+        );
+    }
+
+    public function testGetInstancesWithModelAndAttributeHandlesComplexModelNameArray(): void
+    {
+        $_FILES = [
+            'Complex_Model-Name[file_attribute][0]' => [
+                'name' => 'complex-array-1.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/phpcomplex1',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 300,
+            ],
+            'Complex_Model-Name[file_attribute][1]' => [
+                'name' => 'complex-array-2.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/phpcomplex2',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 350,
+            ],
+        ];
+
+        $files = UploadedFile::getInstances(new ComplexUploadedFileModel(), 'file_attribute');
+
+        self::assertCount(
+            2,
+            $files,
+            'Should return an array with two files for complex model name with array upload.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for first file in complex model array upload.',
+        );
+        self::assertSame(
+            'complex-array-1.txt',
+            $files[0]->name,
+            'Should preserve \'name\' from $_FILES for first file in complex model array upload.',
+        );
+        self::assertSame(
+            300,
+            $files[0]->size,
+            'Should preserve \'size\' from $_FILES for first file in complex model array upload.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[1] ?? null,
+            'Should return an instance of UploadedFile for second file in complex model array upload.',
+        );
+        self::assertSame(
+            'complex-array-2.txt',
+            $files[1]->name,
+            'Should preserve \'name\' from $_FILES for second file in complex model array upload.',
+        );
+        self::assertSame(
+            350,
+            $files[1]->size,
+            'Should preserve \'size\' from $_FILES for second file in complex model array upload.',
+        );
+    }
+
+    public function testGetInstancesWithModelAndAttributeHandlesErrorFilesArray(): void
+    {
+        $tmpFile1 = $this->createTmpFile();
+
+        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
+
+        $tmpFile2 = $this->createTmpFile();
+
+        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/upload')
+                ->withUploadedFiles(
+                    [
+                        'UploadedFileModel[file]' => [
+                            FactoryHelper::createUploadedFile(
+                                'error-array-1.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath1),
+                                UPLOAD_ERR_CANT_WRITE,
+                                75,
+                            ),
+                            FactoryHelper::createUploadedFile(
+                                'error-array-2.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath2),
+                                UPLOAD_ERR_CANT_WRITE,
+                                85,
+                            ),
+                        ],
+                    ],
+                ),
+            ),
+        );
+
+        $files = UploadedFile::getInstances(new UploadedFileModel(), 'file');
+
+        self::assertCount(
+            2,
+            $files,
+            'Should return an array with two files even when there are upload errors.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for first file even when there is an upload error.',
+        );
+        self::assertSame(
+            'error-array-1.txt',
+            $files[0]->name,
+            "Should preserve the original file 'name' for first file even when there is an upload error.",
+        );
+        self::assertSame(
+            '',
+            $files[0]->tempName,
+            "Should have an empty 'tempName' for first file when there is an upload error.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_CANT_WRITE,
+            $files[0]->error,
+            "Should preserve the upload 'error' code for first file from PSR-7 UploadedFile.",
+        );
+        self::assertSame(
+            75,
+            $files[0]->size,
+            "Should preserve the original file 'size' for first file even when there is an upload error.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[1] ?? null,
+            'Should return an instance of UploadedFile for second file even when there is an upload error.',
+        );
+        self::assertSame(
+            'error-array-2.txt',
+            $files[1]->name,
+            "Should preserve the original file 'name' for second file even when there is an upload error.",
+        );
+        self::assertSame(
+            '',
+            $files[1]->tempName,
+            "Should have an empty 'tempName' for second file when there is an upload error.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_CANT_WRITE,
+            $files[1]->error,
+            "Should preserve the upload 'error' code for second file from PSR-7 UploadedFile.",
+        );
+        self::assertSame(
+            85,
+            $files[1]->size,
+            "Should preserve the original file 'size' for second file even when there is an upload error.",
+        );
+    }
+
+    public function testGetInstancesWithModelAndAttributeHandlesMixedSuccessAndErrorFiles(): void
+    {
+        $tmpFile1 = $this->createTmpFile();
+
+        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
+        file_put_contents($tmpPath1, 'Success file content');
+
+        $tmpFile2 = $this->createTmpFile();
+
+        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/upload')
+                ->withUploadedFiles(
+                    [
+                        'UploadedFileModel[file]' => [
+                            FactoryHelper::createUploadedFile(
+                                'success-file.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath1),
+                                UPLOAD_ERR_OK,
+                                20,
+                            ),
+                            FactoryHelper::createUploadedFile(
+                                'error-file.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath2),
+                                UPLOAD_ERR_CANT_WRITE,
+                                100,
+                            ),
+                        ],
+                    ],
+                ),
+            ),
+        );
+
+        $files = UploadedFile::getInstances(new UploadedFileModel(), 'file');
+
+        self::assertCount(
+            2,
+            $files,
+            'Should return an array with two files when mixing successful and error files.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for successful file in mixed scenario.',
+        );
+        self::assertSame(
+            'success-file.txt',
+            $files[0]->name,
+            "Should preserve 'name' for successful file in mixed scenario.",
+        );
+        self::assertNotEmpty(
+            $files[0]->tempName,
+            "Should have a 'tempName' for successful file in mixed scenario.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $files[0]->error,
+            "Should have no 'error' for successful file in mixed scenario.",
+        );
+        self::assertSame(
+            20,
+            $files[0]->size,
+            "Should preserve 'size' for successful file in mixed scenario.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[1] ?? null,
+            'Should return an instance of UploadedFile for error file in mixed scenario.',
+        );
+        self::assertSame(
+            'error-file.txt',
+            $files[1]->name,
+            "Should preserve 'name' for error file in mixed scenario.",
+        );
+        self::assertSame(
+            '',
+            $files[1]->tempName,
+            "Should have empty 'tempName' for error file in mixed scenario.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_CANT_WRITE,
+            $files[1]->error,
+            "Should preserve 'error' code for error file in mixed scenario.",
+        );
+        self::assertSame(
+            100,
+            $files[1]->size,
+            "Should preserve 'size' for error file in mixed scenario.",
+        );
+    }
+
+    public function testGetInstancesWithModelAndAttributeReturnsArrayForMultipleFilesUpload(): void
+    {
+        $_FILES = [
+            'UploadedFileModel[file][0]' => [
+                'name' => 'multi-file-1.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/phpmulti1',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 256,
+            ],
+            'UploadedFileModel[file][1]' => [
+                'name' => 'multi-file-2.pdf',
+                'type' => 'application/pdf',
+                'tmp_name' => '/tmp/phpmulti2',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 512,
+            ],
+            'UploadedFileModel[file][2]' => [
+                'name' => 'multi-file-3.jpg',
+                'type' => 'image/jpeg',
+                'tmp_name' => '/tmp/phpmulti3',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 1024,
+            ],
+        ];
+
+        $files = UploadedFile::getInstances(new UploadedFileModel(), 'file');
+
+        self::assertCount(
+            3,
+            $files,
+            'Should return an array with three files for multiple files upload.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for first file in multiple upload.',
+        );
+        self::assertSame(
+            'multi-file-1.txt',
+            $files[0]->name,
+            'Should preserve \'name\' from $_FILES for first file in multiple upload.',
+        );
+        self::assertSame(
+            'text/plain',
+            $files[0]->type,
+            'Should preserve \'type\' from $_FILES for first file in multiple upload.',
+        );
+        self::assertSame(
+            256,
+            $files[0]->size,
+            'Should preserve \'size\' from $_FILES for first file in multiple upload.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[1] ?? null,
+            'Should return an instance of UploadedFile for second file in multiple upload.',
+        );
+        self::assertSame(
+            'multi-file-2.pdf',
+            $files[1]->name,
+            'Should preserve \'name\' from $_FILES for second file in multiple upload.',
+        );
+        self::assertSame(
+            'application/pdf',
+            $files[1]->type,
+            'Should preserve \'type\' from $_FILES for second file in multiple upload.',
+        );
+        self::assertSame(
+            512,
+            $files[1]->size,
+            'Should preserve \'size\' from $_FILES for second file in multiple upload.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[2] ?? null,
+            'Should return an instance of UploadedFile for third file in multiple upload.',
+        );
+        self::assertSame(
+            'multi-file-3.jpg',
+            $files[2]->name,
+            'Should preserve \'name\' from $_FILES for third file in multiple upload.',
+        );
+        self::assertSame(
+            'image/jpeg',
+            $files[2]->type,
+            'Should preserve \'type\' from $_FILES for third file in multiple upload.',
+        );
+        self::assertSame(
+            1024,
+            $files[2]->size,
+            'Should preserve \'size\' from $_FILES for third file in multiple upload.',
+        );
+    }
+
+    public function testGetInstancesWithModelAndAttributeReturnsArrayForPsr7MultipleFiles(): void
+    {
+        $tmpFile1 = $this->createTmpFile();
+
+        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
+        file_put_contents($tmpPath1, 'PSR-7 array test content 1');
+
+        $tmpFile2 = $this->createTmpFile();
+
+        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
+        file_put_contents($tmpPath2, 'PSR-7 array test content 2');
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/upload')
+                ->withUploadedFiles(
+                    [
+                        'UploadedFileModel[file]' => [
+                            FactoryHelper::createUploadedFile(
+                                'psr7-array-1.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath1),
+                                UPLOAD_ERR_OK,
+                                28,
+                            ),
+                            FactoryHelper::createUploadedFile(
+                                'psr7-array-2.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath2),
+                                UPLOAD_ERR_OK,
+                                28,
+                            ),
+                        ],
+                    ],
+                ),
+            ),
+        );
+
+        $files = UploadedFile::getInstances(new UploadedFileModel(), 'file');
+
+        self::assertCount(
+            2,
+            $files,
+            'Should return an array with two files when using PSR-7 with multiple files and model attribute.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for first PSR-7 file with model and attribute.',
+        );
+        self::assertSame(
+            'psr7-array-1.txt',
+            $files[0]->name,
+            "Should preserve 'name' from first PSR-7 UploadedFile when using model and attribute.",
+        );
+        self::assertSame(
+            'text/plain',
+            $files[0]->type,
+            "Should preserve 'type' from first PSR-7 UploadedFile when using model and attribute.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $files[0]->error,
+            "Should preserve 'error' from first PSR-7 UploadedFile when using model and attribute.",
+        );
+        self::assertSame(
+            28,
+            $files[0]->size,
+            "Should preserve 'size' from first PSR-7 UploadedFile when using model and attribute.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[1] ?? null,
+            'Should return an instance of UploadedFile for second PSR-7 file with model and attribute.',
+        );
+        self::assertSame(
+            'psr7-array-2.txt',
+            $files[1]->name,
+            "Should preserve 'name' from second PSR-7 UploadedFile when using model and attribute.",
+        );
+        self::assertSame(
+            'text/plain',
+            $files[1]->type,
+            "Should preserve 'type' from second PSR-7 UploadedFile when using model and attribute.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $files[1]->error,
+            "Should preserve 'error' from second PSR-7 UploadedFile when using model and attribute.",
+        );
+        self::assertSame(
+            28,
+            $files[1]->size,
+            "Should preserve 'size' from second PSR-7 UploadedFile when using model and attribute.",
+        );
+    }
+
+    public function testGetInstancesWithModelAndAttributeReturnsArrayForSingleFileUpload(): void
+    {
+        $_FILES = [
+            'UploadedFileModel[file]' => [
+                'name' => 'single-file.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/phpsingle',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 128,
+            ],
+        ];
+
+        $files = UploadedFile::getInstances(new UploadedFileModel(), 'file');
+
+        self::assertCount(
+            1,
+            $files,
+            'Should return an array with one file for single file upload.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for single file upload.',
+        );
+        self::assertSame(
+            'single-file.txt',
+            $files[0]->name,
+            'Should preserve \'name\' from $_FILES for single file upload.',
+        );
+        self::assertSame(
+            'text/plain',
+            $files[0]->type,
+            'Should preserve \'type\' from $_FILES for single file upload.',
+        );
+        self::assertSame(
+            '/tmp/phpsingle',
+            $files[0]->tempName,
+            'Should preserve \'tmp_name\' from $_FILES for single file upload.',
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $files[0]->error,
+            'Should preserve \'error\' from $_FILES for single file upload.',
+        );
+        self::assertSame(
+            128,
+            $files[0]->size,
+            'Should preserve \'size\' from $_FILES for single file upload.',
+        );
+    }
+
+    public function testGetInstancesWithModelAndAttributeReturnsEmptyArrayWhenNoFilesUploaded(): void
+    {
+        $_FILES = [];
+
+        $files = UploadedFile::getInstances(new UploadedFileModel(), 'file');
+
+        self::assertEmpty(
+            $files,
+            'Should return an empty array when no files are uploaded for the specified model attribute.',
+        );
+    }
+
+    public function testGetInstancesWithModelAndTabularAttributeReturnsArrayForTabularUpload(): void
+    {
+        $_FILES = [
+            'UploadedFileModel[1][file]' => [
+                'name' => 'tabular-array-1.txt',
+                'type' => 'application/json',
+                'tmp_name' => '/tmp/phptabular1',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 400,
+            ],
+            'UploadedFileModel[2][file]' => [
+                'name' => 'tabular-array-2.txt',
+                'type' => 'application/json',
+                'tmp_name' => '/tmp/phptabular2',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 450,
+            ],
+        ];
+
+        $files = UploadedFile::getInstances(new UploadedFileModel(), '[1]file');
+
+        self::assertCount(
+            1,
+            $files,
+            'Should return an array with one file for specific tabular index.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for tabular-style attribute upload.',
+        );
+        self::assertSame(
+            'tabular-array-1.txt',
+            $files[0]->name,
+            'Should preserve \'name\' from $_FILES for tabular-style attribute upload.',
+        );
+        self::assertSame(
+            'application/json',
+            $files[0]->type,
+            'Should preserve \'type\' from $_FILES for tabular-style attribute upload.',
+        );
+        self::assertSame(
+            400,
+            $files[0]->size,
+            'Should preserve \'size\' from $_FILES for tabular-style attribute upload.',
         );
     }
 
@@ -137,12 +750,12 @@ final class UploadedFileTest extends TestCase
         self::assertSame(
             'array-test.txt',
             $uploadedFile->name,
-            'Should preserve name from $_FILES when using array-indexed attribute.',
+            'Should preserve \'name\' from $_FILES when using array-indexed attribute.',
         );
         self::assertSame(
             150,
             $uploadedFile->size,
-            'Should preserve size from $_FILES when using array-indexed attribute.',
+            'Should preserve \'size\' from $_FILES when using array-indexed attribute.',
         );
     }
 
@@ -168,12 +781,12 @@ final class UploadedFileTest extends TestCase
         self::assertSame(
             'complex-name-test.txt',
             $uploadedFile->name,
-            'Should preserve name from $_FILES when using complex model name.',
+            'Should preserve \'name\' from $_FILES when using complex model name.',
         );
         self::assertSame(
             250,
             $uploadedFile->size,
-            'Should preserve size from $_FILES when using complex model name.',
+            'Should preserve \'size\' from $_FILES when using complex model name.',
         );
     }
 
@@ -183,18 +796,20 @@ final class UploadedFileTest extends TestCase
 
         $tmpPath = stream_get_meta_data($tmpFile)['uri'];
 
-        $uploadedFileWithError = FactoryHelper::createUploadedFile(
-            'error-model-test.txt',
-            'text/plain',
-            FactoryHelper::createStream($tmpPath),
-            UPLOAD_ERR_CANT_WRITE,
-            50,
-        );
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
-                    ->withUploadedFiles(['UploadedFileModel[file]' => $uploadedFileWithError]),
+                ->withUploadedFiles(
+                    [
+                        'UploadedFileModel[file]' => FactoryHelper::createUploadedFile(
+                            'error-model-test.txt',
+                            'text/plain',
+                            FactoryHelper::createStream($tmpPath),
+                            UPLOAD_ERR_CANT_WRITE,
+                            50,
+                        ),
+                    ],
+                ),
             ),
         );
 
@@ -208,22 +823,22 @@ final class UploadedFileTest extends TestCase
         self::assertSame(
             'error-model-test.txt',
             $uploadedFile->name,
-            'Should preserve the original file name even when there is an upload error using model and attribute.',
+            "Should preserve the original file 'name' even when there is an upload error using model and attribute.",
         );
         self::assertSame(
             '',
             $uploadedFile->tempName,
-            'Should have an empty tempName when there is an upload error using model and attribute.',
+            "Should have an empty 'tempName' when there is an upload error using model and attribute.",
         );
         self::assertSame(
             UPLOAD_ERR_CANT_WRITE,
             $uploadedFile->error,
-            'Should preserve the upload error code from PSR-7 UploadedFile when using model and attribute.',
+            "Should preserve the upload 'error' code from PSR-7 UploadedFile when using model and attribute.",
         );
         self::assertSame(
             50,
             $uploadedFile->size,
-            'Should preserve the original file size even when there is an upload error using model and attribute.',
+            "Should preserve the original file 'size' even when there is an upload error using model and attribute.",
         );
     }
 
@@ -261,27 +876,27 @@ final class UploadedFileTest extends TestCase
         self::assertSame(
             'model-test.txt',
             $uploadedFile->name,
-            'Should preserve name from $_FILES when using model and attribute.',
+            'Should preserve \'name\' from $_FILES when using model and attribute.',
         );
         self::assertSame(
             'text/plain',
             $uploadedFile->type,
-            'Should preserve type from $_FILES when using model and attribute.',
+            'Should preserve \'type\' from $_FILES when using model and attribute.',
         );
         self::assertSame(
             '/tmp/phpmodel',
             $uploadedFile->tempName,
-            'Should preserve tmp_name from $_FILES when using model and attribute.',
+            'Should preserve \'tmp_name\' from $_FILES when using model and attribute.',
         );
         self::assertSame(
             UPLOAD_ERR_OK,
             $uploadedFile->error,
-            'Should preserve error from $_FILES when using model and attribute.',
+            'Should preserve \'error\' from $_FILES when using model and attribute.',
         );
         self::assertSame(
             200,
             $uploadedFile->size,
-            'Should preserve size from $_FILES when using model and attribute.',
+            'Should preserve \'size\' from $_FILES when using model and attribute.',
         );
     }
 
@@ -292,18 +907,20 @@ final class UploadedFileTest extends TestCase
         $tmpPath = stream_get_meta_data($tmpFile)['uri'];
         file_put_contents($tmpPath, 'PSR-7 model test content');
 
-        $uploadedFile = FactoryHelper::createUploadedFile(
-            'psr7-model-test.txt',
-            'text/plain',
-            FactoryHelper::createStream($tmpPath),
-            UPLOAD_ERR_OK,
-            24,
-        );
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
-                    ->withUploadedFiles(['UploadedFileModel[file]' => $uploadedFile]),
+                ->withUploadedFiles(
+                    [
+                        'UploadedFileModel[file]' => FactoryHelper::createUploadedFile(
+                            'psr7-model-test.txt',
+                            'text/plain',
+                            FactoryHelper::createStream($tmpPath),
+                            UPLOAD_ERR_OK,
+                            24,
+                        ),
+                    ],
+                ),
             ),
         );
 
@@ -317,22 +934,22 @@ final class UploadedFileTest extends TestCase
         self::assertSame(
             'psr7-model-test.txt',
             $retrievedFile->name,
-            'Should preserve name from PSR-7 UploadedFile when using model and attribute.',
+            "Should preserve 'name' from PSR-7 UploadedFile when using model and attribute.",
         );
         self::assertSame(
             'text/plain',
             $retrievedFile->type,
-            'Should preserve type from PSR-7 UploadedFile when using model and attribute.',
+            "Should preserve 'type' from PSR-7 UploadedFile when using model and attribute.",
         );
         self::assertSame(
             UPLOAD_ERR_OK,
             $retrievedFile->error,
-            'Should preserve error from PSR-7 UploadedFile when using model and attribute.',
+            "Should preserve 'error' from PSR-7 UploadedFile when using model and attribute.",
         );
         self::assertSame(
             24,
             $retrievedFile->size,
-            'Should preserve size from PSR-7 UploadedFile when using model and attribute.',
+            "Should preserve 'size' from PSR-7 UploadedFile when using model and attribute.",
         );
     }
 
@@ -358,17 +975,17 @@ final class UploadedFileTest extends TestCase
         self::assertSame(
             'tabular-test.txt',
             $uploadedFile->name,
-            'Should preserve name from $_FILES when using tabular-style attribute.',
+            'Should preserve \'name\' from $_FILES when using tabular-style attribute.',
         );
         self::assertSame(
             'application/json',
             $uploadedFile->type,
-            'Should preserve type from $_FILES when using tabular-style attribute.',
+            'Should preserve \'type\' from $_FILES when using tabular-style attribute.',
         );
         self::assertSame(
             300,
             $uploadedFile->size,
-            'Should preserve size from $_FILES when using tabular-style attribute.',
+            'Should preserve \'size\' from $_FILES when using tabular-style attribute.',
         );
     }
 
@@ -567,18 +1184,20 @@ final class UploadedFileTest extends TestCase
         $tmpPath = stream_get_meta_data($tmpFile)['uri'];
         file_put_contents($tmpPath, 'Test content for reset method test');
 
-        $uploadedFile = FactoryHelper::createUploadedFile(
-            'reset-test.txt',
-            'text/plain',
-            FactoryHelper::createStream($tmpPath),
-            UPLOAD_ERR_OK,
-            32,
-        );
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/post')
-                    ->withUploadedFiles(['reset-test' => $uploadedFile]),
+                ->withUploadedFiles(
+                    [
+                        'reset-test' => FactoryHelper::createUploadedFile(
+                            'reset-test.txt',
+                            'text/plain',
+                            FactoryHelper::createStream($tmpPath),
+                            UPLOAD_ERR_OK,
+                            32,
+                        ),
+                    ],
+                ),
             ),
         );
 
@@ -684,26 +1303,26 @@ final class UploadedFileTest extends TestCase
 
         $adapter = new ServerRequestAdapter(
             FactoryHelper::createRequest('POST', 'http://example.com')
-                ->withUploadedFiles(
-                    [
-                        'files' => [
-                            FactoryHelper::createUploadedFile(
-                                'file1.txt',
-                                'text/plain',
-                                FactoryHelper::createStream($tmpPathFile1),
-                                UPLOAD_ERR_OK,
-                                8,
-                            ),
-                            FactoryHelper::createUploadedFile(
-                                'file2.txt',
-                                'text/plain',
-                                FactoryHelper::createStream($tmpPathFile2),
-                                UPLOAD_ERR_OK,
-                                8,
-                            ),
-                        ],
+            ->withUploadedFiles(
+                [
+                    'files' => [
+                        FactoryHelper::createUploadedFile(
+                            'file1.txt',
+                            'text/plain',
+                            FactoryHelper::createStream($tmpPathFile1),
+                            UPLOAD_ERR_OK,
+                            8,
+                        ),
+                        FactoryHelper::createUploadedFile(
+                            'file2.txt',
+                            'text/plain',
+                            FactoryHelper::createStream($tmpPathFile2),
+                            UPLOAD_ERR_OK,
+                            8,
+                        ),
                     ],
-                ),
+                ],
+            ),
         );
 
         UploadedFile::setPsr7Adapter($adapter);
