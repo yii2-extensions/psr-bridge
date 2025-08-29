@@ -18,6 +18,104 @@ final class ApplicationEventTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if the property does not exist or is inaccessible.
      */
+    public function testEventCleanupOrderMattersForProperMemoryManagement(): void
+    {
+        $app = $this->statelessApplication();
+
+        $mockComponent1 = new class {
+            /**
+             * @phpstan-var mixed[]
+             */
+            public array $offCalls = [];
+
+            /**
+             * @phpstan-ignore-next-line
+             */
+            public function on(string $name, callable $handler): void {}
+
+            public function off(string $name): void
+            {
+                $this->offCalls[] = $name;
+            }
+        };
+
+        $mockComponent2 = new class {
+            /**
+             * @phpstan-var mixed[]
+             */
+            public array $offCalls = [];
+
+            /**
+             * @phpstan-ignore-next-line
+             */
+            public function on(string $name, callable $handler): void {}
+
+            public function off(string $name): void
+            {
+                $this->offCalls[] = $name;
+            }
+        };
+
+        /** @phpstan-var Event[] $registeredEvents */
+        $registeredEvents = self::inaccessibleProperty($app, 'registeredEvents');
+
+        $event1 = new Event(['name' => 'test.event1', 'sender' => $mockComponent1]);
+        $event2 = new Event(['name' => 'test.event2', 'sender' => $mockComponent2]);
+
+        $registeredEvents[] = $event1;
+        $registeredEvents[] = $event2;
+
+        self::setInaccessibleProperty($app, 'registeredEvents', $registeredEvents);
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
+        self::assertCount(
+            1,
+            $mockComponent1->offCalls,
+            "First component should have 'off()' method called",
+        );
+        self::assertCount(
+            1,
+            $mockComponent2->offCalls,
+            "Second component should have 'off()' method called",
+        );
+        self::assertContains(
+            'test.event1',
+            $mockComponent1->offCalls,
+            "First component should have 'off()' called for 'test.event1'",
+        );
+        self::assertContains(
+            'test.event2',
+            $mockComponent2->offCalls,
+            "Second component should have 'off()' called for 'test.event2'",
+        );
+        $this->assertEmptyRegisteredEvents(
+            $app,
+            "Registered events array should be empty after 'cleanup()' call in 'handle()' method.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the property does not exist or is inaccessible.
+     */
     public function testEventRegistrationAndCleanupBetweenRequests(): void
     {
         $app = $this->statelessApplication();
