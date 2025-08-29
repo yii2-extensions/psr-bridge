@@ -119,6 +119,206 @@ final class UploadedFileTest extends TestCase
         );
     }
 
+    public function testGetInstancesWithComplexUploadedFileModelAndPsr7AdapterForMultipleFiles(): void
+    {
+        $tmpFile1 = $this->createTmpFile();
+
+        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
+        file_put_contents($tmpPath1, 'PSR-7 complex model array test content 1');
+
+        $tmpFile2 = $this->createTmpFile();
+
+        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
+        file_put_contents($tmpPath2, 'PSR-7 complex model array test content 2');
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/upload')
+                ->withUploadedFiles(
+                    [
+                        'Complex_Model-Name[file_attribute]' => [
+                            FactoryHelper::createUploadedFile(
+                                'psr7-complex-array-1.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath1),
+                                UPLOAD_ERR_OK,
+                                38,
+                            ),
+                            FactoryHelper::createUploadedFile(
+                                'psr7-complex-array-2.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath2),
+                                UPLOAD_ERR_OK,
+                                38,
+                            ),
+                        ],
+                    ],
+                ),
+            ),
+        );
+
+        $files = UploadedFile::getInstances(new ComplexUploadedFileModel(), 'file_attribute');
+
+        self::assertCount(
+            2,
+            $files,
+            'Should return an array with two files when using PSR-7 with ComplexUploadedFileModel for multiple files.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for first PSR-7 file with ComplexUploadedFileModel.',
+        );
+        self::assertSame(
+            'psr7-complex-array-1.txt',
+            $files[0]->name,
+            "Should preserve 'name' from first PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            'text/plain',
+            $files[0]->type,
+            "Should preserve 'type' from first PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $files[0]->error,
+            "Should preserve 'error' from first PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            38,
+            $files[0]->size,
+            "Should preserve 'size' from first PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertNotEmpty(
+            $files[0]->tempName,
+            "Should have a valid 'tempName' from first PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[1] ?? null,
+            'Should return an instance of UploadedFile for second PSR-7 file with ComplexUploadedFileModel.',
+        );
+        self::assertSame(
+            'psr7-complex-array-2.txt',
+            $files[1]->name,
+            "Should preserve 'name' from second PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            'text/plain',
+            $files[1]->type,
+            "Should preserve 'type' from second PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $files[1]->error,
+            "Should preserve 'error' from second PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            38,
+            $files[1]->size,
+            "Should preserve 'size' from second PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertNotEmpty(
+            $files[1]->tempName,
+            "Should have a valid 'tempName' from second PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+    }
+
+    public function testGetInstancesWithComplexUploadedFileModelAndPsr7AdapterWithMixedErrorFiles(): void
+    {
+        $tmpFile1 = $this->createTmpFile();
+
+        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
+        file_put_contents($tmpPath1, 'PSR-7 complex model success file content');
+
+        $tmpFile2 = $this->createTmpFile();
+
+        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/upload')
+                ->withUploadedFiles(
+                    [
+                        'Complex_Model-Name[file_attribute]' => [
+                            FactoryHelper::createUploadedFile(
+                                'psr7-complex-success-file.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath1),
+                                UPLOAD_ERR_OK,
+                                36,
+                            ),
+                            FactoryHelper::createUploadedFile(
+                                'psr7-complex-error-file.txt',
+                                'text/plain',
+                                FactoryHelper::createStream($tmpPath2),
+                                UPLOAD_ERR_CANT_WRITE,
+                                120,
+                            ),
+                        ],
+                    ],
+                ),
+            ),
+        );
+
+        $files = UploadedFile::getInstances(new ComplexUploadedFileModel(), 'file_attribute');
+
+        self::assertCount(
+            2,
+            $files,
+            'Should return an array with two files when mixing successful and error files using PSR-7 with ComplexUploadedFileModel.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[0] ?? null,
+            'Should return an instance of UploadedFile for successful file in mixed scenario using PSR-7 with ComplexUploadedFileModel.',
+        );
+        self::assertSame(
+            'psr7-complex-success-file.txt',
+            $files[0]->name,
+            "Should preserve 'name' for successful file in mixed scenario using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertNotEmpty(
+            $files[0]->tempName,
+            "Should have a 'tempName' for successful file in mixed scenario using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $files[0]->error,
+            "Should have no 'error' for successful file in mixed scenario using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            36,
+            $files[0]->size,
+            "Should preserve 'size' for successful file in mixed scenario using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $files[1] ?? null,
+            'Should return an instance of UploadedFile for error file in mixed scenario using PSR-7 with ComplexUploadedFileModel.',
+        );
+        self::assertSame(
+            'psr7-complex-error-file.txt',
+            $files[1]->name,
+            "Should preserve 'name' for error file in mixed scenario using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            '',
+            $files[1]->tempName,
+            "Should have empty 'tempName' for error file in mixed scenario using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_CANT_WRITE,
+            $files[1]->error,
+            "Should preserve 'error' code for error file in mixed scenario using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            120,
+            $files[1]->size,
+            "Should preserve 'size' for error file in mixed scenario using PSR-7 with ComplexUploadedFileModel.",
+        );
+    }
+
     public function testGetInstancesWithModelAndArrayAttributeReturnsArrayForArrayIndexedUpload(): void
     {
         $_FILES = [
@@ -725,6 +925,120 @@ final class UploadedFileTest extends TestCase
             400,
             $files[0]->size,
             'Should preserve \'size\' from $_FILES for tabular-style attribute upload.',
+        );
+    }
+
+    public function testGetInstanceWithComplexUploadedFileModelAndPsr7Adapter(): void
+    {
+        $tmpFile = $this->createTmpFile();
+
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+        file_put_contents($tmpPath, 'PSR-7 complex model test content');
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/upload')
+                ->withUploadedFiles(
+                    [
+                        'Complex_Model-Name[file_attribute]' => FactoryHelper::createUploadedFile(
+                            'psr7-complex-model-test.txt',
+                            'text/plain',
+                            FactoryHelper::createStream($tmpPath),
+                            UPLOAD_ERR_OK,
+                            30,
+                        ),
+                    ],
+                ),
+            ),
+        );
+
+        $uploadedFile = UploadedFile::getInstance(new ComplexUploadedFileModel(), 'file_attribute');
+
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $uploadedFile,
+            'Should return an instance of UploadedFile when using PSR-7 with ComplexUploadedFileModel.',
+        );
+        self::assertSame(
+            'psr7-complex-model-test.txt',
+            $uploadedFile->name,
+            "Should preserve 'name' from PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            'text/plain',
+            $uploadedFile->type,
+            "Should preserve 'type' from PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $uploadedFile->error,
+            "Should preserve 'error' from PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            30,
+            $uploadedFile->size,
+            "Should preserve 'size' from PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertNotEmpty(
+            $uploadedFile->tempName,
+            "Should have a valid 'tempName' from PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+    }
+
+    public function testGetInstanceWithComplexUploadedFileModelAndPsr7AdapterWithError(): void
+    {
+        $tmpFile = $this->createTmpFile();
+
+        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
+
+        UploadedFile::setPsr7Adapter(
+            new ServerRequestAdapter(
+                FactoryHelper::createRequest('POST', 'site/upload')
+                ->withUploadedFiles(
+                    [
+                        'Complex_Model-Name[file_attribute]' => FactoryHelper::createUploadedFile(
+                            'psr7-complex-error-test.txt',
+                            'text/plain',
+                            FactoryHelper::createStream($tmpPath),
+                            UPLOAD_ERR_CANT_WRITE,
+                            75,
+                        ),
+                    ],
+                ),
+            ),
+        );
+
+        $uploadedFile = UploadedFile::getInstance(new ComplexUploadedFileModel(), 'file_attribute');
+
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $uploadedFile,
+            'Should return an instance of UploadedFile even when there is an upload error using PSR-7 with ComplexUploadedFileModel.',
+        );
+        self::assertSame(
+            'psr7-complex-error-test.txt',
+            $uploadedFile->name,
+            "Should preserve the original file 'name' even when there is an upload error using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            'text/plain',
+            $uploadedFile->type,
+            "Should preserve the original file 'type' even when there is an upload error using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            '',
+            $uploadedFile->tempName,
+            "Should have an empty 'tempName' when there is an upload error using PSR-7 with ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_CANT_WRITE,
+            $uploadedFile->error,
+            "Should preserve the upload 'error' code from PSR-7 UploadedFile when using ComplexUploadedFileModel.",
+        );
+        self::assertSame(
+            75,
+            $uploadedFile->size,
+            "Should preserve the original file 'size' even when there is an upload error using PSR-7 with ComplexUploadedFileModel.",
         );
     }
 
