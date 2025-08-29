@@ -219,6 +219,57 @@ final class UploadedFileTest extends TestCase
         );
     }
 
+    public function testReturnUploadedFileInstanceWhenLegacyFilesSizeIsArray(): void
+    {
+        $_FILES = [
+            'file' => [
+                'name' => 'file1.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/phptest1',
+                'error' => UPLOAD_ERR_OK,
+                'size' => [0],
+            ],
+        ];
+
+        $uploadFiles = UploadedFile::getInstancesByName('file');
+
+        self::assertCount(
+            1,
+            $uploadFiles,
+            'Should process the malformed array structure.',
+        );
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $uploadFiles[0] ?? null,
+            'Should return an instance of UploadedFile when a single file is uploaded.',
+        );
+        self::assertSame(
+            'file1.txt',
+            $uploadFiles[0]->name,
+            'Should preserve \'name\' from $_FILES.',
+        );
+        self::assertSame(
+            'text/plain',
+            $uploadFiles[0]->type,
+            'Should preserve \'type\' from $_FILES.',
+        );
+        self::assertSame(
+            '/tmp/phptest1',
+            $uploadFiles[0]->tempName,
+            'Should preserve \'tmp_name\' from $_FILES.',
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $uploadFiles[0]->error,
+            'Should preserve \'error\' from $_FILES.',
+        );
+        self::assertSame(
+            0,
+            $uploadFiles[0]->size,
+            "Should default to exactly '0' when legacy file 'size' is an array.",
+        );
+    }
+
     public function testReturnUploadedFileInstanceWhenMultipleFilesAreUploadedViaPsr7(): void
     {
         $tmpFile1 = $this->createTmpFile();
