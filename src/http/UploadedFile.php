@@ -229,9 +229,6 @@ final class UploadedFile extends \yii\web\UploadedFile
      */
     public static function setPsr7Adapter(ServerRequestAdapter $adapter): void
     {
-        self::closeResources();
-
-        self::$_files = [];
         self::$psr7Adapter = $adapter;
     }
 

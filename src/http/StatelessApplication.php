@@ -387,7 +387,7 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      * Resets the StatelessApplication state and prepares the Yii2 environment for handling a PSR-7 request.
      *
      * Performs a full reinitialization of the application state, including event tracking, error handler cleanup,
-     * request adapter reset, session management, and PSR-7 request injection.
+     * request adapter reset, session management, uploaded file state reset, and PSR-7 request injection.
      *
      * This method ensures that the application is ready to process a new stateless request in worker or SAPI
      * environments, maintaining strict type safety and compatibility with Yii2 core components.
@@ -401,6 +401,9 @@ final class StatelessApplication extends Application implements RequestHandlerIn
     protected function reset(ServerRequestInterface $request): void
     {
         $this->startEventTracking();
+
+        // reset UploadedFile static state to avoid cross-request contamination
+        UploadedFile::reset();
 
         // parent constructor is called because StatelessApplication uses a custom initialization pattern
         // @phpstan-ignore-next-line
