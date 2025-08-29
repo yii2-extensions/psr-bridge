@@ -12,6 +12,8 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\EventComponent;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+use function count;
+
 #[Group('http')]
 final class ApplicationEventTest extends TestCase
 {
@@ -158,6 +160,7 @@ final class ApplicationEventTest extends TestCase
         $app = $this->statelessApplication();
 
         $eventsCaptured = [];
+        $trackedCounts = [];
 
         $app->on(
             StatelessApplication::EVENT_BEFORE_REQUEST,
@@ -168,9 +171,17 @@ final class ApplicationEventTest extends TestCase
         );
         $app->on(
             StatelessApplication::EVENT_AFTER_REQUEST,
-            static function (Event $event) use (&$eventsCaptured): void {
+            function (Event $event) use (&$eventsCaptured, &$trackedCounts): void {
                 $version = $event->sender instanceof StatelessApplication ? $event->sender->version : 'unknown';
                 $eventsCaptured[] = "after_request_{$version}";
+
+                /** @var StatelessApplication $sender */
+                $sender = $event->sender;
+
+                /** @var mixed[] $registeredEvents */
+                $registeredEvents = self::inaccessibleProperty($sender, 'registeredEvents');
+
+                $trackedCounts[] = count($registeredEvents);
             },
         );
 
@@ -192,6 +203,11 @@ final class ApplicationEventTest extends TestCase
             JSON,
             $response->getBody()->getContents(),
             "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
+        self::assertSame(
+            5,
+            $trackedCounts[0] ?? null,
+            'Exactly five events should be tracked during the first request (BEFORE/AFTER).',
         );
         self::assertCount(
             2,
@@ -233,6 +249,11 @@ final class ApplicationEventTest extends TestCase
             2,
             $eventsCaptured,
             'No additional BEFORE/AFTER events should be captured on the second request after cleanup.',
+        );
+        self::assertSame(
+            5,
+            $trackedCounts[0],
+            'Exactly five events should be tracked during the first request (BEFORE/AFTER).',
         );
         $this->assertEmptyRegisteredEvents(
             $app,
