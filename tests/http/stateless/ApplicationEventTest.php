@@ -90,12 +90,12 @@ final class ApplicationEventTest extends TestCase
         self::assertCount(
             1,
             $mockComponent1->offCalls,
-            'Expected only one event to be triggered.',
+            'Expected only one event to be unregistered.',
         );
         self::assertCount(
             1,
             $mockComponent2->offCalls,
-            'Expected only one event to be triggered.',
+            'Expected only one event to be unregistered.',
         );
         self::assertContains(
             'test.event1',
@@ -165,12 +165,12 @@ final class ApplicationEventTest extends TestCase
         self::assertContains(
             'before_request_0.1.0',
             $eventsCaptured,
-            "Expected new before event 'before_request_0.1.0' to be triggered.",
+            "Expected new before event 'before_request_{$app->version}' to be triggered.",
         );
         self::assertContains(
             'after_request_0.1.0',
             $eventsCaptured,
-            "Expected new after event 'after_request_0.1.0' to be triggered.",
+            "Expected new after event 'after_request_{$app->version}' to be triggered.",
         );
         $this->assertEmptyRegisteredEvents(
             $app,
@@ -192,6 +192,11 @@ final class ApplicationEventTest extends TestCase
         self::assertEmpty(
             $response->getBody()->getContents(),
             'Expected Response body should be empty.',
+        );
+        self::assertCount(
+            2,
+            $eventsCaptured,
+            'Expected no additional BEFORE/AFTER events should be captured on the second request after cleanup.',
         );
         $this->assertEmptyRegisteredEvents(
             $app,
@@ -219,7 +224,7 @@ final class ApplicationEventTest extends TestCase
         $app->set('eventComponent', $eventComponent);
 
         $eventComponent->on(
-            'test.internal.event',
+            EventComponent::EVENT_TEST_INTERNAL,
             static function () use (&$internalEventCaptured): void {
                 $internalEventCaptured = true;
             },
@@ -421,7 +426,7 @@ final class ApplicationEventTest extends TestCase
         self::assertSame(
             $app,
             $sender,
-            'Events should be cleaned after request.',
+            'Expected event sender to be the application instance.',
         );
     }
 
