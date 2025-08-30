@@ -83,6 +83,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         $eventTriggered = false;
         $eventName = null;
         $eventSender = null;
+        $eventCount = 0;
 
         $app = $this->statelessApplication(
             [
@@ -95,11 +96,12 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         $app->on(
             StatelessApplication::EVENT_AFTER_REQUEST,
-            static function (Event $event) use (&$eventTriggered, &$eventName, &$eventSender): void {
+            static function (Event $event) use (&$eventTriggered, &$eventCount, &$eventName, &$eventSender): void {
                 if ($event->name === StatelessApplication::EVENT_AFTER_REQUEST) {
                     $eventTriggered = true;
                     $eventName = $event->name;
                     $eventSender = $event->sender;
+                    $eventCount++;
                 }
             },
         );
@@ -138,6 +140,11 @@ final class ApplicationErrorHandlerTest extends TestCase
             $app,
             $eventSender,
             'Event sender should be the StatelessApplication instance.',
+        );
+        self::assertSame(
+            1,
+            $eventCount,
+            'EVENT_AFTER_REQUEST should be triggered exactly once when handling an exception.',
         );
     }
 
