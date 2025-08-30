@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
-use yii\base\{Exception, InvalidConfigException};
+use yii\base\{Event, Exception, InvalidConfigException};
 use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
-use yii2\extensions\psrbridge\http\Response;
+use yii2\extensions\psrbridge\http\{Response, StatelessApplication};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
@@ -73,6 +73,72 @@ final class ApplicationErrorHandlerTest extends TestCase
         );
 
         @\runkit_constant_redefine('YII_DEBUG', true);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testEventAfterRequestIsTriggeredWhenHandlingException(): void
+    {
+        $eventTriggered = false;
+        $eventName = null;
+        $eventSender = null;
+
+        $app = $this->statelessApplication(
+            [
+                'flushLogger' => false,
+                'components' => [
+                    'errorHandler' => ['errorAction' => null],
+                ],
+            ],
+        );
+
+        $app->on(
+            StatelessApplication::EVENT_AFTER_REQUEST,
+            static function (Event $event) use (&$eventTriggered, &$eventName, &$eventSender): void {
+                if ($event->name === StatelessApplication::EVENT_AFTER_REQUEST) {
+                    $eventTriggered = true;
+                    $eventName = $event->name;
+                    $eventSender = $event->sender;
+                }
+            },
+        );
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/trigger-exception'));
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/trigger-exception'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
+        );
+        self::assertStringContainsString(
+            self::normalizeLineEndings(
+                <<<HTML
+                <pre>Exception (Exception) &apos;yii\base\Exception&apos; with message &apos;Exception error message.&apos;
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
+            'Response body should contain content from Response object.',
+        );
+        self::assertTrue(
+            $eventTriggered,
+            'EVENT_AFTER_REQUEST should be triggered when handling an exception.',
+        );
+        self::assertSame(
+            StatelessApplication::EVENT_AFTER_REQUEST,
+            $eventName,
+            'Triggered event should be EVENT_AFTER_REQUEST.',
+        );
+        self::assertSame(
+            $app,
+            $eventSender,
+            'Event sender should be the StatelessApplication instance.',
+        );
     }
 
     /**
@@ -195,6 +261,15 @@ final class ApplicationErrorHandlerTest extends TestCase
             'text/html; charset=UTF-8',
             $response->getHeaderLine('Content-Type'),
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
+        );
+        self::assertStringContainsString(
+            self::normalizeLineEndings(
+                <<<HTML
+                <pre>Exception (Exception) &apos;yii\base\Exception&apos; with message &apos;Exception error message.&apos;
+                HTML,
+            ),
+            self::normalizeLineEndings($response->getBody()->getContents()),
+            'Response body should contain content from Response object.',
         );
 
         $logMessages = $app->getLog()->getLogger()->messages;
