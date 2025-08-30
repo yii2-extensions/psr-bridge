@@ -365,6 +365,53 @@ final class ApplicationEventTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testGlobalEventHandlersAreCleanedAfterRequest(): void
+    {
+        $globalEventCaptured = [];
+
+        Event::on(
+            '*',
+            '*',
+            static function (Event $event) use (&$globalEventCaptured): void {
+                if ($event->name === 'test.global.event') {
+                    $globalEventCaptured[] = $event->name;
+                }
+            },
+        );
+
+        $app = $this->statelessApplication();
+
+        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
+
+        Event::trigger('', 'test.global.event');
+
+        self::assertEmpty(
+            $globalEventCaptured,
+            'Global event handlers should be cleaned up after request processing.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if the property does not exist or is inaccessible.
      */
     public function testInternalComponentEventListenerFiresOutsideRequest(): void
