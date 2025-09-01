@@ -8,7 +8,7 @@
 
 <p align="center">
     <a href="https://packagist.org/packages/yii2-extensions/psr-bridge" target="_blank">
-        <img src="https://img.shields.io/packagist/v/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Stable" alt="Latest Stable Version">
+        <img src="https://img.shields.io/badge/Status-Dev-orange.svg?style=for-the-badge&logo=packagist&logoColor=white" alt="Development Status">
     </a>
     <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
         <img src="https://img.shields.io/badge/%3E%3D8.1-777BB4.svg?style=for-the-badge&logo=php&logoColor=white" alt="PHP version">
