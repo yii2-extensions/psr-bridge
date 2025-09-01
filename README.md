@@ -41,9 +41,6 @@ composer require yii2-extensions/psr-bridge:^0.1@dev
 
 ### Quick start
 
-
-### Basic Usage
-
 Describe how to use your extension in a basic way.
 
 ## Documentation
