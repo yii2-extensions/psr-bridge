@@ -26,11 +26,57 @@
     </a>
 </p>
 
-A Yii2 extension template to create your own Yii2 extensions.
+A comprehensive PSR-7 bridge that enables seamless integration between Yii2 applications and modern PHP runtimes,
+supporting both traditional SAPI and high-performance worker modes.
 
 ## Features
 
-- ✅ **PHP 8.1+**: This package requires PHP 8.1 or higher.
+✅ **Cookie & Session Management**
+
+- Cookie encryption and validation key support.
+- Per-request session isolation.
+- SameSite cookie attribute support.
+- Secure cookie validation with Yii2 compatibility.
+- Session cookie injection and management.
+
+✅ **Error Handling**
+
+- Custom error views and actions.
+- Debug mode with detailed error information.
+- Exception conversion to ResponseInterface.
+- Fallback error handling for nested exceptions.
+- PSR-7 compatible error responses.
+
+✅ **File Upload Processing**
+
+- Memory-efficient large file handling.
+- Multiple file upload support.
+- Nested file array handling.
+- PSR-7 UploadedFileInterface support.
+- Stream-based file processing.
+
+✅ **PSR-7 Request/Response Bridge**
+
+- Automatic conversion between Yii2 and PSR-7 HTTP messages.
+- Content-Range support for partial responses.
+- Full compatibility with PSR-7 ServerRequestInterface.
+- Stream handling for large file downloads.
+- Type-safe response adaptation with proper status codes.
+
+✅ **Stateless Application Support**
+
+- Automatic memory cleanup and garbage collection.
+- Event tracking and cleanup per request.
+- Request-scoped lifecycle management.
+- StatelessApplication class for worker environments.
+
+✅ **Worker Mode Compatibility**
+
+- Efficient memory management with configurable limits.
+- File upload handling without `$_FILES` manipulation.
+- Native support for RoadRunner, FrankenPHP, and similar runtimes.
+- Session isolation per request.
+- Zero global state contamination between requests.
 
 ### Installation
 
@@ -40,7 +86,78 @@ composer require yii2-extensions/psr-bridge:^0.1@dev
 
 ### Quick start
 
-Describe how to use your extension in a basic way.
+#### Worker mode (FrankenPHP)
+
+```php
+<?php
+
+declare(strict_types=1);
+
+// disable PHP automatic session cookie handling
+ini_set('session.use_cookies', '0');
+
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+use yii2\extensions\frankenphp\FrankenPHP;
+use yii2\extensions\psrbridge\http\StatelessApplication;
+
+// Load environment variables from .env file
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->safeLoad();
+
+// production default (change to 'true' for development)
+define('YII_DEBUG', $_ENV['YII_DEBUG'] ?? false);
+// production default (change to 'dev' for development)
+define('YII_ENV', $_ENV['YII_ENV'] ?? 'prod');
+
+require_once dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php';
+
+$config = require_once dirname(__DIR__) . '/config/web/app.php';
+
+$runner = new FrankenPHP(new StatelessApplication($config));
+
+$runner->run();
+```
+
+#### Worker mode (RoadRunner)
+
+```php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\roadrunner\RoadRunner;
+
+define('YII_DEBUG', getenv('YII_DEBUG') ?? false);
+define('YII_ENV', getenv('YII_ENV') ?? 'prod');
+
+require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
+
+$config = require dirname(__DIR__) . '/config/web/app.php';
+
+$runner = new RoadRunner(new StatelessApplication($config));
+
+$runner->run();
+```
+
+#### PSR-7 Conversion
+
+```php
+// Convert Yii2 request to PSR-7
+$request = Yii::$app->request;
+$psr7Request = $request->getPsr7Request();
+
+// Convert Yii2 response to PSR-7
+$response = Yii::$app->response;
+$psr7Response = $response->getPsr7Response();
+
+// Emit PSR-7 response
+$emitter = new SapiEmitter();
+$emitter->emit($psr7Response);
+```
 
 ## Documentation
 
