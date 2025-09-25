@@ -25,4 +25,5 @@ jobs:
       php-version: '["8.3"]'
       phpstan: true
     secrets:
+      AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}

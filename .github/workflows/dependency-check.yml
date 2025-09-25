@@ -20,3 +20,5 @@ name: Composer require checker
 jobs:
   composer-require-checker:
     uses: php-forge/actions/.github/workflows/composer-require-checker.yml@main
+    secrets:
+      AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

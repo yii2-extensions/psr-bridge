@@ -24,4 +24,5 @@ jobs:
       concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd, runkit7
     secrets:
+      AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
