@@ -1,7 +1,7 @@
 {
     "$schema": "vendor/infection/infection/resources/schema.json",
     "logs": {
-        "text": "php:\/\/stderr",
+        "text": "php://stderr",
         "stryker": {
             "report": "main"
         }
