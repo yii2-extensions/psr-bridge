@@ -2,9 +2,23 @@
 
 ## System requirements
 
-- [`PHP`](https://www.php.net/downloads) 8.1 or higher.
-- [`Composer`](https://getcomposer.org/download/) for dependency management.
-- [`Yii2`](https://github.com/yiisoft/yii2) 2.0.53+ or 22.x.
+- [`PHP`](https://www.php.net/downloads) 8.1 or higher
+- [`Composer`](https://getcomposer.org/download/) for dependency management
+- [`Yii2`](https://github.com/yiisoft/yii2) 2.0.53+ or 22.x
+
+### PSR-7/PSR-17 HTTP Message Factories
+
+Install exactly one of the following PSR-7/PSR-17 HTTP message implementations.
+
+- [`guzzlehttp/psr7`](https://github.com/guzzle/psr7)
+- [`httpsoft/http-message`](https://github.com/httpsoft/http-message)
+- [`laminas/laminas-diactoros`](https://github.com/laminas/laminas-diactoros)
+- [`nyholm/psr7`](https://github.com/Nyholm/psr7)
+
+### Worker mode implementation (optional)
+
+- [`yii2-extensions/franken-php`](https://github.com/yii2-extensions/franken-php)
+- [`yii2-extensions/road-runner`](https://github.com/yii2-extensions/road-runner)
 
 ## Installation
 
@@ -13,7 +27,7 @@
 Install the extension.
 
 ```bash
-composer require github_username/github_repository-name
+composer require yii2-extensions/psr-bridge:^0.1@dev
 ```
 
 ### Method 2: Manual installation
@@ -23,7 +37,7 @@ Add to your `composer.json`.
 ```json
 {
     "require": {
-        "github_username/github_repository-name": "^1.0"
+        "yii2-extensions/psr-bridge": "^0.1@dev"
     }
 }
 ```

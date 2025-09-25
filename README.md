@@ -26,8 +26,9 @@
     </a>
 </p>
 
-A comprehensive PSR bridge that enables seamless integration between Yii2 applications and modern PHP runtimes,
-supporting both traditional SAPI and high-performance worker modes.
+A comprehensive PSR bridge that enables seamless integration between Yii2
+applications and modern PHP runtimes, supporting both traditional SAPI and
+high-performance worker modes.
 
 ## Features
 
