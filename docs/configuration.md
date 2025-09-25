@@ -31,7 +31,6 @@ return [
         ],
         'response' => [
             'class' => Response::class,
-            'enableCookieValidation' => false,
         ],
         'errorHandler' => [
             'class' => ErrorHandler::class,
