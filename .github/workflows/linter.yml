@@ -7,9 +7,7 @@ name: linter
 
 jobs:
   linter:
-    uses: php-forge/actions/.github/workflows/super-linter.yml@v2
-    env:
-      COMPOSER_IGNORE_PLATFORM_REQ=1
+    uses: php-forge/actions/.github/workflows/super-linter.yml@fix-mini-44
     permissions:
       checks: write
       contents: read
