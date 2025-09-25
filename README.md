@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD041 -->
 <p align="center">
     <a href="https://github.com/yii2-extensions/psr-bridge" target="_blank">
         <img src="https://www.yiiframework.com/image/yii_logo_light.svg" alt="Yii Framework">
@@ -5,6 +6,7 @@
     <h1 align="center">PSR bridge</h1>
     <br>
 </p>
+<!-- markdownlint-enable MD041 -->
 
 <p align="center">
     <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
@@ -45,7 +47,7 @@ Describe how to use your extension in a basic way.
 For detailed configuration options and advanced usage.
 
 - 📚 [Installation Guide](docs/installation.md)
-- ⚙️ [Configuration Reference](docs/configuration.md) 
+- ⚙️ [Configuration Reference](docs/configuration.md)
 - 💡 [Usage Examples](docs/examples.md)
 - 🧪 [Testing Guide](docs/testing.md)
 
@@ -66,5 +68,4 @@ For detailed configuration options and advanced usage.
 
 ## License
 
-[![License](https://img.shields.io/github/license/yii2-extensions/psr-bridge?style=for-the-badge&logo=opensourceinitiative&logoColor=white&labelColor=333333)](LICENSE.md)
-
+[![License](https://img.shields.io/badge/License-BSD--3--Clause-brightgreen.svg?style=for-the-badge&logo=opensourceinitiative&logoColor=white&labelColor=555555)](LICENSE)

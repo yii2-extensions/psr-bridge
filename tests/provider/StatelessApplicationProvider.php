@@ -61,8 +61,8 @@ final class StatelessApplicationProvider
             'lowercase scheme' => [
                 'basic ' . base64_encode('user:pass'),
                 <<<JSON
-                 {"username":"user","password":"pass"}
-                 JSON,
+                {"username":"user","password":"pass"}
+                JSON,
                 "Response body should be a JSON string with 'username' and 'password'.",
             ],
             'malformed' => [
