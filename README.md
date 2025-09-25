@@ -26,13 +26,12 @@
     </a>
 </p>
 
-A comprehensive PSR-7 bridge that enables seamless integration between Yii2 applications and modern PHP runtimes,
+A comprehensive PSR bridge that enables seamless integration between Yii2 applications and modern PHP runtimes,
 supporting both traditional SAPI and high-performance worker modes.
 
 ## Features
 
 ✅ **Cookie & Session Management**
-
 - Cookie encryption and validation key support.
 - Per-request session isolation.
 - SameSite cookie attribute support.
@@ -40,7 +39,6 @@ supporting both traditional SAPI and high-performance worker modes.
 - Session cookie injection and management.
 
 ✅ **Error Handling**
-
 - Custom error views and actions.
 - Debug mode with detailed error information.
 - Exception conversion to ResponseInterface.
@@ -48,7 +46,6 @@ supporting both traditional SAPI and high-performance worker modes.
 - PSR-7 compatible error responses.
 
 ✅ **File Upload Processing**
-
 - Memory-efficient large file handling.
 - Multiple file upload support.
 - Nested file array handling.
@@ -56,7 +53,6 @@ supporting both traditional SAPI and high-performance worker modes.
 - Stream-based file processing.
 
 ✅ **PSR-7 Request/Response Bridge**
-
 - Automatic conversion between Yii2 and PSR-7 HTTP messages.
 - Content-Range support for partial responses.
 - Full compatibility with PSR-7 ServerRequestInterface.
@@ -64,14 +60,12 @@ supporting both traditional SAPI and high-performance worker modes.
 - Type-safe response adaptation with proper status codes.
 
 ✅ **Stateless Application Support**
-
 - Automatic memory cleanup and garbage collection.
 - Event tracking and cleanup per request.
 - Request-scoped lifecycle management.
 - StatelessApplication class for worker environments.
 
 ✅ **Worker Mode Compatibility**
-
 - Efficient memory management with configurable limits.
 - File upload handling without `$_FILES` manipulation.
 - Native support for RoadRunner, FrankenPHP, and similar runtimes.
@@ -155,7 +149,7 @@ $response = Yii::$app->response;
 $psr7Response = $response->getPsr7Response();
 
 // Emit PSR-7 response
-$emitter = new SapiEmitter();
+$emitter = new yii2\extensions\psrbridge\emitter\SapiEmitter();
 $emitter->emit($psr7Response);
 ```
 
