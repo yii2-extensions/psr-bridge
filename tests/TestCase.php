@@ -26,10 +26,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     /**
      * A secret key used for cookie validation in tests.
-     *
-     * gitleaks:allow
      */
-    protected const COOKIE_VALIDATION_KEY = 'wefJDF8sfdsfSDefwqdxj9oq';
+    protected const COOKIE_VALIDATION_KEY = 'test-cookie-validation-key';
 
     /**
      * @phpstan-var array<mixed, mixed>
