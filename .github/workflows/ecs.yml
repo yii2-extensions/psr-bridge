@@ -19,6 +19,4 @@ name: ecs
 
 jobs:
   easy-coding-standard:
-    uses: php-forge/actions/.github/workflows/ecs.yml@main
-    secrets:
-      AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: php-forge/actions/.github/workflows/ecs.yml@fix-mini-43

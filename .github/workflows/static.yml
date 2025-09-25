@@ -19,6 +19,4 @@ name: static analysis
 
 jobs:
   phpstan:
-    uses: php-forge/actions/.github/workflows/phpstan.yml@main
-    secrets:
-      AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: php-forge/actions/.github/workflows/phpstan.yml@fix-mini-43
