@@ -14,3 +14,4 @@ jobs:
       statuses: write
     secrets:
       AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
