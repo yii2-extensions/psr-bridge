@@ -34,8 +34,8 @@ high-performance worker modes.
 
 <!-- markdownlint-disable MD009 MD028 -->
 <!-- prettier-ignore-start -->
-<div class="markdown-alert markdown-alert-tip" dir="auto">
-    <p dir="auto">
+<div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
+    <p>
         <strong>Cookie &amp; Session Management</strong><br>
         Encrypted cookies • SameSite support • Session isolation
     </p>
