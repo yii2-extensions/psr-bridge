@@ -60,7 +60,6 @@ high-performance worker modes.
                 </p>
             </div>            
         </td>
-        <td width="4%"></td>
         <td width="48%" valign="top">
             <div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
                 <p style="margin: 0 0 8px 0; font-weight: 600;">
