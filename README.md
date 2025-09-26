@@ -91,7 +91,7 @@ Long-running PHP workers for higher throughput and lower latency.
 ### Installation
 
 ```bash
-composer require yii2-extensions/psr-bridge:^0.1@dev
+composer require yii2-extensions/psr-bridge:^0.1
 ```
 
 ### Quick start
@@ -180,7 +180,7 @@ For detailed configuration options and advanced usage.
 
 ## Package information
 
-[![Development Status](https://img.shields.io/badge/Status-Dev-orange.svg?style=for-the-badge&logo=packagist&logoColor=white)](https://packagist.org/packages/yii2-extensions/psr-bridge)
+[![Latest Stable Version](https://img.shields.io/packagist/v/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Stable)](https://packagist.org/packages/yii2-extensions/psr-bridge)
 [![Total Downloads](https://img.shields.io/packagist/dt/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Downloads)](https://packagist.org/packages/yii2-extensions/psr-bridge)
 
 ## Quality code
