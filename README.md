@@ -32,22 +32,28 @@ high-performance worker modes.
 
 ## Features
 
-> [!TIP] **🍪 Cookie & Session Management**  
+> [!TIP] 
+> **🍪 Cookie & Session Management**  
 > Encrypted cookies • SameSite support • Session isolation
 
-> [!TIP] **🛡️ Advanced Error Handling**  
+> [!TIP]
+> **🛡️ Advanced Error Handling**  
 > Custom views • Debug mode • PSR-7 compatible responses
 
-> [!TIP] **📁 Smart File Upload Processing**  
+> [!TIP]
+> **📁 Smart File Upload Processing**  
 > Memory efficient • Multiple files • PSR-7 UploadedFileInterface
 
-> [!TIP] **🔄 PSR-7 Request/Response Bridge**  
+> [!TIP] 
+> **🔄 PSR-7 Request/Response Bridge**  
 > Auto-conversion • Content-Range • Type safe responses
 
-> [!TIP] **🧹 Stateless Application Support**  
+> [!TIP] 
+> **🧹 Stateless Application Support**  
 > Memory cleanup • Event tracking • Request-scoped lifecycle
 
-> [!TIP] **⚡ Worker Mode Compatibility**  
+> [!TIP]
+> **⚡ Worker Mode Compatibility**  
 > RoadRunner • FrankenPHP • Zero state contamination
 
 ## Available deployment options
