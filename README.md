@@ -1,8 +1,10 @@
 <!-- markdownlint-disable MD041 -->
 <p align="center">
-    <a href="https://github.com/yii2-extensions/psr-bridge" target="_blank">
-        <img src="https://www.yiiframework.com/image/yii_logo_light.svg" alt="Yii Framework">
-    </a>
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://www.yiiframework.com/image/design/logo/yii3_full_for_dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://www.yiiframework.com/image/design/logo/yii3_full_for_light.svg">
+        <img src="https://www.yiiframework.com/image/design/logo/yii3_full_for_dark.svg" alt="Yii Framework" width="80%">
+    </picture>
     <h1 align="center">PSR bridge</h1>
     <br>
 </p>
@@ -26,58 +28,10 @@
     </a>
 </p>
 
-A comprehensive PSR bridge that enables seamless integration between Yii2
-applications and modern PHP runtimes, supporting both traditional SAPI and
-high-performance worker modes.
-
-## Features
-
-✅ **Cookie & Session Management**
-
-- Cookie encryption and validation key support.
-- Per-request session isolation.
-- SameSite cookie attribute support.
-- Secure cookie validation with Yii2 compatibility.
-- Session cookie injection and management.
-
-✅ **Error Handling**
-
-- Custom error views and actions.
-- Debug mode with detailed error information.
-- Exception conversion to ResponseInterface.
-- Fallback error handling for nested exceptions.
-- PSR-7 compatible error responses.
-
-✅ **File Upload Processing**
-
-- Memory-efficient large file handling.
-- Multiple file upload support.
-- Nested file array handling.
-- PSR-7 UploadedFileInterface support.
-- Stream-based file processing.
-
-✅ **PSR-7 Request/Response Bridge**
-
-- Automatic conversion between Yii2 and PSR-7 HTTP messages.
-- Content-Range support for partial responses.
-- Full compatibility with PSR-7 ServerRequestInterface.
-- Stream handling for large file downloads.
-- Type-safe response adaptation with proper status codes.
-
-✅ **Stateless Application Support**
-
-- Automatic memory cleanup and garbage collection.
-- Event tracking and cleanup per request.
-- Request-scoped lifecycle management.
-- StatelessApplication class for worker environments.
-
-✅ **Worker Mode Compatibility**
-
-- Efficient memory management with configurable limits.
-- File upload handling without `$_FILES` manipulation.
-- Native support for RoadRunner, FrankenPHP, and similar runtimes.
-- Session isolation per request.
-- Zero global state contamination between requests.
+<p align="center">
+    <strong>Transform your Yii2 applications into high-performance, PSR-compliant powerhouses</strong><br>
+    <em>Supporting traditional SAPI, RoadRunner, FrankenPHP, and worker-based architectures</em>
+</p>
 
 ## Available deployment options
 
@@ -87,6 +41,36 @@ Long-running PHP workers for higher throughput and lower latency.
 
 [![FrankenPHP](https://img.shields.io/badge/FrankenPHP-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://github.com/yii2-extensions/franken-php)
 [![RoadRunner](https://img.shields.io/badge/RoadRunner-%23FF6B35.svg?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMjIgMTJMMTIgMjJMMiAxMkwxMiAyWiIgZmlsbD0iI0ZGRkZGRiIvPgo8cGF0aCBkPSJNOCAyTDE2IDEwTDggMThaIiBmaWxsPSIjRkY2QjM1Ii8+CjxwYXRoIGQ9Ik0xNiA2TDIwIDEwTDE2IDE0WiIgZmlsbD0iI0ZGNkIzNSIvPgo8L3N2Zz4K&logoColor=white)](https://github.com/yii2-extensions/road-runner)
+
+## Features
+
+<!-- markdownlint-disable MD009 MD028 -->
+<!-- prettier-ignore-start -->
+> [!TIP] 
+> **Cookie & Session Management**<br> 
+> Encrypted cookies • SameSite support • Session isolation
+
+> [!TIP] 
+> **Advanced Error Handling**<br> 
+> Custom views • Debug mode • PSR-7 compatible responses
+
+> [!TIP] 
+> **Smart File Upload Processing**<br> 
+> Memory efficient • Multiple files • PSR-7 UploadedFileInterface
+
+> [!TIP] 
+> **PSR-7 Request/Response Bridge**<br> 
+> Auto-conversion • Content-Range • Type safe responses
+
+> [!TIP] 
+> **Stateless Application Support**<br> 
+> Memory cleanup • Event tracking • Request-scoped lifecycle
+
+> [!TIP] 
+> **Worker Mode Compatibility**<br> 
+> RoadRunner • FrankenPHP • Zero state contamination
+<!-- prettier-ignore-end -->
+<!-- markdownlint-enable MD009 MD028 -->
 
 ### Installation
 
