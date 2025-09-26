@@ -34,32 +34,29 @@ high-performance worker modes.
 
 <!-- markdownlint-disable MD009 MD028 -->
 <!-- prettier-ignore-start -->
-<div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
-    <p>
-        <strong>Cookie &amp; Session Management</strong><br>
-        Encrypted cookies • SameSite support • Session isolation
-    </p>
-</div>
+> [!TIP] 
+> **Cookie & Session Management**<br> 
+> • Encrypted cookies • SameSite support • Session isolation
 
 > [!TIP] 
 > **Advanced Error Handling**<br> 
-> Custom views • Debug mode • PSR-7 compatible responses
+> • Custom views • Debug mode • PSR-7 compatible responses
 
 > [!TIP] 
 > **Smart File Upload Processing**<br> 
-> Memory efficient • Multiple files • PSR-7 UploadedFileInterface
+> • Memory efficient • Multiple files • PSR-7 UploadedFileInterface
 
 > [!TIP] 
 > **PSR-7 Request/Response Bridge**<br> 
-> Auto-conversion • Content-Range • Type safe responses
+> • Auto-conversion • Content-Range • Type safe responses
 
 > [!TIP] 
 > **Stateless Application Support**<br> 
-> Memory cleanup • Event tracking • Request-scoped lifecycle
+> • Memory cleanup • Event tracking • Request-scoped lifecycle
 
 > [!TIP] 
 > **Worker Mode Compatibility**<br> 
-> RoadRunner • FrankenPHP • Zero state contamination
+> • RoadRunner • FrankenPHP • Zero state contamination
 <!-- prettier-ignore-end -->
 <!-- markdownlint-enable MD009 MD028 -->
 
