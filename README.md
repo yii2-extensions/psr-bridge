@@ -28,9 +28,10 @@
     </a>
 </p>
 
-A comprehensive PSR bridge that enables seamless integration between Yii2
-applications and modern PHP runtimes, supporting both traditional SAPI and
-high-performance worker modes.
+<p align="center">
+  <strong>Transform your Yii2 applications into high-performance, PSR-compliant powerhouses</strong><br>
+  <em>Supporting traditional SAPI, RoadRunner, FrankenPHP, and worker-based architectures</em>
+</p>
 
 ## Features
 
