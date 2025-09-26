@@ -32,14 +32,14 @@ high-performance worker modes.
 
 ## Features
 
-<table>
+<table width="100%" style="table-layout: fixed;">
 <tr>
-<td align="center" width="60">🍪</td>
-<td><strong>Cookie & Session Management</strong><br>
-<em>• Encrypted cookies</em><br><em>• SameSite support</em><br><em> • Session isolation</em>
+<td align="center" style="width: 8%;">🍪</td>
+<td style="width: 42%;"><strong>Cookie & Session Management</strong><br>
+<em>• Encrypted cookies</em><br><em>• SameSite support</em><br><em>• Session isolation</em>
 </td>
-<td align="center" width="60">🛡️</td>
-<td><strong>Advanced Error Handling</strong><br>
+<td align="center" style="width: 8%;">🛡️</td>
+<td style="width: 42%;"><strong>Advanced Error Handling</strong><br>
 <em>• Custom views</em><br><em>• Debug mode</em><br><em>• PSR-7 compatible responses</em>
 </td>
 </tr>
