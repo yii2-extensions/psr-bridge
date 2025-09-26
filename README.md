@@ -29,8 +29,8 @@
 </p>
 
 <p align="center">
-  <strong>Transform your Yii2 applications into high-performance, PSR-compliant powerhouses</strong><br>
-  <em>Supporting traditional SAPI, RoadRunner, FrankenPHP, and worker-based architectures</em>
+    <strong>Transform your Yii2 applications into high-performance, PSR-compliant powerhouses</strong><br>
+    <em>Supporting traditional SAPI, RoadRunner, FrankenPHP, and worker-based architectures</em>
 </p>
 
 ## Available deployment options
