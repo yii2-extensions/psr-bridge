@@ -18,9 +18,7 @@ enhanced versions.
 
 declare(strict_types=1);
 
-use yii2\extensions\psrbridge\http\ErrorHandler;
-use yii2\extensions\psrbridge\http\Request;
-use yii2\extensions\psrbridge\http\Response;
+use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
 
 return [
     'components' => [
@@ -106,14 +104,13 @@ Configure PSR-7 HTTP message factories for request/response conversion.
 
 declare(strict_types=1);
 
-use HttpSoft\Message\ResponseFactory;
-use HttpSoft\Message\ServerRequestFactory;
-use HttpSoft\Message\StreamFactory;
-use HttpSoft\Message\UploadedFileFactory;
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\ServerRequestFactoryInterface;
-use Psr\Http\Message\StreamFactoryInterface;
-use Psr\Http\Message\UploadedFileFactoryInterface;
+use HttpSoft\Message\{ResponseFactory, ServerRequestFactory, StreamFactory, UploadedFileFactory};
+use Psr\Http\Message\{
+    ResponseFactoryInterface,
+    ServerRequestFactoryInterface,
+    StreamFactoryInterface,
+    UploadedFileFactoryInterface,
+};
 
 'container' => [
     'definitions' => [
@@ -134,9 +131,7 @@ For worker-based environments (FrankenPHP, RoadRunner).
 
 declare(strict_types=1);
 
-use yii2\extensions\psrbridge\http\Request;
-use yii2\extensions\psrbridge\http\Response;
-use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\psrbridge\http\{Request, Response, StatelessApplication};
 
 $config = [
     'id' => 'stateless-app',
