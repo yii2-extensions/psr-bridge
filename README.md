@@ -32,52 +32,32 @@ high-performance worker modes.
 
 ## Features
 
-✅ **Cookie & Session Management**
-
-- Cookie encryption and validation key support.
-- Per-request session isolation.
-- SameSite cookie attribute support.
-- Secure cookie validation with Yii2 compatibility.
-- Session cookie injection and management.
-
-✅ **Error Handling**
-
-- Custom error views and actions.
-- Debug mode with detailed error information.
-- Exception conversion to ResponseInterface.
-- Fallback error handling for nested exceptions.
-- PSR-7 compatible error responses.
-
-✅ **File Upload Processing**
-
-- Memory-efficient large file handling.
-- Multiple file upload support.
-- Nested file array handling.
-- PSR-7 UploadedFileInterface support.
-- Stream-based file processing.
-
-✅ **PSR-7 Request/Response Bridge**
-
-- Automatic conversion between Yii2 and PSR-7 HTTP messages.
-- Content-Range support for partial responses.
-- Full compatibility with PSR-7 ServerRequestInterface.
-- Stream handling for large file downloads.
-- Type-safe response adaptation with proper status codes.
-
-✅ **Stateless Application Support**
-
-- Automatic memory cleanup and garbage collection.
-- Event tracking and cleanup per request.
-- Request-scoped lifecycle management.
-- StatelessApplication class for worker environments.
-
-✅ **Worker Mode Compatibility**
-
-- Efficient memory management with configurable limits.
-- File upload handling without `$_FILES` manipulation.
-- Native support for RoadRunner, FrankenPHP, and similar runtimes.
-- Session isolation per request.
-- Zero global state contamination between requests.
+<table>
+<tr>
+<td align="center" width="60">🍪</td>
+<td><strong>Cookie & Session Management</strong><br>
+<em>• Encrypted cookies • SameSite support • Session isolation</em></td>
+<td align="center" width="60">🛡️</td>
+<td><strong>Advanced Error Handling</strong><br>
+<em>• Custom views • Debug mode • PSR-7 compatible responses</em></td>
+</tr>
+<tr>
+<td align="center">📁</td>
+<td><strong>Smart File Upload Processing</strong><br>
+<em>• Memory efficient • Multiple files • PSR-7 UploadedFileInterface</em></td>
+<td align="center">🔄</td>
+<td><strong>PSR-7 Request/Response Bridge</strong><br>
+<em>• Auto-conversion • Content-Range • Type safe responses</em></td>
+</tr>
+<tr>
+<td align="center">🧹</td>
+<td><strong>Stateless Application Support</strong><br>
+<em>• Memory cleanup • Event tracking • Request-scoped lifecycle</em></td>
+<td align="center">⚡</td>
+<td><strong>Worker Mode Compatibility</strong><br>
+<em>• RoadRunner • FrankenPHP • Zero state contamination</em></td>
+</tr>
+</table>
 
 ## Available deployment options
 
