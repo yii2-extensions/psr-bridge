@@ -32,54 +32,71 @@ high-performance worker modes.
 
 ## Features
 
-<div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
-    <p style="margin: 0 0 8px 0; font-weight: 600;">
-        <strong>Advanced Error Handling</strong>
-    </p>
-    <p style="margin: 0;">
-        Custom views • Debug mode • PSR-7 compatible responses
-    </p>
+<svg fill="none" viewBox="0 0 1200 600" width="100%" height="600" xmlns="http://www.w3.org/2000/svg">
+<foreignObject width="100%" height="100%">
+<div xmlns="http://www.w3.org/1999/xhtml">
+<style>
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.alert-box {
+  border-left: 4px solid #1f883d;
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(31, 136, 61, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.alert-title {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  font-size: 16px;
+  color: #000000;
+}
+.alert-content {
+  margin: 0;
+  color: #333333;
+  line-height: 1.6;
+  font-size: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  .alert-title { color: #f0f6fc; }
+  .alert-content { color: #8b949e; }
+  .alert-box { background: rgba(31, 136, 61, 0.15); }
+}
+</style>
+<div class="container">
+  <div class="alert-box">
+    <p class="alert-title"><strong>Advanced Error Handling</strong></p>
+    <p class="alert-content">Custom views • Debug mode • PSR-7 compatible responses</p>
+  </div>
+  <div class="alert-box">
+    <p class="alert-title"><strong>Cookie & Session Management</strong></p>
+    <p class="alert-content">Encrypted cookies • SameSite support • Session isolation</p>
+  </div>
+  <div class="alert-box">
+    <p class="alert-title"><strong>PSR-7 Request/Response Bridge</strong></p>
+    <p class="alert-content">Auto-conversion • Content-Range • Type safe responses</p>
+  </div>  
+  <div class="alert-box">
+    <p class="alert-title"><strong>Smart File Upload Processing</strong></p>
+    <p class="alert-content">Memory efficient • Multiple files • PSR-7 UploadedFileInterface</p>
+  </div>
+  <div class="alert-box">
+    <p class="alert-title"><strong>Stateless Application Support</strong></p>
+    <p class="alert-content">Memory cleanup • Event tracking • Request-scoped lifecycle</p>
+  </div>
+  <div class="alert-box">
+    <p class="alert-title"><strong>Worker Mode Compatibility</strong></p>
+    <p class="alert-content">RoadRunner • FrankenPHP • Zero state contamination</p>
+  </div>
 </div>
-<div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
-    <p style="margin: 0 0 8px 0; font-weight: 600;">
-        <strong>Cookie & Session Management</strong>
-    </p>
-    <p style="margin: 0;">
-        Encrypted cookies • SameSite support • Session isolation
-    </p>
 </div>
-<div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
-    <p style="margin: 0 0 8px 0; font-weight: 600;">
-        <strong>PSR-7 Request/Response Bridge</strong>
-    </p>
-    <p style="margin: 0;">
-        Auto-conversion • Content-Range • Type safe responses
-    </p>
-</div>
-<div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
-    <p style="margin: 0 0 8px 0; font-weight: 600;">
-        <strong>Smart File Upload Processing</strong>
-    </p>
-    <p style="margin: 0;">
-        Memory efficient • Multiple files • PSR-7 UploadedFileInterface
-    </p>
-</div>            
-<div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
-    <p style="margin: 0 0 8px 0; font-weight: 600;">
-        <strong>Stateless Application Support</strong>
-    </p>
-    <p style="margin: 0;">
-        Memory cleanup • Event tracking • Request-scoped lifecycle
-    </p>
-</div>
-<div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
-    <p style="margin: 0 0 8px 0; font-weight: 600;">
-        <strong>Worker Mode Compatibility</strong>
-    </p>
-    <p style="margin: 0;">
-        RoadRunner • FrankenPHP • Zero state contamination
-    </p>
-</div>
+</foreignObject>
+</svg>
 
 ## Available deployment options
 
