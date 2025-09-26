@@ -44,7 +44,7 @@ Long-running PHP workers for higher throughput and lower latency.
 
 ## Features
 
-![](./docs/svgs/features.svg)
+![Features overview](./docs/svgs/features.svg)
 
 ### Installation
 
