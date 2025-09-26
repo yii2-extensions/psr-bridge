@@ -32,35 +32,13 @@ high-performance worker modes.
 
 ## Features
 
-<table width="100%" style="table-layout: fixed;">
-<tr>
-<td align="center" style="width: 8%;">🍪</td>
-<td style="width: 42%;"><strong>Cookie & Session Management</strong><br>
-<em>• Encrypted cookies</em><br><em>• SameSite support</em><br><em>• Session isolation</em>
-</td>
-<td align="center" style="width: 8%;">🛡️</td>
-<td style="width: 42%;"><strong>Advanced Error Handling</strong><br>
-<em>• Custom views</em><br><em>• Debug mode</em><br><em>• PSR-7 compatible responses</em>
-</td>
-</tr>
-<tr>
-<td align="center">📁</td>
-<td><strong>Smart File Upload Processing</strong><br>
-<em>• Memory efficient</em><br><em>• Multiple files</em><br><em>• PSR-7 UploadedFileInterface</em>
-</td>
-<td align="center">🔄</td>
-<td><strong>PSR-7 Request/Response Bridge</strong><br>
-<em>• Auto-conversion</em><br><em>• Content-Range</em><br><em>• Type safe responses</em></td>
-</tr>
-<tr>
-<td align="center">🧹</td>
-<td><strong>Stateless Application Support</strong><br>
-<em>• Memory cleanup</em><br><em>• Event tracking</em><br><em>• Request-scoped lifecycle</em></td>
-<td align="center">⚡</td>
-<td><strong>Worker Mode Compatibility</strong><br>
-<em>• RoadRunner</em><br><em>• FrankenPHP</em><br><em>• Zero state contamination</em></td>
-</tr>
-</table>
+| 🍪 **Cookie & Session Management**                                      | 🛡️ **Advanced Error Handling**                                |
+|-------------------------------------------------------------------------|----------------------------------------------------------------|
+| • Encrypted cookies<br>• SameSite support<br>• Session isolation        | • Custom views<br>• Debug mode<br>• PSR-7 compatible responses |
+| **📁 Smart File Upload Processing**                                     | **🔄 PSR-7 Request/Response Bridge**                           |
+| • Memory efficient<br>• Multiple files<br>• PSR-7 UploadedFileInterface | • Auto-conversion<br>• Content-Range<br>• Type safe responses  |
+| **🧹 Stateless Application Support**                                    | **⚡ Worker Mode Compatibility**                                |
+| • Memory cleanup<br>• Event tracking<br>• Request-scoped lifecycle      | • RoadRunner<br>• FrankenPHP<br>• Zero state contamination     |
 
 ## Available deployment options
 
