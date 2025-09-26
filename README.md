@@ -36,26 +36,29 @@ high-performance worker modes.
 <tr>
 <td align="center" width="60">🍪</td>
 <td><strong>Cookie & Session Management</strong><br>
-<em>• Encrypted cookies • SameSite support • Session isolation</em></td>
+<em>• Encrypted cookies</em><br><em>• SameSite support</em><br><em> • Session isolation</em>
+</td>
 <td align="center" width="60">🛡️</td>
 <td><strong>Advanced Error Handling</strong><br>
-<em>• Custom views • Debug mode • PSR-7 compatible responses</em></td>
+<em>• Custom views</em><br><em>• Debug mode</em><br><em>• PSR-7 compatible responses</em>
+</td>
 </tr>
 <tr>
 <td align="center">📁</td>
 <td><strong>Smart File Upload Processing</strong><br>
-<em>• Memory efficient • Multiple files • PSR-7 UploadedFileInterface</em></td>
+<em>• Memory efficient</em><br><em>• Multiple files</em><br><em>• PSR-7 UploadedFileInterface</em>
+</td>
 <td align="center">🔄</td>
 <td><strong>PSR-7 Request/Response Bridge</strong><br>
-<em>• Auto-conversion • Content-Range • Type safe responses</em></td>
+<em>• Auto-conversion</em><br><em>• Content-Range</em><br><em>• Type safe responses</em></td>
 </tr>
 <tr>
 <td align="center">🧹</td>
 <td><strong>Stateless Application Support</strong><br>
-<em>• Memory cleanup • Event tracking • Request-scoped lifecycle</em></td>
+<em>• Memory cleanup</em><br><em>• Event tracking</em><br><em>• Request-scoped lifecycle</em></td>
 <td align="center">⚡</td>
 <td><strong>Worker Mode Compatibility</strong><br>
-<em>• RoadRunner • FrankenPHP • Zero state contamination</em></td>
+<em>• RoadRunner</em><br><em>• FrankenPHP</em><br><em>• Zero state contamination</em></td>
 </tr>
 </table>
 
