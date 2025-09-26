@@ -32,33 +32,63 @@ high-performance worker modes.
 
 ## Features
 
-<!-- markdownlint-disable MD009 MD028 -->
-<!-- prettier-ignore-start -->
-> [!TIP] 
-> **Cookie & Session Management**<br> 
-> Encrypted cookies • SameSite support • Session isolation
-
-> [!TIP] 
-> **Advanced Error Handling**<br> 
-> Custom views • Debug mode • PSR-7 compatible responses
-
-> [!TIP] 
-> **Smart File Upload Processing**<br> 
-> Memory efficient • Multiple files • PSR-7 UploadedFileInterface
-
-> [!TIP] 
-> **PSR-7 Request/Response Bridge**<br> 
-> Auto-conversion • Content-Range • Type safe responses
-
-> [!TIP] 
-> **Stateless Application Support**<br> 
-> Memory cleanup • Event tracking • Request-scoped lifecycle
-
-> [!TIP] 
-> **Worker Mode Compatibility**<br> 
-> RoadRunner • FrankenPHP • Zero state contamination
-<!-- prettier-ignore-end -->
-<!-- markdownlint-enable MD009 MD028 -->
+<table width="100%">
+    <tr>
+        <td width="48%" valign="top">
+            <div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    <strong>Advanced Error Handling</strong>
+                </p>
+                <p style="margin: 0;">
+                    Custom views • Debug mode • PSR-7 compatible responses
+                </p>
+            </div>
+            <div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    <strong>Smart File Upload Processing</strong>
+                </p>
+                <p style="margin: 0;">
+                    Memory efficient • Multiple files • PSR-7 UploadedFileInterface
+                </p>
+            </div>            
+            <div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    <strong>PSR-7 Request/Response Bridge</strong>
+                </p>
+                <p style="margin: 0;">
+                    Auto-conversion • Content-Range • Type safe responses
+                </p>
+            </div>            
+        </td>
+        <td width="4%"></td>
+        <td width="48%" valign="top">
+            <div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    <strong>Cookie & Session Management</strong>
+                </p>
+                <p style="margin: 0;">
+                    Encrypted cookies • SameSite support • Session isolation
+                </p>
+            </div>        
+            <div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    <strong>Stateless Application Support</strong>
+                </p>
+                <p style="margin: 0;">
+                    Memory cleanup • Event tracking • Request-scoped lifecycle
+                </p>
+            </div>
+            <div style="border-left: 4px solid #1f883d; padding: 12px; margin-bottom: 16px; border-radius: 6px;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    <strong>Worker Mode Compatibility</strong>
+                </p>
+                <p style="margin: 0;">
+                    RoadRunner • FrankenPHP • Zero state contamination
+                </p>
+            </div>
+        </td>
+    </tr>
+</table>
 
 ## Available deployment options
 
