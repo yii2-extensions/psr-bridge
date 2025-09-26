@@ -32,29 +32,31 @@ high-performance worker modes.
 
 ## Features
 
-> [!TIP] 
-> **Cookie & Session Management**  
-> • Encrypted cookies • SameSite support • Session isolation
+<!-- markdownlint-disable MD009 MD028 -->
+> [!TIP]
+> **Cookie & Session Management**
+> Encrypted cookies • SameSite support • Session isolation
 
 > [!TIP]
-> **Advanced Error Handling**  
-> • Custom views • Debug mode • PSR-7 compatible responses
+> **Advanced Error Handling**
+> Custom views • Debug mode • PSR-7 compatible responses
 
 > [!TIP]
-> **Smart File Upload Processing**  
-> • Memory efficient • Multiple files • PSR-7 UploadedFileInterface
-
-> [!TIP] 
-> **PSR-7 Request/Response Bridge**  
-> • Auto-conversion • Content-Range • Type safe responses
-
-> [!TIP] 
-> **🧹 Stateless Application Support**  
-> • Memory cleanup • Event tracking • Request-scoped lifecycle
+> **Smart File Upload Processing**
+> Memory efficient • Multiple files • PSR-7 UploadedFileInterface
 
 > [!TIP]
-> **Worker Mode Compatibility**  
-> • RoadRunner • FrankenPHP • Zero state contamination
+> **PSR-7 Request/Response Bridge**
+> Auto-conversion • Content-Range • Type safe responses
+
+> [!TIP]
+> **Stateless Application Support**
+> Memory cleanup • Event tracking • Request-scoped lifecycle
+
+> [!TIP]
+> **Worker Mode Compatibility**
+> RoadRunner • FrankenPHP • Zero state contamination
+<!-- markdownlint-enable MD009 MD028 -->
 
 ## Available deployment options
 
