@@ -29,12 +29,14 @@ jobs:
       extensions: mbstring, gd, runkit7
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   phpunit-dev:
     uses: php-forge/actions/.github/workflows/phpunit.yml@v2
     with:
-      concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}-dev
       composer-command: composer update --prefer-dist --no-interaction --no-progress --optimize-autoloader --ignore-platform-reqs --ansi
-      extensions: mbstring, gd, runkit7
+      concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}-dev
+      extensions: mbstring, gd
+      os: '["ubuntu-latest"]'
       php-version: '["8.5","8.6"]'
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
