@@ -7,10 +7,6 @@ name: linter
 
 jobs:
   linter:
-    uses: php-forge/actions/.github/workflows/super-linter.yml@v2
-    permissions:
-      checks: write
-      contents: read
-      statuses: write
+    uses: php-forge/actions/.github/workflows/super-linter.yml@main
     secrets:
       AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
