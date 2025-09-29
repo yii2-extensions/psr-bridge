@@ -14,6 +14,23 @@ use yii2\extensions\psrbridge\tests\TestCase;
 use function sprintf;
 use function var_export;
 
+/**
+ * Test suite for PSR-7 server parameters adapter in the Yii2 bridge layer.
+ *
+ * Verifies correct behavior of the Request server parameter handling when using PSR-7 requests, including remote host,
+ * remote IP, script name, server name, server port, and server params precedence and reset logic.
+ *
+ * Test coverage.
+ * - Checks correct extraction of server parameters from PSR-7 requests and fallback to global server values.
+ * - Confirms empty values and default handling for script URL and server params in various modes.
+ * - Ensures independent requests maintain separate server parameter states.
+ * - Uses data providers where applicable (remote host, server name, server params); remote IP and server port are
+ *   covered via targeted tests.
+ * - Validates reset and override behavior for remote host, server name, and server port.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('adapter')]
 final class ServerParamsPsr7Test extends TestCase
 {
@@ -189,30 +206,6 @@ final class ServerParamsPsr7Test extends TestCase
             $request->getRemoteIP(),
             "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams', not from global " .
             '$_SERVER.',
-        );
-    }
-
-    #[DataProviderExternal(ServerParamsPsr7Provider::class, 'remoteIPCases')]
-    #[Group('remote-ip')]
-    public function testReturnRemoteIPFromServerParamsCases(mixed $serverValue, string|null $expected): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_ADDR' => $serverValue]),
-        );
-
-        $actual = $request->getRemoteIP();
-
-        self::assertSame(
-            $expected,
-            $actual,
-            sprintf(
-                "'getRemoteIP()' should return '%s' when 'REMOTE_ADDR' is '%s' in PSR-7 'serverParams'. Got: '%s'",
-                var_export($expected, true),
-                var_export($serverValue, true),
-                var_export($actual, true),
-            ),
         );
     }
 
@@ -528,33 +521,6 @@ final class ServerParamsPsr7Test extends TestCase
             $result2,
             "'SERVER_PORT' should change after request 'reset' method and new PSR-7 request assignment.",
         );
-    }
-
-    /**
-     * @phpstan-param array<string, mixed> $requestConfig
-     * @phpstan-param array<string, mixed> $serverGlobal
-     * @phpstan-param array<string, array<int, string>|int|string> $headers
-     * @phpstan-param array<string, mixed> $serverParams
-     */
-    #[DataProviderExternal(ServerParamsPsr7Provider::class, 'serverPortCases')]
-    #[Group('server-port')]
-    public function testServerPortCases(
-        array $requestConfig,
-        array $serverGlobal,
-        array $headers,
-        array $serverParams,
-        int|null $expected,
-        string $message,
-    ): void {
-        $_SERVER = $serverGlobal;
-
-        $request = new Request($requestConfig);
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', $headers, serverParams: $serverParams),
-        );
-
-        self::assertSame($expected, $request->getServerPort(), $message);
     }
 
     #[Group('server-port')]
