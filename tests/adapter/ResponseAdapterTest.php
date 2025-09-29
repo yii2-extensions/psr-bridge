@@ -330,6 +330,68 @@ final class ResponseAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testCookieWithEmptyValueIsIncludedInHeaders(): void
+    {
+        $response = new Response(
+            [
+                'charset' => 'UTF-8',
+                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                'enableCookieValidation' => true,
+            ],
+        );
+
+        $deletionCookie = new Cookie(
+            [
+                'name' => 'session_id',
+                'value' => '', // empty value for deletion
+                'expire' => time() - 3600, // past expiration date
+                'path' => '/',
+                'domain' => 'example.com',
+            ],
+        );
+
+        $response->cookies->add($deletionCookie);
+
+        $adapter = new ResponseAdapter(
+            $response,
+            FactoryHelper::createResponseFactory(),
+            FactoryHelper::createStreamFactory(),
+            new Security(),
+        );
+
+        $psr7Response = $adapter->toPsr7();
+        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
+
+        self::assertNotEmpty(
+            $setCookieHeaders,
+            "'Set-Cookie' header should be present when a cookie with an empty value is added for deletion.",
+        );
+
+        $deletionHeaderFound = false;
+
+        foreach ($setCookieHeaders as $header) {
+            if (str_starts_with($header, 'session_id=')) {
+                $deletionHeaderFound = true;
+
+                self::assertStringContainsString(
+                    'session_id=',
+                    $header,
+                    "'Set-Cookie' header for deletion should start with 'session_id=' and include the cookie name.",
+                );
+
+                break;
+            }
+        }
+
+        self::assertTrue(
+            $deletionHeaderFound,
+            "A 'Set-Cookie' header for the deletion cookie ('session_id=') must be present in the response headers.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testDeletionCookiesWithValidationEnabled(): void
     {
         $response = new Response(
