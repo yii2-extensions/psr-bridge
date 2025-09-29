@@ -14,7 +14,6 @@ use yii2\extensions\psrbridge\tests\TestCase;
 use function sprintf;
 use function var_export;
 
-
 /**
  * Test suite for PSR-7 server parameters adapter in the Yii2 bridge layer.
  *
