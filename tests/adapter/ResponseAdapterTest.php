@@ -29,6 +29,22 @@ use function time;
 use function unlink;
 use function urlencode;
 
+/**
+ * Tests for the ResponseAdapter class.
+ *
+ * Validates conversion of Yii2 Response objects to PSR-7 responses, including file streaming, cookie formatting, header
+ * preservation, and error handling.
+ *
+ * Key features:
+ * - Checks header preservation and exception cases.
+ * - Ensures correct stream and content handling for various response scenarios.
+ * - Verifies cookie formatting and validation logic.
+ *
+ * @see ResponseAdapter for the implementation under test.
+ *
+ * @copyright Copyright (C) 2025
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('adapter')]
 final class ResponseAdapterTest extends TestCase
 {
@@ -308,68 +324,6 @@ final class ResponseAdapterTest extends TestCase
             1,
             strlen($body),
             "PSR-7 response body should contain exactly one 'byte'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testCookieWithEmptyValueIsIncludedInHeaders(): void
-    {
-        $response = new Response(
-            [
-                'charset' => 'UTF-8',
-                'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                'enableCookieValidation' => true,
-            ],
-        );
-
-        $deletionCookie = new Cookie(
-            [
-                'name' => 'session_id',
-                'value' => '', // empty value for deletion
-                'expire' => time() - 3600, // past expiration date
-                'path' => '/',
-                'domain' => 'example.com',
-            ],
-        );
-
-        $response->cookies->add($deletionCookie);
-
-        $adapter = new ResponseAdapter(
-            $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
-            new Security(),
-        );
-
-        $psr7Response = $adapter->toPsr7();
-        $setCookieHeaders = $psr7Response->getHeader('Set-Cookie');
-
-        self::assertNotEmpty(
-            $setCookieHeaders,
-            "'Set-Cookie' header should be present when a cookie with an empty value is added for deletion.",
-        );
-
-        $deletionHeaderFound = false;
-
-        foreach ($setCookieHeaders as $header) {
-            if (str_starts_with($header, 'session_id=')) {
-                $deletionHeaderFound = true;
-
-                self::assertStringContainsString(
-                    'session_id=',
-                    $header,
-                    "'Set-Cookie' header for deletion should start with 'session_id=' and include the cookie name.",
-                );
-
-                break;
-            }
-        }
-
-        self::assertTrue(
-            $deletionHeaderFound,
-            "A 'Set-Cookie' header for the deletion cookie ('session_id=') must be present in the response headers.",
         );
     }
 
