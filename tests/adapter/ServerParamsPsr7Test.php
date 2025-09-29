@@ -24,7 +24,8 @@ use function var_export;
  * - Checks correct extraction of server parameters from PSR-7 requests and fallback to global server values.
  * - Confirms empty values and default handling for script URL and server params in various modes.
  * - Ensures independent requests maintain separate server parameter states.
- * - Uses data providers for comprehensive edge case coverage.
+ * - Uses data providers where applicable (remote host, server name, server params); remote IP and server port are
+ *   covered via targeted tests.
  * - Validates reset and override behavior for remote host, server name, and server port.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
