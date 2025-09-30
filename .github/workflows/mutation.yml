@@ -1,20 +1,14 @@
 ---
 on:
-  pull_request:
+  pull_request: &ignore-paths
     paths-ignore:
+      - ".gitattributes"
+      - ".gitignore"
+      - "CHANGELOG.md"
       - "docs/**"
       - "README.md"
-      - "CHANGELOG.md"
-      - ".gitignore"
-      - ".gitattributes"
 
-  push:
-    paths-ignore:
-      - "docs/**"
-      - "README.md"
-      - "CHANGELOG.md"
-      - ".gitignore"
-      - ".gitattributes"
+  push: *ignore-paths
 
 name: mutation test
 

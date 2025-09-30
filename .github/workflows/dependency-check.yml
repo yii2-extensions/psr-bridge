@@ -1,6 +1,6 @@
 ---
 on:
-  pull_request:
+  pull_request: &ignore-paths
     paths-ignore:
       - ".gitattributes"
       - ".gitignore"
@@ -8,13 +8,7 @@ on:
       - "docs/**"
       - "README.md"
 
-  push:
-    paths-ignore:
-      - ".gitattributes"
-      - ".gitignore"
-      - "CHANGELOG.md"
-      - "docs/**"
-      - "README.md"
+  push: *ignore-paths
 
 name: Composer require checker
 
