@@ -35,6 +35,53 @@ final class ServerRequestAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnBodyParamsWhenPsr7RequestHasFormData(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/test',
+                ['Content-Type' => 'application/x-www-form-urlencoded'],
+                [
+                    'key1' => 'value1',
+                    'key2' => 'value2',
+                ],
+            ),
+        );
+
+        $bodyParams = $request->getBodyParams();
+
+        self::assertIsArray(
+            $bodyParams,
+            'Body parameters should be returned as an array when PSR-7 request contains form data.',
+        );
+        self::assertArrayHasKey(
+            'key1',
+            $bodyParams,
+            "Body parameters should contain the key 'key1' when present in the PSR-7 request.",
+        );
+        self::assertSame(
+            'value1',
+            $bodyParams['key1'] ?? null,
+            "Body parameter 'key1' should have the expected value from the PSR-7 request.",
+        );
+        self::assertArrayHasKey(
+            'key2',
+            $bodyParams,
+            "Body parameters should contain the key 'key2' when present in the PSR-7 request.",
+        );
+        self::assertSame(
+            'value2',
+            $bodyParams['key2'] ?? null,
+            "Body parameter 'key2' should have the expected value from the PSR-7 request.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnBodyParamsWithMethodParamRemoved(): void
     {
         $request = new Request();
