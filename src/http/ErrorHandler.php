@@ -249,7 +249,7 @@ final class ErrorHandler extends \yii\web\ErrorHandler
     /**
      * Creates a Response instance for error handling.
      *
-     * Uses the Response if available, otherwise creates a new instance with default configuration.
+     * Uses the Response if available, otherwise create a new instance with default configuration.
      *
      * @return Response Clean Response instance ready for error content.
      */
