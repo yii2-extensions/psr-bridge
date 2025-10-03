@@ -10,9 +10,6 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\{ComplexUploadedFileModel, UploadedFileModel};
 use yii2\extensions\psrbridge\tests\TestCase;
 
-use function file_put_contents;
-use function stream_get_meta_data;
-
 use const UPLOAD_ERR_CANT_WRITE;
 use const UPLOAD_ERR_OK;
 

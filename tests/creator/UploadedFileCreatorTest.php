@@ -12,8 +12,6 @@ use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
-use function stream_get_meta_data;
-
 use const UPLOAD_ERR_OK;
 
 #[Group('http')]
@@ -1038,12 +1036,12 @@ final class UploadedFileCreatorTest extends TestCase
     public function testThrowsExceptionWithMismatchedStructures(): void
     {
        $files = [
-            'invalid' => [
-                'tmp_name' => [$this->createTmpFile()],
-                'size' => 'not_array', // should be array when 'tmp_name' is array
-                'error' => [UPLOAD_ERR_OK],
-            ],
-        ];
+           'invalid' => [
+               'tmp_name' => [$this->createTmpFile()],
+               'size' => 'not_array', // should be array when 'tmp_name' is array
+               'error' => [UPLOAD_ERR_OK],
+           ],
+       ];
 
         $creator = new UploadedFileCreator(
             FactoryHelper::createUploadedFileFactory(),

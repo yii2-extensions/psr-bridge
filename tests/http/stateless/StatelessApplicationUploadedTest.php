@@ -12,7 +12,6 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 use function filesize;
-use function stream_get_meta_data;
 
 #[Group('http')]
 final class StatelessApplicationUploadedTest extends TestCase

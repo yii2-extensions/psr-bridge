@@ -103,9 +103,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * This method creates a new temporary file using the system's temporary directory and stores the file resource in
      * the internal list for later cleanup during test teardown. Returns the file path to the created temporary file.
      *
-     * @return string Path to the created temporary file.
-     *
      * @throws RuntimeException If the temporary file cannot be created.
+     * @return string Path to the created temporary file.
      */
     protected function createTmpFile(): string
     {
