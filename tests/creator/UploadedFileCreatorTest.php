@@ -1035,13 +1035,13 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowsExceptionWithMismatchedStructures(): void
     {
-       $files = [
-           'invalid' => [
-               'tmp_name' => [$this->createTmpFile()],
-               'size' => 'not_array', // should be array when 'tmp_name' is array
-               'error' => [UPLOAD_ERR_OK],
-           ],
-       ];
+        $files = [
+            'invalid' => [
+                'tmp_name' => [$this->createTmpFile()],
+                'size' => 'not_array', // should be array when 'tmp_name' is array
+                'error' => [UPLOAD_ERR_OK],
+            ],
+        ];
 
         $creator = new UploadedFileCreator(
             FactoryHelper::createUploadedFileFactory(),
