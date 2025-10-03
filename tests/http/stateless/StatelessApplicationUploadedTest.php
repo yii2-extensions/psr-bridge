@@ -22,14 +22,10 @@ final class StatelessApplicationUploadedTest extends TestCase
      */
     public function testCreateUploadedFileFromSuperglobalWhenMultipartFormDataPosted(): void
     {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $_FILES['avatar'] = [
             'name' => 'profile.jpg',
             'type' => 'image/jpeg',
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'error' => UPLOAD_ERR_OK,
             'size' => 1024,
         ];
@@ -103,9 +99,7 @@ final class StatelessApplicationUploadedTest extends TestCase
      */
     public function testUploadedFilesAreResetBetweenRequests(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
+        $tmpPath1 = $this->createTmpFile();
         $size1 = filesize($tmpPath1);
 
         self::assertIsInt(
@@ -176,9 +170,7 @@ final class StatelessApplicationUploadedTest extends TestCase
             'PSR-7 Request should NOT have uploaded files from previous request.',
         );
 
-        $tmpFile2 = $this->createTmpFile();
-
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
+        $tmpPath2 = $this->createTmpFile();
         $size2 = filesize($tmpPath2);
 
         self::assertIsInt(

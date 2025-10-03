@@ -18,6 +18,8 @@ use yii2\extensions\psrbridge\http\StatelessApplication;
 use yii2\extensions\psrbridge\tests\support\stub\{Identity, MockerFunctions};
 
 use function fclose;
+use function is_resource;
+use function stream_get_meta_data;
 use function tmpfile;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
@@ -84,7 +86,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Closes the temporary file resource if it is a valid resource.
      *
-     * @param resource ...$tmpFile The temporary file resources to close.
+     * @param resource ...$tmpFile Temporary file resources to close.
      */
     protected function closeTmpFile(...$tmpFile): void
     {
@@ -96,9 +98,16 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @phpstan-return resource
+     * Creates a temporary file and registers its resource for cleanup.
+     *
+     * This method creates a new temporary file using the system's temporary directory and stores the file resource in
+     * the internal list for later cleanup during test teardown. Returns the file path to the created temporary file.
+     *
+     * @return string Path to the created temporary file.
+     *
+     * @throws RuntimeException If the temporary file cannot be created.
      */
-    protected function createTmpFile()
+    protected function createTmpFile(): string
     {
         $tmpFile = tmpfile();
 
@@ -108,7 +117,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
         $this->tmpFiles[] = $tmpFile;
 
-        return $tmpFile;
+        return stream_get_meta_data($tmpFile)['uri'] ?? '';
     }
 
     /**

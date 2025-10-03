@@ -2146,8 +2146,7 @@ final class ResponseAdapterTest extends TestCase
      */
     private function createTempFileWithContent(string $content): string
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPathFile = stream_get_meta_data($tmpFile)['uri'];
+        $tmpPathFile = $this->createTmpFile();
         $handle = fopen($tmpPathFile, 'wb');
 
         if ($handle === false) {
