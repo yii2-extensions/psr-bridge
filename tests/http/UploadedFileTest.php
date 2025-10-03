@@ -10,9 +10,6 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\support\stub\{ComplexUploadedFileModel, UploadedFileModel};
 use yii2\extensions\psrbridge\tests\TestCase;
 
-use function file_put_contents;
-use function stream_get_meta_data;
-
 use const UPLOAD_ERR_CANT_WRITE;
 use const UPLOAD_ERR_OK;
 
@@ -27,10 +24,6 @@ final class UploadedFileTest extends TestCase
 
     public function testConvertPsr7FileWithErrorShouldNotThrowException(): void
     {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/post')
@@ -39,7 +32,7 @@ final class UploadedFileTest extends TestCase
                         'error-file' => FactoryHelper::createUploadedFile(
                             'error-file.txt',
                             'text/plain',
-                            FactoryHelper::createStream($tmpPath),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             UPLOAD_ERR_CANT_WRITE,
                             100,
                         ),
@@ -84,17 +77,13 @@ final class UploadedFileTest extends TestCase
 
     public function testConvertPsr7FileWithNullSizeShouldDefaultToZero(): void
     {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/post')
                 ->withUploadedFiles(
                     [
                         'null-size-file' => FactoryHelper::createUploadedFileFactory()->createUploadedFile(
-                            FactoryHelper::createStream($tmpPath),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             null,
                             UPLOAD_ERR_CANT_WRITE,
                             'null-size-file.txt',
@@ -121,16 +110,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstancesWithComplexUploadedFileModelAndPsr7AdapterForMultipleFiles(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-        file_put_contents($tmpPath1, 'PSR-7 complex model array test content 1');
-
-        $tmpFile2 = $this->createTmpFile();
-
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-        file_put_contents($tmpPath2, 'PSR-7 complex model array test content 2');
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -140,14 +119,14 @@ final class UploadedFileTest extends TestCase
                             FactoryHelper::createUploadedFile(
                                 'psr7-complex-array-1.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath1),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_OK,
                                 38,
                             ),
                             FactoryHelper::createUploadedFile(
                                 'psr7-complex-array-2.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath2),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_OK,
                                 38,
                             ),
@@ -226,15 +205,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstancesWithComplexUploadedFileModelAndPsr7AdapterWithMixedErrorFiles(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-        file_put_contents($tmpPath1, 'PSR-7 complex model success file content');
-
-        $tmpFile2 = $this->createTmpFile();
-
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -244,14 +214,14 @@ final class UploadedFileTest extends TestCase
                             FactoryHelper::createUploadedFile(
                                 'psr7-complex-success-file.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath1),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_OK,
                                 36,
                             ),
                             FactoryHelper::createUploadedFile(
                                 'psr7-complex-error-file.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath2),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_CANT_WRITE,
                                 120,
                             ),
@@ -437,14 +407,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstancesWithModelAndAttributeHandlesErrorFilesArray(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-
-        $tmpFile2 = $this->createTmpFile();
-
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -454,14 +416,14 @@ final class UploadedFileTest extends TestCase
                             FactoryHelper::createUploadedFile(
                                 'error-array-1.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath1),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_CANT_WRITE,
                                 75,
                             ),
                             FactoryHelper::createUploadedFile(
                                 'error-array-2.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath2),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_CANT_WRITE,
                                 85,
                             ),
@@ -532,15 +494,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstancesWithModelAndAttributeHandlesMixedSuccessAndErrorFiles(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-        file_put_contents($tmpPath1, 'Success file content');
-
-        $tmpFile2 = $this->createTmpFile();
-
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -550,14 +503,14 @@ final class UploadedFileTest extends TestCase
                             FactoryHelper::createUploadedFile(
                                 'success-file.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath1),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_OK,
                                 20,
                             ),
                             FactoryHelper::createUploadedFile(
                                 'error-file.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath2),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_CANT_WRITE,
                                 100,
                             ),
@@ -722,16 +675,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstancesWithModelAndAttributeReturnsArrayForPsr7MultipleFiles(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-        file_put_contents($tmpPath1, 'PSR-7 array test content 1');
-
-        $tmpFile2 = $this->createTmpFile();
-
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-        file_put_contents($tmpPath2, 'PSR-7 array test content 2');
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -741,14 +684,14 @@ final class UploadedFileTest extends TestCase
                             FactoryHelper::createUploadedFile(
                                 'psr7-array-1.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath1),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_OK,
                                 28,
                             ),
                             FactoryHelper::createUploadedFile(
                                 'psr7-array-2.txt',
                                 'text/plain',
-                                FactoryHelper::createStream($tmpPath2),
+                                FactoryHelper::createStream($this->createTmpFile()),
                                 UPLOAD_ERR_OK,
                                 28,
                             ),
@@ -930,11 +873,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstanceWithComplexUploadedFileModelAndPsr7Adapter(): void
     {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-        file_put_contents($tmpPath, 'PSR-7 complex model test content');
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -943,7 +881,7 @@ final class UploadedFileTest extends TestCase
                         'Complex_Model-Name[file_attribute]' => FactoryHelper::createUploadedFile(
                             'psr7-complex-model-test.txt',
                             'text/plain',
-                            FactoryHelper::createStream($tmpPath),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             UPLOAD_ERR_OK,
                             30,
                         ),
@@ -987,10 +925,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstanceWithComplexUploadedFileModelAndPsr7AdapterWithError(): void
     {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -999,7 +933,7 @@ final class UploadedFileTest extends TestCase
                         'Complex_Model-Name[file_attribute]' => FactoryHelper::createUploadedFile(
                             'psr7-complex-error-test.txt',
                             'text/plain',
-                            FactoryHelper::createStream($tmpPath),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             UPLOAD_ERR_CANT_WRITE,
                             75,
                         ),
@@ -1106,10 +1040,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstanceWithModelAndAttributeHandlesErrorFiles(): void
     {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -1118,7 +1048,7 @@ final class UploadedFileTest extends TestCase
                         'UploadedFileModel[file]' => FactoryHelper::createUploadedFile(
                             'error-model-test.txt',
                             'text/plain',
-                            FactoryHelper::createStream($tmpPath),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             UPLOAD_ERR_CANT_WRITE,
                             50,
                         ),
@@ -1216,11 +1146,6 @@ final class UploadedFileTest extends TestCase
 
     public function testGetInstanceWithModelAndAttributeReturnsUploadedFileForPsr7Files(): void
     {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-        file_put_contents($tmpPath, 'PSR-7 model test content');
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/upload')
@@ -1229,7 +1154,7 @@ final class UploadedFileTest extends TestCase
                         'UploadedFileModel[file]' => FactoryHelper::createUploadedFile(
                             'psr7-model-test.txt',
                             'text/plain',
-                            FactoryHelper::createStream($tmpPath),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             UPLOAD_ERR_OK,
                             24,
                         ),
@@ -1493,11 +1418,6 @@ final class UploadedFileTest extends TestCase
 
     public function testResetMethodShouldCloseDetachedResources(): void
     {
-        $tmpFile = $this->createTmpFile();
-
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-        file_put_contents($tmpPath, 'Test content for reset method test');
-
         UploadedFile::setPsr7Adapter(
             new ServerRequestAdapter(
                 FactoryHelper::createRequest('POST', 'site/post')
@@ -1506,7 +1426,7 @@ final class UploadedFileTest extends TestCase
                         'reset-test' => FactoryHelper::createUploadedFile(
                             'reset-test.txt',
                             'text/plain',
-                            FactoryHelper::createStream($tmpPath),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             UPLOAD_ERR_OK,
                             32,
                         ),
@@ -1605,16 +1525,6 @@ final class UploadedFileTest extends TestCase
 
     public function testReturnUploadedFileInstanceWhenMultipleFilesAreUploadedViaPsr7(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-
-        $tmpPathFile1 = stream_get_meta_data($tmpFile1)['uri'];
-        file_put_contents($tmpPathFile1, 'content1');
-
-        $tmpFile2 = $this->createTmpFile();
-
-        $tmpPathFile2 = stream_get_meta_data($tmpFile2)['uri'];
-        file_put_contents($tmpPathFile2, 'content2');
-
         $adapter = new ServerRequestAdapter(
             FactoryHelper::createRequest('POST', 'http://example.com')
             ->withUploadedFiles(
@@ -1623,14 +1533,14 @@ final class UploadedFileTest extends TestCase
                         FactoryHelper::createUploadedFile(
                             'file1.txt',
                             'text/plain',
-                            FactoryHelper::createStream($tmpPathFile1),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             UPLOAD_ERR_OK,
                             8,
                         ),
                         FactoryHelper::createUploadedFile(
                             'file2.txt',
                             'text/plain',
-                            FactoryHelper::createStream($tmpPathFile2),
+                            FactoryHelper::createStream($this->createTmpFile()),
                             UPLOAD_ERR_OK,
                             8,
                         ),

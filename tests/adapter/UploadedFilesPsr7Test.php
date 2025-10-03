@@ -16,9 +16,7 @@ final class UploadedFilesPsr7Test extends TestCase
 {
     public function testReturnMultipleUploadedFilesWithDifferentStructures(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-
-        $tmpPathFile1 = stream_get_meta_data($tmpFile1)['uri'];
+        $tmpPathFile1 = $this->createTmpFile();
         $tmpFileSize1 = filesize($tmpPathFile1);
 
         self::assertIsInt(
@@ -26,9 +24,7 @@ final class UploadedFilesPsr7Test extends TestCase
             "'filesize' for 'test1.txt' should be an integer.",
         );
 
-        $tmpFile2 = $this->createTmpFile();
-
-        $tmpPathFile2 = stream_get_meta_data($tmpFile2)['uri'];
+        $tmpPathFile2 = $this->createTmpFile();
         $tmpFileSize2 = filesize($tmpPathFile2);
 
         self::assertIsInt(

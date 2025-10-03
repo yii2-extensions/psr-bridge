@@ -12,8 +12,6 @@ use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
-use function stream_get_meta_data;
-
 use const UPLOAD_ERR_OK;
 
 #[Group('http')]
@@ -22,11 +20,8 @@ final class UploadedFileCreatorTest extends TestCase
 {
     public function testCreateFromArrayWithMinimalFileSpec(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'size' => 512,
             'error' => UPLOAD_ERR_OK,
         ];
@@ -60,11 +55,8 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testCreateFromArrayWithNullOptionalFields(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'size' => 256,
             'error' => UPLOAD_ERR_OK,
             'name' => null,
@@ -95,11 +87,8 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testCreateFromArrayWithValidFileSpec(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'size' => 1024,
             'error' => UPLOAD_ERR_OK,
             'name' => 'test.txt',
@@ -183,18 +172,9 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithMixedFileStructures(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-
-        $tmpFile2 = $this->createTmpFile();
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
-        $tmpFile3 = $this->createTmpFile();
-        $tmpPath3 = stream_get_meta_data($tmpFile3)['uri'];
-
         $files = [
             'single' => [
-                'tmp_name' => $tmpPath1,
+                'tmp_name' => $this->createTmpFile(),
                 'size' => 1024,
                 'error' => UPLOAD_ERR_OK,
                 'name' => 'single.txt',
@@ -202,8 +182,8 @@ final class UploadedFileCreatorTest extends TestCase
             ],
             'multiple' => [
                 'tmp_name' => [
-                    $tmpPath2,
-                    $tmpPath3,
+                    $this->createTmpFile(),
+                    $this->createTmpFile(),
                 ],
                 'size' => [
                     2048,
@@ -306,17 +286,11 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithMultipleFiles(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-
-        $tmpFile2 = $this->createTmpFile();
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
         $files = [
             'documents' => [
                 'tmp_name' => [
-                    $tmpPath1,
-                    $tmpPath2,
+                    $this->createTmpFile(),
+                    $this->createTmpFile(),
                 ],
                 'size' => [
                     2048,
@@ -416,16 +390,10 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithNestedStructure(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-
-        $tmpFile2 = $this->createTmpFile();
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
         $files = [
             'nested' => [
                 'level1' => [
-                    'tmp_name' => $tmpPath1,
+                    'tmp_name' => $this->createTmpFile(),
                     'size' => 1024,
                     'error' => UPLOAD_ERR_OK,
                     'name' => 'nested1.txt',
@@ -433,7 +401,7 @@ final class UploadedFileCreatorTest extends TestCase
                 ],
                 'level2' => [
                     'level3' => [
-                        'tmp_name' => [$tmpPath2],
+                        'tmp_name' => [$this->createTmpFile()],
                         'size' => [512],
                         'error' => [UPLOAD_ERR_OK],
                         'name' => ['nested2.jpg'],
@@ -546,12 +514,9 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithSingleFile(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $files = [
             'upload' => [
-                'tmp_name' => $tmpPath,
+                'tmp_name' => $this->createTmpFile(),
                 'size' => 1024,
                 'error' => UPLOAD_ERR_OK,
                 'name' => 'document.pdf',
@@ -603,10 +568,7 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testDepthParameterStartsAtZeroNotOne(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
-        $tenLevelFiles = $this->createDeeplyNestedFileStructure($tmpPath, 11);
+        $tenLevelFiles = $this->createDeeplyNestedFileStructure($this->createTmpFile(), 11);
 
         $creator = new UploadedFileCreator(
             FactoryHelper::createUploadedFileFactory(),
@@ -638,10 +600,7 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testSuccessWithMaximumAllowedRecursionDepth(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
-        $maxDepthFiles = $this->createDeeplyNestedFileStructure($tmpPath, 10);
+        $maxDepthFiles = $this->createDeeplyNestedFileStructure($this->createTmpFile(), 10);
 
         $creator = new UploadedFileCreator(
             FactoryHelper::createUploadedFileFactory(),
@@ -678,14 +637,11 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionInBuildFileTreeRecursion(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $files = [
             'documents' => [
                 'tmp_name' => [
                     'category' => [
-                        'subcategory' => $tmpPath,
+                        'subcategory' => $this->createTmpFile(),
                     ],
                 ],
                 'size' => [
@@ -714,13 +670,10 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionInBuildFileTreeWithMismatchedArrayStructureError(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $files = [
             'documents' => [
                 'tmp_name' => [
-                    'level1' => [$tmpPath],
+                    'level1' => [$this->createTmpFile()],
                 ],
                 'size' => [
                     'level1' => [1024],
@@ -746,13 +699,10 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionInBuildFileTreeWithMismatchedArrayStructureSize(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $files = [
             'documents' => [
                 'tmp_name' => [
-                    'level1' => [$tmpPath],
+                    'level1' => [$this->createTmpFile()],
                 ],
                 'size' => [
                     'level1' => 1024,
@@ -778,11 +728,8 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWhenErrorIsNotInteger(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'size' => 1024,
             'error' => 'invalid',
         ];
@@ -801,11 +748,8 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWhenMissingSize(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'error' => UPLOAD_ERR_OK,
         ];
 
@@ -846,17 +790,11 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWhenNameIsNotArrayOrNullInMultiFileSpec(): void
     {
-        $tempFile1 = $this->createTmpFile();
-        $tmpPath1 = stream_get_meta_data($tempFile1)['uri'];
-
-        $tempFile2 = $this->createTmpFile();
-        $tmpPath2 = stream_get_meta_data($tempFile2)['uri'];
-
         $files = [
             'invalid' => [
                 'tmp_name' => [
-                    $tmpPath1,
-                    $tmpPath2,
+                    $this->createTmpFile(),
+                    $this->createTmpFile(),
                 ],
                 'size' => [
                     2048,
@@ -885,11 +823,8 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWhenNameIsNotStringOrNull(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'size' => 1024,
             'error' => UPLOAD_ERR_OK,
             'name' => 123,
@@ -909,10 +844,7 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWhenRecursionDepthExceeded(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
-        $deeplyNestedFiles = $this->createDeeplyNestedFileStructure($tmpPath, 15);
+        $deeplyNestedFiles = $this->createDeeplyNestedFileStructure($this->createTmpFile(), 15);
 
         $creator = new UploadedFileCreator(
             FactoryHelper::createUploadedFileFactory(),
@@ -927,11 +859,8 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWhenSizeIsNotInteger(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'size' => 'invalid',
             'error' => UPLOAD_ERR_OK,
         ];
@@ -993,11 +922,8 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWhenTypeIsNotStringOrNull(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'size' => 1024,
             'error' => UPLOAD_ERR_OK,
             'type' => 123,
@@ -1017,15 +943,12 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWithMismatchedErrorsArray(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-
-        $tmpFile2 = $this->createTmpFile();
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
         $files = [
             'invalid' => [
-                'tmp_name' => [$tmpPath1, $tmpPath2],
+                'tmp_name' => [
+                    $this->createTmpFile(),
+                    $this->createTmpFile(),
+                ],
                 'size' => [
                     2048,
                     1536,
@@ -1047,17 +970,11 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowExceptionWithMismatchedSizesArray(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-
-        $tmpFile2 = $this->createTmpFile();
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
         $files = [
             'invalid' => [
                 'tmp_name' => [
-                    $tmpPath1,
-                    $tmpPath2,
+                    $this->createTmpFile(),
+                    $this->createTmpFile(),
                 ],
                 'size' => [2048], // missing 'size' for second file
                 'error' => [
@@ -1080,10 +997,7 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowsExceptionForDepthValidation(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
-        $elevenLevelFiles = $this->createDeeplyNestedFileStructure($tmpPath, 12);
+        $elevenLevelFiles = $this->createDeeplyNestedFileStructure($this->createTmpFile(), 12);
 
         $creator = new UploadedFileCreator(
             FactoryHelper::createUploadedFileFactory(),
@@ -1100,11 +1014,8 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowsExceptionWhenMissingError(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $fileSpec = [
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'size' => 1024,
         ];
 
@@ -1124,12 +1035,9 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testThrowsExceptionWithMismatchedStructures(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $files = [
             'invalid' => [
-                'tmp_name' => [$tmpPath],
+                'tmp_name' => [$this->createTmpFile()],
                 'size' => 'not_array', // should be array when 'tmp_name' is array
                 'error' => [UPLOAD_ERR_OK],
             ],

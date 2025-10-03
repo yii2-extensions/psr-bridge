@@ -160,7 +160,7 @@ final class ServerRequestCreatorTest extends TestCase
 
             self::assertSame(
                 'php://input',
-                $metadata['uri'],
+                $metadata['uri'] ?? '',
                 "Body stream should have 'php://input' as URI when successfully attached from globals.",
             );
 
@@ -281,9 +281,6 @@ final class ServerRequestCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithComplexScenario(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $_SERVER = [
             'REQUEST_METHOD' => 'PUT',
             'REQUEST_URI' => '/api/profile/update?force=true',
@@ -300,7 +297,7 @@ final class ServerRequestCreatorTest extends TestCase
                 'error' => UPLOAD_ERR_OK,
                 'name' => 'avatar.png',
                 'size' => 1500,
-                'tmp_name' => $tmpPath,
+                'tmp_name' => $this->createTmpFile(),
                 'type' => 'image/png',
             ],
         ];
@@ -734,12 +731,6 @@ final class ServerRequestCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithMultipleUploadedFiles(): void
     {
-        $tmpFile1 = $this->createTmpFile();
-        $tmpPath1 = stream_get_meta_data($tmpFile1)['uri'];
-
-        $tmpFile2 = $this->createTmpFile();
-        $tmpPath2 = stream_get_meta_data($tmpFile2)['uri'];
-
         $_FILES = [
             'documents' => [
                 'name' => [
@@ -751,8 +742,8 @@ final class ServerRequestCreatorTest extends TestCase
                     'text/plain',
                 ],
                 'tmp_name' => [
-                    $tmpPath1,
-                    $tmpPath2,
+                    $this->createTmpFile(),
+                    $this->createTmpFile(),
                 ],
                 'error' => [
                     UPLOAD_ERR_OK,
@@ -1124,13 +1115,10 @@ final class ServerRequestCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithSingleUploadedFile(): void
     {
-        $tmpFile = $this->createTmpFile();
-        $tmpPath = stream_get_meta_data($tmpFile)['uri'];
-
         $_FILES['avatar'] = [
             'name' => 'profile.jpg',
             'type' => 'image/jpeg',
-            'tmp_name' => $tmpPath,
+            'tmp_name' => $this->createTmpFile(),
             'error' => UPLOAD_ERR_OK,
             'size' => 1024,
         ];

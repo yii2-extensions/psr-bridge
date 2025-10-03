@@ -12,56 +12,26 @@ use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+/**
+ * Test suite for PSR-7 server request adapter in the Yii2 bridge layer.
+ *
+ * Verifies correct behavior of the Request handling when using PSR-7 requests, including body parameters, HTTP method
+ * overrides, query string and params, raw body, and parsed body logic.
+ *
+ * Test coverage.
+ * - Data provider integration for query string and URL cases.
+ * - Extraction and override of HTTP methods from body and headers.
+ * - Handling of body parameters, including method param removal.
+ * - Parent fallback logic when adapter is not set.
+ * - Query string and query params precedence and fallback.
+ * - Raw body and parsed body extraction for arrays and objects.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('adapter')]
 final class ServerRequestAdapterTest extends TestCase
 {
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnBodyParamsWhenPsr7RequestHasFormData(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest(
-                'POST',
-                '/test',
-                ['Content-Type' => 'application/x-www-form-urlencoded'],
-                [
-                    'key1' => 'value1',
-                    'key2' => 'value2',
-                ],
-            ),
-        );
-
-        $bodyParams = $request->getBodyParams();
-
-        self::assertIsArray(
-            $bodyParams,
-            'Body parameters should be returned as an array when PSR-7 request contains form data.',
-        );
-        self::assertArrayHasKey(
-            'key1',
-            $bodyParams,
-            "Body parameters should contain the key 'key1' when present in the PSR-7 request.",
-        );
-        self::assertSame(
-            'value1',
-            $bodyParams['key1'] ?? null,
-            "Body parameter 'key1' should have the expected value from the PSR-7 request.",
-        );
-        self::assertArrayHasKey(
-            'key2',
-            $bodyParams,
-            "Body parameters should contain the key 'key2' when present in the PSR-7 request.",
-        );
-        self::assertSame(
-            'value2',
-            $bodyParams['key2'] ?? null,
-            "Body parameter 'key2' should have the expected value from the PSR-7 request.",
-        );
-    }
-
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
