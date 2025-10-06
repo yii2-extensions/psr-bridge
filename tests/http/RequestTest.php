@@ -15,7 +15,6 @@ use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\TestCase;
 
-
 use function array_filter;
 use function str_starts_with;
 

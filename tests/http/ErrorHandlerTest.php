@@ -15,7 +15,6 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function ob_get_level;
 use function ob_start;
-
 use function str_repeat;
 
 /**

@@ -255,20 +255,20 @@ final class RequestProvider
         ];
     }
 
-        /**
-         * Provides test data for PJAX request detection logic.
-         *
-         * This provider supplies test cases for validating the detection of PJAX requests based on the
-         * 'HTTP_X_REQUESTED_WITH' and 'HTTP_X_PJAX' server parameters, covering both standard and missing header
-         * scenarios.
-         *
-         * Each test case includes the server parameters and the expected boolean result indicating whether the request
-         * should be recognized as PJAX.
-         *
-         * @return array test data with server parameters and expected PJAX detection results.
-         *
-         * @phpstan-return array<array{array<string, string>, bool}>
-         */
+    /**
+     * Provides test data for PJAX request detection logic.
+     *
+     * This provider supplies test cases for validating the detection of PJAX requests based on the
+     * 'HTTP_X_REQUESTED_WITH' and 'HTTP_X_PJAX' server parameters, covering both standard and missing header
+     * scenarios.
+     *
+     * Each test case includes the server parameters and the expected boolean result indicating whether the request
+     * should be recognized as PJAX.
+     *
+     * @return array test data with server parameters and expected PJAX detection results.
+     *
+     * @phpstan-return array<array{array<string, string>, bool}>
+     */
     public static function getIsPjax(): array
     {
         return [
