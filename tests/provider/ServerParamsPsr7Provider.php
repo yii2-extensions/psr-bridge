@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\provider;
 
 /**
- * Data provider for {@see \yii2\extensions\psrbridge\tests\http\ServerParamsPsr7Test} and related server params test
+ * Data provider for {@see \yii2\extensions\psrbridge\tests\adapter\ServerParamsPsr7Test} and related server params test
  * classes.
  *
  * Supplies comprehensive test data for server parameter normalization and extraction scenarios, including remote host,
