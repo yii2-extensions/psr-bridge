@@ -17,6 +17,21 @@ use function session_name;
 use function str_starts_with;
 use function uniqid;
 
+/**
+ * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} session handling in stateless mode.
+ *
+ * Verifies correct session isolation, persistence, flash message handling, and authentication session separation in
+ * stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Confirms session data is isolated between different session IDs and requests.
+ * - Ensures session data persists with the same session ID and is reset without cookies.
+ * - Tests user authentication session isolation and multi-request scenarios in worker mode.
+ * - Validates flash message isolation and persistence across sessions.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ApplicationSessionTest extends TestCase
 {

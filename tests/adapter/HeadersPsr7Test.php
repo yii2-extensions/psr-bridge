@@ -9,6 +9,21 @@ use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+/**
+ * Test suite for {@see Request} header handling functionality and behavior.
+ *
+ * Verifies correct behavior of the Request header handling when using PSR-7 requests, including CSRF token extraction,
+ * content type precedence, secure header filtering, and case-insensitive header access.
+ *
+ * Test coverage.
+ * - Extraction of CSRF token from PSR-7 request headers, including custom and case-insensitive headers.
+ * - Filtering of secure headers when request is not from trusted hosts.
+ * - Handling of empty and missing CSRF headers.
+ * - Precedence of PSR-7 'Content-Type' header over server globals.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('adapter')]
 final class HeadersPsr7Test extends TestCase
 {

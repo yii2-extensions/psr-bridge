@@ -18,6 +18,22 @@ use yii2\extensions\psrbridge\tests\TestCase;
 use function array_filter;
 use function str_starts_with;
 
+/**
+ * Test suite for {@see Request} class functionality and behavior.
+ *
+ * Verifies correct behavior of HTTP request handling, CSRF validation, authentication, headers, server params, query
+ * string, uploaded files, and edge cases in the Yii2 PSR bridge.
+ *
+ * Test coverage.
+ * - Confirms correct IP resolution, secure connection, and host info extraction.
+ * - Covers query string, server params, uploaded files, and request method logic.
+ * - Ensures correct parsing of authentication credentials and HTTP headers.
+ * - Tests edge cases for AJAX, PJAX, forwarded headers, and parent fallback behavior.
+ * - Validates CSRF token generation, validation, and header handling.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class RequestTest extends TestCase
 {
@@ -254,7 +270,7 @@ final class RequestTest extends TestCase
             'CSRF token validation should pass for any value if CSRF validation is disabled.',
         );
         self::assertTrue(
-            $request->validateCsrfToken(null),
+            $request->validateCsrfToken(),
             "CSRF token validation should pass for 'null' value if CSRF validation is disabled.",
         );
 
@@ -274,7 +290,7 @@ final class RequestTest extends TestCase
                 "CSRF token validation should pass for any value on safe HTTP methods ('GET', 'HEAD', 'OPTIONS').",
             );
             self::assertTrue(
-                $request->validateCsrfToken(null),
+                $request->validateCsrfToken(),
                 "CSRF token validation should pass for 'null' value on safe HTTP methods ('GET', 'HEAD', 'OPTIONS').",
             );
         }
@@ -292,7 +308,7 @@ final class RequestTest extends TestCase
                 "CSRF token validation should fail for invalid token on unsafe HTTP methods ('POST', 'PUT', 'DELETE').",
             );
             self::assertFalse(
-                $request->validateCsrfToken(null),
+                $request->validateCsrfToken(),
                 "CSRF token validation should fail for 'null' value on unsafe HTTP methods ('POST', 'PUT', 'DELETE').",
             );
         }
@@ -356,7 +372,7 @@ final class RequestTest extends TestCase
             "CSRF token validation should pass for any value on custom safe HTTP methods ('OPTIONS').",
         );
         self::assertTrue(
-            $request->validateCsrfToken(null),
+            $request->validateCsrfToken(),
             "CSRF token validation should pass for 'null' value on custom safe HTTP methods ('OPTIONS').",
         );
         self::assertTrue(
@@ -377,7 +393,7 @@ final class RequestTest extends TestCase
                 "CSRF token validation should fail for invalid token on HTTP methods ('GET', 'HEAD', 'POST').",
             );
             self::assertFalse(
-                $request->validateCsrfToken(null),
+                $request->validateCsrfToken(),
                 "CSRF token validation should fail for 'null' value on HTTP methods ('GET', 'HEAD', 'POST').",
             );
             self::assertFalse(

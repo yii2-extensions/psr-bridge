@@ -16,6 +16,12 @@ use function rewind;
 use function stream_get_meta_data;
 use function tmpfile;
 
+/**
+ * Controller stub for testing various HTTP actions and behaviors in Yii2 applications.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 final class SiteController extends Controller
 {
     /**

@@ -25,6 +25,20 @@ use function ob_start;
 
 use const PHP_INT_MAX;
 
+/**
+ * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} memory management in stateless mode.
+ *
+ * Verifies correct memory limit handling, output buffer cleanup and garbage collection in stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Confirms memory limit parsing, unlimited values, and positive/negative limit scenarios.
+ * - Covers edge cases for memory thresholds, recursion, and buffer management.
+ * - Ensures output buffer levels are cleaned after request handling.
+ * - Validates garbage collection and memory usage before and after cleanup.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ApplicationMemoryTest extends TestCase
 {
@@ -196,7 +210,6 @@ final class ApplicationMemoryTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if the method does not exist or is inaccessible.
      */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'parseMemoryLimit')]
@@ -212,6 +225,7 @@ final class ApplicationMemoryTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the property does not exist or is inaccessible.
      */
     #[TestWith([-1])]
     #[TestWith([0])]

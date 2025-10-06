@@ -21,6 +21,23 @@ use function restore_error_handler;
 use function set_error_handler;
 use function str_contains;
 
+/**
+ * Test suite for {@see StatelessApplication} error handling in stateless mode.
+ *
+ * Verifies correct error view rendering, event triggering, sensitive variable filtering, exception logging, and
+ * fallback behaviors in stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Checks that exception logging is performed during error handling.
+ * - Confirms error view logic and status codes for various debug and route scenarios.
+ * - Covers rendering of exceptions in different formats and error actions.
+ * - Ensures after request event is triggered when handling exceptions.
+ * - Tests fallback HTML error response and strict parsing exception cases.
+ * - Validates filtering of sensitive server variables in fallback exception messages.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ApplicationErrorHandlerTest extends TestCase
 {

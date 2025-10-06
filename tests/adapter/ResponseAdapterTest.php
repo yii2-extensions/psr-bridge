@@ -30,7 +30,7 @@ use function unlink;
 use function urlencode;
 
 /**
- * Tests for the ResponseAdapter class.
+ * Test suite for {@see ResponseAdapter} conversion functionality and behavior.
  *
  * Validates conversion of Yii2 Response objects to PSR-7 responses, including file streaming, cookie formatting, header
  * preservation, and error handling.
@@ -39,8 +39,6 @@ use function urlencode;
  * - Checks header preservation and exception cases.
  * - Ensures correct stream and content handling for various response scenarios.
  * - Verifies cookie formatting and validation logic.
- *
- * @see ResponseAdapter for the implementation under test.
  *
  * @copyright Copyright (C) 2025
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

@@ -20,6 +20,24 @@ use function str_contains;
 use function time;
 use function urlencode;
 
+/**
+ * Test suite for {@see Response} class functionality and behavior.
+ *
+ * Verifies correct conversion of Yii2 Response objects to PSR-7 responses, including session handling, headers,
+ * cookies, events, and content.
+ *
+ * Ensures compatibility with active, inactive, and missing session scenarios.
+ *
+ * Test coverage.
+ * - Checks event triggering and header/cookie propagation.
+ * - Confirms correct PSR-7 response generation with active session and session cookie.
+ * - Ensures session cookie is formatted and included as expected.
+ * - Validates response conversion with inactive and missing session.
+ * - Verifies prepare method is called during PSR-7 conversion.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ResponseTest extends TestCase
 {

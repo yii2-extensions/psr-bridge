@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
+use ReflectionException;
 use RuntimeException;
 use Throwable;
 use yii\base\{Exception, UserException};
@@ -16,6 +17,21 @@ use function ob_get_level;
 use function ob_start;
 use function str_repeat;
 
+/**
+ * Test suite for {@see ErrorHandler} class functionality and behavior.
+ *
+ * Verifies correct error and exception handling, output buffer management, response clearing, and state reset in the
+ * Yii2 PSR bridge.
+ *
+ * Test coverage.
+ * - Confirms output buffer clearing and response data reset.
+ * - Covers edge cases for nested, long, empty, and special character exceptions.
+ * - Ensures correct state management and response format defaults.
+ * - Validates exception handling for various exception types and messages.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ErrorHandlerTest extends TestCase
 {
@@ -135,6 +151,9 @@ final class ErrorHandlerTest extends TestCase
         );
     }
 
+    /**
+     * @throws ReflectionException if the property does not exist or is inaccessible.
+     */
     public function testHandleExceptionCallsUnregister(): void
     {
         $errorHandler = new ErrorHandler();
