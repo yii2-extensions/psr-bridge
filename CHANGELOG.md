@@ -11,6 +11,7 @@
 - Bug #186: Remove redundant test cases from `ServerRequestAdapterTest` for clarity (@terabytesoftw)
 - Bug #187: Correct grammatical error in docblock for `createErrorResponse` method in `ErrorHandler` (@terabytesoftw)
 - Bug #188: Update PHPDocs in tests for consistency and clarity (@terabytesoftw)
+- Bug #189: Add mutation testing badge to `README.md` for enhanced visibility (@terabytesoftw)
 
 ## 0.1.0 September 26, 2025
 
