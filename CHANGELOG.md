@@ -2,6 +2,8 @@
 
 ## 0.1.2 Under development
 
+- Bug #190: Update action versions to use `yii2-framework` for consistency (@terabytesoftw)
+
 ## 0.1.1 October 6, 2025
 
 - Bug #180: Add `phpunit-dev` job to `build.yml` for enhanced testing capabilities (@terabytesoftw)
