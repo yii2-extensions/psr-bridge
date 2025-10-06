@@ -9,6 +9,21 @@ use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+/**
+ * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} routing and parameter handling in
+ * stateless mode.
+ *
+ * Verifies correct extraction and processing of route, query, and POST parameters in stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Checks route parameter mapping and response formatting.
+ * - Confirms correct handling of POST parameters and JSON response structure.
+ * - Ensures query parameters are parsed and returned as expected.
+ * - Validates combined route and query parameter extraction.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ApplicationRoutingTest extends TestCase
 {

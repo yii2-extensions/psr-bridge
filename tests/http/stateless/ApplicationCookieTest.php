@@ -15,6 +15,19 @@ use function array_filter;
 use function implode;
 use function str_starts_with;
 
+/**
+ * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} cookie handling in stateless mode.
+ *
+ * Verifies correct behavior of cookie validation, signature, and deletion in stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Confirms correct 'Set-Cookie' headers for cookie deletion and multiple cookie types.
+ * - Ensures correct Content-Type and status codes for cookie-related routes.
+ * - Validates JSON response for cookie validation and signature scenarios.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ApplicationCookieTest extends TestCase
 {

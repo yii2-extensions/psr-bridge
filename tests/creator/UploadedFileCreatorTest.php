@@ -14,6 +14,21 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use const UPLOAD_ERR_OK;
 
+/**
+ * Test suite for {@see UploadedFileCreator} class functionality and behavior.
+ *
+ * Verifies correct behavior of PSR-7 UploadedFile creation from PHP file specs and globals, including edge cases,
+ * recursion depth, error handling, and array structure validation.
+ *
+ * Test coverage.
+ * - Confirms correct exception throwing for invalid input, recursion depth, and mismatched array structures.
+ * - Covers edge cases for missing or invalid fields, file existence, and type validation.
+ * - Ensures correct creation of UploadedFileInterface instances from minimal, `null`, and valid file specs.
+ * - Validates handling of empty, mixed, multiple, nested, and deeply nested file structures.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 #[Group('creator')]
 final class UploadedFileCreatorTest extends TestCase
@@ -132,7 +147,7 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         self::assertEmpty(
-            $creator->createFromGlobals([]),
+            $creator->createFromGlobals(),
             "Should return empty 'array' when no files are provided.",
         );
     }
@@ -1116,15 +1131,14 @@ final class UploadedFileCreatorTest extends TestCase
      *
      * @param array $result Processed file structure.
      * @param int $expectedDepth Expected depth to navigate.
-     * @param string $rootKey Root key to start navigation from.
      *
      * @return mixed Deepest file found.
      *
      * @phpstan-param array<array<mixed>|UploadedFileInterface> $result
      */
-    private function navigateToDeepestFile(array $result, int $expectedDepth, string $rootKey = 'deep'): mixed
+    private function navigateToDeepestFile(array $result, int $expectedDepth): mixed
     {
-        $current = $result[$rootKey] ?? null;
+        $current = $result['deep'] ?? null;
 
         for ($i = 1; $i <= $expectedDepth; $i++) {
             $levelKey = "level_{$i}";

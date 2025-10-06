@@ -13,14 +13,16 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 /**
- * Test suite for PSR-7 cookies adapter in the Yii2 bridge layer.
+ * Test suite for {@see Request} cookie handling functionality and behavior.
  *
- * Verifies correct behavior of the Request cookie handling when using PSR-7 requests, including read-only cookie
- * collections and validation key requirements.
+ * Verifies correct PSR-7 cookie adapter behavior, including read-only cookie collection enforcement and validation key
+ * requirements when processing cookies through the Yii2 PSR bridge layer.
  *
  * Test coverage.
- * - Exception thrown when cookie validation is enabled but no validation key is provided.
- * - Read-only cookie collection enforcement when adapter is set.
+ * - Confirms read-only enforcement preventing modifications to cookie collections with PSR-7 adapter.
+ * - Ensures proper cookie parameter processing from PSR-7 requests.
+ * - Validates exception handling when cookie validation is enabled without a validation key.
+ * - Verifies configuration validation for secure cookie handling.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -76,10 +78,10 @@ final class CookiesPsr7Test extends TestCase
         $request->enableCookieValidation = true;
         $request->cookieValidationKey = '';
 
+        $request->setPsr7Request($psr7Request);
+
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage(Message::COOKIE_VALIDATION_KEY_REQUIRED->getMessage());
-
-        $request->setPsr7Request($psr7Request);
 
         $request->getCookies();
     }

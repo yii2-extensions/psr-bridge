@@ -14,6 +14,20 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function count;
 
+/**
+ * Test suite for {@see StatelessApplication} event handling in stateless mode.
+ *
+ * Verifies correct event registration, handler cleanup, and event firing order in stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Confirms LIFO cleanup order for registered events and memory management.
+ * - Ensures global and internal event handlers are properly managed.
+ * - Tests event triggering during request handling and outside request context.
+ * - Validates event registration and cleanup between requests.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ApplicationEventTest extends TestCase
 {
@@ -263,6 +277,7 @@ final class ApplicationEventTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the property does not exist or is inaccessible.
      */
     public function testGlobalEventCleanupWithoutSystemInterference(): void
     {

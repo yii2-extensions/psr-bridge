@@ -10,6 +10,7 @@
 - Bug #185: Consolidate `paths-ignore` configuration across workflow files for consistency, add logos for badges in `README.md` (@terabytesoftw)
 - Bug #186: Remove redundant test cases from `ServerRequestAdapterTest` for clarity (@terabytesoftw)
 - Bug #187: Correct grammatical error in docblock for `createErrorResponse` method in `ErrorHandler` (@terabytesoftw)
+- Bug #188: Update PHPDocs in tests for consistency and clarity (@terabytesoftw)
 
 ## 0.1.0 September 26, 2025
 

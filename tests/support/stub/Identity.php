@@ -7,6 +7,14 @@ namespace yii2\extensions\psrbridge\tests\support\stub;
 use yii\base\BaseObject;
 use yii\web\IdentityInterface;
 
+/**
+ * Stub identity class for testing authentication and user identity in Yii2 applications.
+ *
+ * Provides a static user list and implements {@see IdentityInterface} for authentication scenarios.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 final class Identity extends BaseObject implements IdentityInterface
 {
     public string $accessToken = '';

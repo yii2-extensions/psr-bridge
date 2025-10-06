@@ -97,6 +97,7 @@ final class SapiEmitterTest extends TestCase
     public function testEmitResponseWithContentRangeAndSuppressedBody(): void
     {
         $emitter = new SapiEmitter(1);
+
         $response = FactoryHelper::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: 'Contents');
 
         $emitter->emit($response, false);
@@ -475,9 +476,9 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithNonReadableStream(): void
     {
-        $fopen = fopen('php://output', 'cb');
+        $file = fopen('php://output', 'cb');
 
-        $response = FactoryHelper::createResponse(body: $fopen === false ? null : $fopen);
+        $response = FactoryHelper::createResponse(body: $file === false ? null : $file);
 
         self::assertSame(
             'php://output',
@@ -682,9 +683,9 @@ final class SapiEmitterTest extends TestCase
      */
     public function testThrowExceptionWhenOutputAlreadySent(): void
     {
-        $fopen = fopen('php://output', 'cb');
+        $file = fopen('php://output', 'cb');
 
-        $response = FactoryHelper::createResponse(body: $fopen === false ? null : $fopen);
+        $response = FactoryHelper::createResponse(body: $file === false ? null : $file);
 
         $response->getBody()->write('Contents');
 

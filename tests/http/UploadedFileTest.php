@@ -13,6 +13,21 @@ use yii2\extensions\psrbridge\tests\TestCase;
 use const UPLOAD_ERR_CANT_WRITE;
 use const UPLOAD_ERR_OK;
 
+/**
+ * Test suite for {@see UploadedFile} class functionality and behavior.
+ *
+ * Verifies correct conversion, retrieval, and handling of uploaded files using PSR-7 adapters and legacy PHP globals
+ * in the Yii2 PSR bridge.
+ *
+ * Test coverage.
+ * - Confirms conversion of PSR-7 files with error and null size handling.
+ * - Covers edge cases for missing files, error files, and resource management on reset.
+ * - Ensures correct behavior for mixed error/success files, tabular and array attributes, and legacy file loading.
+ * - Validates retrieval of single and multiple uploaded files via model attributes and complex structures.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 final class UploadedFileTest extends TestCase
 {
     protected function setUp(): void

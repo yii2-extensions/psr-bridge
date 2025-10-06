@@ -15,7 +15,7 @@ use function sprintf;
 use function var_export;
 
 /**
- * Test suite for PSR-7 server parameters adapter in the Yii2 bridge layer.
+ * Test suite for {@see Request} server parameter handling functionality and behavior.
  *
  * Verifies correct behavior of the Request server parameter handling when using PSR-7 requests, including remote host,
  * remote IP, script name, server name, server port, and server params precedence and reset logic.

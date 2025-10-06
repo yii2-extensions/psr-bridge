@@ -12,9 +12,37 @@ use function base64_encode;
 
 use const PHP_INT_SIZE;
 
+/**
+ * Data provider for stateless application test suites.
+ *
+ * Supplies comprehensive test data for stateless Yii2 application scenarios, including authentication, cookies, error
+ * handling, exception rendering, memory management, and server parameter extraction.
+ *
+ * Key features.
+ * - Covers HTTP Basic authentication extraction and normalization.
+ * - Includes memory management, garbage collection, and memory limit parsing cases.
+ * - Provides data for cookie validation, serialization, and edge cases.
+ * - Supports error view rendering and exception format scenarios.
+ * - Validates remote IP and server port extraction from headers and server parameters.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 final class StatelessApplicationProvider
 {
     /**
+     * Provides test data for HTTP Basic authentication credentials extraction and normalization.
+     *
+     * This provider supplies test cases for validating the extraction and normalization of HTTP Basic authentication
+     * credentials from the 'Authorization' header, covering scenarios such as valid credentials, empty username or
+     * password, multiple colons in the password, invalid or malformed schemes, missing space, non-breaking space, and
+     * credentials without a colon.
+     *
+     * Each test case includes the 'Authorization' header value, the expected JSON response body, and an assertion
+     * message describing the expected outcome for the credentials extraction logic.
+     *
+     * @return array test data with 'Authorization' header, expected JSON response, and assertion message.
+     *
      * @phpstan-return array<string, array{string, string, string}>
      */
     public static function authCredentials(): array
@@ -107,6 +135,17 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for cookie handling scenarios in stateless application responses.
+     *
+     * This provider supplies test cases for validating the extraction, validation, and serialization of cookies in
+     * stateless application mode, covering scenarios with validation enabled/disabled, empty and invalid cookies,
+     * object cookies, and multiple signed cookies.
+     *
+     * Each test case includes validation flags, the input cookies array, the expected JSON-encoded response body, and a
+     * description of the expected outcome.
+     *
+     * @return array test data with validation flags, input cookies, expected JSON, and assertion message.
+     *
      * @phpstan-return array<string, array{bool, bool, array<string, object|string>, string, string}>
      */
     public static function cookies(): array
@@ -191,6 +230,18 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for error view rendering logic in stateless application error handling.
+     *
+     * This provider supplies test cases for validating the rendering of custom error views when exceptions are
+     * triggered in stateless application mode, covering scenarios with different debug modes and exception types.
+     *
+     * Each test case includes the debug flag, the route that triggers the exception, the error action route, the
+     * expected HTTP status code, the expected HTML response body, and an assertion message describing the expected
+     * outcome.
+     *
+     * @return array test data with debug flag, trigger route, error action route, status code, expected HTML, and
+     * assertion message.
+     *
      * @phpstan-return array<string, array{bool, string, string, int, string, string}>
      */
     public static function errorViewLogic(): array
@@ -257,6 +308,17 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for exception rendering format scenarios in stateless application error handling.
+     *
+     * This provider supplies test cases for validating the rendering of exceptions in different response formats,
+     * including HTML, JSON, and RAW, ensuring correct status codes, content types, and response body structure.
+     *
+     * Each test case includes the response format, expected content type, HTTP status code, route that triggers the
+     * exception, and an array of expected response body elements.
+     *
+     * @return array test data with response format, content type, status code, trigger route, and expected body
+     * elements.
+     *
      * @phpstan-return array<string, array{string, string, int, string, string[]}>
      */
     public static function exceptionRenderingFormats(): array
@@ -294,6 +356,16 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for garbage collection triggering scenarios in stateless application memory management.
+     *
+     * This provider supplies test cases for validating when garbage collection (GC) should be triggered based on
+     * different memory limits and object creation loads in a stateless application context.
+     *
+     * Each test case includes the memory limit string, the number of object creation iterations, the expected boolean
+     * indicating whether GC should be triggered, and an assertion message describing the expected outcome.
+     *
+     * @return array test data with memory limit, iteration count, expected GC trigger, and assertion message.
+     *
      * @phpstan-return array<string, array{string, int, bool, string}>
      */
     public static function garbageCollection(): array
@@ -321,6 +393,15 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for positive memory limit scenarios in stateless application memory management.
+     *
+     * This provider supplies test cases for validating the correct handling and assignment of positive memory limit
+     * values, including small, medium, large, and very large values, as well as 64-bit specific cases.
+     *
+     * Each test case includes the memory limit in bytes and an assertion message describing the expected outcome.
+     *
+     * @return array test data with memory limit values and assertion messages.
+     *
      * @phpstan-return array<string, array{int, string}>
      */
     public static function memoryLimitPositive(): array
@@ -357,6 +438,16 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for memory usage threshold scenarios in stateless application memory management.
+     *
+     * This provider supplies test cases for validating the logic that determines whether memory cleanup should be
+     * triggered based on current memory usage and configured memory limits.
+     *
+     * Each test case includes the memory limit string, the expected boolean result indicating whether cleanup should
+     * occur, and an assertion message describing the expected outcome.
+     *
+     * @return array test data with memory limit, expected cleanup result, and assertion message.
+     *
      * @phpstan-return array<string, array{string, bool, string}>
      */
     public static function memoryThreshold(): array
@@ -387,6 +478,17 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for memory limit string parsing scenarios.
+     *
+     * This provider supplies test cases for validating the extraction and normalization of memory limit values from
+     * various string formats, including plain numbers, negative values, different unit suffixes (K, M, G), mixed case,
+     * unknown or invalid suffixes, special characters, and edge cases such as unlimited or zero values.
+     *
+     * Each test case consists of the input memory limit string, the expected integer byte value, and an assertion
+     * message describing the expected outcome.
+     *
+     * @return array test data with input memory limit strings, expected byte values, and assertion messages.
+     *
      * @phpstan-return array<string, array{string, int, string}>
      */
     public static function parseMemoryLimit(): array
@@ -491,6 +593,17 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for remote IP address extraction and normalization scenarios.
+     *
+     * This provider supplies test cases for validating the extraction and normalization of remote IP addresses from
+     * various input types, including empty strings, invalid formats, malformed IPv6, non-IP integers and strings, as
+     * well as valid IPv4 and IPv6 addresses (including loopback and compressed forms).
+     *
+     * Each test case consists of the input value, the expected normalized IP address string or `null`, and an assertion
+     * message describing the expected outcome.
+     *
+     * @return array test data with input remote address values, expected normalized results, and assertion messages.
+     *
      * @phpstan-return array<array{int|string, string|null, string}>
      */
     public static function remoteIPAddresses(): array
@@ -555,6 +668,18 @@ final class StatelessApplicationProvider
     }
 
     /**
+     * Provides test data for server port extraction and normalization scenarios from HTTP headers.
+     *
+     * This provider supplies test cases for validating the extraction and normalization of server port values from
+     * the 'X-Forwarded-Port' HTTP header, covering edge cases such as empty values, maximum and minimum valid ports,
+     * multiple comma-separated ports, whitespace handling, negative and non-numeric values, out-of-range ports, leading
+     * zeros, unsupported headers, and whitespace-only values.
+     *
+     * Each test case consists of the input headers array, the expected normalized port as `int` or `null`, and an
+     * assertion message describing the expected outcome.
+     *
+     * @return array test data with input headers, expected normalized port, and assertion messages.
+     *
      * @phpstan-return array<string, array{array<string, string>, int|null, string}>
      */
     public static function serverPortHeaders(): array

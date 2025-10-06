@@ -13,7 +13,7 @@ use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
 /**
- * Test suite for PSR-7 server request adapter in the Yii2 bridge layer.
+ * Test suite for {@see Request} handling functionality and behavior.
  *
  * Verifies correct behavior of the Request handling when using PSR-7 requests, including body parameters, HTTP method
  * overrides, query string and params, raw body, and parsed body logic.

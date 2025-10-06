@@ -10,6 +10,20 @@ use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+/**
+ * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} server parameter handling in stateless
+ * mode.
+ *
+ * Verifies correct handling of remote IP addresses and server port extraction in stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Confirms remote IP address extraction for valid and invalid REMOTE_ADDR values.
+ * - Ensures correct HTTP status codes, content types, and JSON response bodies for each route.
+ * - Validates server port extraction from headers and server parameters, including trusted host scenarios.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ApplicationServerParamsTest extends TestCase
 {

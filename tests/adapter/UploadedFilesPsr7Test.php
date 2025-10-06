@@ -10,6 +10,21 @@ use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\support\FactoryHelper;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+/**
+ * Test suite for {@see Request} uploaded files handling functionality and behavior.
+ *
+ * Verifies the correct behavior of the Request uploaded files handling when using PSR-7 requests, including nested,
+ * array, and single file structures, as well as edge cases for file size and adapter state.
+ *
+ * Test coverage.
+ * - Confirms correct handling when adapter is set and for zero-size files.
+ * - Ensures correct conversion of multiple, nested, and array-structured uploaded files.
+ * - Uses temporary files and stubs for robust test isolation.
+ * - Validates recursive conversion of deeply nested uploaded file arrays.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('adapter')]
 #[Group('uploaded-files')]
 final class UploadedFilesPsr7Test extends TestCase

@@ -13,8 +13,21 @@ use yii2\extensions\psrbridge\tests\TestCase;
 
 use function filesize;
 
+/**
+ * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} uploaded file handling in stateless mode.
+ *
+ * Verifies correct extraction, creation, and reset of uploaded files in stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Confirms PSR-7 uploaded file creation from PHP superglobals and multipart form data.
+ * - Ensures correct response and file state for repeated requests.
+ * - Validates reset and isolation of uploaded files between requests.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
-final class StatelessApplicationUploadedTest extends TestCase
+final class ApplicationUploadedTest extends TestCase
 {
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.

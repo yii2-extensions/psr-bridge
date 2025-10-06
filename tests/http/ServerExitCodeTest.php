@@ -9,6 +9,20 @@ use PHPUnit\Framework\Attributes\{Group, TestWith};
 use yii2\extensions\psrbridge\http\ServerExitCode;
 use yii2\extensions\psrbridge\tests\TestCase;
 
+
+/**
+ * Test suite for {@see ServerExitCode} enum value mapping.
+ *
+ * Verifies that each ServerExitCode enum case returns the expected integer value, ensuring correct mapping between enum
+ * cases and their integer representations.
+ *
+ * Test coverage.
+ * - Confirms integer values for all ServerExitCode cases.
+ * - Ensures enum-to-integer mapping is correct and stable.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ServerExitCodeTest extends TestCase
 {

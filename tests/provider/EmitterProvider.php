@@ -28,20 +28,15 @@ use yii2\extensions\psrbridge\emitter\HttpNoBodyStatus;
 final class EmitterProvider
 {
     /**
-     * Data provider for testing response body chunking with various buffer sizes.
+     * Provides test data for response body chunking with various buffer sizes.
      *
-     * Tests the emitter ability to correctly chunk and stream response bodies.
-     * - Different buffer sizes for various content lengths.
-     * - Empty content handling for zero-length responses.
-     * - Partial content ranges for HTTP range requests.
-     * - Response body streaming with default and custom buffer sizes.
-     * - Whole versus segmented content transmission scenarios.
+     * This provider supplies test cases for validating the emission of response body content in different chunk sizes,
+     * buffer ranges, and offsets.
      *
-     * Each test case provides content, expected chunks, buffer size, and optional range parameters to validate proper
-     * response body chunking and range handling across different scenarios.
+     * Each test case includes the body content, the expected chunks after emission, the buffer size, the start offset,
+     * and the end offset.
      *
-     * {@see \yii2\extensions\psrbridge\tests\emitter\SapiEmitterTest::testEmitResponseWithVariousBodyContents()} for
-     * the test case using this data.
+     * @return array test data with body content, expected chunks, buffer sizes, start offsets, and end offsets.
      *
      * @phpstan-return array<array{string, array<string>, int|null, int|null, int|null}>
      */
@@ -66,20 +61,14 @@ final class EmitterProvider
     }
 
     /**
-     * Data provider for testing HTTP status codes that mustn't include a response body.
+     * Provides test data for HTTP status codes that must not include a response body.
      *
-     * Tests emitter compliance with HTTP specifications regarding bodiless responses.
-     * - '1xx' Informational responses ('100', '101', '102', '103').
-     * - '204' No Content status code.
-     * - '205' Reset Content status code.
-     * - '304' Not Modified status code.
+     * This provider supplies test cases for validating emission compliance with HTTP status codes that, according to
+     * the protocol, must not include a response body.
      *
-     * Each test case provides a status code and its corresponding reason phrase to verify that the emitter correctly
-     * handles these special status codes by not emitting any response body, regardless of whether one exists in the
-     * response object.
+     * Each test case consists of the status code integer value and its corresponding reason phrase.
      *
-     * {@see \yii2\extensions\psrbridge\tests\emitter\SapiEmitterTest::testEmitResponseWithNoBodyStatusCodes()} for the
-     * test case using this data.
+     * @return array test data with status code integers and their reason phrases.
      *
      * @phpstan-return array<array{int, string}>
      */
@@ -103,20 +92,14 @@ final class EmitterProvider
     }
 
     /**
-     * Data provider for testing HTTP status line formatting with various reason phrases.
+     * Provides test data for HTTP status line formatting with various reason phrases.
      *
-     * Tests the emitter formatting of the HTTP status line under different scenarios.
-     * - Custom non-standard reason phrases (like "I'm a teapot").
-     * - Empty reason phrases which should result in status code only.
-     * - Standard reason phrases for common status codes ('200 OK', '404 Not Found').
-     * - Whitespace-only reason phrases which should be preserved.
+     * This provider supplies test cases for validating the emission of HTTP status lines with custom, empty, standard,
+     * and whitespace reason phrases.
      *
-     * Each test case provides a status code, reason phrase, and expected HTTP status line output to verify that the
-     * emitter correctly formats the status line according to HTTP specifications while handling edge cases
-     * appropriately.
+     * Each test case consists of the status code, the reason phrase, and the expected  formatted status line string.
      *
-     * {@see \yii2\extensions\psrbridge\tests\emitter\SapiEmitterTest::testEmitResponseWithCustomReasonPhrase()} for the
-     * test case using this data.
+     * @return array test data with status codes, reason phrases, and expected status line strings.
      *
      * @phpstan-return array<array{int, string, string}>
      */

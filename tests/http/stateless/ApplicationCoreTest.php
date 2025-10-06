@@ -30,6 +30,22 @@ use function ob_start;
 use function str_contains;
 use function unlink;
 
+/**
+ * Test suite for {@see StatelessApplication} core functionality in stateless mode.
+ *
+ * Verifies correct behavior of the core lifecycle, event order, PSR-7 container resolution, logging, and response
+ * handling in stateless Yii2 applications.
+ *
+ * Test coverage.
+ * - Checks PSR-7 request headers and application aliasing after handle.
+ * - Confirms PSR-7 factory resolution and container definitions.
+ * - Covers redirect, exception rendering, response adapter caching, and core component configuration.
+ * - Ensures immediate log flushing and file output.
+ * - Validates event order during request handling.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 #[Group('http')]
 final class ApplicationCoreTest extends TestCase
 {
