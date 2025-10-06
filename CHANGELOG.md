@@ -1,5 +1,7 @@
 # ChangeLog
 
+## 0.1.2 Under development
+
 ## 0.1.1 October 6, 2025
 
 - Bug #180: Add `phpunit-dev` job to `build.yml` for enhanced testing capabilities (@terabytesoftw)
