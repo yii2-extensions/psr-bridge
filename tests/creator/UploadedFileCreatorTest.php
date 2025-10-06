@@ -1129,7 +1129,7 @@ final class UploadedFileCreatorTest extends TestCase
     /**
      * Navigate to the deepest file in a nested structure.
      *
-     * @param array $result Processed file structure.
+     * @param array $result Processed file structure with a 'deep' key.
      * @param int $expectedDepth Expected depth to navigate.
      *
      * @return mixed Deepest file found.
