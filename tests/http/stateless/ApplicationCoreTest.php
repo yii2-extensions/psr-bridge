@@ -611,7 +611,7 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'support',
             Yii::getAlias('@webroot'),
-            "'@webroot' alias should be set to the parent directory of the test directory after handling a request.",
+            "'@webroot' alias should be set to the 'tests/support' directory after handling a request.",
         );
     }
 }
