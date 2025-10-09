@@ -15,9 +15,8 @@ use yii\i18n\{Formatter, I18N};
 use yii\log\{Dispatcher, FileTarget};
 use yii\web\{AssetManager, Session, UrlManager, User, View};
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response, StatelessApplication};
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
-use yii2\extensions\psrbridge\tests\TestCase;
 
 use function array_filter;
 use function dirname;
@@ -29,6 +28,8 @@ use function ob_get_level;
 use function ob_start;
 use function str_contains;
 use function unlink;
+
+use const DIRECTORY_SEPARATOR;
 
 /**
  * Test suite for {@see StatelessApplication} core functionality in stateless mode.
@@ -58,7 +59,7 @@ final class ApplicationCoreTest extends TestCase
     {
         parent::setUp();
 
-        $this->logFile = dirname(__DIR__, 2) . '/runtime/log/flush-test.log';
+        $this->logFile = dirname(__DIR__, 3) . '/runtime/logs/flush-test.log';
 
         if (file_exists($this->logFile)) {
             unlink($this->logFile);
@@ -610,7 +611,7 @@ final class ApplicationCoreTest extends TestCase
             "'@web' alias should be set to an empty string after handling a request.",
         );
         self::assertSame(
-            dirname(__DIR__, 2),
+            dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'support',
             Yii::getAlias('@webroot'),
             "'@webroot' alias should be set to the parent directory of the test directory after handling a request.",
         );

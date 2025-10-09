@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\tests;
+namespace yii2\extensions\psrbridge\tests\support;
 
 use HttpSoft\Message\{ResponseFactory, StreamFactory};
 use PHPForge\Support\TestSupport;
@@ -145,7 +145,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             ArrayHelper::merge(
                 [
                     'id' => 'stateless-app',
-                    'basePath' => __DIR__,
+                    'basePath' => dirname(__DIR__, 2),
                     'bootstrap' => ['log'],
                     'controllerNamespace' => '\yii2\extensions\psrbridge\tests\support\stub',
                     'components' => [
@@ -162,7 +162,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                                         'info',
                                         'warning',
                                     ],
-                                    'logFile' => '@runtime/log/app.log',
                                 ],
                             ],
                         ],
@@ -196,8 +195,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                             StreamFactoryInterface::class => StreamFactory::class,
                         ],
                     ],
-                    'runtimePath' => dirname(__DIR__) . '/runtime',
-                    'vendorPath' => dirname(__DIR__) . '/vendor',
                 ],
                 $config,
             ),
@@ -213,8 +210,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             ArrayHelper::merge(
                 [
                     'id' => 'web-app',
-                    'basePath' => __DIR__,
-                    'vendorPath' => dirname(__DIR__) . '/vendor',
+                    'basePath' => dirname(__DIR__, 2),
                     'aliases' => [
                         '@bower' => '@vendor/bower-asset',
                         '@npm' => '@vendor/npm-asset',

@@ -8,8 +8,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\ServerParamsPsr7Provider;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function sprintf;
 use function var_export;

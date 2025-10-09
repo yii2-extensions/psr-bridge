@@ -9,8 +9,7 @@ use yii\base\{InvalidCallException, InvalidConfigException};
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 /**
  * Test suite for {@see Request} cookie handling functionality and behavior.

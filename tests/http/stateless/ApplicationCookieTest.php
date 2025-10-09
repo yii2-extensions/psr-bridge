@@ -8,8 +8,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function array_filter;
 use function implode;

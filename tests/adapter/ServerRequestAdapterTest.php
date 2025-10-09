@@ -9,8 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 /**
  * Test suite for {@see Request} handling functionality and behavior.

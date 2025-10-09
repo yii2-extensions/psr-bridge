@@ -8,8 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\creator\ServerRequestCreator;
 use yii2\extensions\psrbridge\http\UploadedFile;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function filesize;
 

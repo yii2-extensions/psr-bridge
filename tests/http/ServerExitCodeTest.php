@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http;
 use BackedEnum;
 use PHPUnit\Framework\Attributes\{Group, TestWith};
 use yii2\extensions\psrbridge\http\ServerExitCode;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\TestCase;
 
 /**
  * Test suite for {@see ServerExitCode} enum value mapping.

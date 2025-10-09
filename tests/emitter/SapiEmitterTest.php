@@ -11,9 +11,8 @@ use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\emitter\SapiEmitter;
 use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
 use yii2\extensions\psrbridge\tests\provider\EmitterProvider;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
-use yii2\extensions\psrbridge\tests\TestCase;
 
 use function fopen;
 use function implode;

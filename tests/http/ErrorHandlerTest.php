@@ -11,7 +11,7 @@ use Throwable;
 use yii\base\{Exception, UserException};
 use yii\web\HttpException;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Response};
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\TestCase;
 
 use function ob_get_level;
 use function ob_start;

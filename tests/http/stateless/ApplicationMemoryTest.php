@@ -9,8 +9,7 @@ use ReflectionException;
 use stdClass;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function array_fill;
 use function end;

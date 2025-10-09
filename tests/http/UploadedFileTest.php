@@ -6,9 +6,8 @@ namespace yii2\extensions\psrbridge\tests\http;
 
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\http\UploadedFile;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\{ComplexUploadedFileModel, UploadedFileModel};
-use yii2\extensions\psrbridge\tests\TestCase;
 
 use const UPLOAD_ERR_CANT_WRITE;
 use const UPLOAD_ERR_OK;
