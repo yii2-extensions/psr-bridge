@@ -22,6 +22,24 @@ use function is_resource;
 use function stream_get_meta_data;
 use function tmpfile;
 
+/**
+ * Base test case providing common helpers and utilities for the test suite.
+ *
+ * Provides utilities to create and tear down Yii2 stateless and web application instances, manage temporary files used
+ * during tests, sign cookies for cookie-validation scenarios, and reset PHP superglobals to ensure test isolation.
+ *
+ * Tests that require HTTP request/response factories, stream factories or application scaffolding should extend this
+ * class.
+ *
+ * Key features.
+ * - Creates `StatelessApplication` and `Application` instances with a sane test configuration.
+ * - Manages temporary file resources and ensures cleanup during `tearDown()`.
+ * - Provides `signCookies()` helper for creating signed cookie values.
+ * - Resets `$_SERVER`, `$_GET`, `$_POST`, `$_FILES` and `$_COOKIE` between tests to avoid cross-test contamination.
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ */
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
     use TestSupport;
