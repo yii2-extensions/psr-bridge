@@ -29,8 +29,6 @@ use function ob_start;
 use function str_contains;
 use function unlink;
 
-use const DIRECTORY_SEPARATOR;
-
 /**
  * Test suite for {@see StatelessApplication} core functionality in stateless mode.
  *
