@@ -13,7 +13,7 @@ use yii\web\{JsonParser, NotFoundHttpException};
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\TestCase;
 
 use function array_filter;
 use function str_starts_with;

@@ -6,8 +6,7 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\Group;
 use yii2\extensions\psrbridge\http\Request;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 /**
  * Test suite for {@see Request} header handling functionality and behavior.

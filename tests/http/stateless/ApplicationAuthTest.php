@@ -7,8 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 /**
  * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} authentication handling in stateless

@@ -9,8 +9,7 @@ use Psr\Http\Message\UploadedFileInterface;
 use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\creator\UploadedFileCreator;
 use yii2\extensions\psrbridge\exception\Message;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use const UPLOAD_ERR_OK;
 

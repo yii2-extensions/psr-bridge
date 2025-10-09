@@ -10,8 +10,7 @@ use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
 use yii2\extensions\psrbridge\http\{Response, StatelessApplication};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function array_filter;
 use function is_array;

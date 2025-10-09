@@ -8,9 +8,8 @@ use PHPUnit\Framework\Attributes\{Group, TestWith};
 use ReflectionException;
 use yii\base\{Event, InvalidConfigException};
 use yii2\extensions\psrbridge\http\StatelessApplication;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\EventComponent;
-use yii2\extensions\psrbridge\tests\TestCase;
 
 use function count;
 

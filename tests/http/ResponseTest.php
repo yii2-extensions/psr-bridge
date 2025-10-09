@@ -12,8 +12,7 @@ use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\web\{Cookie, Session};
 use yii2\extensions\psrbridge\http\Response;
-use yii2\extensions\psrbridge\tests\support\FactoryHelper;
-use yii2\extensions\psrbridge\tests\TestCase;
+use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function count;
 use function str_contains;
