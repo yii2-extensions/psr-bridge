@@ -5,6 +5,7 @@
 - Bug #190: Update action versions to use `yii2-framework` for consistency (@terabytesoftw)
 - Bug #191: Refactor test imports for consistency and add support files (@terabytesoftw)
 - Bug #192: Add copyright and license information to `MockerExtension::class` and refactor `tests/support/bootstrap.php` (@terabytesoftw)
+- Bug #193: Update `.editorconfig` and `.gitignore` for improved consistency and clarity (@terabytesoftw)
 
 ## 0.1.1 October 6, 2025
 
