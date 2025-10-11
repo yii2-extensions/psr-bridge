@@ -20,6 +20,9 @@ final class ComplexUploadedFileModel extends Model
      */
     public UploadedFile|array|null $file_attribute = null;
 
+    /**
+     * @phpstan-ignore throws.unusedType
+     */
     public function formName(): string
     {
         return 'Complex_Model-Name';
