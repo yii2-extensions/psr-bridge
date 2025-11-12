@@ -110,9 +110,6 @@ final class ServerRequestCreatorTest extends TestCase
                 throw new RuntimeException('Stream creation failed.');
             }
 
-            /**
-             * @phpstan-ignore throws.unusedType
-             */
             public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
             {
                 throw new RuntimeException('Stream creation failed.');
