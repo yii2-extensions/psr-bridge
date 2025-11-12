@@ -20,9 +20,6 @@ final class UploadedFileModel extends Model
      */
     public UploadedFile|array|null $file = null;
 
-    /**
-     * @phpstan-ignore throws.unusedType
-     */
     public function formName(): string
     {
         return 'UploadedFileModel';
