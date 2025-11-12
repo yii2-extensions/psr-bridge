@@ -6,7 +6,8 @@
 - Bug #191: Refactor test imports for consistency and add support files (@terabytesoftw)
 - Bug #192: Add copyright and license information to `MockerExtension::class` and refactor `tests/support/bootstrap.php` (@terabytesoftw)
 - Bug #193: Update `.editorconfig` and `.gitignore` for improved consistency and clarity (@terabytesoftw)
-- Bug #194: Update symplify/easy-coding-standard requirement from `^12.5` to `^13.0` (@dependabot)
+- Dep #194: Update symplify/easy-coding-standard requirement from `^12.5` to `^13.0` (@dependabot)
+- Bug #195: Add test for memory usage at `90%` threshold in `ApplicationMemoryTest` class (@terabytesoftw)
 
 ## 0.1.1 October 6, 2025
 

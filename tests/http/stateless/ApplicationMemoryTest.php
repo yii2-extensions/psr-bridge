@@ -78,6 +78,27 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testCleanReturnsTrueWhenMemoryUsageIsExactlyAtNinetyPercentThreshold(): void
+    {
+        $app = $this->statelessApplication();
+
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        $currentUsage = memory_get_usage(true);
+
+        $exactLimit = (int) ($currentUsage / 0.9);
+
+        $app->setMemoryLimit($exactLimit);
+
+        self::assertTrue(
+            $app->clean(),
+            "Should return 'true' when memory usage is exactly at '90%' threshold (boundary condition).",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testClearOutputCleansLocalBuffers(): void
     {
         $levels = [];
