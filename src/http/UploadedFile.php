@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\http;
 
 use Psr\Http\Message\UploadedFileInterface;
-use yii\base\{Model};
+use yii\base\Model;
 use yii\helpers\Html;
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 
