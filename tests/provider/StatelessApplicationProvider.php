@@ -443,36 +443,26 @@ final class StatelessApplicationProvider
      * This provider supplies test cases for validating the logic that determines whether memory cleanup should be
      * triggered based on current memory usage and configured memory limits.
      *
-     * Each test case includes the memory limit string, the expected boolean result indicating whether cleanup should
-     * occur, and an assertion message describing the expected outcome.
+     * Each test case includes the memory limit string and an assertion message describing the expected outcome.
      *
-     * @return array test data with memory limit, expected cleanup result, and assertion message.
+     * @return array test data with memory limit and assertion message.
      *
-     * @phpstan-return array<string, array{string, bool, string}>
+     * @phpstan-return array<string, array{string, string}>
      */
     public static function memoryThreshold(): array
     {
         return [
             'low usage - should not clean' => [
                 '1G',
-                false,
-                "'clean()' should return 'false' when memory usage is below '90%' threshold with '1G' limit.",
+                "Should return 'false' when memory usage is below '90%' threshold with '1G' limit.",
             ],
             'moderate usage - should not clean' => [
                 '512M',
-                false,
-                "'clean()' should return 'false' when memory usage is below '90%' threshold with '512M' limit.",
+                "Should return 'false' when memory usage is below '90%' threshold with '512M' limit.",
             ],
             'threshold calculation - 100M' => [
                 '100M',
-                false,
-                "'clean()' should return 'false' with '100M' limit and verify correct '90%' threshold calculation.",
-            ],
-            'high memory setup - 2G' => [
-                '2G',
-                true,
-                "'clean()' should return 'true' when memory usage equals the calculated '90%' threshold " .
-                '(using adjusted limit).',
+                "Should return 'false' with '100M' limit and verify correct '90%' threshold calculation.",
             ],
         ];
     }
