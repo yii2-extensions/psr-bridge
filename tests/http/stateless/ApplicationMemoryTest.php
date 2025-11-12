@@ -45,11 +45,8 @@ final class ApplicationMemoryTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(StatelessApplicationProvider::class, 'memoryThreshold')]
-    public function testCleanBehaviorWithDifferentMemoryLimits(
-        string $memoryLimit,
-        bool $shouldTriggerSpecialTest,
-        string $assertionMessage,
-    ): void {
+    public function testCleanBehaviorWithDifferentMemoryLimits(string $memoryLimit, string $assertionMessage): void
+    {
         $originalLimit = ini_get('memory_limit');
 
         ini_set('memory_limit', $memoryLimit);
@@ -58,21 +55,30 @@ final class ApplicationMemoryTest extends TestCase
 
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
-        if ($shouldTriggerSpecialTest === false) {
-            self::assertFalse($app->clean(), $assertionMessage);
-        }
-
-        if ($shouldTriggerSpecialTest === true) {
-            $currentUsage = memory_get_usage(true);
-
-            $artificialLimit = (int) ($currentUsage / 0.9);
-
-            $app->setMemoryLimit($artificialLimit);
-
-            self::assertTrue($app->clean(), $assertionMessage);
-        }
+        self::assertFalse($app->clean(), $assertionMessage);
 
         ini_set('memory_limit', $originalLimit);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testCleanReturnsTrueWhenMemoryUsageIsExactlyPercentThreshold(): void
+    {
+        $app = $this->statelessApplication();
+
+        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+
+        $currentUsage = memory_get_usage(true);
+
+        $exactLimit = (int) ($currentUsage / 0.9);
+
+        $app->setMemoryLimit($exactLimit);
+
+        self::assertTrue(
+            $app->clean(),
+            "Should return 'true' when memory usage is exactly at '90%' threshold (boundary condition).",
+        );
     }
 
     /**
