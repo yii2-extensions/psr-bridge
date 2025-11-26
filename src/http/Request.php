@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\http;
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException};
+use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, RequestParserInterface};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
@@ -789,7 +789,7 @@ final class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
-        $rawContentType = $this->getContentType();
+        $rawContentType = $request->getHeaderLine('Content-Type');
         if (($pos = strpos((string)$rawContentType, ';')) !== false) {
             // e.g. text/html; charset=UTF-8
             $contentType = substr($rawContentType, 0, $pos);
@@ -797,6 +797,8 @@ final class Request extends \yii\web\Request
             $contentType = $rawContentType;
         }
 
+        $parsedParams = null;
+        
         if (isset($this->parsers[$contentType])) {
             $parser = Yii::createObject($this->parsers[$contentType]);
             if (!($parser instanceof RequestParserInterface)) {
