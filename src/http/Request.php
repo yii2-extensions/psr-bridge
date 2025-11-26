@@ -814,7 +814,7 @@ final class Request extends \yii\web\Request
         }
 
         if ($parsedParams !== null) {
-            $request = $request->withParsedBody((array)$parsedParams);
+            $request = $request->withParsedBody($parsedParams);
         }
 
         $this->adapter = new ServerRequestAdapter(
