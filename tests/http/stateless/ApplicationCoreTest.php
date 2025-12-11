@@ -306,7 +306,7 @@ final class ApplicationCoreTest extends TestCase
                 'components' => [
                     'request' => [
                         'parsers' => [
-                            'application/xml' => \stdClass::class,
+                            'application/xml' => stdClass::class,
                         ],
                     ],
                     'errorHandler' => ['errorAction' => null],
@@ -462,6 +462,7 @@ final class ApplicationCoreTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws JsonException if JSON encoding fails.
      */
     public function testRequestUsesWildcardParser(): void
     {
