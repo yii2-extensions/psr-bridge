@@ -784,8 +784,6 @@ final class Request extends \yii\web\Request
      *
      * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to bridge.
      *
-     * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
-     *
      * Usage example:
      * ```php
      * $psr7Request = new \GuzzleHttp\Psr7\ServerRequest('GET', '/api/resource');

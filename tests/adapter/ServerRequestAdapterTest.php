@@ -36,6 +36,26 @@ final class ServerRequestAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testHandlesUndefinedParsersPropertyGracefully(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => 'application/json'],
+            )->withBody(FactoryHelper::createStream()),
+        );
+
+        self::assertNull(
+            $request->getPsr7Request()->getParsedBody(),
+            "PSR-7 request parsed body should be 'null' when 'parsers' property is not defined.",
+        );
+    }
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testParsedBodyIsNullWhenContentTypeIsEmptyString(): void
     {
         $jsonData = '{"action":"create","item":"product"}';
