@@ -124,6 +124,12 @@ $emitter = new yii2\extensions\psrbridge\emitter\SapiEmitter();
 $emitter->emit($psr7Response);
 ```
 
+### Smart Body Parsing
+
+The bridge automatically parses incoming PSR-7 request bodies based on the `Content-Type` header and your configured 
+parsers (for example, `application/json`), ensuring `Yii::$app->request->post()` works seamlessly in worker mode without
+extra boilerplate.
+
 ## Documentation
 
 For detailed configuration options and advanced usage.

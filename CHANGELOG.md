@@ -11,6 +11,7 @@
 - Bug #196: Fix proper bridge between PSR-7 `ServerRequestInterface` and Yii `Request` class, including request body parsing (@Blezigen)
 - Bug #197: Add memory limit option to `mutation-static` command in `composer.json` for improved mutation testing (@terabytesoftw)
 - Bug #198: Refactor `setPsr7Request()` method to use standardized error messages and introduce comprehensive integration tests using `StatelessApplication` class (@terabytesoftw)
+- Bug #199: Update `README.md` and `docs/configuration.md` to include automatic body parsing setup and parser configuration (@terabytesoftw)
 
 ## 0.1.1 October 6, 2025
 
