@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\http;
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, RequestParserInterface};
+use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 

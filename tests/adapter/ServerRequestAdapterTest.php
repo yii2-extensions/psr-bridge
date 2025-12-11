@@ -85,7 +85,6 @@ final class ServerRequestAdapterTest extends TestCase
             FactoryHelper::createRequest(
                 'POST',
                 '/api/items',
-                [],
             )->withBody($stream),
         );
 
@@ -129,6 +128,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testParsesBodyFromNonRewindedStream(): void
     {
         $jsonContent = '{"name": "test", "value": 123}';
@@ -284,6 +286,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnEmptyQueryParamsWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -298,6 +303,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnEmptyQueryStringWhenAdapterIsSetWithNoQuery(): void
     {
         $request = new Request();
@@ -312,6 +320,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodFromAdapterWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -327,6 +338,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithBodyOverrideAndLowerCaseMethodsWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -350,6 +364,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithBodyOverrideWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -373,6 +390,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithCustomMethodParamWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -398,6 +418,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithHeaderOverrideWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -413,6 +436,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithoutOverrideWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -585,7 +611,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnPsr7RequestInstanceWhenAdapterIsSet(): void
     {
@@ -603,6 +629,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnQueryParamsWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -646,7 +675,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @phpstan-param string $expectedString
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(RequestProvider::class, 'getQueryString')]
     public function testReturnQueryStringWhenAdapterIsSet(string $queryString, string $expectedString): void
@@ -664,6 +693,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnRawBodyFromAdapterWhenAdapterIsSet(): void
     {
         $bodyContent = '{"name":"John","email":"john@example.com","message":"Hello World"}';
@@ -685,6 +717,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnRawBodyWhenAdapterIsSetWithEmptyBody(): void
     {
         $request = new Request();
