@@ -21,6 +21,8 @@ use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
 use function strncasecmp;
+use function strpos;
+use function substr;
 
 /**
  * HTTP Request extension with PSR-7 bridge and worker mode support.
@@ -791,7 +793,7 @@ final class Request extends \yii\web\Request
     {
         $rawContentType = $request->getHeaderLine('Content-Type');
 
-        if (($pos = strpos( $rawContentType, ';')) !== false) {
+        if (($pos = strpos($rawContentType, ';')) !== false) {
             // for example, text/html; charset=UTF-8
             $contentType = substr($rawContentType, 0, $pos);
         } else {
