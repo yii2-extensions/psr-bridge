@@ -117,9 +117,46 @@ final class ServerRequestAdapterTest extends TestCase
                 ['Content-Type' => 'application/json'],
             )->withBody($stream),
         );
+
+        self::assertSame(
+            'application/json',
+            $request->getPsr7Request()->getHeaderLine('Content-Type'),
+            "PSR-7 request 'Content-Type' header should be 'application/json'.",
+        );
         self::assertNull(
             $request->getPsr7Request()->getParsedBody(),
             "PSR-7 request parsed body should remain 'null' when parsers array is empty.",
+        );
+    }
+
+    public function testParsesBodyFromNonRewindedStream(): void
+    {
+        $jsonContent = '{"name": "test", "value": 123}';
+
+        $stream = FactoryHelper::createStream();
+
+        $stream->write($jsonContent);
+        $stream->getContents();
+
+        $request = new Request();
+
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => 'application/json'],
+            )->withBody($stream),
+        );
+
+        self::assertSame(
+            [
+                'name' => 'test',
+                'value' => 123,
+            ],
+            $request->getPsr7Request()->getParsedBody(),
+            'PSR-7 request parsed body should match the expected array structure from JSON stream.',
         );
     }
 
@@ -182,6 +219,11 @@ final class ServerRequestAdapterTest extends TestCase
             ),
         );
 
+        self::assertSame(
+            'application/json',
+            $request->getPsr7Request()->getHeaderLine('Content-Type'),
+            "PSR-7 request 'Content-Type' header should be 'application/json'.",
+        );
         self::assertSame(
             $existingParsedBody,
             $request->getPsr7Request()->getParsedBody(),
