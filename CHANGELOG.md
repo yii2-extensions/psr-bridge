@@ -2,6 +2,8 @@
 
 ## 0.1.3 Under development
 
+- Bug #201: Improve `ServerRequestAdapter` class to handle body parsing, request adaptation logic and update related tests (@terabytesoftw)
+
 ## 0.1.2 December 11, 2025
 
 - Bug #190: Update action versions to use `yii2-framework` for consistency (@terabytesoftw)

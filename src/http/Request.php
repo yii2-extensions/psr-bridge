@@ -21,8 +21,6 @@ use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
 use function strncasecmp;
-use function strpos;
-use function substr;
 
 /**
  * HTTP Request extension with PSR-7 bridge and worker mode support.
@@ -49,6 +47,7 @@ use function substr;
  * - Worker mode support for modern runtimes (see {@see $workerMode}).
  *
  * @see ServerRequestAdapter for PSR-7 to Yii2 Request adapter.
+ * @phpstan-property array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -776,6 +775,8 @@ final class Request extends \yii\web\Request
      * Wraps the provided PSR-7 {@see ServerRequestInterface} in a {@see ServerRequestAdapter} to enable full PSR-7
      * interoperability for the Yii2 Request component.
      *
+     * The adapter handles body parsing internally if needed, using the configured parsers from this request instance.
+     *
      * This method injects a stateless application start time header (`statelessAppStartTime`) into the request for
      * tracing and debugging purposes.
      *
@@ -783,8 +784,7 @@ final class Request extends \yii\web\Request
      *
      * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to bridge.
      *
-     * @throws InvalidConfigException If the configured parser or fallback parser does not implement
-     * RequestParserInterface.
+     * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
      *
      * Usage example:
      * ```php
@@ -794,48 +794,9 @@ final class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
-        $rawContentType = $request->getHeaderLine('Content-Type');
-
-        if (($pos = strpos($rawContentType, ';')) !== false) {
-            // for example, text/html; charset=UTF-8
-            $contentType = substr($rawContentType, 0, $pos);
-        } else {
-            $contentType = $rawContentType;
-        }
-
-        $parsedParams = null;
-
-        /** @phpstan-var array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers */
-        $parsers = $this->parsers;
-
-        if (isset($parsers[$contentType])) {
-            $parser = Yii::createObject($parsers[$contentType]);
-
-            if ($parser instanceof RequestParserInterface === false) {
-                throw new InvalidConfigException(
-                    Message::INVALID_REQUEST_PARSER->getMessage($contentType, RequestParserInterface::class),
-                );
-            }
-
-            $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
-        } elseif (isset($parsers['*'])) {
-            $parser = Yii::createObject($parsers['*']);
-
-            if ($parser instanceof RequestParserInterface === false) {
-                throw new InvalidConfigException(
-                    Message::INVALID_FALLBACK_REQUEST_PARSER->getMessage(RequestParserInterface::class),
-                );
-            }
-
-            $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
-        }
-
-        if ($parsedParams !== null) {
-            $request = $request->withParsedBody($parsedParams);
-        }
-
         $this->adapter = new ServerRequestAdapter(
             $request->withHeader('statelessAppStartTime', (string) microtime(true)),
+            $this->parsers,
         );
 
         UploadedFile::setPsr7Adapter($this->adapter);
