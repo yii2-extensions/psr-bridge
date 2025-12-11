@@ -11,9 +11,9 @@ stateless application configuration.
 ### Core components setup
 
 Replace the default Yii2 Request and Response components with PSR Bridge
-enhanced versions. 
+enhanced versions.
 
-To enable automatic body parsing (for example, for JSON APIs), configure 
+To enable automatic body parsing (for example, for JSON APIs), configure
 the `parsers` property.
 
 ```php
@@ -50,10 +50,10 @@ return [
 The `Request` component includes built-in logic to handle PSR-7 body parsing automatically.
 
 When `setPsr7Request()` is called (typically by the worker runner), the bridge will:
-1.  Detect the `Content-Type` of the incoming PSR-7 request.
-2.  Check the `parsers` configuration for a matching parser.
-3.  Parse the body content.
-4.  Update the PSR-7 Request instance using `withParsedBody()`.
+1. Detect the `Content-Type` of the incoming PSR-7 request.
+2. Check the `parsers` configuration for a matching parser.
+3. Parse the body content.
+4. Update the PSR-7 Request instance using `withParsedBody()`.
 
 This ensures that `Yii::$app->request->post()` and `Yii::$app->request->bodyParams` are correctly
 populated immediately after the request is handled.
