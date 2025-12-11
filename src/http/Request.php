@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\http;
 use Psr\Http\Message\{ServerRequestInterface, UploadedFileInterface};
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException};
+use yii\web\{CookieCollection, HeaderCollection, NotFoundHttpException, RequestParserInterface};
 use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 
@@ -21,6 +21,8 @@ use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
 use function strncasecmp;
+use function strpos;
+use function substr;
 
 /**
  * HTTP Request extension with PSR-7 bridge and worker mode support.
@@ -789,6 +791,42 @@ final class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
+        $rawContentType = $request->getHeaderLine('Content-Type');
+
+        if (($pos = strpos($rawContentType, ';')) !== false) {
+            // for example, text/html; charset=UTF-8
+            $contentType = substr($rawContentType, 0, $pos);
+        } else {
+            $contentType = $rawContentType;
+        }
+
+        $parsedParams = null;
+
+        /** @phpstan-var array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers */
+        $parsers = $this->parsers;
+
+        if (isset($parsers[$contentType])) {
+            $parser = Yii::createObject($parsers[$contentType]);
+
+            if ($parser instanceof RequestParserInterface === false) {
+                throw new InvalidConfigException("The '$contentType' request parser is invalid. It must implement the yii\\web\\RequestParserInterface.");
+            }
+
+            $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
+        } elseif (isset($parsers['*'])) {
+            $parser = Yii::createObject($parsers['*']);
+
+            if ($parser instanceof RequestParserInterface === false) {
+                throw new InvalidConfigException('The fallback request parser is invalid. It must implement the yii\\web\\RequestParserInterface.');
+            }
+
+            $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
+        }
+
+        if ($parsedParams !== null) {
+            $request = $request->withParsedBody($parsedParams);
+        }
+
         $this->adapter = new ServerRequestAdapter(
             $request->withHeader('statelessAppStartTime', (string) microtime(true)),
         );
