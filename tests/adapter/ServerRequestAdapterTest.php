@@ -53,6 +53,7 @@ final class ServerRequestAdapterTest extends TestCase
             "PSR-7 request parsed body should be 'null' when 'parsers' property is not defined.",
         );
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
