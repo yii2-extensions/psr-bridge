@@ -13,12 +13,16 @@ stateless application configuration.
 Replace the default Yii2 Request and Response components with PSR Bridge
 enhanced versions.
 
+To enable automatic body parsing (for example, for JSON APIs), configure
+the `parsers` property.
+
 ```php
 <?php
 
 declare(strict_types=1);
 
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
+use yii\web\{JsonParser, MultipartFormDataParser};
 
 return [
     'components' => [
@@ -26,6 +30,10 @@ return [
             'class' => Request::class,
             'enableCookieValidation' => false,
             'enableCsrfValidation' => false,
+            'parsers' => [
+                'application/json' => JsonParser::class,
+                'multipart/form-data' => MultipartFormDataParser::class,
+            ],
         ],
         'response' => [
             'class' => Response::class,
@@ -35,6 +43,35 @@ return [
         ],
     ],
 ];
+```
+
+### Request body parsing
+
+The `Request` component includes built-in logic to handle PSR-7 body parsing automatically.
+
+When `setPsr7Request()` is called (typically by the worker runner), the bridge will:
+
+1. Detect the `Content-Type` of the incoming PSR-7 request.
+2. Check the `parsers` configuration for a matching parser.
+3. Parse the body content.
+4. Update the PSR-7 Request instance using `withParsedBody()`.
+
+This ensures that `Yii::$app->request->post()` and `Yii::$app->request->bodyParams` are correctly
+populated immediately after the request is handled.
+
+#### Wildcard parsing
+
+You can also configure a fallback parser using the `*` wildcard.
+
+```php
+'request' => [
+    'class' => Request::class,
+    'parsers' => [
+        'application/json' => JsonParser::class,
+        // Use JSON parser for any content type not explicitly defined above
+        '*' => JsonParser::class,
+    ],
+],
 ```
 
 ## Error handling configuration
