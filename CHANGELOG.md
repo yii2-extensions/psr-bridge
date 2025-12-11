@@ -8,6 +8,7 @@
 - Bug #193: Update `.editorconfig` and `.gitignore` for improved consistency and clarity (@terabytesoftw)
 - Dep #194: `Update symplify/easy-coding-standard requirement from` `^12.5` to `^13.0` (@dependabot)
 - Bug #195: Add test for memory usage at `90%` threshold in `ApplicationMemoryTest` class (@terabytesoftw)
+- Bug #196: Fix proper bridge between PSR-7 `ServerRequestInterface` and Yii `Request` class, including request body parsing (@Blezigen)
 
 ## 0.1.1 October 6, 2025
 
