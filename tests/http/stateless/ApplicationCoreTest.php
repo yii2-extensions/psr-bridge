@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use JsonException;
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
+use JsonException;
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
