@@ -768,7 +768,7 @@ final class Request extends \yii\web\Request
         return parent::resolve();
     }
 
-       /**
+    /**
      * Sets and bridges a PSR-7 ServerRequestInterface instance for the current request.
      *
      * Wraps the provided PSR-7 {@see ServerRequestInterface} in a {@see ServerRequestAdapter} to enable full PSR-7
@@ -790,27 +790,35 @@ final class Request extends \yii\web\Request
     public function setPsr7Request(ServerRequestInterface $request): void
     {
         $rawContentType = $request->getHeaderLine('Content-Type');
-        if (($pos = strpos((string)$rawContentType, ';')) !== false) {
-            // e.g. text/html; charset=UTF-8
+
+        if (($pos = strpos( $rawContentType, ';')) !== false) {
+            // for example, text/html; charset=UTF-8
             $contentType = substr($rawContentType, 0, $pos);
         } else {
             $contentType = $rawContentType;
         }
 
         $parsedParams = null;
-        
-        if (isset($this->parsers[$contentType])) {
-            $parser = Yii::createObject($this->parsers[$contentType]);
-            if (!($parser instanceof RequestParserInterface)) {
+
+        /** @phpstan-var array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers */
+        $parsers = $this->parsers;
+
+        if (isset($parsers[$contentType])) {
+            $parser = Yii::createObject($parsers[$contentType]);
+
+            if ($parser instanceof RequestParserInterface === false) {
                 throw new InvalidConfigException("The '$contentType' request parser is invalid. It must implement the yii\\web\\RequestParserInterface.");
             }
-            $parsedParams = $parser->parse((string)$request->getBody(), $rawContentType);
-        } elseif (isset($this->parsers['*'])) {
-            $parser = Yii::createObject($this->parsers['*']);
-            if (!($parser instanceof RequestParserInterface)) {
+
+            $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
+        } elseif (isset($parsers['*'])) {
+            $parser = Yii::createObject($parsers['*']);
+
+            if ($parser instanceof RequestParserInterface === false) {
                 throw new InvalidConfigException('The fallback request parser is invalid. It must implement the yii\\web\\RequestParserInterface.');
             }
-            $parsedParams = $parser->parse((string)$request->getBody(), $rawContentType);
+
+            $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
         }
 
         if ($parsedParams !== null) {
@@ -818,8 +826,9 @@ final class Request extends \yii\web\Request
         }
 
         $this->adapter = new ServerRequestAdapter(
-            $request->withHeader('statelessAppStartTime', (string) microtime(true))
+            $request->withHeader('statelessAppStartTime', (string) microtime(true)),
         );
+
         UploadedFile::setPsr7Adapter($this->adapter);
     }
 
