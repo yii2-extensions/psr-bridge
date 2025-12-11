@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 0.1.2 Under development
+## 0.1.2 December 11, 2025
 
 - Bug #190: Update action versions to use `yii2-framework` for consistency (@terabytesoftw)
 - Bug #191: Refactor test imports for consistency and add support files (@terabytesoftw)
