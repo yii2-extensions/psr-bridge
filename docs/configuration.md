@@ -33,7 +33,7 @@ return [
             'parsers' => [
                 'application/json' => JsonParser::class,
                 'multipart/form-data' => MultipartFormDataParser::class,
-            ],            
+            ],
         ],
         'response' => [
             'class' => Response::class,
@@ -50,6 +50,7 @@ return [
 The `Request` component includes built-in logic to handle PSR-7 body parsing automatically.
 
 When `setPsr7Request()` is called (typically by the worker runner), the bridge will:
+
 1. Detect the `Content-Type` of the incoming PSR-7 request.
 2. Check the `parsers` configuration for a matching parser.
 3. Parse the body content.
