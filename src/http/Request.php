@@ -783,6 +783,9 @@ final class Request extends \yii\web\Request
      *
      * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to bridge.
      *
+     * @throws InvalidConfigException If the configured parser or fallback parser does not implement
+     * RequestParserInterface.
+     *
      * Usage example:
      * ```php
      * $psr7Request = new \GuzzleHttp\Psr7\ServerRequest('GET', '/api/resource');
@@ -809,7 +812,9 @@ final class Request extends \yii\web\Request
             $parser = Yii::createObject($parsers[$contentType]);
 
             if ($parser instanceof RequestParserInterface === false) {
-                throw new InvalidConfigException("The '$contentType' request parser is invalid. It must implement the yii\\web\\RequestParserInterface.");
+                throw new InvalidConfigException(
+                    Message::INVALID_REQUEST_PARSER->getMessage($contentType, RequestParserInterface::class),
+                );
             }
 
             $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
@@ -817,7 +822,9 @@ final class Request extends \yii\web\Request
             $parser = Yii::createObject($parsers['*']);
 
             if ($parser instanceof RequestParserInterface === false) {
-                throw new InvalidConfigException('The fallback request parser is invalid. It must implement the yii\\web\\RequestParserInterface.');
+                throw new InvalidConfigException(
+                    Message::INVALID_FALLBACK_REQUEST_PARSER->getMessage(RequestParserInterface::class),
+                );
             }
 
             $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);

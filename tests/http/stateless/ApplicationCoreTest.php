@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
+use JsonException;
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
+use stdClass;
 use Yii;
 use yii\base\{InvalidConfigException, Security};
 use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
 use yii\log\{Dispatcher, FileTarget};
-use yii\web\{AssetManager, Session, UrlManager, User, View};
+use yii\web\{AssetManager, JsonParser, RequestParserInterface, Session, UrlManager, User, View};
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response, StatelessApplication};
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
@@ -24,6 +26,7 @@ use function file_exists;
 use function file_get_contents;
 use function ini_get;
 use function ini_set;
+use function json_encode;
 use function ob_get_level;
 use function ob_start;
 use function str_contains;
@@ -247,6 +250,100 @@ final class ApplicationCoreTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws JsonException if JSON encoding fails.
+     */
+    public function testHandleThrowsExceptionWithCorrectMessageWhenFallbackParserIsInvalid(): void
+    {
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'request' => [
+                        'parsers' => [
+                            '*' => stdClass::class,
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $payload = ['test' => 'data'];
+
+        $jsonPayload = json_encode($payload, JSON_THROW_ON_ERROR);
+
+        $response = $app->handle(
+            FactoryHelper::createRequest(
+                method: 'POST',
+                uri: 'site/post',
+                headers: ['Content-Type' => 'application/vnd.unknown'],
+            )->withBody(FactoryHelper::createStreamFactory()->createStream($jsonPayload)),
+        );
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/post'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/post'.",
+        );
+        self::assertStringContainsString(
+            'Fallback request parser is invalid. It must implement the &apos;' . RequestParserInterface::class .
+            '&apos;.',
+            $response->getBody()->getContents(),
+            'Response body should contain the expected error message for invalid fallback parser.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testHandleThrowsExceptionWithCorrectMessageWhenSpecificParserIsInvalid(): void
+    {
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'request' => [
+                        'parsers' => [
+                            'application/xml' => \stdClass::class,
+                        ],
+                    ],
+                    'errorHandler' => ['errorAction' => null],
+                ],
+            ],
+        );
+
+        $payload = '<root>test</root>';
+
+        $response = $app->handle(
+            FactoryHelper::createRequest(
+                method: 'POST',
+                uri: 'site/post',
+                headers: ['Content-Type' => 'application/xml'],
+            )->withBody(FactoryHelper::createStreamFactory()->createStream($payload)),
+        );
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/post'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/post'.",
+        );
+        self::assertStringContainsString(
+            'The &apos;application/xml&apos; request parser is invalid. It must implement the &apos;' .
+            RequestParserInterface::class . '&apos;.',
+            $response->getBody()->getContents(),
+            'Response body should contain the expected error message for invalid fallback parser.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testRedirectWhenRouteIsSiteRedirect(): void
     {
@@ -327,6 +424,80 @@ final class ApplicationCoreTest extends TestCase
 
             @\runkit_constant_redefine('YII_ENV_TEST', true);
         }
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws JsonException if JSON encoding fails.
+     */
+    public function testRequestParsesBodyWithConfiguredParsers(): void
+    {
+        $app = $this->statelessApplication();
+
+        $payload = [
+            'foo' => 'bar',
+            'number' => 123,
+        ];
+
+        $jsonPayload = json_encode($payload, JSON_THROW_ON_ERROR);
+        $response = $app->handle(
+            FactoryHelper::createRequest(
+                method: 'POST',
+                uri: 'site/post',
+                headers: ['Content-Type' => 'application/json; charset=UTF-8'],
+            )->withBody(FactoryHelper::createStreamFactory()->createStream($jsonPayload)),
+        );
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' from 'site/post'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            $jsonPayload,
+            $response->getBody()->getContents(),
+            "Response body should contain the parsed JSON returned by 'SiteController::actionPost()'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testRequestUsesWildcardParser(): void
+    {
+        $app = $this->statelessApplication(
+            [
+                'components' => [
+                    'request' => [
+                        'parsers' => [
+                            '*' => JsonParser::class,
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $payload = ['wildcard' => 'works'];
+
+        $jsonPayload = json_encode($payload, JSON_THROW_ON_ERROR);
+        $response = $app->handle(
+            FactoryHelper::createRequest(
+                method: 'POST',
+                uri: 'site/post',
+                headers: ['Content-Type' => 'application/vnd.custom+json'],
+            )->withBody(FactoryHelper::createStreamFactory()->createStream($jsonPayload)),
+        );
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' from 'site/post'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            $jsonPayload,
+            $response->getBody()->getContents(),
+            'Response body should contain the data parsed by the wildcard parser.',
+        );
     }
 
     /**

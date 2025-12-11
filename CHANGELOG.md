@@ -10,6 +10,7 @@
 - Bug #195: Add test for memory usage at `90%` threshold in `ApplicationMemoryTest` class (@terabytesoftw)
 - Bug #196: Fix proper bridge between PSR-7 `ServerRequestInterface` and Yii `Request` class, including request body parsing (@Blezigen)
 - Bug #197: Add memory limit option to `mutation-static` command in `composer.json` for improved mutation testing (@terabytesoftw)
+- Bug #198: Refactor `setPsr7Request()` method to use standardized error messages and introduces comprehensive integration tests using `StatelessApplication` class (@terabytesoftw)
 
 ## 0.1.1 October 6, 2025
 

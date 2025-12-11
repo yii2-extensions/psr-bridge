@@ -74,12 +74,26 @@ enum Message: string
     case FAILED_CREATE_STREAM_FROM_TMP_FILE = "Failed to create stream from temporary file '%s'.";
 
     /**
+     * Error when the fallback request parser is invalid.
+     *
+     * Format: "Fallback request parser is invalid. It must implement the '%s'."
+     */
+    case INVALID_FALLBACK_REQUEST_PARSER = "Fallback request parser is invalid. It must implement the '%s'.";
+
+    /**
      * Error when an optional array is invalid in multiple file specification.
      *
      * Format: "Invalid optional '%s' array in multiple file specification for '%s'. Expected 'array' or 'null'."
      */
     case INVALID_OPTIONAL_ARRAY_IN_MULTI_SPEC = "Invalid optional '%s' array in multiple file specification for '%s'. " .
     "Expected 'array' or 'null'.";
+
+    /**
+     * Error when a specific request parser is invalid.
+     *
+     * Format: "The '%s' request parser is invalid. It must implement the '%s'."
+     */
+    case INVALID_REQUEST_PARSER = "The '%s' request parser is invalid. It must implement the '%s'.";
 
     /**
      * Error when the maximum nesting depth for file uploads is exceeded.
