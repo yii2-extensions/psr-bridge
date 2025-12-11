@@ -36,7 +36,7 @@ final class ServerRequestAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testHandlesUndefinedParsersPropertyGracefully(): void
+    public function testHandlesUnconfiguredParsersGracefully(): void
     {
         $request = new Request();
 
@@ -50,7 +50,7 @@ final class ServerRequestAdapterTest extends TestCase
 
         self::assertNull(
             $request->getPsr7Request()->getParsedBody(),
-            "PSR-7 request parsed body should be 'null' when 'parsers' property is not defined.",
+            "PSR-7 request parsed body should be 'null' when 'parsers' property is not configured.",
         );
     }
 
