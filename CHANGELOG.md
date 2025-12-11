@@ -12,6 +12,7 @@
 - Bug #197: Add memory limit option to `mutation-static` command in `composer.json` for improved mutation testing (@terabytesoftw)
 - Bug #198: Refactor `setPsr7Request()` method to use standardized error messages and introduce comprehensive integration tests using `StatelessApplication` class (@terabytesoftw)
 - Bug #199: Update `README.md` and `docs/configuration.md` to include automatic body parsing setup and parser configuration (@terabytesoftw)
+- Bug #200: Add missing GitHub agents directory to ignore list `.gitignore` (@terabytesoftw)
 
 ## 0.1.1 October 6, 2025
 
