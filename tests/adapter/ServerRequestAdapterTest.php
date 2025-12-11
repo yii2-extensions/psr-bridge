@@ -7,6 +7,7 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use Psr\Http\Message\ServerRequestInterface;
 use yii\base\InvalidConfigException;
+use yii\web\JsonParser;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
@@ -22,6 +23,7 @@ use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
  * - Extraction and override of HTTP methods from body and headers.
  * - Handling of body parameters, including method param removal.
  * - Parent fallback logic when adapter is not set.
+ * - Parsed body handling based on content type and parsers.
  * - Query string and query params precedence and fallback.
  * - Raw body and parsed body extraction for arrays and objects.
  *
@@ -31,6 +33,227 @@ use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 #[Group('adapter')]
 final class ServerRequestAdapterTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testHandlesUnconfiguredParsersGracefully(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => 'application/json'],
+            )->withBody(FactoryHelper::createStream()),
+        );
+
+        self::assertNull(
+            $request->getPsr7Request()->getParsedBody(),
+            "PSR-7 request parsed body should be 'null' when 'parsers' property is not configured.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testParsedBodyIsNullWhenContentTypeIsEmptyString(): void
+    {
+        $jsonData = '{"action":"create","item":"product"}';
+
+        $stream = FactoryHelper::createStream();
+
+        $stream->write($jsonData);
+
+        $request = new Request();
+
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => ''],
+            )->withBody($stream),
+        );
+
+        self::assertEmpty(
+            $request->getPsr7Request()->getHeaderLine('Content-Type'),
+            "PSR-7 request 'Content-Type' header should be an empty string.",
+        );
+        self::assertNull(
+            $request->getPsr7Request()->getParsedBody(),
+            "PSR-7 request parsed body should be 'null' when 'Content-Type' header is empty.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testParsedBodyIsNullWhenContentTypeMissing(): void
+    {
+        $jsonData = '{"action":"create","item":"product"}';
+
+        $stream = FactoryHelper::createStream();
+
+        $stream->write($jsonData);
+
+        $request = new Request();
+
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/items',
+            )->withBody($stream),
+        );
+
+        self::assertNull(
+            $request->getPsr7Request()->getParsedBody(),
+            "PSR-7 request parsed body should be 'null' when 'Content-Type' header is missing.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testParsedBodyIsNullWhenParsersArrayIsEmpty(): void
+    {
+        $jsonData = '{"action":"create","item":"product"}';
+
+        $stream = FactoryHelper::createStream();
+
+        $stream->write($jsonData);
+
+        $request = new Request();
+
+        $request->parsers = [];
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => 'application/json'],
+            )->withBody($stream),
+        );
+
+        self::assertSame(
+            'application/json',
+            $request->getPsr7Request()->getHeaderLine('Content-Type'),
+            "PSR-7 request 'Content-Type' header should be 'application/json'.",
+        );
+        self::assertNull(
+            $request->getPsr7Request()->getParsedBody(),
+            "PSR-7 request parsed body should remain 'null' when parsers array is empty.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testParsesBodyFromNonRewindedStream(): void
+    {
+        $jsonContent = '{"name": "test", "value": 123}';
+
+        $stream = FactoryHelper::createStream();
+
+        $stream->write($jsonContent);
+        $stream->getContents();
+
+        $request = new Request();
+
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => 'application/json'],
+            )->withBody($stream),
+        );
+
+        self::assertSame(
+            [
+                'name' => 'test',
+                'value' => 123,
+            ],
+            $request->getPsr7Request()->getParsedBody(),
+            'PSR-7 request parsed body should match the expected array structure from JSON stream.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testParsesBodyFromStreamWhenParsedBodyIsNull(): void
+    {
+        $jsonData = '{"action":"create","item":"product"}';
+
+        $stream = FactoryHelper::createStream();
+
+        $stream->write($jsonData);
+
+        $request = new Request();
+
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => 'application/json'],
+            )->withBody($stream),
+        );
+
+        self::assertSame(
+            'application/json',
+            $request->getPsr7Request()->getHeaderLine('Content-Type'),
+            "PSR-7 request 'Content-Type' header should be 'application/json'.",
+        );
+        self::assertSame(
+            ['action' => 'create', 'item' => 'product'],
+            $request->getPsr7Request()->getParsedBody(),
+            'PSR-7 request parsed body should match the expected array structure from JSON stream.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testPreservesExistingParsedBodyWithoutReparsing(): void
+    {
+        $existingParsedBody = [
+            'username' => 'john_doe',
+            'email' => 'john@example.com',
+            'data' => ['nested' => 'value'],
+        ];
+
+        $request = new Request();
+
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest(
+                'POST',
+                '/api/users',
+                ['Content-Type' => 'application/json'],
+                $existingParsedBody,
+            ),
+        );
+
+        self::assertSame(
+            'application/json',
+            $request->getPsr7Request()->getHeaderLine('Content-Type'),
+            "PSR-7 request 'Content-Type' header should be 'application/json'.",
+        );
+        self::assertSame(
+            $existingParsedBody,
+            $request->getPsr7Request()->getParsedBody(),
+            'PSR-7 request parsed body should remain unchanged when it was already set.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
@@ -84,6 +307,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnEmptyQueryParamsWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -98,6 +324,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnEmptyQueryStringWhenAdapterIsSetWithNoQuery(): void
     {
         $request = new Request();
@@ -112,6 +341,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodFromAdapterWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -127,6 +359,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithBodyOverrideAndLowerCaseMethodsWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -150,6 +385,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithBodyOverrideWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -173,6 +411,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithCustomMethodParamWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -198,6 +439,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithHeaderOverrideWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -213,6 +457,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithoutOverrideWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -385,7 +632,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testReturnPsr7RequestInstanceWhenAdapterIsSet(): void
     {
@@ -403,6 +650,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnQueryParamsWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -446,7 +696,7 @@ final class ServerRequestAdapterTest extends TestCase
     }
 
     /**
-     * @phpstan-param string $expectedString
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(RequestProvider::class, 'getQueryString')]
     public function testReturnQueryStringWhenAdapterIsSet(string $queryString, string $expectedString): void
@@ -464,6 +714,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnRawBodyFromAdapterWhenAdapterIsSet(): void
     {
         $bodyContent = '{"name":"John","email":"john@example.com","message":"Hello World"}';
@@ -485,6 +738,9 @@ final class ServerRequestAdapterTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnRawBodyWhenAdapterIsSetWithEmptyBody(): void
     {
         $request = new Request();

@@ -7,14 +7,16 @@ namespace yii2\extensions\psrbridge\adapter;
 use Psr\Http\Message\ServerRequestInterface;
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\web\{Cookie, HeaderCollection};
+use yii\web\{Cookie, HeaderCollection, RequestParserInterface};
 use yii2\extensions\psrbridge\exception\Message;
 
 use function implode;
 use function in_array;
 use function is_array;
 use function is_string;
+use function strpos;
 use function strtoupper;
+use function substr;
 use function unserialize;
 
 /**
@@ -47,11 +49,34 @@ use function unserialize;
 final class ServerRequestAdapter
 {
     /**
+     * Adapted PSR-7 ServerRequestInterface instance.
+     *
+     * This property holds the PSR-7 request after any necessary transformations (such as body parsing) have been
+     * applied during construction.
+     */
+    public readonly ServerRequestInterface $psrRequest;
+
+    /**
      * Creates a new instance of the {@see ServerRequestAdapter} class.
      *
+     * If the PSR-7 request does not already have a parsed body, and a matching parser is configured for the request's
+     * 'Content-Type', the body will be parsed and set on the request.
+     *
+     * This approach centralizes all PSR-7 request adaptation logic within the adapter, avoiding double parsing when the
+     * body was already parsed by a PSR-7 server (RoadRunner, FrankenPHP, etc.).
+     *
      * @param ServerRequestInterface $psrRequest PSR-7 ServerRequestInterface instance to adapt.
+     * @param array $parsers Optional array of 'Content-Type' to parser class mappings. If provided, and the request has
+     * no parsed body, the adapter will attempt to parse the body using the configured parsers.
+     *
+     * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
+     *
+     * @phpstan-param array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
      */
-    public function __construct(public readonly ServerRequestInterface $psrRequest) {}
+    public function __construct(ServerRequestInterface $psrRequest, array $parsers = [])
+    {
+        $this->psrRequest = $this->parseBody($psrRequest, $parsers);
+    }
 
     /**
      * Retrieves the request body parameters, excluding the HTTP method override parameter if present.
@@ -437,5 +462,63 @@ final class ServerRequestAdapter
         }
 
         return $cookies;
+    }
+
+    /**
+     * Parses the request body if needed using the configured parsers.
+     *
+     * If the PSR-7 request already has a parsed body (not `null`), this method returns it unchanged.
+     *
+     * Otherwise, it extracts the 'Content-Type', finds a matching parser from the provided parsers array, parses the
+     * body content, and returns a new request with the parsed body set.
+     *
+     * This approach avoids double parsing when the body was already parsed by a PSR-7 server (RoadRunner, FrankenPHP,
+     * etc.).
+     *
+     * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to potentially parse.
+     * @param array $parsers Array of 'Content-Type' to parser class mappings.
+     *
+     * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
+     *
+     * @return ServerRequestInterface Request with parsed body set if parsing was performed, or unchanged.
+     *
+     * @phpstan-param array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
+     */
+    private function parseBody(ServerRequestInterface $request, array $parsers): ServerRequestInterface
+    {
+        if ($request->getParsedBody() !== null) {
+            return $request;
+        }
+
+        $rawContentType = $request->getHeaderLine('Content-Type');
+
+        $pos = strpos($rawContentType, ';');
+        $contentType = $pos !== false ? substr($rawContentType, 0, $pos) : $rawContentType;
+
+        $parsedParams = null;
+
+        if (isset($parsers[$contentType])) {
+            $parser = Yii::createObject($parsers[$contentType]);
+
+            if ($parser instanceof RequestParserInterface === false) {
+                throw new InvalidConfigException(
+                    Message::INVALID_REQUEST_PARSER->getMessage($contentType, RequestParserInterface::class),
+                );
+            }
+
+            $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
+        } elseif (isset($parsers['*'])) {
+            $parser = Yii::createObject($parsers['*']);
+
+            if ($parser instanceof RequestParserInterface === false) {
+                throw new InvalidConfigException(
+                    Message::INVALID_FALLBACK_REQUEST_PARSER->getMessage(RequestParserInterface::class),
+                );
+            }
+
+            $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
+        }
+
+        return $request->withParsedBody($parsedParams);
     }
 }
