@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 0.1.3 Under development
+## 0.1.3 December 12, 2025
 
 - Bug #201: Improve `ServerRequestAdapter` class to handle body parsing, request adaptation logic and update related tests (@terabytesoftw)
 
