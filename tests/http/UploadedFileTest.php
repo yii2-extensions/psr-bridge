@@ -1625,6 +1625,7 @@ final class UploadedFileTest extends TestCase
             'Should return different instances for different files.',
         );
     }
+
     protected function setUp(): void
     {
         parent::setUp();

@@ -512,6 +512,7 @@ final class ResponseTest extends TestCase
             "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
         );
     }
+
     protected function tearDown(): void
     {
         $this->closeApplication();

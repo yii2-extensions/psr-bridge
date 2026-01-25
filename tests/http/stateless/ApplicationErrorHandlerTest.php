@@ -671,6 +671,7 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
+
     protected function tearDown(): void
     {
         $this->closeApplication();
