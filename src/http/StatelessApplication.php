@@ -9,7 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use yii\base\{Event, InvalidConfigException};
 use yii\di\{Container, NotInstantiableException};
-use yii\web\Application;
+use yii\web\{Application, IdentityInterface, User};
 
 use function array_merge;
 use function array_reverse;
@@ -45,6 +45,11 @@ use function strtoupper;
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ *
+ * @template TUserIdentity of IdentityInterface
+ * @extends Application<TUserIdentity>
+ *
+ * @phpstan-property-read User<TUserIdentity> $user
  */
 final class StatelessApplication extends Application implements RequestHandlerInterface
 {
@@ -67,13 +72,6 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      * Version of the StatelessApplication.
      */
     public string $version = '0.1.0';
-
-    /**
-     * Configuration for the StatelessApplication.
-     *
-     * @phpstan-var array<string, mixed>
-     */
-    private array $config = [];
 
     /**
      * Container for dependency injection.
@@ -113,10 +111,13 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      *
      * @phpstan-ignore constructor.missingParentCall
      */
-    public function __construct(array $config = [])
-    {
-        $this->config = $config;
-
+    public function __construct(/**
+     * Configuration for the StatelessApplication.
+     *
+     * @phpstan-var array<string, mixed>
+     */
+        private array $config = [],
+    ) {
         $this->initEventTracking();
     }
 

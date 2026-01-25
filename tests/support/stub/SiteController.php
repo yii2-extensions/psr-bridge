@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\support\stub;
 use Yii;
 use yii\base\{Exception, InvalidRouteException, UserException};
 use yii\captcha\CaptchaAction;
-use yii\web\{Controller, Cookie, RangeNotSatisfiableHttpException, Response};
+use yii\web\{Application, Controller, Cookie, RangeNotSatisfiableHttpException, Response};
 
 use function fwrite;
 use function htmlspecialchars;
@@ -21,6 +21,8 @@ use function tmpfile;
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ *
+ * @extends Controller<Application>
  */
 final class SiteController extends Controller
 {

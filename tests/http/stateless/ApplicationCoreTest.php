@@ -56,28 +56,6 @@ final class ApplicationCoreTest extends TestCase
      */
     private string $logFile = '';
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->logFile = dirname(__DIR__, 3) . '/runtime/logs/flush-test.log';
-
-        if (file_exists($this->logFile)) {
-            unlink($this->logFile);
-        }
-    }
-
-    protected function tearDown(): void
-    {
-        $this->closeApplication();
-
-        if (file_exists($this->logFile)) {
-            unlink($this->logFile);
-        }
-
-        parent::tearDown();
-    }
-
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
@@ -100,18 +78,18 @@ final class ApplicationCoreTest extends TestCase
 
         self::assertTrue(
             $container->has(ServerRequestFactoryInterface::class),
-            'Container should have definition for ServerRequestFactoryInterface, ensuring PSR-7 request factory is ' .
-            'available.',
+            'Container should have definition for ServerRequestFactoryInterface, ensuring PSR-7 request factory is '
+            . 'available.',
         );
         self::assertTrue(
             $container->has(StreamFactoryInterface::class),
-            'Container should have definition for StreamFactoryInterface, ensuring PSR-7 stream factory is ' .
-            'available.',
+            'Container should have definition for StreamFactoryInterface, ensuring PSR-7 stream factory is '
+            . 'available.',
         );
         self::assertTrue(
             $container->has(UploadedFileFactoryInterface::class),
-            'Container should have definition for UploadedFileFactoryInterface, ensuring PSR-7 uploaded file ' .
-            'factory is available.',
+            'Container should have definition for UploadedFileFactoryInterface, ensuring PSR-7 uploaded file '
+            . 'factory is available.',
         );
         self::assertInstanceOf(
             ServerRequestFactory::class,
@@ -289,8 +267,8 @@ final class ApplicationCoreTest extends TestCase
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/post'.",
         );
         self::assertStringContainsString(
-            'Fallback request parser is invalid. It must implement the &apos;' . RequestParserInterface::class .
-            '&apos;.',
+            'Fallback request parser is invalid. It must implement the &apos;' . RequestParserInterface::class
+            . '&apos;.',
             $response->getBody()->getContents(),
             'Response body should contain the expected error message for invalid fallback parser.',
         );
@@ -335,8 +313,8 @@ final class ApplicationCoreTest extends TestCase
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/post'.",
         );
         self::assertStringContainsString(
-            'The &apos;application/xml&apos; request parser is invalid. It must implement the &apos;' .
-            RequestParserInterface::class . '&apos;.',
+            'The &apos;application/xml&apos; request parser is invalid. It must implement the &apos;'
+            . RequestParserInterface::class . '&apos;.',
             $response->getBody()->getContents(),
             'Response body should contain the expected error message for invalid fallback parser.',
         );
@@ -549,8 +527,8 @@ final class ApplicationCoreTest extends TestCase
         self::assertSame(
             $adapter1,
             self::inaccessibleProperty($bridgeResponse1, 'adapter'),
-            "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, " .
-            'confirming adapter caching behavior.',
+            "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, "
+            . 'confirming adapter caching behavior.',
         );
 
         // second request with different route - verify stateless behavior
@@ -635,8 +613,8 @@ final class ApplicationCoreTest extends TestCase
 
         self::assertTrue(
             $hasCookieHeader,
-            "PSR-7 Response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct " .
-            'adapter behavior.',
+            "PSR-7 Response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct "
+            . 'adapter behavior.',
         );
         self::assertContains(
             'test=test; Path=/; HttpOnly; SameSite=Lax',
@@ -699,8 +677,8 @@ final class ApplicationCoreTest extends TestCase
                 ],
             ],
             $app->coreComponents(),
-            "'coreComponents()' should return the expected mapping of component IDs to class definitions after " .
-            'handling a request.',
+            "'coreComponents()' should return the expected mapping of component IDs to class definitions after "
+            . 'handling a request.',
         );
     }
 
@@ -785,5 +763,27 @@ final class ApplicationCoreTest extends TestCase
             Yii::getAlias('@webroot'),
             "'@webroot' alias should be set to the 'tests/support' directory after handling a request.",
         );
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->logFile = dirname(__DIR__, 3) . '/runtime/logs/flush-test.log';
+
+        if (file_exists($this->logFile)) {
+            unlink($this->logFile);
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        $this->closeApplication();
+
+        if (file_exists($this->logFile)) {
+            unlink($this->logFile);
+        }
+
+        parent::tearDown();
     }
 }

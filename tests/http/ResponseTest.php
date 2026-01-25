@@ -40,13 +40,6 @@ use function urlencode;
 #[Group('http')]
 final class ResponseTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        $this->closeApplication();
-
-        parent::tearDown();
-    }
-
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
@@ -518,5 +511,11 @@ final class ResponseTest extends TestCase
             $response->isSent,
             "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
         );
+    }
+    protected function tearDown(): void
+    {
+        $this->closeApplication();
+
+        parent::tearDown();
     }
 }

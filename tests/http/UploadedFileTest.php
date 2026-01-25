@@ -29,13 +29,6 @@ use const UPLOAD_ERR_OK;
  */
 final class UploadedFileTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        UploadedFile::reset();
-    }
-
     public function testConvertPsr7FileWithErrorShouldNotThrowException(): void
     {
         UploadedFile::setPsr7Adapter(
@@ -1631,5 +1624,11 @@ final class UploadedFileTest extends TestCase
             $uploadFile2,
             'Should return different instances for different files.',
         );
+    }
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        UploadedFile::reset();
     }
 }

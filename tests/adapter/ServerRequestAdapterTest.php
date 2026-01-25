@@ -645,8 +645,8 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertInstanceOf(
             ServerRequestInterface::class,
             $request->getPsr7Request(),
-            "'getPsr7Request()' should return a '" . ServerRequestInterface::class . "' instance when the PSR-7 " .
-            'adapter is set.',
+            "'getPsr7Request()' should return a '" . ServerRequestInterface::class . "' instance when the PSR-7 "
+            . 'adapter is set.',
         );
     }
 

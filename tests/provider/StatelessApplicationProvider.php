@@ -60,8 +60,8 @@ final class StatelessApplicationProvider
                 <<<JSON
                 {"username":"user","password":"pa:ss"}
                 JSON,
-                "Response body should be a JSON string with 'username' and 'password' where the password may contain " .
-                'colon(s) in HTTP_AUTHORIZATION.',
+                "Response body should be a JSON string with 'username' and 'password' where the password may contain "
+                . 'colon(s) in HTTP_AUTHORIZATION.',
             ],
             'empty password' => [
                 'Basic ' . base64_encode('user:'),
@@ -75,16 +75,16 @@ final class StatelessApplicationProvider
                 <<<JSON
                 {"username":null,"password":"pass"}
                 JSON,
-                "Response body should be a JSON string with 'username' as 'null' and 'password' when username is " .
-                'empty.',
+                "Response body should be a JSON string with 'username' as 'null' and 'password' when username is "
+                . 'empty.',
             ],
             'invalid scheme' => [
                 'basix ' . base64_encode('user:pass'),
                 <<<JSON
                 {"username":null,"password":null}
                 JSON,
-                "Response body should be a JSON string with 'username' and 'password' as 'null' for invalid " .
-                'HTTP_AUTHORIZATION header.',
+                "Response body should be a JSON string with 'username' and 'password' as 'null' for invalid "
+                . 'HTTP_AUTHORIZATION header.',
             ],
             'lowercase scheme' => [
                 'basic ' . base64_encode('user:pass'),
@@ -98,24 +98,24 @@ final class StatelessApplicationProvider
                 <<<JSON
                 {"username":null,"password":null}
                 JSON,
-                "Response body should be a JSON string with 'username' and 'password' as 'null' for malformed " .
-                'HTTP_AUTHORIZATION header.',
+                "Response body should be a JSON string with 'username' and 'password' as 'null' for malformed "
+                . 'HTTP_AUTHORIZATION header.',
             ],
             'missing space' => [
                 'Basic' . base64_encode('a:b'),
                 <<<JSON
                 {"username":null,"password":null}
                 JSON,
-                "Response body should be a JSON string with 'username' and 'password' as 'null' for malformed " .
-                'HTTP_AUTHORIZATION header.',
+                "Response body should be a JSON string with 'username' and 'password' as 'null' for malformed "
+                . 'HTTP_AUTHORIZATION header.',
             ],
             'no colon' => [
                 'Basic ' . base64_encode('userpass'),
                 <<<JSON
                 {"username":"userpass","password":null}
                 JSON,
-                "Response body should be a JSON string with 'username' set and 'password' as 'null' when " .
-                'credentials contain no colon in HTTP_AUTHORIZATION.',
+                "Response body should be a JSON string with 'username' set and 'password' as 'null' when "
+                . 'credentials contain no colon in HTTP_AUTHORIZATION.',
             ],
             'non-breaking space' => [
                 "basic\xC2\xA0" . base64_encode('user:pass'),
@@ -263,8 +263,8 @@ final class StatelessApplicationProvider
                 </span>
                 </div>
                 HTML,
-                "Response body should contain 'Custom error page from errorAction' when Exception is triggered and " .
-                "YII_DEBUG mode is disabled with 'errorAction' configured.",
+                "Response body should contain 'Custom error page from errorAction' when Exception is triggered and "
+                . "YII_DEBUG mode is disabled with 'errorAction' configured.",
             ],
             'debug false with UserException' => [
                 false,
@@ -282,8 +282,8 @@ final class StatelessApplicationProvider
                 </span>
                 </div>
                 HTML,
-                "Response body should contain 'Custom error page from errorAction' when UserException is triggered " .
-                "and YII_DEBUG mode is disabled with 'errorAction' configured.",
+                "Response body should contain 'Custom error page from errorAction' when UserException is triggered "
+                . "and YII_DEBUG mode is disabled with 'errorAction' configured.",
             ],
             'debug true with UserException' => [
                 true,
@@ -301,8 +301,8 @@ final class StatelessApplicationProvider
                 </span>
                 </div>
                 HTML,
-                "Response body should contain 'Custom error page from errorAction' when UserException is triggered " .
-                "and YII_DEBUG mode is enabled with 'errorAction' configured.",
+                "Response body should contain 'Custom error page from errorAction' when UserException is triggered "
+                . "and YII_DEBUG mode is enabled with 'errorAction' configured.",
             ],
         ];
     }
@@ -421,16 +421,16 @@ final class StatelessApplicationProvider
             ],
             'very large value near 32-bit INT_MAX' => [
                 2_147_483_647,
-                'Memory limit should handle large positive values correctly without overflow when set to ' .
-                "'2_147_483_647' bytes.",
+                'Memory limit should handle large positive values correctly without overflow when set to '
+                . "'2_147_483_647' bytes.",
             ],
         ];
 
         if (PHP_INT_SIZE >= 8) {
             $data['ultra large value 4GiB (64-bit only)'] = [
                 4_294_967_296,
-                "Memory limit should be set to exactly '4_294_967_296' bytes ('4GiB') when a positive value is " .
-                "provided on '64-bit' builds.",
+                "Memory limit should be set to exactly '4_294_967_296' bytes ('4GiB') when a positive value is "
+                . "provided on '64-bit' builds.",
             ];
         }
 

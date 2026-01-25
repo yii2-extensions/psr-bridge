@@ -457,8 +457,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertCount(
             1,
             $setCookieHeaders,
-            "Exactly one 'Set-Cookie' header present in the response when a single cookie with all attributes is " .
-            'added.',
+            "Exactly one 'Set-Cookie' header present in the response when a single cookie with all attributes is "
+            . 'added.',
         );
 
         $cookieHeader = $setCookieHeaders[0] ?? '';
@@ -626,8 +626,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertCount(
             1,
             $setCookieHeaders,
-            "Exactly one 'Set-Cookie' header present in the response when a cookie with 'DateTimeImmutable' expire " .
-            'is added.',
+            "Exactly one 'Set-Cookie' header present in the response when a cookie with 'DateTimeImmutable' expire "
+            . 'is added.',
         );
 
         $cookieHeader = $setCookieHeaders[0] ?? '';
@@ -1123,8 +1123,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertStringContainsString(
             '; Secure',
             $headerStrings,
-            "'Set-Cookie' header should automatically include the 'Secure' flag when 'SameSite=None' is set " .
-            '(browser requirement).',
+            "'Set-Cookie' header should automatically include the 'Secure' flag when 'SameSite=None' is set "
+            . '(browser requirement).',
         );
         self::assertStringNotContainsString(
             '; Secure=',
@@ -1316,8 +1316,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertStringStartsWith(
             urlencode('string_expire_cookie') . '=' . urlencode('string_expire_value'),
             $cookieHeader,
-            "'Set-Cookie' header should contain the plain value when 'expire=1' (string - special case due to " .
-            "'!==' comparison).",
+            "'Set-Cookie' header should contain the plain value when 'expire=1' (string - special case due to "
+            . "'!==' comparison).",
         );
         self::assertStringContainsString(
             '; Expires=' . gmdate('D, d-M-Y H:i:s T', 1),
@@ -1363,8 +1363,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertCount(
             1,
             $setCookieHeaders,
-            "Exactly one 'Set-Cookie' header present in the response when a cookie is added with validation disabled " .
-            'and expired.',
+            "Exactly one 'Set-Cookie' header present in the response when a cookie is added with validation disabled "
+            . 'and expired.',
         );
 
         $cookieHeader = $setCookieHeaders[0] ?? '';
@@ -1372,8 +1372,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertStringContainsString(
             urlencode('past_cookie') . '=' . urlencode('past_value'),
             $cookieHeader,
-            "'Set-Cookie' header should contain the original cookie value when validation is disabled, even if the " .
-            'cookie is expired.',
+            "'Set-Cookie' header should contain the original cookie value when validation is disabled, even if the "
+            . 'cookie is expired.',
         );
         self::assertStringContainsString(
             '; Expires=' . gmdate('D, d-M-Y H:i:s T', $pastTime),
@@ -1466,8 +1466,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertCount(
             1,
             $setCookieHeaders,
-            "Exactly one 'Set-Cookie' header present in the response when an expired cookie is added with validation " .
-            'enabled.',
+            "Exactly one 'Set-Cookie' header present in the response when an expired cookie is added with validation "
+            . 'enabled.',
         );
 
         $cookieHeader = $setCookieHeaders[0] ?? '';
@@ -1522,8 +1522,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertCount(
             1,
             $setCookieHeaders,
-            "Exactly one 'Set-Cookie' header present in the response when a valid cookie is added with validation " .
-            'enabled.',
+            "Exactly one 'Set-Cookie' header present in the response when a valid cookie is added with validation "
+            . 'enabled.',
         );
 
         $cookieHeader = $setCookieHeaders[0] ?? '';
@@ -1536,8 +1536,8 @@ final class ResponseAdapterTest extends TestCase
         self::assertStringStartsNotWith(
             urlencode('valid_cookie') . '=' . urlencode('valid_value'),
             $cookieHeader,
-            "'Set-Cookie' header should not contain the plain cookie 'value' when validation is enabled for a " .
-            'valid (non-expired) cookie.',
+            "'Set-Cookie' header should not contain the plain cookie 'value' when validation is enabled for a "
+            . 'valid (non-expired) cookie.',
         );
         self::assertStringContainsString(
             '; Expires=' . gmdate('D, d-M-Y H:i:s T', $futureTime),

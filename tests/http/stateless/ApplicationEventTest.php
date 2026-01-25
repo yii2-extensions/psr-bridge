@@ -7,6 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPUnit\Framework\Attributes\{Group, TestWith};
 use ReflectionException;
 use yii\base\{Event, InvalidConfigException};
+use yii\web\IdentityInterface;
 use yii2\extensions\psrbridge\http\StatelessApplication;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\EventComponent;
@@ -188,7 +189,7 @@ final class ApplicationEventTest extends TestCase
                 $version = $event->sender instanceof StatelessApplication ? $event->sender->version : 'unknown';
                 $eventsCaptured[] = "after_request_{$version}";
 
-                /** @var StatelessApplication $sender */
+                /** @var StatelessApplication<IdentityInterface> $sender */
                 $sender = $event->sender;
 
                 /** @var mixed[] $registeredEvents */
@@ -550,6 +551,8 @@ final class ApplicationEventTest extends TestCase
 
     /**
      * @throws ReflectionException if the property does not exist or is inaccessible.
+     *
+     * @phpstan-param StatelessApplication<IdentityInterface> $app
      */
     private function assertEmptyRegisteredEvents(StatelessApplication $app, string $message): void
     {

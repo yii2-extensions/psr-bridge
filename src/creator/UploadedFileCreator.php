@@ -117,7 +117,7 @@ final class UploadedFileCreator
 
         try {
             $stream = $this->streamFactory->createStreamFromFile($file['tmp_name']);
-        } catch (Throwable $e) {
+        } catch (Throwable) {
             throw new InvalidArgumentException(
                 Message::FAILED_CREATE_STREAM_FROM_TMP_FILE->getMessage($file['tmp_name']),
             );
@@ -157,9 +157,7 @@ final class UploadedFileCreator
     public function createFromGlobals(array $files = []): array
     {
         return array_map(
-            function (array|UploadedFileInterface $file) {
-                return $this->processFileInput($file);
-            },
+            $this->processFileInput(...),
             $files,
         );
     }

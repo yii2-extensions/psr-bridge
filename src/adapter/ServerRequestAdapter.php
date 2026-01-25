@@ -200,9 +200,9 @@ final class ServerRequestAdapter
 
         // check for method override in body
         if (
-            is_array($parsedBody) &&
-            isset($parsedBody[$methodParam]) &&
-            is_string($parsedBody[$methodParam])
+            is_array($parsedBody)
+            && isset($parsedBody[$methodParam])
+            && is_string($parsedBody[$methodParam])
         ) {
             $methodOverride = strtoupper($parsedBody[$methodParam]);
 

@@ -879,7 +879,7 @@ final class ServerRequestCreatorTest extends TestCase
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => '/test',
             123 => 'numeric-key-value',
-            null => 'null-key-value',
+            '' => 'empty-string-key-value',
         ];
 
         $creator = new ServerRequestCreator(
