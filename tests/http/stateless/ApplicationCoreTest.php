@@ -6,6 +6,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
 use JsonException;
+use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
@@ -514,7 +515,7 @@ final class ApplicationCoreTest extends TestCase
         // get PSR-7 Response twice to test caching
         $bridgeResponse1->getPsr7Response();
 
-        $adapter1 = self::inaccessibleProperty($bridgeResponse1, 'adapter');
+        $adapter1 = ReflectionHelper::inaccessibleProperty($bridgeResponse1, 'adapter');
 
         self::assertNotNull(
             $adapter1,
@@ -526,7 +527,7 @@ final class ApplicationCoreTest extends TestCase
         // verify adapter is cached (same instance across multiple calls)
         self::assertSame(
             $adapter1,
-            self::inaccessibleProperty($bridgeResponse1, 'adapter'),
+            ReflectionHelper::inaccessibleProperty($bridgeResponse1, 'adapter'),
             "Multiple calls to 'getPsr7Response()' should return the same cached adapter instance, "
             . 'confirming adapter caching behavior.',
         );
@@ -551,7 +552,7 @@ final class ApplicationCoreTest extends TestCase
         // get PSR-7 Response twice to test caching and reset behavior
         $bridgeResponse2->getPsr7Response();
 
-        $adapter2 = self::inaccessibleProperty($bridgeResponse2, 'adapter');
+        $adapter2 = ReflectionHelper::inaccessibleProperty($bridgeResponse2, 'adapter');
 
         self::assertNotNull(
             $adapter2,
@@ -586,7 +587,7 @@ final class ApplicationCoreTest extends TestCase
 
         $bridgeResponse3->getPsr7Response();
 
-        $adapter3 = self::inaccessibleProperty($bridgeResponse3, 'adapter');
+        $adapter3 = ReflectionHelper::inaccessibleProperty($bridgeResponse3, 'adapter');
 
         self::assertNotNull(
             $adapter3,

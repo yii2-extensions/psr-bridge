@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
+use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\{Group, TestWith};
 use ReflectionException;
 use yii\base\{Event, InvalidConfigException};
@@ -105,7 +106,7 @@ final class ApplicationEventTest extends TestCase
         };
 
         /** @phpstan-var Event[] $registeredEvents */
-        $registeredEvents = self::inaccessibleProperty($app, 'registeredEvents');
+        $registeredEvents = ReflectionHelper::inaccessibleProperty($app, 'registeredEvents');
 
         $event1 = new Event(['name' => 'test.event1', 'sender' => $mockComponent1]);
         $event2 = new Event(['name' => 'test.event2', 'sender' => $mockComponent2]);
@@ -113,7 +114,7 @@ final class ApplicationEventTest extends TestCase
         $registeredEvents[] = $event1;
         $registeredEvents[] = $event2;
 
-        self::setInaccessibleProperty($app, 'registeredEvents', $registeredEvents);
+        ReflectionHelper::setInaccessibleProperty($app, 'registeredEvents', $registeredEvents);
 
         $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
 
@@ -193,7 +194,7 @@ final class ApplicationEventTest extends TestCase
                 $sender = $event->sender;
 
                 /** @var mixed[] $registeredEvents */
-                $registeredEvents = self::inaccessibleProperty($sender, 'registeredEvents');
+                $registeredEvents = ReflectionHelper::inaccessibleProperty($sender, 'registeredEvents');
 
                 $trackedCounts[] = count($registeredEvents);
             },
@@ -557,7 +558,7 @@ final class ApplicationEventTest extends TestCase
     private function assertEmptyRegisteredEvents(StatelessApplication $app, string $message): void
     {
         self::assertEmpty(
-            self::inaccessibleProperty($app, 'registeredEvents'),
+            ReflectionHelper::inaccessibleProperty($app, 'registeredEvents'),
             "{$message} 'registeredEvents' array property should be empty.",
         );
     }

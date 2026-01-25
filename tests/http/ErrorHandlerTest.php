@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
+use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use ReflectionException;
 use RuntimeException;
@@ -162,7 +163,7 @@ final class ErrorHandlerTest extends TestCase
 
         $errorHandler->register();
 
-        $registered = self::inaccessibleParentProperty(
+        $registered = ReflectionHelper::inaccessibleParentProperty(
             $errorHandler,
             \yii\base\ErrorHandler::class,
             '_registered',
@@ -177,7 +178,7 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        $registeredAfter = self::inaccessibleParentProperty(
+        $registeredAfter = ReflectionHelper::inaccessibleParentProperty(
             $errorHandler,
             \yii\base\ErrorHandler::class,
             '_registered',

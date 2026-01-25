@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
+use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
 use ReflectionException;
 use stdClass;
@@ -225,7 +226,11 @@ final class ApplicationMemoryTest extends TestCase
     ): void {
         $app = $this->statelessApplication();
 
-        self::assertSame($expected, self::invokeMethod($app, 'parseMemoryLimit', [$input]), $assertionMessage);
+        self::assertSame(
+            $expected,
+            ReflectionHelper::invokeMethod($app, 'parseMemoryLimit', [$input]),
+            $assertionMessage,
+        );
     }
 
     /**
@@ -245,7 +250,7 @@ final class ApplicationMemoryTest extends TestCase
         $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
 
         $firstMemoryLimit = $app->getMemoryLimit();
-        $shouldRecalculateMemoryLimit = self::inaccessibleProperty($app, 'shouldRecalculateMemoryLimit');
+        $shouldRecalculateMemoryLimit = ReflectionHelper::inaccessibleProperty($app, 'shouldRecalculateMemoryLimit');
 
         self::assertFalse(
             $shouldRecalculateMemoryLimit,
@@ -259,7 +264,7 @@ final class ApplicationMemoryTest extends TestCase
         );
 
         $app->setMemoryLimit($memoryLimit);
-        $shouldRecalculateMemoryLimit = self::inaccessibleProperty($app, 'shouldRecalculateMemoryLimit');
+        $shouldRecalculateMemoryLimit = ReflectionHelper::inaccessibleProperty($app, 'shouldRecalculateMemoryLimit');
 
         self::assertTrue(
             $shouldRecalculateMemoryLimit,

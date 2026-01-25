@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
+use PHPForge\Support\LineEndingNormalizer;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use yii\base\{Event, Exception, InvalidConfigException};
 use yii\helpers\Json;
@@ -76,8 +77,8 @@ final class ApplicationErrorHandlerTest extends TestCase
             "Expected Content-Type 'text/html; charset=UTF-8' for route '{$route}'.",
         );
         self::assertSame(
-            self::normalizeLineEndings($expectedErrorViewContent),
-            self::normalizeLineEndings($response->getBody()->getContents()),
+            LineEndingNormalizer::normalize($expectedErrorViewContent),
+            LineEndingNormalizer::normalize($response->getBody()->getContents()),
             $expectedAssertMessage,
         );
 
@@ -128,12 +129,14 @@ final class ApplicationErrorHandlerTest extends TestCase
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
         );
         self::assertStringContainsString(
-            self::normalizeLineEndings(
+            LineEndingNormalizer::normalize(
                 <<<HTML
                 <pre>Exception (Exception) &apos;yii\base\Exception&apos; with message &apos;Exception error message.&apos;
                 HTML,
             ),
-            self::normalizeLineEndings($response->getBody()->getContents()),
+            LineEndingNormalizer::normalize(
+                $response->getBody()->getContents(),
+            ),
             'Response body should contain content from Response object.',
         );
         self::assertTrue(
@@ -279,12 +282,14 @@ final class ApplicationErrorHandlerTest extends TestCase
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
         );
         self::assertStringContainsString(
-            self::normalizeLineEndings(
+            LineEndingNormalizer::normalize(
                 <<<HTML
                 <pre>Exception (Exception) &apos;yii\base\Exception&apos; with message &apos;Exception error message.&apos;
                 HTML,
             ),
-            self::normalizeLineEndings($response->getBody()->getContents()),
+            LineEndingNormalizer::normalize(
+                $response->getBody()->getContents(),
+            ),
             'Response body should contain content from Response object.',
         );
 
@@ -519,14 +524,16 @@ final class ApplicationErrorHandlerTest extends TestCase
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/trigger-exception'.",
         );
         self::assertSame(
-            self::normalizeLineEndings(
+            LineEndingNormalizer::normalize(
                 <<<HTML
                 <div id="custom-response-error">
                 Custom Response object from error action: Exception error message.
                 </div>
                 HTML,
             ),
-            self::normalizeLineEndings($response->getBody()->getContents()),
+            LineEndingNormalizer::normalize(
+                $response->getBody()->getContents(),
+            ),
             'Response body should contain content from Response object.',
         );
 
@@ -559,13 +566,15 @@ final class ApplicationErrorHandlerTest extends TestCase
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/nonexistent-action'.",
         );
         self::assertStringContainsString(
-            self::normalizeLineEndings(
+            LineEndingNormalizer::normalize(
                 <<<HTML
                 <pre>An Error occurred while handling another error:
                 yii\base\InvalidRouteException: Unable to resolve the request &quot;invalid/nonexistent-action&quot;.
                 HTML,
             ),
-            self::normalizeLineEndings($response->getBody()->getContents()),
+            LineEndingNormalizer::normalize(
+                $response->getBody()->getContents(),
+            ),
             "Response body should contain error message about 'An Error occurred while handling another error'.",
         );
     }
