@@ -24,7 +24,7 @@
         "infection/infection": "^0.27|^0.32",
         "maglnet/composer-require-checker": "^4.1",
         "php-forge/coding-standard": "^0.1",
-        "php-forge/support": "^0.2",
+        "php-forge/support": "^0.3",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan-strict-rules": "^2.0.3",
         "phpunit/phpunit": "^10.5",
