@@ -3,6 +3,7 @@
 ## 0.1.4 Under development
 
 - Enh #202: Add `php-forge/coding-standard` to development dependencies for code quality checks and add support `PHP 8.5` (@terabytesoftw)
+- Bug #203: Remove `FUNDING.yml`, update `.styleci.yml` and `README.md`, and add Development Guide in `docs/development.md` (@terabytesoftw)
 
 ## 0.1.3 December 12, 2025
 
