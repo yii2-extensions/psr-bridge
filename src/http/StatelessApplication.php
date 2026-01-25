@@ -111,13 +111,8 @@ final class StatelessApplication extends Application implements RequestHandlerIn
      *
      * @phpstan-ignore constructor.missingParentCall
      */
-    public function __construct(/**
-     * Configuration for the StatelessApplication.
-     *
-     * @phpstan-var array<string, mixed>
-     */
-        private array $config = [],
-    ) {
+    public function __construct(private array $config = [])
+    {
         $this->initEventTracking();
     }
 

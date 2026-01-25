@@ -174,7 +174,7 @@ enum Message: string
      * Received: (begin='%d', end='%d')."
      */
     case RESPONSE_STREAM_RANGE_INVALID = 'Response stream range values must be valid: '
-    . "('begin' >= '0' and 'end' >= 'begin'). Received: (begin='%d', end='%d'.)";
+    . "('begin' >= '0' and 'end' >= 'begin'). Received: (begin='%d', end='%d').";
 
     /**
      * Error when unable to read from the response stream.

@@ -17,7 +17,7 @@
         "psr/http-factory": "^1.1",
         "psr/http-message": "^2.0",
         "psr/http-server-handler": "^1.0",
-        "yiisoft/yii2": "^2.0.53|^22"
+        "yiisoft/yii2": "^2.0.54|^22"
     },
     "require-dev": {
         "httpsoft/http-message": "^1.1",
