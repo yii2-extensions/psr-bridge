@@ -4,6 +4,7 @@
 
 - Enh #202: Add `php-forge/coding-standard` to development dependencies for code quality checks and add support `PHP 8.5` (@terabytesoftw)
 - Bug #203: Remove `FUNDING.yml`, update `.styleci.yml` and `README.md`, and add Development Guide in `docs/development.md` (@terabytesoftw)
+- Dep #204: Update `php-forge/support` `^0.2` to `^0.3` (@dependabot)
 
 ## 0.1.3 December 12, 2025
 
@@ -15,7 +16,7 @@
 - Bug #191: Refactor test imports for consistency and add support files (@terabytesoftw)
 - Bug #192: Add copyright and license information to `MockerExtension::class` and refactor `tests/support/bootstrap.php` (@terabytesoftw)
 - Bug #193: Update `.editorconfig` and `.gitignore` for improved consistency and clarity (@terabytesoftw)
-- Dep #194: `Update symplify/easy-coding-standard requirement from` `^12.5` to `^13.0` (@dependabot)
+- Dep #194: Update `symplify/easy-coding-standard requirement from` `^12.5` to `^13.0` (@dependabot)
 - Bug #195: Add test for memory usage at `90%` threshold in `ApplicationMemoryTest` class (@terabytesoftw)
 - Bug #196: Fix proper bridge between PSR-7 `ServerRequestInterface` and Yii `Request` class, including request body parsing (@Blezigen)
 - Bug #197: Add memory limit option to `mutation-static` command in `composer.json` for improved mutation testing (@terabytesoftw)
