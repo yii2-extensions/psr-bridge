@@ -173,7 +173,7 @@ final class ServerRequestCreator
     {
         $name = str_replace('_', '-', strtolower($name));
 
-        return implode('-', array_map('ucfirst', explode('-', $name)));
+        return implode('-', array_map(ucfirst(...), explode('-', $name)));
     }
 
     /**

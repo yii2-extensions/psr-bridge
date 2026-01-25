@@ -40,13 +40,6 @@ use function str_contains;
 #[Group('http')]
 final class ApplicationErrorHandlerTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        $this->closeApplication();
-
-        parent::tearDown();
-    }
-
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
@@ -308,12 +301,12 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         foreach ($logMessages as $logMessage) {
             if (
-                is_array($logMessage) &&
-                isset($logMessage[0], $logMessage[1], $logMessage[2]) &&
-                $logMessage[1] === Logger::LEVEL_ERROR &&
-                $logMessage[0] instanceof Exception &&
-                $logMessage[2] === $expectedCategory &&
-                str_contains($logMessage[0]->getMessage(), 'Exception error message.')
+                is_array($logMessage)
+                && isset($logMessage[0], $logMessage[1], $logMessage[2])
+                && $logMessage[1] === Logger::LEVEL_ERROR
+                && $logMessage[0] instanceof Exception
+                && $logMessage[2] === $expectedCategory
+                && str_contains($logMessage[0]->getMessage(), 'Exception error message.')
             ) {
                 $exceptionLogFound = true;
 
@@ -323,8 +316,8 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         self::assertTrue(
             $exceptionLogFound,
-            "Logger should contain an error log entry with category '{$expectedCategory}' and message " .
-            "'Exception error message'.",
+            "Logger should contain an error log entry with category '{$expectedCategory}' and message "
+            . "'Exception error message'.",
         );
         self::assertFalse(
             $app->flushLogger,
@@ -677,5 +670,12 @@ final class ApplicationErrorHandlerTest extends TestCase
         }
 
         @\runkit_constant_redefine('YII_ENV_TEST', true);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->closeApplication();
+
+        parent::tearDown();
     }
 }

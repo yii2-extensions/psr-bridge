@@ -67,8 +67,8 @@ final class ApplicationSessionTest extends TestCase
         self::assertSame(
             "{$sessionName}=user-a-session; Path=/; HttpOnly; SameSite",
             $response->getHeaderLine('Set-Cookie'),
-            "Response Set-Cookie header should contain session 'ID' 'user-a-session', ensuring correct session " .
-            'assignment.',
+            "Response Set-Cookie header should contain session 'ID' 'user-a-session', ensuring correct session "
+            . 'assignment.',
         );
 
         $captchaData1 = Json::decode($response->getBody()->getContents());
@@ -117,8 +117,8 @@ final class ApplicationSessionTest extends TestCase
         self::assertSame(
             "{$sessionName}=user-b-session; Path=/; HttpOnly; SameSite",
             $response->getHeaderLine('Set-Cookie'),
-            "Response Set-Cookie header should contain session 'ID' 'user-b-session', ensuring correct session " .
-            'assignment for second user.',
+            "Response Set-Cookie header should contain session 'ID' 'user-b-session', ensuring correct session "
+            . 'assignment for second user.',
         );
 
         $captchaData2 = Json::decode($response->getBody()->getContents());
@@ -233,8 +233,8 @@ final class ApplicationSessionTest extends TestCase
         self::assertSame(
             "{$sessionName}=flash-user-a; Path=/; HttpOnly; SameSite",
             $response->getHeaderLine('Set-Cookie'),
-            "Response Set-Cookie header should contain session 'ID' 'flash-user-a', ensuring correct session " .
-            'assignment.',
+            "Response Set-Cookie header should contain session 'ID' 'flash-user-a', ensuring correct session "
+            . 'assignment.',
         );
 
         // second user checks for flash messages
@@ -261,8 +261,8 @@ final class ApplicationSessionTest extends TestCase
         self::assertSame(
             "{$sessionName}=flash-user-b; Path=/; HttpOnly; SameSite",
             $response->getHeaderLine('Set-Cookie'),
-            "Response Set-Cookie header should contain session 'ID' 'flash-user-b', ensuring correct session " .
-            'assignment.',
+            "Response Set-Cookie header should contain session 'ID' 'flash-user-b', ensuring correct session "
+            . 'assignment.',
         );
         self::assertIsArray(
             $flashData,
@@ -309,8 +309,8 @@ final class ApplicationSessionTest extends TestCase
             self::assertSame(
                 "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
                 $response->getHeaderLine('Set-Cookie'),
-                "Response Set-Cookie header should contain session 'ID' '{$sessionId}' ensuring correct session " .
-                'assignment in worker mode.',
+                "Response Set-Cookie header should contain session 'ID' '{$sessionId}' ensuring correct session "
+                . 'assignment in worker mode.',
             );
 
             $sessions[] = $sessionId;
@@ -339,8 +339,8 @@ final class ApplicationSessionTest extends TestCase
             self::assertSame(
                 "{$sessionName}={$sessionId}; Path=/; HttpOnly; SameSite",
                 $response->getHeaderLine('Set-Cookie'),
-                "Response Set-Cookie header should contain session 'ID' '{$sessionId}', ensuring correct session " .
-                "assignment for session '{$sessionId}'.",
+                "Response Set-Cookie header should contain session 'ID' '{$sessionId}', ensuring correct session "
+                . "assignment for session '{$sessionId}'.",
             );
 
             $data = Json::decode($response->getBody()->getContents());
@@ -349,14 +349,14 @@ final class ApplicationSessionTest extends TestCase
 
             self::assertIsArray(
                 $data,
-                "Response body should be an array after decoding JSON for session '{$sessionId}' in multiple " .
-                'requests with different sessions.',
+                "Response body should be an array after decoding JSON for session '{$sessionId}' in multiple "
+                . 'requests with different sessions.',
             );
             self::assertSame(
                 $expectedData,
                 $data['data'] ?? null,
-                "Session '{$sessionId}' should return its own data ('{$expectedData}') and not leak data between " .
-                'sessions in multiple requests with different sessions.',
+                "Session '{$sessionId}' should return its own data ('{$expectedData}') and not leak data between "
+                . 'sessions in multiple requests with different sessions.',
             );
         }
     }
@@ -548,15 +548,15 @@ final class ApplicationSessionTest extends TestCase
         self::assertCount(
             1,
             $cookie,
-            "Response Set-Cookie header should contain exactly one '{$sessionName}' cookie when no session cookie " .
-            'is sent.',
+            "Response Set-Cookie header should contain exactly one '{$sessionName}' cookie when no session cookie "
+            . 'is sent.',
         );
         self::assertMatchesRegularExpression(
-            '/^' . preg_quote($sessionName, '/') .
-            '=[A-Za-z0-9,-]+; Path=\/; HttpOnly; SameSite(?:=(?:Lax|Strict|None))?$/',
+            '/^' . preg_quote($sessionName, '/')
+            . '=[A-Za-z0-9,-]+; Path=\/; HttpOnly; SameSite(?:=(?:Lax|Strict|None))?$/',
             $cookieLine,
-            'Response Set-Cookie should match the expected format for a new session when no cookie is sent. ' .
-            "Value received: '{$cookieLine}'.",
+            'Response Set-Cookie should match the expected format for a new session when no cookie is sent. '
+            . "Value received: '{$cookieLine}'.",
         );
     }
 

@@ -249,8 +249,8 @@ final class ApplicationMemoryTest extends TestCase
 
         self::assertFalse(
             $shouldRecalculateMemoryLimit,
-            "'shouldRecalculateMemoryLimit' should remain 'false' after 'handle()' if 'setMemoryLimit()' was not " .
-            'called.',
+            "'shouldRecalculateMemoryLimit' should remain 'false' after 'handle()' if 'setMemoryLimit()' was not "
+            . 'called.',
         );
         self::assertSame(
             268_435_456,
@@ -263,8 +263,8 @@ final class ApplicationMemoryTest extends TestCase
 
         self::assertTrue(
             $shouldRecalculateMemoryLimit,
-            "'shouldRecalculateMemoryLimit' should be 'true' after calling 'setMemoryLimit()' with a non-positive " .
-            'value.',
+            "'shouldRecalculateMemoryLimit' should be 'true' after calling 'setMemoryLimit()' with a non-positive "
+            . 'value.',
         );
 
         ini_set('memory_limit', '128M');
@@ -275,8 +275,8 @@ final class ApplicationMemoryTest extends TestCase
         self::assertSame(
             134_217_728,
             $secondMemoryLimit,
-            "'getMemoryLimit()' should return '128M' ('134_217_728 bytes') after recalculation from system when a " .
-            'non-positive override is applied.',
+            "'getMemoryLimit()' should return '128M' ('134_217_728 bytes') after recalculation from system when a "
+            . 'non-positive override is applied.',
         );
         self::assertNotSame(
             $firstMemoryLimit,

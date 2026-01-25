@@ -83,9 +83,9 @@ final class SapiEmitter
         $this->emitStatusLine($response);
 
         if (
-            $body === true &&
-            HttpNoBodyStatus::shouldHaveNoBody($response->getStatusCode()) === false &&
-            $response->getBody()->isReadable() === true
+            $body === true
+            && HttpNoBodyStatus::shouldHaveNoBody($response->getStatusCode()) === false
+            && $response->getBody()->isReadable() === true
         ) {
             $this->emitBody($response);
         }
@@ -174,7 +174,7 @@ final class SapiEmitter
 
             match ($name) {
                 'Set-Cookie' => array_map(
-                    static fn($value) => header("$name: $value", false),
+                    static fn(string $value) => header("$name: $value", false),
                     $values,
                 ),
                 default => header("$name: " . implode(', ', $values)),

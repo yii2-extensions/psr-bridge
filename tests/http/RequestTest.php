@@ -166,8 +166,8 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD', 'OPTIONS') even if no token " .
-                'is provided.',
+                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD', 'OPTIONS') even if no token "
+                . 'is provided.',
             );
         }
 
@@ -180,8 +180,8 @@ final class RequestTest extends TestCase
 
             self::assertFalse(
                 $request->validateCsrfToken(),
-                "CSRF token validation should fail for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if no token is " .
-                'provided.',
+                "CSRF token validation should fail for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if no token is "
+                . 'provided.',
             );
             self::assertNotNull(
                 $token,
@@ -192,8 +192,8 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "CSRF token validation should pass for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if a valid " .
-                'token is provided in the header.',
+                "CSRF token validation should pass for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if a valid "
+                . 'token is provided in the header.',
             );
         }
 
@@ -219,8 +219,8 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD', 'OPTIONS') even if no token " .
-                "is provided in 'POST' params.",
+                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD', 'OPTIONS') even if no token "
+                . "is provided in 'POST' params.",
             );
         }
 
@@ -232,16 +232,16 @@ final class RequestTest extends TestCase
 
             self::assertFalse(
                 $request->validateCsrfToken(),
-                "CSRF token validation should fail for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if no token is " .
-                "provided in 'POST' params.",
+                "CSRF token validation should fail for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if no token is "
+                . "provided in 'POST' params.",
             );
 
             $request->setBodyParams([$request->csrfParam => $token]);
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "CSRF token validation should pass for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if a valid " .
-                "token is provided in 'POST' params.",
+                "CSRF token validation should pass for unsafe HTTP methods ('POST', 'PUT', 'DELETE') if a valid "
+                . "token is provided in 'POST' params.",
             );
         }
 
@@ -440,8 +440,8 @@ final class RequestTest extends TestCase
 
             self::assertTrue(
                 $request->validateCsrfToken(),
-                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD') regardless of custom header " .
-                'presence.',
+                "CSRF token validation should pass for safe HTTP methods ('GET', 'HEAD') regardless of custom header "
+                . 'presence.',
             );
         }
 
@@ -494,8 +494,8 @@ final class RequestTest extends TestCase
             $_SERVER,
             static function (string $key): bool {
                 return
-                    str_starts_with($key, 'HTTP_AUTHORIZATION') === false &&
-                    str_starts_with($key, 'REDIRECT_HTTP_AUTHORIZATION') === false;
+                    str_starts_with($key, 'HTTP_AUTHORIZATION') === false
+                    && str_starts_with($key, 'REDIRECT_HTTP_AUTHORIZATION') === false;
             },
             ARRAY_FILTER_USE_KEY,
         );
@@ -516,8 +516,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             [null, null],
             $request->getAuthCredentials(),
-            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header is not basic " .
-            'authentication.',
+            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header is not basic "
+            . 'authentication.',
         );
 
         // test when Authorization header is empty
@@ -539,8 +539,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             [null, null],
             $request->getAuthCredentials(),
-            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header contains only basic " .
-            'without credentials.',
+            "'getAuthCredentials()' should return ['null', 'null'] when 'Authorization' header contains only basic "
+            . 'without credentials.',
         );
     }
 
@@ -671,14 +671,14 @@ final class RequestTest extends TestCase
         self::assertSame(
             $expected[0] ?? null,
             $request->getHostInfo(),
-            "'getHostInfo()' should return the expected value for the given 'secureHeaders' and 'trustedHosts' " .
-            'configuration.',
+            "'getHostInfo()' should return the expected value for the given 'secureHeaders' and 'trustedHosts' "
+            . 'configuration.',
         );
         self::assertSame(
             $expected[1] ?? null,
             $request->getHostName(),
-            "'getHostName()' should return the expected value for the given 'secureHeaders' and 'trustedHosts' " .
-            'configuration.',
+            "'getHostName()' should return the expected value for the given 'secureHeaders' and 'trustedHosts' "
+            . 'configuration.',
         );
 
         $request = new Request(
@@ -780,8 +780,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             $expected,
             $request->getIsSecureConnection(),
-            "'getIsSecureConnection()' should return the expected value for the given 'secureHeaders' and " .
-            "'trustedHosts'.",
+            "'getIsSecureConnection()' should return the expected value for the given 'secureHeaders' and "
+            . "'trustedHosts'.",
         );
 
         $request = new Request(
@@ -807,8 +807,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             $expected,
             $request->getIsSecureConnection(),
-            "'getIsSecureConnection()' should return the expected value for the associative 'trustedHosts' and " .
-            "'secureHeaders'.",
+            "'getIsSecureConnection()' should return the expected value for the associative 'trustedHosts' and "
+            . "'secureHeaders'.",
         );
 
         $_SERVER = $original;
@@ -845,8 +845,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             $expected,
             $request->getIsSecureConnection(),
-            "'getIsSecureConnection()' should return the expected value for the associative 'trustedHosts' and " .
-            "'secureHeaders'.",
+            "'getIsSecureConnection()' should return the expected value for the associative 'trustedHosts' and "
+            . "'secureHeaders'.",
         );
 
         $_SERVER = $original;
@@ -1556,8 +1556,8 @@ final class RequestTest extends TestCase
                 ['id' => '21'],
             ],
             $result,
-            "'resolve()' should return the same route and parameters even if \$_GET['id'] is set to a different " .
-            'value before resolving.',
+            "'resolve()' should return the same route and parameters even if \$_GET['id'] is set to a different "
+            . 'value before resolving.',
         );
         self::assertSame(
             ['id' => '21'],
@@ -1579,8 +1579,8 @@ final class RequestTest extends TestCase
                 ],
             ],
             $result,
-            "'resolve()' should merge additional query parameters set via 'setQueryParams()' with the resolved route " .
-            'parameters.',
+            "'resolve()' should merge additional query parameters set via 'setQueryParams()' with the resolved route "
+            . 'parameters.',
         );
         self::assertSame(
             ['id' => 63],
@@ -1597,8 +1597,8 @@ final class RequestTest extends TestCase
 
         self::assertNull(
             $request->getRemoteHost(),
-            "Remote host should return 'null' from parent implementation when PSR-7 adapter is not set and " .
-            "'REMOTE_HOST' is not present in \$_SERVER.",
+            "Remote host should return 'null' from parent implementation when PSR-7 adapter is not set and "
+            . "'REMOTE_HOST' is not present in \$_SERVER.",
         );
     }
 
@@ -1628,8 +1628,8 @@ final class RequestTest extends TestCase
 
         self::assertNull(
             $request->getServerName(),
-            "Server name should return 'null' from parent implementation when PSR-7 adapter is not set and " .
-            "'SERVER_NAME' is not present in \$_SERVER.",
+            "Server name should return 'null' from parent implementation when PSR-7 adapter is not set and "
+            . "'SERVER_NAME' is not present in \$_SERVER.",
         );
     }
 
@@ -1642,8 +1642,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             'parent.host.com',
             $request->getRemoteHost(),
-            'Remote host should return the value from parent implementation when PSR-7 adapter is not set and ' .
-            "'REMOTE_HOST' is present in \$_SERVER.",
+            'Remote host should return the value from parent implementation when PSR-7 adapter is not set and '
+            . "'REMOTE_HOST' is present in \$_SERVER.",
         );
     }
 
@@ -1656,8 +1656,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             'fallback.server.com',
             $request->getServerName(),
-            "Server name should return 'fallback.server.com' from parent implementation when PSR-7 adapter is not " .
-            "set and 'SERVER_NAME' is present in \$_SERVER.",
+            "Server name should return 'fallback.server.com' from parent implementation when PSR-7 adapter is not "
+            . "set and 'SERVER_NAME' is present in \$_SERVER.",
         );
     }
 
@@ -1787,8 +1787,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             $expectedUserIp,
             $request->getUserIP(),
-            "'getUserIP()' should return the expected user 'IP', considering trusted hosts and the 'X-Forwarded-For'" .
-            'header with possible injection attempts.',
+            "'getUserIP()' should return the expected user 'IP', considering trusted hosts and the 'X-Forwarded-For'"
+            . 'header with possible injection attempts.',
         );
     }
 
@@ -1813,8 +1813,8 @@ final class RequestTest extends TestCase
         self::assertSame(
             $expectedPort,
             $request->getServerPort(),
-            "'getServerPort()' should return the expected 'PORT', considering trusted hosts and the 'X-Forwarded-Port' " .
-            'header when present.',
+            "'getServerPort()' should return the expected 'PORT', considering trusted hosts and the 'X-Forwarded-Port' "
+            . 'header when present.',
         );
     }
 }

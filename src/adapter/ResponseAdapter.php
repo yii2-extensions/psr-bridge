@@ -201,11 +201,11 @@ final class ResponseAdapter
         $stream = $this->psrResponse->stream;
 
         if (
-            is_array($stream) === false ||
-            count($stream) !== 3 ||
-            isset($stream[0]) === false ||
-            isset($stream[1]) === false || is_int($stream[1]) === false ||
-            isset($stream[2]) === false || is_int($stream[2]) === false
+            is_array($stream) === false
+            || count($stream) !== 3
+            || isset($stream[0]) === false
+            || isset($stream[1]) === false || is_int($stream[1]) === false
+            || isset($stream[2]) === false || is_int($stream[2]) === false
         ) {
             throw new InvalidConfigException(Message::RESPONSE_STREAM_FORMAT_INVALID->getMessage());
         }
@@ -275,9 +275,9 @@ final class ResponseAdapter
         }
 
         if (
-            $this->psrResponse->enableCookieValidation &&
-            $this->psrResponse->cookieValidationKey !== '' &&
-            ($expire === 0 || $expire >= time())
+            $this->psrResponse->enableCookieValidation
+            && $this->psrResponse->cookieValidationKey !== ''
+            && ($expire === 0 || $expire >= time())
         ) {
             $value = $this->security->hashData(
                 serialize([$cookie->name, $cookie->value]),

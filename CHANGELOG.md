@@ -2,6 +2,8 @@
 
 ## 0.1.4 Under development
 
+- Enh #202: Add `php-forge/coding-standard` to development dependencies for code quality checks and add support `PHP 8.5` (@terabytesoftw)
+
 ## 0.1.3 December 12, 2025
 
 - Bug #201: Improve `ServerRequestAdapter` class to handle body parsing, request adaptation logic and update related tests (@terabytesoftw)

@@ -65,8 +65,8 @@ final class HeadersPsr7Test extends TestCase
         self::assertSame(
             'multipart/form-data; boundary=----WebKitFormBoundary',
             $request->getContentType(),
-            "'getContentType()' should return the 'Content-Type' header from the PSR-7 request when present, " .
-            "overriding 'text/plain' from \$_SERVER['CONTENT_TYPE'].",
+            "'getContentType()' should return the 'Content-Type' header from the PSR-7 request when present, "
+            . "overriding 'text/plain' from \$_SERVER['CONTENT_TYPE'].",
         );
     }
 
@@ -137,8 +137,8 @@ final class HeadersPsr7Test extends TestCase
         self::assertSame(
             '',
             $request->getCsrfTokenFromHeader(),
-            'CSRF token from header should return empty string when CSRF header is present but empty in the PSR-7 ' .
-            'request.',
+            'CSRF token from header should return empty string when CSRF header is present but empty in the PSR-7 '
+            . 'request.',
         );
     }
 

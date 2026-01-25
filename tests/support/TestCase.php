@@ -13,7 +13,7 @@ use yii\base\Security;
 use yii\caching\FileCache;
 use yii\helpers\ArrayHelper;
 use yii\log\FileTarget;
-use yii\web\{Application, JsonParser};
+use yii\web\{Application, IdentityInterface, JsonParser};
 use yii2\extensions\psrbridge\http\StatelessApplication;
 use yii2\extensions\psrbridge\tests\support\stub\{Identity, MockerFunctions};
 
@@ -60,30 +60,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * @phpstan-var array<resource>
      */
     private array $tmpFiles = [];
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        MockerFunctions::reset();
-
-        $this->originalServer = $_SERVER;
-
-        $_SERVER = [];
-    }
-
-    protected function tearDown(): void
-    {
-        $_COOKIE = [];
-        $_FILES = [];
-        $_GET = [];
-        $_POST = [];
-        $_SERVER = $this->originalServer;
-
-        $this->closeTmpFile(...$this->tmpFiles);
-
-        parent::tearDown();
-    }
 
     protected function closeApplication(): void
     {
@@ -137,6 +113,17 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         return stream_get_meta_data($tmpFile)['uri'] ?? '';
     }
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        MockerFunctions::reset();
+
+        $this->originalServer = $_SERVER;
+
+        $_SERVER = [];
+    }
+
     /**
      * @phpstan-param array<string, string|object> $cookieParams
      *
@@ -156,67 +143,82 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     /**
      * @phpstan-param array<string, mixed> $config
+     * @phpstan-return StatelessApplication<IdentityInterface>
      */
     protected function statelessApplication(array $config = []): StatelessApplication
     {
-        return new StatelessApplication(
-            ArrayHelper::merge(
-                [
-                    'id' => 'stateless-app',
-                    'basePath' => dirname(__DIR__, 2),
-                    'bootstrap' => ['log'],
-                    'controllerNamespace' => '\yii2\extensions\psrbridge\tests\support\stub',
-                    'components' => [
-                        'cache' => [
-                            'class' => FileCache::class,
-                        ],
-                        'log' => [
-                            'traceLevel' => YII_DEBUG ? 3 : 0,
-                            'targets' => [
-                                [
-                                    'class' => FileTarget::class,
-                                    'levels' => [
-                                        'error',
-                                        'info',
-                                        'warning',
-                                    ],
+        /** @phpstan-var array<string, mixed> $configApplication */
+        $configApplication = ArrayHelper::merge(
+            [
+                'id' => 'stateless-app',
+                'basePath' => dirname(__DIR__, 2),
+                'bootstrap' => ['log'],
+                'controllerNamespace' => '\yii2\extensions\psrbridge\tests\support\stub',
+                'components' => [
+                    'cache' => [
+                        'class' => FileCache::class,
+                    ],
+                    'log' => [
+                        'traceLevel' => YII_DEBUG ? 3 : 0,
+                        'targets' => [
+                            [
+                                'class' => FileTarget::class,
+                                'levels' => [
+                                    'error',
+                                    'info',
+                                    'warning',
                                 ],
                             ],
                         ],
-                        'request' => [
-                            'enableCookieValidation' => false,
-                            'enableCsrfCookie' => false,
-                            'enableCsrfValidation' => false,
-                            'parsers' => [
-                                'application/json' => JsonParser::class,
-                            ],
-                            'scriptFile' => __DIR__ . '/index.php',
-                            'scriptUrl' => '/index.php',
-                        ],
-                        'user' => [
-                            'enableAutoLogin' => false,
-                            'identityClass' => Identity::class,
-                        ],
-                        'urlManager' => [
-                            'showScriptName' => false,
-                            'enableStrictParsing' => false,
-                            'enablePrettyUrl' => true,
-                            'rules' => [
-                                'site/query/<test:\w+>' => 'site/query',
-                                'site/update/<id:\d+>' => 'site/update',
-                            ],
-                        ],
                     ],
-                    'container' => [
-                        'definitions' => [
-                            ResponseFactoryInterface::class => ResponseFactory::class,
-                            StreamFactoryInterface::class => StreamFactory::class,
+                    'request' => [
+                        'enableCookieValidation' => false,
+                        'enableCsrfCookie' => false,
+                        'enableCsrfValidation' => false,
+                        'parsers' => [
+                            'application/json' => JsonParser::class,
+                        ],
+                        'scriptFile' => __DIR__ . '/index.php',
+                        'scriptUrl' => '/index.php',
+                    ],
+                    'user' => [
+                        'enableAutoLogin' => false,
+                        'identityClass' => Identity::class,
+                    ],
+                    'urlManager' => [
+                        'showScriptName' => false,
+                        'enableStrictParsing' => false,
+                        'enablePrettyUrl' => true,
+                        'rules' => [
+                            'site/query/<test:\w+>' => 'site/query',
+                            'site/update/<id:\d+>' => 'site/update',
                         ],
                     ],
                 ],
-                $config,
-            ),
+                'container' => [
+                    'definitions' => [
+                        ResponseFactoryInterface::class => ResponseFactory::class,
+                        StreamFactoryInterface::class => StreamFactory::class,
+                    ],
+                ],
+            ],
+            $config,
         );
+
+        return new StatelessApplication($configApplication);
+    }
+
+    protected function tearDown(): void
+    {
+        $_COOKIE = [];
+        $_FILES = [];
+        $_GET = [];
+        $_POST = [];
+        $_SERVER = $this->originalServer;
+
+        $this->closeTmpFile(...$this->tmpFiles);
+
+        parent::tearDown();
     }
 
     /**
@@ -224,26 +226,27 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function webApplication(array $config = []): void
     {
-        new Application(
-            ArrayHelper::merge(
-                [
-                    'id' => 'web-app',
-                    'basePath' => dirname(__DIR__, 2),
-                    'aliases' => [
-                        '@bower' => '@vendor/bower-asset',
-                        '@npm' => '@vendor/npm-asset',
-                    ],
-                    'components' => [
-                        'request' => [
-                            'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                            'isConsoleRequest' => false,
-                            'scriptFile' => __DIR__ . '/index.php',
-                            'scriptUrl' => '/index.php',
-                        ],
+        /** @phpstan-var array<string, mixed> $configApplication */
+        $configApplication = ArrayHelper::merge(
+            [
+                'id' => 'web-app',
+                'basePath' => dirname(__DIR__, 2),
+                'aliases' => [
+                    '@bower' => '@vendor/bower-asset',
+                    '@npm' => '@vendor/npm-asset',
+                ],
+                'components' => [
+                    'request' => [
+                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
+                        'isConsoleRequest' => false,
+                        'scriptFile' => __DIR__ . '/index.php',
+                        'scriptUrl' => '/index.php',
                     ],
                 ],
-                $config,
-            ),
+            ],
+            $config,
         );
+
+        new Application($configApplication);
     }
 }

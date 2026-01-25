@@ -203,8 +203,8 @@ final class ServerParamsPsr7Test extends TestCase
         self::assertSame(
             '10.0.0.1',
             $request->getRemoteIP(),
-            "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams', not from global " .
-            '$_SERVER.',
+            "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams', not from global "
+            . '$_SERVER.',
         );
     }
 
@@ -326,8 +326,8 @@ final class ServerParamsPsr7Test extends TestCase
         );
         self::assertNull(
             $serverParams['REQUEST_TIME'] ?? null,
-            "Server parameter 'REQUEST_TIME' should be 'null' when explicitly set to 'null' in PSR-7 'serverParams', " .
-            'even if present in global $_SERVER.',
+            "Server parameter 'REQUEST_TIME' should be 'null' when explicitly set to 'null' in PSR-7 'serverParams', "
+            . 'even if present in global $_SERVER.',
         );
         self::assertSame(
             'new.example.com',
@@ -556,8 +556,8 @@ final class ServerParamsPsr7Test extends TestCase
         self::assertNotSame(
             $result1,
             $result2,
-            "Independent request instances should return different 'SERVER_PORT' when configured with different " .
-            'values.',
+            "Independent request instances should return different 'SERVER_PORT' when configured with different "
+            . 'values.',
         );
     }
 }
