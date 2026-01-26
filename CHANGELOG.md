@@ -2,6 +2,8 @@
 
 ## 0.1.5 Under development
 
+- Bug #206: Update examples in `testing.md` for running Composer script with arguments (@terabytesoftw)
+
 ## 0.1.4 January 25, 2026
 
 - Enh #203: Add `php-forge/coding-standard` to development dependencies for code quality checks and add support `PHP 8.5` (@terabytesoftw)
