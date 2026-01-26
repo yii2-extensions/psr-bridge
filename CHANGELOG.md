@@ -3,6 +3,7 @@
 ## 0.1.5 Under development
 
 - Bug #206: Update examples in `testing.md` for running Composer script with arguments (@terabytesoftw)
+- Bug #207: Update command syntax in `testing.md` to remove redundant 'run' prefix for Composer scripts (@terabytesoftw)
 
 ## 0.1.4 January 25, 2026
 
