@@ -1,5 +1,7 @@
 # ChangeLog
 
+## 0.1.6 Under development
+
 ## 0.1.5 January 27, 2026
 
 - Bug #206: Update examples in `testing.md` for running Composer script with arguments (@terabytesoftw)
