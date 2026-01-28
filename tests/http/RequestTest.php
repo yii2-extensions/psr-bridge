@@ -492,11 +492,8 @@ final class RequestTest extends TestCase
         // test when no authentication data is available at all
         $_SERVER = array_filter(
             $_SERVER,
-            static function (string $key): bool {
-                return
-                    str_starts_with($key, 'HTTP_AUTHORIZATION') === false
-                    && str_starts_with($key, 'REDIRECT_HTTP_AUTHORIZATION') === false;
-            },
+            static fn(string $key): bool => str_starts_with($key, 'HTTP_AUTHORIZATION') === false
+            && str_starts_with($key, 'REDIRECT_HTTP_AUTHORIZATION') === false,
             ARRAY_FILTER_USE_KEY,
         );
 
