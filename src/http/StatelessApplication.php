@@ -394,10 +394,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     {
         $this->startEventTracking();
         $this->resetUploadedFilesState();
-
-        // parent constructor is called because StatelessApplication uses a custom initialization pattern
-        // @phpstan-ignore-next-line
-        parent::__construct($this->config);
+        $this->reinitializeApplication();
 
         $this->requestedRoute = '';
         $this->requestedAction = null;
@@ -429,6 +426,16 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->bootstrap();
 
         $this->session->close();
+    }
+
+    /**
+     * Reinitializes the application instance for the current request.
+     */
+    protected function reinitializeApplication(): void
+    {
+        // parent constructor is called because StatelessApplication uses a custom initialization pattern
+        // @phpstan-ignore-next-line
+        parent::__construct($this->config);
     }
 
     /**

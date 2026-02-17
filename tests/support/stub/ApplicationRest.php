@@ -20,6 +20,14 @@ use yii2\extensions\psrbridge\http\StatelessApplication;
  */
 final class ApplicationRest extends StatelessApplication
 {
+    /**
+     * Flags to track method calls for testing purposes.
+     */
+    public bool $reinitializeApplicationCalled = false;
+
+    /**
+     * Flags to track method calls for testing purposes.
+     */
     public bool $resetUploadedFilesStateCalled = false;
 
     /**
@@ -28,6 +36,13 @@ final class ApplicationRest extends StatelessApplication
     public function runPrepareForRequest(ServerRequestInterface $request): void
     {
         $this->prepareForRequest($request);
+    }
+
+    protected function reinitializeApplication(): void
+    {
+        $this->reinitializeApplicationCalled = true;
+
+        parent::reinitializeApplication();
     }
 
     protected function resetUploadedFilesState(): void
