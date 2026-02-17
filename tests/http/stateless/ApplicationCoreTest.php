@@ -17,9 +17,9 @@ use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
 use yii\log\{Dispatcher, FileTarget};
 use yii\web\{AssetManager, JsonParser, RequestParserInterface, Session, UrlManager, User, View};
-use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response, StatelessApplication};
+use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response, StatelessApplication, UploadedFile};
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
-use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\{ApplicationRest, MockerFunctions};
 
 use function array_filter;
 use function dirname;
@@ -318,6 +318,53 @@ final class ApplicationCoreTest extends TestCase
             . RequestParserInterface::class . '&apos;.',
             $response->getBody()->getContents(),
             'Response body should contain the expected error message for invalid fallback parser.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testPrepareForRequestCallsOverriddenResetUploadedFilesStateHook(): void
+    {
+        $app = new ApplicationRest(
+            [
+                'id' => 'stateless-app',
+                'basePath' => dirname(__DIR__, 3),
+                'controllerNamespace' => '\yii2\extensions\psrbridge\tests\support\stub',
+                'components' => [
+                    'request' => [
+                        'enableCookieValidation' => false,
+                        'enableCsrfCookie' => false,
+                        'enableCsrfValidation' => false,
+                        'scriptFile' => __DIR__ . '/index.php',
+                        'scriptUrl' => '/index.php',
+                    ],
+                ],
+            ],
+        );
+
+        UploadedFile::$_files = [
+            'avatar' => [
+                'name' => 'avatar.png',
+                'tempName' => '/tmp/php123',
+                'tempResource' => null,
+                'type' => 'image/png',
+                'size' => 1024,
+                'error' => UPLOAD_ERR_OK,
+                'fullPath' => null,
+            ],
+        ];
+
+        $app->runPrepareForRequest(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertTrue(
+            $app->resetUploadedFilesStateCalled,
+            "Overridden 'resetUploadedFilesState()' hook should be invoked by 'prepareForRequest()'.",
+        );
+        self::assertSame(
+            [],
+            UploadedFile::$_files,
+            'Overridden hook should preserve uploaded-file static state reset behavior.',
         );
     }
 

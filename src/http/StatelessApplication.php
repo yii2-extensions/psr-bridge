@@ -9,7 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use yii\base\{Event, InvalidConfigException};
 use yii\di\{Container, NotInstantiableException};
-use yii\web\{Application, IdentityInterface, User};
+use yii\web\{Application, IdentityInterface};
 
 use function array_merge;
 use function array_reverse;
@@ -48,8 +48,6 @@ use function strtoupper;
  *
  * @template TUserIdentity of IdentityInterface
  * @extends Application<TUserIdentity>
- *
- * @phpstan-property-read User<TUserIdentity> $user
  */
 class StatelessApplication extends Application implements RequestHandlerInterface
 {
