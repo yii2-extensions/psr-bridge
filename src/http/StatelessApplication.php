@@ -43,11 +43,11 @@ use function strtoupper;
  *
  * @see RequestHandlerInterface for PSR-7 request handling contract.
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
- *
  * @template TUserIdentity of IdentityInterface
  * @extends Application<TUserIdentity>
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 class StatelessApplication extends Application implements RequestHandlerInterface
 {
@@ -395,10 +395,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->startEventTracking();
         $this->resetUploadedFilesState();
         $this->reinitializeApplication();
-
-        $this->requestedRoute = '';
-        $this->requestedAction = null;
-        $this->requestedParams = [];
+        $this->resetRequestState();
 
         // re-register error handler to reset its state
         $this->errorHandler->setResponse($this->response);
@@ -438,6 +435,16 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         // parent constructor is called because StatelessApplication uses a custom initialization pattern
         // @phpstan-ignore-next-line
         parent::__construct($this->config);
+    }
+
+    /**
+     * Resets request state fields for route and action resolution.
+     */
+    protected function resetRequestState(): void
+    {
+        $this->requestedRoute = '';
+        $this->requestedAction = null;
+        $this->requestedParams = [];
     }
 
     /**

@@ -26,6 +26,11 @@ final class ApplicationRest extends StatelessApplication
     public bool $reinitializeApplicationCalled = false;
 
     /**
+     * Indicates whether `resetRequestState()` was invoked.
+     */
+    public bool $resetRequestStateCalled = false;
+
+    /**
      * Indicates whether `resetUploadedFilesState()` was invoked.
      */
     public bool $resetUploadedFilesStateCalled = false;
@@ -46,6 +51,13 @@ final class ApplicationRest extends StatelessApplication
         $this->reinitializeApplicationCalled = true;
 
         parent::reinitializeApplication();
+    }
+
+    protected function resetRequestState(): void
+    {
+        $this->resetRequestStateCalled = true;
+
+        parent::resetRequestState();
     }
 
     protected function resetUploadedFilesState(): void
