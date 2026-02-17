@@ -36,7 +36,7 @@ use function ini_set;
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
-final class ErrorHandler extends \yii\web\ErrorHandler
+class ErrorHandler extends \yii\web\ErrorHandler
 {
     /**
      * Default configuration for creating fallback Response instances.

@@ -38,7 +38,7 @@ use function substr;
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
-final class UploadedFile extends \yii\web\UploadedFile
+class UploadedFile extends \yii\web\UploadedFile
 {
     /**
      * @var array[] Uploaded files cache.

@@ -51,7 +51,7 @@ use function strtoupper;
  *
  * @phpstan-property-read User<TUserIdentity> $user
  */
-final class StatelessApplication extends Application implements RequestHandlerInterface
+class StatelessApplication extends Application implements RequestHandlerInterface
 {
     /**
      * Whether to flush the logger during application termination.

@@ -35,7 +35,7 @@ use yii2\extensions\psrbridge\adapter\ResponseAdapter;
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
-final class Response extends \yii\web\Response
+class Response extends \yii\web\Response
 {
     /**
      * @var string A secret key used for cookie validation. This property must be set if {@see enableCookieValidation}
