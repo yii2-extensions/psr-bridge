@@ -62,7 +62,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * @phpstan-param array<string, mixed> $config
      * @phpstan-return ApplicationRest<IdentityInterface>
      */
-    protected function ApplicationRest(array $config = []): ApplicationRest
+    protected function applicationRest(array $config = []): ApplicationRest
     {
         /** @phpstan-var array<string, mixed> $configApplication */
         $configApplication = ArrayHelper::merge(
