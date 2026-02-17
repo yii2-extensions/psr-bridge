@@ -41,6 +41,10 @@ final class ApplicationSessionTest extends TestCase
     {
         $sessionName = session_name();
 
+        if ($sessionName === false) {
+            self::fail("Failed to retrieve session name using 'session_name()'.");
+        }
+
         // first user generates captcha - need to use 'refresh=1' to get JSON response
         $_COOKIE = [$sessionName => 'user-a-session'];
         $_GET = ['refresh' => '1'];
@@ -201,6 +205,10 @@ final class ApplicationSessionTest extends TestCase
     {
         $sessionName = session_name();
 
+        if ($sessionName === false) {
+            self::fail("Failed to retrieve session name using 'session_name()'.");
+        }
+
         // first user sets a flash message
         $_COOKIE = [$sessionName => 'flash-user-a'];
         $_SERVER = [
@@ -280,6 +288,10 @@ final class ApplicationSessionTest extends TestCase
     public function testMultipleRequestsWithDifferentSessionsInWorkerMode(): void
     {
         $sessionName = session_name();
+
+        if ($sessionName === false) {
+            self::fail("Failed to retrieve session name using 'session_name()'.");
+        }
 
         $app = $this->statelessApplication();
 
@@ -367,6 +379,11 @@ final class ApplicationSessionTest extends TestCase
     public function testSessionDataPersistenceWithSameSessionId(): void
     {
         $sessionName = session_name();
+
+        if ($sessionName === false) {
+            self::fail("Failed to retrieve session name using 'session_name()'.");
+        }
+
         $sessionId = 'test-session-' . uniqid();
 
         $_COOKIE = [$sessionName => $sessionId];
@@ -447,6 +464,10 @@ final class ApplicationSessionTest extends TestCase
     public function testSessionIsolationBetweenRequests(): void
     {
         $sessionName = session_name();
+
+        if ($sessionName === false) {
+            self::fail("Failed to retrieve session name using 'session_name()'.");
+        }
 
         $_COOKIE = [$sessionName => 'session-user-a'];
         $_SERVER = [
@@ -566,6 +587,10 @@ final class ApplicationSessionTest extends TestCase
     public function testUserAuthenticationSessionIsolation(): void
     {
         $sessionName = session_name();
+
+        if ($sessionName === false) {
+            self::fail("Failed to retrieve session name using 'session_name()'.");
+        }
 
         // first user logs in
         $_COOKIE = [$sessionName => 'user1-session'];

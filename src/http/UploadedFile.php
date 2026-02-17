@@ -88,7 +88,7 @@ class UploadedFile extends \yii\web\UploadedFile
     {
         $name = Html::getInputName($model, $attribute);
 
-        return self::getInstanceByName($name);
+        return static::getInstanceByName($name);
     }
 
     /**
@@ -96,7 +96,7 @@ class UploadedFile extends \yii\web\UploadedFile
      *
      * @param string $name Name of the file input field.
      *
-     * @return UploadedFile|null Instance of the uploaded file, or `null` if no file was uploaded for the name.
+     * @return self|null Instance of the uploaded file, or `null` if no file was uploaded for the name.
      *
      * Usage example:
      * ```php
@@ -142,7 +142,7 @@ class UploadedFile extends \yii\web\UploadedFile
     {
         $name = Html::getInputName($model, $attribute);
 
-        return self::getInstancesByName($name);
+        return static::getInstancesByName($name);
     }
 
     /**
