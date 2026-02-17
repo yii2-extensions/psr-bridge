@@ -395,9 +395,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     protected function prepareForRequest(ServerRequestInterface $request): void
     {
         $this->startEventTracking();
-
-        // reset UploadedFile static state to avoid cross-request contamination
-        UploadedFile::reset();
+        $this->resetUploadedFilesState();
 
         // parent constructor is called because StatelessApplication uses a custom initialization pattern
         // @phpstan-ignore-next-line
@@ -433,6 +431,14 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->bootstrap();
 
         $this->session->close();
+    }
+
+    /**
+     * Resets uploaded file static state for the current request.
+     */
+    protected function resetUploadedFilesState(): void
+    {
+        UploadedFile::reset();
     }
 
     /**
