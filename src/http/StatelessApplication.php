@@ -265,7 +265,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         try {
-            $this->reset($request);
+            $this->prepareForRequest($request);
 
             $this->state = self::STATE_BEFORE_REQUEST;
 
@@ -380,21 +380,19 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
-     * Resets the StatelessApplication state and prepares the Yii2 environment for handling a PSR-7 request.
+     * Prepares the application lifecycle for a new PSR-7 request.
      *
-     * Performs a full reinitialization of the application state, including event tracking, error handler cleanup,
-     * request adapter reset, session management, uploaded file state reset, and PSR-7 request injection.
+     * Initializes per-request state, rebinds request and response context, resets uploaded file static state,
+     * synchronizes session and cookie settings, and runs bootstrap for the current request.
      *
-     * This method ensures that the application is ready to process a new stateless request in worker or SAPI
-     * environments, maintaining strict type safety and compatibility with Yii2 core components.
+     * This method is called internally before request handling to keep worker and SAPI execution stateless and
+     * repeatable.
      *
-     * This method is called internally before each request is handled to guarantee stateless, repeatable operation.
+     * @param ServerRequestInterface $request PSR-7 request to bind to the Yii2 request adapter.
      *
-     * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to inject into the application.
-     *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws InvalidConfigException if the application configuration is invalid.
      */
-    protected function reset(ServerRequestInterface $request): void
+    protected function prepareForRequest(ServerRequestInterface $request): void
     {
         $this->startEventTracking();
 
