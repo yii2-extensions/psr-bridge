@@ -43,11 +43,11 @@ use function strtoupper;
  *
  * @see RequestHandlerInterface for PSR-7 request handling contract.
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
- *
  * @template TUserIdentity of IdentityInterface
  * @extends Application<TUserIdentity>
+ *
+ * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 class StatelessApplication extends Application implements RequestHandlerInterface
 {

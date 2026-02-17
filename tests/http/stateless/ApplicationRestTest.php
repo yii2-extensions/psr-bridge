@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\Group;
-use yii\base\InvalidConfigException;
+use yii\base\{Action, Controller, InvalidConfigException};
 use yii2\extensions\psrbridge\http\UploadedFile;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
@@ -45,11 +45,32 @@ final class ApplicationRestTest extends TestCase
     {
         $app = $this->applicationRest();
 
+        // simulate state left over from a previous request cycle
+        $app->requestedRoute = 'site/previous';
+
+        // @phpstan-ignore-next-line
+        $app->requestedAction = new Action('previous', new Controller('site', $app));
+
+        $app->requestedParams = ['foo' => 'bar'];
+
+
         $app->runPrepareForRequest(FactoryHelper::createRequest('GET', 'site/index'));
 
         self::assertTrue(
             $app->resetRequestStateCalled,
             "Overridden 'resetRequestState()' hook should be invoked by 'prepareForRequest()'.",
+        );
+        self::assertEmpty(
+            $app->requestedRoute,
+            "Should be reset to empty 'string'.",
+        );
+        self::assertNull(
+            $app->requestedAction,
+            "Should be reset to 'null'.",
+        );
+        self::assertEmpty(
+            $app->requestedParams,
+            "Should be reset to empty 'array'.",
         );
     }
 
@@ -81,7 +102,7 @@ final class ApplicationRestTest extends TestCase
         self::assertSame(
             [],
             UploadedFile::$_files,
-            'Overridden hook should preserve uploaded-file static state reset behavior.',
+            'Overridden hook should preserve uploaded file static state reset behavior.',
         );
     }
 }
