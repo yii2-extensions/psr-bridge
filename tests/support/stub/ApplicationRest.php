@@ -10,7 +10,7 @@ use yii\web\IdentityInterface;
 use yii2\extensions\psrbridge\http\StatelessApplication;
 
 /**
- * Test stub for REST-style StatelessApplication customization.
+ * Stub for a REST application.
  *
  * @template TUserIdentity of IdentityInterface
  * @extends StatelessApplication<TUserIdentity>
@@ -20,14 +20,32 @@ use yii2\extensions\psrbridge\http\StatelessApplication;
  */
 final class ApplicationRest extends StatelessApplication
 {
+    /**
+     * Indicates whether `reinitializeApplication()` was invoked.
+     */
+    public bool $reinitializeApplicationCalled = false;
+
+    /**
+     * Indicates whether `resetUploadedFilesState()` was invoked.
+     */
     public bool $resetUploadedFilesStateCalled = false;
 
     /**
+     * Runs request preparation and triggers lifecycle hooks.
+     *
+     * @param ServerRequestInterface $request The incoming PSR-7 server request.
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function runPrepareForRequest(ServerRequestInterface $request): void
     {
         $this->prepareForRequest($request);
+    }
+
+    protected function reinitializeApplication(): void
+    {
+        $this->reinitializeApplicationCalled = true;
+
+        parent::reinitializeApplication();
     }
 
     protected function resetUploadedFilesState(): void

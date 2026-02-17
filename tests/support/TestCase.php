@@ -14,7 +14,7 @@ use yii\helpers\ArrayHelper;
 use yii\log\FileTarget;
 use yii\web\{Application, IdentityInterface, JsonParser};
 use yii2\extensions\psrbridge\http\StatelessApplication;
-use yii2\extensions\psrbridge\tests\support\stub\{Identity, MockerFunctions};
+use yii2\extensions\psrbridge\tests\support\stub\{ApplicationRest, Identity, MockerFunctions};
 
 use function fclose;
 use function is_resource;
@@ -57,6 +57,34 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * @phpstan-var array<resource>
      */
     private array $tmpFiles = [];
+
+    /**
+     * @phpstan-param array<string, mixed> $config
+     * @phpstan-return ApplicationRest<IdentityInterface>
+     */
+    protected function applicationRest(array $config = []): ApplicationRest
+    {
+        /** @phpstan-var array<string, mixed> $configApplication */
+        $configApplication = ArrayHelper::merge(
+            [
+                'id' => 'stateless-app',
+                'basePath' => dirname(__DIR__, 2),
+                'controllerNamespace' => '\yii2\extensions\psrbridge\tests\support\stub',
+                'components' => [
+                    'request' => [
+                        'enableCookieValidation' => false,
+                        'enableCsrfCookie' => false,
+                        'enableCsrfValidation' => false,
+                        'scriptFile' => __DIR__ . '/index.php',
+                        'scriptUrl' => '/index.php',
+                    ],
+                ],
+            ],
+            $config,
+        );
+
+        return new ApplicationRest($configApplication);
+    }
 
     protected function closeApplication(): void
     {
