@@ -446,7 +446,7 @@ final class RequestProvider
                 ],
                 '123.123.123.123',
             ],
-            // RFC 7239 forwarded from trusted proxy with optinal port
+            // RFC 7239 forwarded from trusted proxy with optional port
             [
                 [
                     'HTTP_FORWARDED' => 'for=123.123.123.123:2222',

@@ -52,7 +52,7 @@ use function strncasecmp;
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
-final class Request extends \yii\web\Request
+class Request extends \yii\web\Request
 {
     /**
      * @var string A secret key used for cookie validation. This property must be set if {@see enableCookieValidation}

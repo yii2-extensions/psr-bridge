@@ -1331,7 +1331,7 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithValidationDisabled(): void
     {
-        $pastTime = time() - 3600; // 1 hour ago (expired cookie)
+        $expiredTime = time() - 3600; // 1 hour ago (expired cookie)
 
         $response = new Response(
             [
@@ -1345,7 +1345,7 @@ final class ResponseAdapterTest extends TestCase
                 [
                     'name' => 'past_cookie',
                     'value' => 'past_value',
-                    'expire' => $pastTime,
+                    'expire' => $expiredTime,
                 ],
             ),
         );
@@ -1376,7 +1376,7 @@ final class ResponseAdapterTest extends TestCase
             . 'cookie is expired.',
         );
         self::assertStringContainsString(
-            '; Expires=' . gmdate('D, d-M-Y H:i:s T', $pastTime),
+            '; Expires=' . gmdate('D, d-M-Y H:i:s T', $expiredTime),
             $cookieHeader,
             "'Set-Cookie' header should contain the correctly formatted expiration date for the expired cookie.",
         );
@@ -1433,7 +1433,7 @@ final class ResponseAdapterTest extends TestCase
      */
     public function testFormatCookieWithValidationEnabled(): void
     {
-        $pastTime = time() - 3600; // 1 hour ago (expired cookie)
+        $expiredTime = time() - 3600; // 1 hour ago (expired cookie)
 
         $response = new Response(
             [
@@ -1448,7 +1448,7 @@ final class ResponseAdapterTest extends TestCase
                 [
                     'name' => 'expired_cookie',
                     'value' => 'expired_value',
-                    'expire' => $pastTime,
+                    'expire' => $expiredTime,
                 ],
             ),
         );
@@ -1478,7 +1478,7 @@ final class ResponseAdapterTest extends TestCase
             "'Set-Cookie' header should start with the encoded cookie 'name' when validation is enabled.",
         );
         self::assertStringContainsString(
-            '; Expires=' . gmdate('D, d-M-Y H:i:s T', $pastTime),
+            '; Expires=' . gmdate('D, d-M-Y H:i:s T', $expiredTime),
             $cookieHeader,
             "'Set-Cookie' header should contain the correct 'Expires' attribute for the expired cookie.",
         );
