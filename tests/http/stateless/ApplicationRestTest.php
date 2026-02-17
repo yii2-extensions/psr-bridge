@@ -14,6 +14,7 @@ use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
  *
  * Test coverage.
  * - Verifies that `prepareForRequest()` invokes the overridden `reinitializeApplication()` hook.
+ * - Verifies that `prepareForRequest()` invokes the overridden `resetRequestState()` hook.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetUploadedFilesState()` hook.
  *
  * @copyright Copyright (C) 2026 Terabytesoftw.
@@ -34,6 +35,21 @@ final class ApplicationRestTest extends TestCase
         self::assertTrue(
             $app->reinitializeApplicationCalled,
             "Overridden 'reinitializeApplication()' hook should be invoked by 'prepareForRequest()'.",
+        );
+    }
+    
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testPrepareForRequestCallsOverriddenResetRequestStateHook(): void
+    {
+        $app = $this->applicationRest();
+
+        $app->runPrepareForRequest(FactoryHelper::createRequest('GET', 'site/index'));
+
+        self::assertTrue(
+            $app->resetRequestStateCalled,
+            "Overridden 'resetRequestState()' hook should be invoked by 'prepareForRequest()'.",
         );
     }
 
