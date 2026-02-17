@@ -37,7 +37,7 @@ final class ApplicationRestTest extends TestCase
             "Overridden 'reinitializeApplication()' hook should be invoked by 'prepareForRequest()'.",
         );
     }
-    
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
