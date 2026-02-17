@@ -44,7 +44,6 @@ use function strncasecmp;
  * - Full compatibility with Yii2 Cookie validation and CSRF protection.
  * - Immutable, type-safe access to request data (body, headers, cookies, files, query, server parameters, etc.).
  * - PSR-7 ServerRequestAdapter integration via {@see setPsr7Request()} and {@see getPsr7Request()}.
- * - Worker mode support for modern runtimes (see {@see $workerMode}).
  *
  * @see ServerRequestAdapter for PSR-7 to Yii2 Request adapter.
  * @phpstan-property array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
@@ -59,11 +58,6 @@ class Request extends \yii\web\Request
      * is 'true'.
      */
     public $cookieValidationKey = '';
-
-    /**
-     * Whether the request is in worker mode.
-     */
-    public bool $workerMode = true;
 
     /**
      * PSR-7 ServerRequestAdapter for bridging PSR-7 ServerRequestInterface with Yii2 Request component.
@@ -531,7 +525,7 @@ class Request extends \yii\web\Request
     public function getScriptUrl(): string
     {
         if ($this->adapter !== null) {
-            return $this->workerMode ? '' : $this->getScriptName();
+            return $this->getScriptName();
         }
 
         return parent::getScriptUrl();

@@ -111,7 +111,7 @@ final class ServerParamsPsr7Test extends TestCase
      */
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
     {
-        $request = new Request(['workerMode' => false]);
+        $request = new Request();
 
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test'),
@@ -215,7 +215,7 @@ final class ServerParamsPsr7Test extends TestCase
     {
         $expectedScriptName = '/app/public/index.php';
 
-        $request = new Request(['workerMode' => false]);
+        $request = new Request();
 
         $request->setPsr7Request(
             FactoryHelper::createRequest('GET', '/test', serverParams: ['SCRIPT_NAME' => $expectedScriptName]),
