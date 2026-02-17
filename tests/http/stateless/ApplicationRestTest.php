@@ -53,14 +53,14 @@ final class ApplicationRestTest extends TestCase
 
         $app->requestedParams = ['foo' => 'bar'];
 
-
         $app->runPrepareForRequest(FactoryHelper::createRequest('GET', 'site/index'));
 
         self::assertTrue(
             $app->resetRequestStateCalled,
             "Overridden 'resetRequestState()' hook should be invoked by 'prepareForRequest()'.",
         );
-        self::assertEmpty(
+        self::assertSame(
+            '',
             $app->requestedRoute,
             "Should be reset to empty 'string'.",
         );
@@ -68,7 +68,8 @@ final class ApplicationRestTest extends TestCase
             $app->requestedAction,
             "Should be reset to 'null'.",
         );
-        self::assertEmpty(
+        self::assertSame(
+            [],
             $app->requestedParams,
             "Should be reset to empty 'array'.",
         );
