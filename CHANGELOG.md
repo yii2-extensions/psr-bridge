@@ -3,8 +3,8 @@
 ## 0.2.0 Under development
 
 - Bug #211: Change classes from final to non-final in `ErrorHandler`, `Request`, `Response`, `StatelessApplication`, and `UploadedFile` classes for improved extensibility (@terabytesoftw)
-- Bug #212: Remove worker mode property from `Request` class and update related tests for consistency (@terabytesoftw)
-- Bug #211: Rename `reset()` to `prepareForRequest()` in `StatelessApplication` and update request handling call for clearer (@terabytesoftw)
+- Bug #213: Remove worker mode property from `Request` class and update related tests for consistency (@terabytesoftw)
+- Bug #214: Rename `reset()` to `prepareForRequest()` in `StatelessApplication` and update request handling call for clearer (@terabytesoftw)
 
 ## 0.1.5 January 28, 2026
 
