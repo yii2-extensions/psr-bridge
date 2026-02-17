@@ -430,6 +430,8 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
 
     /**
      * Reinitializes the application instance for the current request.
+     *
+     * @throws InvalidConfigException if the application configuration is invalid.
      */
     protected function reinitializeApplication(): void
     {
