@@ -12,8 +12,8 @@ use yii\base\Security;
 use yii\caching\FileCache;
 use yii\helpers\ArrayHelper;
 use yii\log\FileTarget;
-use yii\web\{Application, IdentityInterface, JsonParser};
-use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii\web\{IdentityInterface, JsonParser};
+use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\psrbridge\tests\support\stub\{ApplicationRest, Identity, MockerFunctions};
 
 use function fclose;
@@ -31,7 +31,7 @@ use function tmpfile;
  * class.
  *
  * Key features.
- * - Creates `StatelessApplication` and `Application` instances with a sane test configuration.
+ * - Creates `yii2\extensions\psrbridge\http\Application` and `yii\web\Application` instances with a sane test configuration.
  * - Manages temporary file resources and ensures cleanup during `tearDown()`.
  * - Provides `signCookies()` helper for creating signed cookie values.
  * - Resets `$_SERVER`, `$_GET`, `$_POST`, `$_FILES` and `$_COOKIE` between tests to avoid cross-test contamination.
@@ -125,6 +125,27 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         );
     }
 
+    protected function assertSitePostUploadJsonResponse(ResponseInterface $response): void
+    {
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route '/site/post'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route '/site/post'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"action": "upload"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected PSR-7 Response body '{\"action\":\"upload\"}'.",
+        );
+    }
+
     protected function closeApplication(): void
     {
         if (Yii::$app->has('session')) {
@@ -207,9 +228,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     /**
      * @phpstan-param array<string, mixed> $config
-     * @phpstan-return StatelessApplication<IdentityInterface>
+     * @phpstan-return Application<IdentityInterface>
      */
-    protected function statelessApplication(array $config = []): StatelessApplication
+    protected function statelessApplication(array $config = []): Application
     {
         /** @phpstan-var array<string, mixed> $configApplication */
         $configApplication = ArrayHelper::merge(
@@ -269,7 +290,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             $config,
         );
 
-        return new StatelessApplication($configApplication);
+        return new Application($configApplication);
     }
 
     protected function tearDown(): void
@@ -311,6 +332,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             $config,
         );
 
-        new Application($configApplication);
+        new \yii\web\Application($configApplication);
     }
 }

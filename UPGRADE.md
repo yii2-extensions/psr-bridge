@@ -4,12 +4,26 @@
 
 ### Breaking changes
 
-- `yii2\extensions\psrbridge\http\StatelessApplication::reset()` was renamed to `prepareForRequest()`.
+- `yii2\extensions\psrbridge\http\StatelessApplication` was renamed to `yii2\extensions\psrbridge\http\Application`.
+- No compatibility alias is provided for `StatelessApplication`; all imports and type hints must be updated.
+- `yii2\extensions\psrbridge\http\Application::reset()` was renamed to `prepareForRequest()`.
 - `yii2\extensions\psrbridge\http\Request::$workerMode` was removed.
 
 ### Migration steps
 
 #### 1) Update custom `StatelessApplication` subclasses
+
+Replace imports and instantiation sites:
+
+```php
+use yii2\extensions\psrbridge\http\Application;
+```
+
+```php
+$app = new Application($config);
+```
+
+Then update lifecycle overrides and calls:
 
 If you override `reset()` in your project, rename it to `prepareForRequest()` and keep the same signature:
 

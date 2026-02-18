@@ -9,15 +9,11 @@ use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 /**
- * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} content type handling in stateless mode.
- *
- * Verifies the correct Content-Type, Content-Disposition, and response body for file and stream routes in stateless
- * Yii2 applications.
+ * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} content-type handling in stateless mode.
  *
  * Test coverage.
- * - Confirms 'Content-Type' and 'Content-Disposition' headers for file download routes.
- * - Ensures correct response body for file and stream endpoints.
- * - Validates HTTP status codes and header values for each route.
+ * - Ensures file download responses include expected content headers.
+ * - Verifies stream responses return the expected plain-text body.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

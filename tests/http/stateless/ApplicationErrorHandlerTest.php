@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtens
 use yii\base\{Event, Exception, InvalidConfigException};
 use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
-use yii2\extensions\psrbridge\http\{Response, StatelessApplication};
+use yii2\extensions\psrbridge\http\{Application, Response};
 use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
@@ -22,18 +22,15 @@ use function set_error_handler;
 use function str_contains;
 
 /**
- * Test suite for {@see StatelessApplication} error handling in stateless mode.
- *
- * Verifies correct error view rendering, event triggering, sensitive variable filtering, exception logging, and
- * fallback behaviors in stateless Yii2 applications.
+ * Unit tests for {@see Application} error handling in stateless mode.
  *
  * Test coverage.
- * - Checks that exception logging is performed during error handling.
- * - Confirms error view logic and status codes for various debug and route scenarios.
- * - Covers rendering of exceptions in different formats and error actions.
- * - Ensures after request event is triggered when handling exceptions.
- * - Tests fallback HTML error response and strict parsing exception cases.
- * - Validates filtering of sensitive server variables in fallback exception messages.
+ * - Ensures EVENT_AFTER_REQUEST is triggered during exception handling.
+ * - Ensures fallback responses mask sensitive server variable values.
+ * - Verifies error view selection for debug and non-debug configurations.
+ * - Verifies exception rendering across response formats and error-action configurations.
+ * - Verifies exceptions are logged when request handling fails.
+ * - Verifies invalid routes and strict parsing produce expected not found responses.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -105,9 +102,9 @@ final class ApplicationErrorHandlerTest extends TestCase
         );
 
         $app->on(
-            StatelessApplication::EVENT_AFTER_REQUEST,
+            Application::EVENT_AFTER_REQUEST,
             static function (Event $event) use (&$eventTriggered, &$eventCount, &$eventName, &$eventSender): void {
-                if ($event->name === StatelessApplication::EVENT_AFTER_REQUEST) {
+                if ($event->name === Application::EVENT_AFTER_REQUEST) {
                     $eventTriggered = true;
                     $eventName = $event->name;
                     $eventSender = $event->sender;
@@ -144,14 +141,14 @@ final class ApplicationErrorHandlerTest extends TestCase
             'EVENT_AFTER_REQUEST should be triggered when handling an exception.',
         );
         self::assertSame(
-            StatelessApplication::EVENT_AFTER_REQUEST,
+            Application::EVENT_AFTER_REQUEST,
             $eventName,
             'Triggered event should be EVENT_AFTER_REQUEST.',
         );
         self::assertSame(
             $app,
             $eventSender,
-            'Event sender should be the StatelessApplication instance.',
+            'Event sender should be the Application instance.',
         );
         self::assertSame(
             1,
@@ -668,7 +665,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         );
         self::assertJsonStringEqualsJsonString(
             <<<JSON
-            {"name":"Not Found","message":"Page not found in StatelessApplication.","code":0,"status":404,"type":"yii\\\\web\\\\NotFoundHttpException"}
+            {"name":"Not Found","message":"Page not found in Application.","code":0,"status":404,"type":"yii\\\\web\\\\NotFoundHttpException"}
             JSON,
             $response->getBody()->getContents(),
             'Response body should contain JSON with NotFoundHttpException details.',

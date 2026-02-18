@@ -117,9 +117,9 @@ Configure memory limits and garbage collection behavior.
 
 declare(strict_types=1);
 
-use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\psrbridge\http\Application;
 
-$app = new StatelessApplication($config);
+$app = new Application($config);
 
 // Enable logger flushing (default: true)
 $app->flushLogger = true;
@@ -159,7 +159,7 @@ use Psr\Http\Message\{
 ],
 ```
 
-### StatelessApplication configuration
+### Application configuration
 
 For worker-based environments (FrankenPHP, RoadRunner).
 
@@ -168,7 +168,7 @@ For worker-based environments (FrankenPHP, RoadRunner).
 
 declare(strict_types=1);
 
-use yii2\extensions\psrbridge\http\{Request, Response, StatelessApplication};
+use yii2\extensions\psrbridge\http\{Request, Response, Application};
 
 $config = [
     'id' => 'stateless-app',
@@ -186,7 +186,7 @@ $config = [
     ],
 ];
 
-$app = new StatelessApplication($config);
+$app = new Application($config);
 ```
 
 ## Next steps
