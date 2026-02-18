@@ -369,10 +369,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->resetRequestState();
         $this->prepareErrorHandler();
         $this->attachPsrRequest($request);
-
-        // synchronize cookie validation settings between request and response
-        $this->response->cookieValidationKey = $this->request->cookieValidationKey;
-        $this->response->enableCookieValidation = $this->request->enableCookieValidation;
+        $this->syncCookieValidationState();
 
         // reset the session to ensure a clean state
         // @codeCoverageIgnoreStart
@@ -420,6 +417,16 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     protected function resetUploadedFilesState(): void
     {
         UploadedFile::reset();
+    }
+
+    /**
+     * Synchronizes cookie validation settings between request and response.
+     */
+    protected function syncCookieValidationState(): void
+    {
+        // synchronize cookie validation settings between request and response
+        $this->response->cookieValidationKey = $this->request->cookieValidationKey;
+        $this->response->enableCookieValidation = $this->request->enableCookieValidation;
     }
 
     /**
