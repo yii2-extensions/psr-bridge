@@ -21,6 +21,11 @@ use yii2\extensions\psrbridge\http\{Response, StatelessApplication};
 final class ApplicationRest extends StatelessApplication
 {
     /**
+     * Indicates whether `prepareErrorHandler()` was invoked.
+     */
+    public bool $prepareErrorHandlerCalled = false;
+
+    /**
      * Indicates whether `reinitializeApplication()` was invoked.
      */
     public bool $reinitializeApplicationCalled = false;
@@ -49,6 +54,13 @@ final class ApplicationRest extends StatelessApplication
     public function runPrepareForRequest(ServerRequestInterface $request): void
     {
         $this->prepareForRequest($request);
+    }
+
+    protected function prepareErrorHandler(): void
+    {
+        $this->prepareErrorHandlerCalled = true;
+
+        parent::prepareErrorHandler();
     }
 
     protected function reinitializeApplication(): void

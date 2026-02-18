@@ -13,8 +13,8 @@ use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
  *
  * Test coverage.
- * - Verifies that `handle()` invokes the overridden `terminate()` hook.
- * - Verifies that `prepareForRequest()` invokes the overridden `reinitializeApplication()` hook.
+ * - Verifies that `handle()` invokes the overridden `prepareErrorHandler()`, `reinitializeApplication()`, and
+ *   `terminate()` hooks.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetRequestState()` hook.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetUploadedFilesState()` hook.
  *
@@ -27,7 +27,7 @@ final class ApplicationHookTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testPrepareForRequestCallsOverriddenReinitializeApplicationHook(): void
+    public function testHandleInvokesOverriddenCoreLifecycleHooks(): void
     {
         $app = $this->applicationRest();
 
@@ -35,6 +35,10 @@ final class ApplicationHookTest extends TestCase
 
         $this->assertSiteIndexJsonResponse(
             $response,
+        );
+        self::assertTrue(
+            $app->prepareErrorHandlerCalled,
+            "Overridden 'prepareErrorHandler()' hook should be invoked by 'prepareForRequest()'.",
         );
         self::assertTrue(
             $app->reinitializeApplicationCalled,
