@@ -21,6 +21,11 @@ use yii2\extensions\psrbridge\http\{Response, StatelessApplication};
 final class ApplicationRest extends StatelessApplication
 {
     /**
+     * Indicates whether `attachPsrRequest()` was invoked.
+     */
+    public bool $attachPsrRequestCalled = false;
+
+    /**
      * Log of lifecycle hook calls for testing purposes.
      *
      * Each entry is a string representing the name of the lifecycle hook that was called.
@@ -65,6 +70,14 @@ final class ApplicationRest extends StatelessApplication
         $this->hookCallLog[] = 'prepareForRequest';
 
         $this->prepareForRequest($request);
+    }
+
+    protected function attachPsrRequest(ServerRequestInterface $request): void
+    {
+        $this->hookCallLog[] = 'attachPsrRequest';
+        $this->attachPsrRequestCalled = true;
+
+        parent::attachPsrRequest($request);
     }
 
     protected function prepareErrorHandler(): void
