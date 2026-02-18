@@ -525,13 +525,7 @@ class Request extends \yii\web\Request
     public function getScriptUrl(): string
     {
         if ($this->adapter !== null) {
-            $scriptUrl = $this->getServerParam('SCRIPT_NAME');
-
-            if (is_string($scriptUrl) && $scriptUrl !== '') {
-                return $scriptUrl;
-            }
-
-            return ''; // script-less worker mode fallback
+            return $this->getScriptName();
         }
 
         return parent::getScriptUrl();
@@ -859,5 +853,27 @@ class Request extends \yii\web\Request
                 'tempResource' => $psrFile->getStream()->detach(),
             ],
         );
+    }
+
+    /**
+     * Retrieves the script name from the current server parameters.
+     *
+     * Returns the value of the 'SCRIPT_NAME' server parameter as a string, or an empty string if not set or not a
+     * string.
+     *
+     * This method provides a type-safe way to access the script name for the current request, supporting
+     * interoperability with modern HTTP stacks and legacy workflows.
+     *
+     * @return string Script name from the server parameters, or an empty string if unavailable.
+     */
+    private function getScriptName(): string
+    {
+        $scriptUrl = $this->getServerParam('SCRIPT_NAME');
+
+        if (is_string($scriptUrl) && $scriptUrl !== '') {
+            return $scriptUrl;
+        }
+
+        return ''; // script-less worker mode fallback
     }
 }
