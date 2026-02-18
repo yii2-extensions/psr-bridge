@@ -168,7 +168,7 @@ For worker-based environments (FrankenPHP, RoadRunner).
 
 declare(strict_types=1);
 
-use yii2\extensions\psrbridge\http\{Request, Response, Application};
+use yii2\extensions\psrbridge\http\{Application, Request, Response};
 
 $config = [
     'id' => 'stateless-app',
