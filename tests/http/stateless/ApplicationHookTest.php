@@ -37,6 +37,17 @@ final class ApplicationHookTest extends TestCase
             $response,
         );
         // order assertions to verify the sequence of lifecycle hook invocations
+        self::assertSame(
+            [
+                'resetUploadedFilesState',
+                'reinitializeApplication',
+                'resetRequestState',
+                'prepareErrorHandler',
+                'terminate',
+            ],
+            $app->hookCallLog,
+            'Lifecycle hooks must be invoked in the documented sequence.',
+        );
         self::assertTrue(
             $app->resetUploadedFilesStateCalled,
             "Overridden 'resetUploadedFilesState()' hook should be invoked by 'prepareForRequest()'.",
