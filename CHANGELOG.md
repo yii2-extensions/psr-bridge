@@ -14,6 +14,7 @@
 - Bug #221: Extract `syncCookieValidationState()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #222: Extract `openSessionFromRequestCookies()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #223: Extract `finalizeSessionState()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
+- Bug #224: Align lifecycle initialization by calling `parent::init()` and remove manual `bootstrap()` call from `prepareForRequest()` in `StatelessApplication` (@terabytesoftw)
 
 ## 0.1.5 January 28, 2026
 
