@@ -15,7 +15,8 @@
 - Bug #222: Extract `openSessionFromRequestCookies()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #223: Extract `finalizeSessionState()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #224: Align lifecycle initialization by calling `parent::init()` and remove manual `bootstrap()` call from `prepareForRequest()` in `StatelessApplication` (@terabytesoftw)
-- Bug #255: Return empty `string` for script URL in worker mode when adapter is set in `Request` class for compatibility with PSR-7 request handling (@terabytesoftw)
+- Bug #225: Resolve script URL from PSR-7 server params before returning empty fallback in `Request::getScriptUrl()` and add coverage for non-worker PSR-7 usage (@terabytesoftw)
+- Bug #225: Return empty `string` for script URL in worker mode when adapter is set in `Request` class for compatibility with PSR-7 request handling (@terabytesoftw)
 
 ## 0.1.5 January 28, 2026
 

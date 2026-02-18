@@ -191,6 +191,21 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    public function testReturnScriptUrlFromServerParamsWhenAdapterIsSet(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/index.php/site/index', serverParams: ['SCRIPT_NAME' => '/index.php']),
+        );
+
+        self::assertSame(
+            '/index.php',
+            $request->getScriptUrl(),
+            "'getScriptUrl()' should return 'SCRIPT_NAME' from PSR-7 server params when adapter is set.",
+        );
+    }
+
     #[DataProviderExternal(ServerParamsPsr7Provider::class, 'serverNameCases')]
     #[Group('server-name')]
     public function testReturnServerNameFromServerParamsCases(mixed $serverValue, string|null $expected): void

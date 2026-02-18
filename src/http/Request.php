@@ -525,7 +525,13 @@ class Request extends \yii\web\Request
     public function getScriptUrl(): string
     {
         if ($this->adapter !== null) {
-            return ''; // return empty string in worker mode since no script file exists
+            $scriptUrl = $this->getServerParam('SCRIPT_NAME');
+
+            if (is_string($scriptUrl) && $scriptUrl !== '') {
+                return $scriptUrl;
+            }
+
+            return ''; // script-less worker mode fallback
         }
 
         return parent::getScriptUrl();
