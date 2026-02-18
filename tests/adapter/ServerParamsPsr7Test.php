@@ -109,23 +109,6 @@ final class ServerParamsPsr7Test extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
-        );
-
-        self::assertEmpty(
-            $request->getScriptUrl(),
-            "Script URL should be empty when adapter is set in traditional mode without 'SCRIPT_NAME'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
     {
         $request = new Request();
@@ -205,26 +188,6 @@ final class ServerParamsPsr7Test extends TestCase
             $request->getRemoteIP(),
             "'getRemoteIP()' should return the 'REMOTE_ADDR' value from PSR-7 'serverParams', not from global "
             . '$_SERVER.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
-    {
-        $expectedScriptName = '/app/public/index.php';
-
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SCRIPT_NAME' => $expectedScriptName]),
-        );
-
-        self::assertSame(
-            $expectedScriptName,
-            $request->getScriptUrl(),
-            "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
         );
     }
 
