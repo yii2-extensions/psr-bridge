@@ -289,14 +289,11 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
-     * Initializes the StatelessApplication.
-     *
-     * Calls {@see parent::init()} to run base Yii2 initialization (which sets STATE_INIT and executes
-     * {@see bootstrap()}), ensuring correct lifecycle ordering before request handling.
+     * Initializes the StatelessApplication state to `STATE_INIT`.
      */
     public function init(): void
     {
-        parent::init();
+        $this->state = self::STATE_INIT;
     }
 
     /**
@@ -378,9 +375,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
      * Prepares the application lifecycle for a new PSR-7 request.
      *
      * Initializes per-request state, rebinds request and response context, resets uploaded file static state,
-     * synchronizes session and cookie settings.
-     *
-     * Bootstrap is executed automatically inside {@see reinitializeApplication()} via the parent constructor chain.
+     * synchronizes session and cookie settings, and executes bootstrap after attaching the PSR-7 request.
      *
      * This method is called internally before request handling to keep worker and SAPI execution stateless and
      * repeatable.
@@ -399,6 +394,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->attachPsrRequest($request);
         $this->syncCookieValidationState();
         $this->openSessionFromRequestCookies();
+        $this->bootstrap();
         $this->finalizeSessionState();
     }
 

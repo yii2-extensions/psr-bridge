@@ -20,6 +20,7 @@ use function is_numeric;
 use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
+use function str_starts_with;
 use function strncasecmp;
 
 /**
@@ -862,7 +863,7 @@ class Request extends \yii\web\Request
     {
         $scriptName = $this->getServerParam('SCRIPT_NAME');
 
-        if (is_string($scriptName) && $scriptName !== '') {
+        if (is_string($scriptName) && $scriptName !== '' && str_starts_with($scriptName, '/')) {
             return $scriptName;
         }
 

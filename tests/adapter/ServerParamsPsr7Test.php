@@ -123,6 +123,21 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
+    public function testReturnEmptyScriptUrlWhenScriptNameIsRelativePath(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            FactoryHelper::createRequest('GET', '/site/index', serverParams: ['SCRIPT_NAME' => 'web/index.php']),
+        );
+
+        self::assertSame(
+            '',
+            $request->getScriptUrl(),
+            "'getScriptUrl()' should return empty string when PSR-7 'SCRIPT_NAME' is a relative path.",
+        );
+    }
+
     #[Group('server-params')]
     public function testReturnEmptyServerParamsWhenAdapterIsSet(): void
     {
