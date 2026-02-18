@@ -109,23 +109,6 @@ final class ServerParamsPsr7Test extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnEmptyScriptUrlWhenAdapterIsSetInTraditionalModeWithoutScriptName(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
-        );
-
-        self::assertEmpty(
-            $request->getScriptUrl(),
-            "Script URL should be empty when adapter is set in traditional mode without 'SCRIPT_NAME'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testReturnEmptyScriptUrlWhenAdapterIsSetInWorkerMode(): void
     {
         $request = new Request();
@@ -208,23 +191,18 @@ final class ServerParamsPsr7Test extends TestCase
         );
     }
 
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnScriptNameWhenAdapterIsSetInTraditionalMode(): void
+    public function testReturnScriptUrlFromServerParamsWhenAdapterIsSet(): void
     {
-        $expectedScriptName = '/app/public/index.php';
-
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SCRIPT_NAME' => $expectedScriptName]),
+            FactoryHelper::createRequest('GET', '/index.php/site/index', serverParams: ['SCRIPT_NAME' => '/index.php']),
         );
 
         self::assertSame(
-            $expectedScriptName,
+            '/index.php',
             $request->getScriptUrl(),
-            "Script URL should return 'SCRIPT_NAME' when adapter is set in traditional mode.",
+            "'getScriptUrl()' should return 'SCRIPT_NAME' from PSR-7 server params when adapter is set.",
         );
     }
 
