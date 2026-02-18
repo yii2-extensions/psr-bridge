@@ -340,6 +340,21 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
+     * Finalizes session state after bootstrap execution.
+     *
+     * Closes the active session immediately after {@see bootstrap()} completes, ensuring that no lingering session
+     * data persists between the bootstrap phase and normal request handling.
+     *
+     * Override this method in a subclass to customize post-bootstrap session finalization behaviour.
+     */
+    protected function finalizeSessionState(): void
+    {
+        // @codeCoverageIgnoreStart
+        $this->session->close();
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
      * Opens the session using the session identifier from request cookies.
      */
     protected function openSessionFromRequestCookies(): void
@@ -391,8 +406,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->syncCookieValidationState();
         $this->openSessionFromRequestCookies();
         $this->bootstrap();
-
-        $this->session->close();
+        $this->finalizeSessionState();
     }
 
     /**
