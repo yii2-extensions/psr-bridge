@@ -4,7 +4,7 @@
 
 This guide covers all configuration options for the PSR Bridge extension, from
 basic setup to advanced HTTP message handling, worker mode integration, and
-stateless application configuration.
+application configuration.
 
 ## Basic configuration
 
@@ -171,7 +171,7 @@ declare(strict_types=1);
 use yii2\extensions\psrbridge\http\{Application, Request, Response};
 
 $config = [
-    'id' => 'stateless-app',
+    'id' => 'app',
     'basePath' => dirname(__DIR__),
     'controllerNamespace' => 'app\\controllers',
     'components' => [
