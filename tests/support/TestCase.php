@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\support;
 
 use HttpSoft\Message\{ResponseFactory, StreamFactory};
-use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
+use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
 use RuntimeException;
 use Yii;
 use yii\base\Security;
@@ -75,8 +75,26 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                         'enableCookieValidation' => false,
                         'enableCsrfCookie' => false,
                         'enableCsrfValidation' => false,
+                        'parsers' => [
+                            'application/json' => JsonParser::class,
+                        ],
                         'scriptFile' => __DIR__ . '/index.php',
                         'scriptUrl' => '/index.php',
+                    ],
+                    'urlManager' => [
+                        'showScriptName' => false,
+                        'enableStrictParsing' => false,
+                        'enablePrettyUrl' => true,
+                        'rules' => [
+                            'site/query/<test:\w+>' => 'site/query',
+                            'site/update/<id:\d+>' => 'site/update',
+                        ],
+                    ],
+                ],
+                'container' => [
+                    'definitions' => [
+                        ResponseFactoryInterface::class => ResponseFactory::class,
+                        StreamFactoryInterface::class => StreamFactory::class,
                     ],
                 ],
             ],
@@ -84,6 +102,27 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         );
 
         return new ApplicationRest($configApplication);
+    }
+
+    protected function assertSiteIndexJsonResponse(ResponseInterface $response): void
+    {
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
     }
 
     protected function closeApplication(): void
