@@ -177,7 +177,6 @@ $config = [
     'components' => [
         'request' => [
             'class' => Request::class,
-            'workerMode' => true,
         ],
         'response' => [
             'class' => Response::class,

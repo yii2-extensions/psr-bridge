@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
-use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
+use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function array_filter;
@@ -33,7 +33,7 @@ final class ApplicationCookieTest extends TestCase
      *
      * @phpstan-param array<string, string|object> $cookieParams
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'cookies')]
+    #[DataProviderExternal(ApplicationProvider::class, 'cookies')]
     public function testReturnCookiesForValidationAndSignature(
         bool $enableCookieValidation,
         bool $signedCookies,

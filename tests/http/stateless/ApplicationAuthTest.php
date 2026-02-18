@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
-use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
+use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 /**
@@ -25,7 +25,7 @@ final class ApplicationAuthTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'authCredentials')]
+    #[DataProviderExternal(ApplicationProvider::class, 'authCredentials')]
     public function testJsonBodyContainsCredentialsFromAuthorizationHeader(
         string $httpAuthorization,
         string $expectedJson,

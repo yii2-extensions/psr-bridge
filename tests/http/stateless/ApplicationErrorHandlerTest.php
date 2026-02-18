@@ -10,7 +10,7 @@ use yii\base\{Event, Exception, InvalidConfigException};
 use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
 use yii2\extensions\psrbridge\http\{Application, Response};
-use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
+use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function array_filter;
@@ -41,7 +41,7 @@ final class ApplicationErrorHandlerTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'errorViewLogic')]
+    #[DataProviderExternal(ApplicationProvider::class, 'errorViewLogic')]
     #[RequiresPhpExtension('runkit7')]
     public function testErrorViewLogic(
         bool $debug,
@@ -424,7 +424,7 @@ final class ApplicationErrorHandlerTest extends TestCase
      *
      * @phpstan-param string[] $expectedContent
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'exceptionRenderingFormats')]
+    #[DataProviderExternal(ApplicationProvider::class, 'exceptionRenderingFormats')]
     public function testRenderExceptionWithDifferentFormats(
         string $format,
         string $expectedContentType,
