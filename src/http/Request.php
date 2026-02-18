@@ -856,18 +856,14 @@ class Request extends \yii\web\Request
     /**
      * Returns the script name from server parameters.
      *
-     * Reads the `SCRIPT_NAME` server parameter.
-     *
-     * Returns an empty string when the value is unavailable or not a string.
-     *
      * @return string Script name, or an empty string when unavailable.
      */
     private function getScriptName(): string
     {
-        $scriptUrl = $this->getServerParam('SCRIPT_NAME');
+        $scriptName = $this->getServerParam('SCRIPT_NAME');
 
-        if (is_string($scriptUrl) && $scriptUrl !== '') {
-            return $scriptUrl;
+        if (is_string($scriptName) && $scriptName !== '') {
+            return $scriptName;
         }
 
         return ''; // script-less worker mode fallback
