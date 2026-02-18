@@ -26,6 +26,11 @@ final class ApplicationRest extends StatelessApplication
     public bool $attachPsrRequestCalled = false;
 
     /**
+     * Indicates whether `finalizeSessionState()` was invoked.
+     */
+    public bool $finalizeSessionStateCalled = false;
+
+    /**
      * Log of lifecycle hook calls for testing purposes.
      *
      * Each entry is a string representing the name of the lifecycle hook that was called.
@@ -88,6 +93,14 @@ final class ApplicationRest extends StatelessApplication
         $this->attachPsrRequestCalled = true;
 
         parent::attachPsrRequest($request);
+    }
+
+    protected function finalizeSessionState(): void
+    {
+        $this->hookCallLog[] = 'finalizeSessionState';
+        $this->finalizeSessionStateCalled = true;
+
+        parent::finalizeSessionState();
     }
 
     protected function openSessionFromRequestCookies(): void

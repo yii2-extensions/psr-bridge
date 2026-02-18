@@ -15,7 +15,8 @@ use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
  * Test coverage.
  * - Verifies that `handle()` invokes in the correct sequence the overridden `resetUploadedFilesState()`,
  *   `reinitializeApplication()`, `resetRequestState()`, `prepareErrorHandler()`, `attachPsrRequest()`,
- *   `syncCookieValidationState()`, `openSessionFromRequestCookies()`, and `terminate()` hooks.
+ *   `syncCookieValidationState()`, `openSessionFromRequestCookies()`, `finalizeSessionState()`, and
+ *   `terminate()` hooks.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetRequestState()` hook.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetUploadedFilesState()` hook.
  *
@@ -47,6 +48,7 @@ final class ApplicationHookTest extends TestCase
                 'attachPsrRequest',
                 'syncCookieValidationState',
                 'openSessionFromRequestCookies',
+                'finalizeSessionState',
                 'terminate',
             ],
             $app->hookCallLog,
@@ -79,6 +81,10 @@ final class ApplicationHookTest extends TestCase
         self::assertTrue(
             $app->openSessionFromRequestCookiesCalled,
             "Overridden 'openSessionFromRequestCookies()' hook should be invoked by 'prepareForRequest()'.",
+        );
+        self::assertTrue(
+            $app->finalizeSessionStateCalled,
+            "Overridden 'finalizeSessionState()' hook should be invoked by 'prepareForRequest()'.",
         );
         self::assertTrue(
             $app->terminateCalled,
