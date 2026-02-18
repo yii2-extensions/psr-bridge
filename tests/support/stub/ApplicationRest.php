@@ -35,6 +35,11 @@ final class ApplicationRest extends StatelessApplication
     public array $hookCallLog = [];
 
     /**
+     * Indicates whether `openSessionFromRequestCookies()` was invoked.
+     */
+    public bool $openSessionFromRequestCookiesCalled = false;
+
+    /**
      * Indicates whether `prepareErrorHandler()` was invoked.
      */
     public bool $prepareErrorHandlerCalled = false;
@@ -83,6 +88,14 @@ final class ApplicationRest extends StatelessApplication
         $this->attachPsrRequestCalled = true;
 
         parent::attachPsrRequest($request);
+    }
+
+    protected function openSessionFromRequestCookies(): void
+    {
+        $this->hookCallLog[] = 'openSessionFromRequestCookies';
+        $this->openSessionFromRequestCookiesCalled = true;
+
+        parent::openSessionFromRequestCookies();
     }
 
     protected function prepareErrorHandler(): void

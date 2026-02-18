@@ -340,6 +340,25 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
+     * Opens the session using the session identifier from request cookies.
+     */
+    protected function openSessionFromRequestCookies(): void
+    {
+        // reset the session to ensure a clean state
+        // @codeCoverageIgnoreStart
+        $this->session->close();
+        // @codeCoverageIgnoreEnd
+
+        $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
+        $this->session->setId($sessionId);
+
+        // start the session with the correct 'ID'
+        // @codeCoverageIgnoreStart
+        $this->session->open();
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
      * Prepares the error handler for the current request lifecycle.
      */
     protected function prepareErrorHandler(): void
@@ -370,20 +389,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->prepareErrorHandler();
         $this->attachPsrRequest($request);
         $this->syncCookieValidationState();
-
-        // reset the session to ensure a clean state
-        // @codeCoverageIgnoreStart
-        $this->session->close();
-        // @codeCoverageIgnoreEnd
-
-        $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
-        $this->session->setId($sessionId);
-
-        // start the session with the correct 'ID'
-        // @codeCoverageIgnoreStart
-        $this->session->open();
-        // @codeCoverageIgnoreEnd
-
+        $this->openSessionFromRequestCookies();
         $this->bootstrap();
 
         $this->session->close();
