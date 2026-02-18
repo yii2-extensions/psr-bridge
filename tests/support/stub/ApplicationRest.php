@@ -55,6 +55,11 @@ final class ApplicationRest extends StatelessApplication
     public bool $resetUploadedFilesStateCalled = false;
 
     /**
+     * Indicates whether `syncCookieValidationState()` was invoked.
+     */
+    public bool $syncCookieValidationStateCalled = false;
+
+    /**
      * Indicates whether `terminate()` was invoked.
      */
     public bool $terminateCalled = false;
@@ -110,6 +115,14 @@ final class ApplicationRest extends StatelessApplication
         $this->resetUploadedFilesStateCalled = true;
 
         parent::resetUploadedFilesState();
+    }
+
+    protected function syncCookieValidationState(): void
+    {
+        $this->hookCallLog[] = 'syncCookieValidationState';
+        $this->syncCookieValidationStateCalled = true;
+
+        parent::syncCookieValidationState();
     }
 
     protected function terminate(Response $response): ResponseInterface

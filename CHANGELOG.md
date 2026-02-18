@@ -11,6 +11,7 @@
 - Bug #218: Rename `ApplicationRestTest` to `ApplicationHookTest` to reflect its focus on testing lifecycle hooks (@terabytesoftw)
 - Bug #219: Extract `prepareErrorHandler()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #220: Extract `attachPsrRequest()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
+- Bug #221: Extract `syncCookieValidationState()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 
 ## 0.1.5 January 28, 2026
 
