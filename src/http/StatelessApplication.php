@@ -329,55 +329,6 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
-     * Retrieves the current memory limit from the PHP configuration.
-     *
-     * @return string Memory limit value from ini_get('memory_limit').
-     */
-    protected function getSystemMemoryLimit(): string
-    {
-        return ini_get('memory_limit');
-    }
-
-    /**
-     * Parses a PHP memory limit string and converts it to bytes.
-     *
-     * Supports the following formats.
-     * - '-1' for unlimited (returns 'PHP_INT_MAX').
-     * - Numeric values with suffix: K (kilobytes), M (megabytes), G (gigabytes).
-     * - Plain numeric values (bytes).
-     *
-     * @param string $limit Memory limit string to parse.
-     *
-     * @return int Memory limit in bytes, or 'PHP_INT_MAX' if unlimited.
-     */
-    protected static function parseMemoryLimit(string $limit): int
-    {
-        if ($limit === '-1') {
-            // @codeCoverageIgnoreStart
-            return PHP_INT_MAX;
-            // @codeCoverageIgnoreEnd
-        }
-
-        $number = 0;
-        $suffix = null;
-
-        sscanf($limit, '%u%c', $number, $suffix);
-
-        if ($suffix !== null) {
-            $multipliers = [
-                'K' => 1024,
-                'M' => 1048576,
-                'G' => 1073741824,
-            ];
-
-            $suffix = strtoupper((string) $suffix);
-            $number = (int) $number * ($multipliers[$suffix] ?? 1);
-        }
-
-        return (int) $number;
-    }
-
-    /**
      * Prepares the application lifecycle for a new PSR-7 request.
      *
      * Initializes per-request state, rebinds request and response context, resets uploaded file static state,
@@ -513,6 +464,16 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
+     * Retrieves the current memory limit from the PHP configuration.
+     *
+     * @return string Memory limit value from ini_get('memory_limit').
+     */
+    private function getSystemMemoryLimit(): string
+    {
+        return ini_get('memory_limit');
+    }
+
+    /**
      * Handles application errors and returns a Yii2 Response instance.
      *
      * Invokes the configured error handler to process the exception and generate a response, then triggers the
@@ -551,6 +512,45 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->eventHandler = function (Event $event): void {
             $this->registeredEvents[] = $event;
         };
+    }
+
+    /**
+     * Parses a PHP memory limit string and converts it to bytes.
+     *
+     * Supports the following formats.
+     * - '-1' for unlimited (returns 'PHP_INT_MAX').
+     * - Numeric values with suffix: K (kilobytes), M (megabytes), G (gigabytes).
+     * - Plain numeric values (bytes).
+     *
+     * @param string $limit Memory limit string to parse.
+     *
+     * @return int Memory limit in bytes, or 'PHP_INT_MAX' if unlimited.
+     */
+    private static function parseMemoryLimit(string $limit): int
+    {
+        if ($limit === '-1') {
+            // @codeCoverageIgnoreStart
+            return PHP_INT_MAX;
+            // @codeCoverageIgnoreEnd
+        }
+
+        $number = 0;
+        $suffix = null;
+
+        sscanf($limit, '%u%c', $number, $suffix);
+
+        if ($suffix !== null) {
+            $multipliers = [
+                'K' => 1024,
+                'M' => 1048576,
+                'G' => 1073741824,
+            ];
+
+            $suffix = strtoupper((string) $suffix);
+            $number = (int) $number * ($multipliers[$suffix] ?? 1);
+        }
+
+        return (int) $number;
     }
 
     /**

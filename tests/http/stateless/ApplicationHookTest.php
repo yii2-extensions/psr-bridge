@@ -13,6 +13,7 @@ use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
  *
  * Test coverage.
+ * - Verifies that `handle()` invokes the overridden `terminate()` hook.
  * - Verifies that `prepareForRequest()` invokes the overridden `reinitializeApplication()` hook.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetRequestState()` hook.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetUploadedFilesState()` hook.
@@ -32,26 +33,16 @@ final class ApplicationHookTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertTrue(
             $app->reinitializeApplicationCalled,
             "Overridden 'reinitializeApplication()' hook should be invoked by 'prepareForRequest()'.",
+        );
+        self::assertTrue(
+            $app->terminateCalled,
+            "Overridden 'terminate()' hook should be invoked by 'handle()'.",
         );
     }
 
@@ -64,22 +55,8 @@ final class ApplicationHookTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertInstanceOf(
             Action::class,
@@ -123,9 +100,9 @@ final class ApplicationHookTest extends TestCase
         $tmpPath1 = $this->createTmpFile();
         $size1 = filesize($tmpPath1);
 
-        self::assertIsInt(
+        self::assertNotFalse(
             $size1,
-            'Temporary file should have a valid size greater than zero.',
+            "'filesize()' must not fail on the temporary file.",
         );
 
         $app = $this->applicationRest();

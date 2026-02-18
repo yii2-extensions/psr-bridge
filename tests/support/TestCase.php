@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\support;
 
 use HttpSoft\Message\{ResponseFactory, StreamFactory};
-use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
+use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
 use RuntimeException;
 use Yii;
 use yii\base\Security;
@@ -102,6 +102,27 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         );
 
         return new ApplicationRest($configApplication);
+    }
+
+    protected function assertSiteIndexJsonResponse(ResponseInterface $response): void
+    {
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/index'.",
+        );
+        self::assertSame(
+            'application/json; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
+        );
+        self::assertJsonStringEqualsJsonString(
+            <<<JSON
+            {"hello":"world"}
+            JSON,
+            $response->getBody()->getContents(),
+            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        );
     }
 
     protected function closeApplication(): void

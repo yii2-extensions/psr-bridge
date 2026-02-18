@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\support\stub;
 
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use yii\base\InvalidConfigException;
 use yii\web\IdentityInterface;
-use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\psrbridge\http\{Response, StatelessApplication};
 
 /**
  * Stub for a REST application.
@@ -34,6 +34,11 @@ final class ApplicationRest extends StatelessApplication
      * Indicates whether `resetUploadedFilesState()` was invoked.
      */
     public bool $resetUploadedFilesStateCalled = false;
+
+    /**
+     * Indicates whether `terminate()` was invoked.
+     */
+    public bool $terminateCalled = false;
 
     /**
      * Runs request preparation and triggers lifecycle hooks.
@@ -65,5 +70,12 @@ final class ApplicationRest extends StatelessApplication
         $this->resetUploadedFilesStateCalled = true;
 
         parent::resetUploadedFilesState();
+    }
+
+    protected function terminate(Response $response): ResponseInterface
+    {
+        $this->terminateCalled = true;
+
+        return parent::terminate($response);
     }
 }
