@@ -329,6 +329,17 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
+     * Attaches the PSR-7 request to the Yii request adapter.
+     *
+     * @param ServerRequestInterface $request PSR-7 request instance to attach.
+     */
+    protected function attachPsrRequest(ServerRequestInterface $request): void
+    {
+        // inject the PSR-7 request into the Yii2 Request adapter
+        $this->request->setPsr7Request($request);
+    }
+
+    /**
      * Prepares the error handler for the current request lifecycle.
      */
     protected function prepareErrorHandler(): void
@@ -357,9 +368,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->reinitializeApplication();
         $this->resetRequestState();
         $this->prepareErrorHandler();
-
-        // inject the PSR-7 request into the Yii2 Request adapter
-        $this->request->setPsr7Request($request);
+        $this->attachPsrRequest($request);
 
         // synchronize cookie validation settings between request and response
         $this->response->cookieValidationKey = $this->request->cookieValidationKey;
