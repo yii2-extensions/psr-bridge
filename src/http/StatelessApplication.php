@@ -345,11 +345,13 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
      * Closes the active session immediately after {@see bootstrap()} completes, ensuring that no lingering session
      * data persists between the bootstrap phase and normal request handling.
      *
-     * Override this method in a subclass to customize post bootstrap session finalization behaviour.
+     * Override this method in a subclass to customize post-bootstrap session finalization behaviour.
      */
     protected function finalizeSessionState(): void
     {
+        // @codeCoverageIgnoreStart
         $this->session->close();
+        // @codeCoverageIgnoreEnd
     }
 
     /**
