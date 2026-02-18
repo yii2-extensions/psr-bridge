@@ -64,7 +64,7 @@ ini_set('session.use_cookies', '0');
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use yii2\extensions\frankenphp\FrankenPHP;
-use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\psrbridge\http\Application;
 
 // Load environment variables from .env file
 $dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
@@ -79,7 +79,7 @@ require_once dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php';
 
 $config = require_once dirname(__DIR__) . '/config/web/app.php';
 
-$runner = new FrankenPHP(new StatelessApplication($config));
+$runner = new FrankenPHP(new Application($config));
 
 $runner->run();
 ```
@@ -93,7 +93,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\roadrunner\RoadRunner;
 
 define('YII_DEBUG', getenv('YII_DEBUG') ?? false);
@@ -103,7 +103,7 @@ require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
 
 $config = require dirname(__DIR__) . '/config/web/app.php';
 
-$runner = new RoadRunner(new StatelessApplication($config));
+$runner = new RoadRunner(new Application($config));
 
 $runner->run();
 ```

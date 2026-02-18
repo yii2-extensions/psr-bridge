@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
 use ReflectionException;
 use stdClass;
 use yii\base\InvalidConfigException;
-use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
+use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function array_fill;
@@ -26,15 +26,14 @@ use function ob_start;
 use const PHP_INT_MAX;
 
 /**
- * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} memory management in stateless mode.
- *
- * Verifies correct memory limit handling, output buffer cleanup and garbage collection in stateless Yii2 applications.
+ * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} memory handling in stateless mode.
  *
  * Test coverage.
- * - Confirms memory limit parsing, unlimited values, and positive/negative limit scenarios.
- * - Covers edge cases for memory thresholds, recursion, and buffer management.
- * - Ensures output buffer levels are cleaned after request handling.
- * - Validates garbage collection and memory usage before and after cleanup.
+ * - Ensures memory limit parsing and recalculation handle supported formats and boundary values.
+ * - Ensures output buffers are cleared by the error handler.
+ * - Verifies cleanup behavior across configured memory thresholds.
+ * - Verifies garbage collection runs under expected load scenarios.
+ * - Verifies unlimited memory settings map to PHP_INT_MAX.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -45,7 +44,7 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'memoryThreshold')]
+    #[DataProviderExternal(ApplicationProvider::class, 'memoryThreshold')]
     public function testCleanBehaviorWithDifferentMemoryLimits(string $memoryLimit, string $assertionMessage): void
     {
         $originalLimit = ini_get('memory_limit');
@@ -123,7 +122,7 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'garbageCollection')]
+    #[DataProviderExternal(ApplicationProvider::class, 'garbageCollection')]
     public function testGarbageCollectionWithDifferentLoads(
         string $memoryLimit,
         int $iterations,
@@ -218,7 +217,7 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws ReflectionException if the method does not exist or is inaccessible.
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'parseMemoryLimit')]
+    #[DataProviderExternal(ApplicationProvider::class, 'parseMemoryLimit')]
     public function testParseMemoryLimitHandlesAllCasesCorrectly(
         string $input,
         int $expected,
@@ -295,7 +294,7 @@ final class ApplicationMemoryTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'memoryLimitPositive')]
+    #[DataProviderExternal(ApplicationProvider::class, 'memoryLimitPositive')]
     public function testSetMemoryLimitWithPositiveValueSetsLimitDirectly(
         int $memoryLimit,
         string $assertionMessage,

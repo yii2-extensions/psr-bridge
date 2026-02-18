@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
-use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
+use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 use function array_filter;
@@ -15,14 +15,12 @@ use function implode;
 use function str_starts_with;
 
 /**
- * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} cookie handling in stateless mode.
- *
- * Verifies correct behavior of cookie validation, signature, and deletion in stateless Yii2 applications.
+ * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} cookie handling in stateless mode.
  *
  * Test coverage.
- * - Confirms correct 'Set-Cookie' headers for cookie deletion and multiple cookie types.
- * - Ensures correct Content-Type and status codes for cookie-related routes.
- * - Validates JSON response for cookie validation and signature scenarios.
+ * - Ensures cookie validation and signature handling return expected JSON payloads.
+ * - Verifies deletion responses emit expected Set-Cookie headers.
+ * - Verifies multiple cookie responses include created cookies and omit deleted cookies.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -35,7 +33,7 @@ final class ApplicationCookieTest extends TestCase
      *
      * @phpstan-param array<string, string|object> $cookieParams
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'cookies')]
+    #[DataProviderExternal(ApplicationProvider::class, 'cookies')]
     public function testReturnCookiesForValidationAndSignature(
         bool $enableCookieValidation,
         bool $signedCookies,

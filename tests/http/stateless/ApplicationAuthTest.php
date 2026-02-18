@@ -6,18 +6,15 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
-use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
+use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 /**
- * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} authentication handling in stateless
- * mode.
- *
- * Verifies correct extraction and handling of HTTP authentication credentials in stateless Yii2 applications.
+ * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} authentication handling in stateless mode.
  *
  * Test coverage.
- * - Confirms credentials are parsed from Authorization header and PHP_AUTH_USER.
- * - Ensures correct JSON response structure for various authentication scenarios.
+ * - Ensures credentials are extracted from the Authorization header.
+ * - Verifies partial credentials when only PHP_AUTH_USER is present.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -28,7 +25,7 @@ final class ApplicationAuthTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'authCredentials')]
+    #[DataProviderExternal(ApplicationProvider::class, 'authCredentials')]
     public function testJsonBodyContainsCredentialsFromAuthorizationHeader(
         string $httpAuthorization,
         string $expectedJson,

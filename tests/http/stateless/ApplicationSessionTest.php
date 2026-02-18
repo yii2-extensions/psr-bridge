@@ -17,16 +17,15 @@ use function str_starts_with;
 use function uniqid;
 
 /**
- * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} session handling in stateless mode.
- *
- * Verifies correct session isolation, persistence, flash message handling, and authentication session separation in
- * stateless Yii2 applications.
+ * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} session handling in stateless mode.
  *
  * Test coverage.
- * - Confirms session data is isolated between different session IDs and requests.
- * - Ensures session data persists with the same session ID and is reset without cookies.
- * - Tests user authentication session isolation and multi-request scenarios in worker mode.
- * - Validates flash message isolation and persistence across sessions.
+ * - Ensures captcha state is isolated across session IDs and requests.
+ * - Ensures flash messages remain isolated between sessions.
+ * - Ensures session-backed authentication state does not leak between users.
+ * - Verifies data persists when the same session ID is reused.
+ * - Verifies requests without a session cookie create a new session cookie.
+ * - Verifies worker-mode requests keep session data isolated across session IDs.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

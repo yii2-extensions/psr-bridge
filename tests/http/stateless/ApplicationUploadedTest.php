@@ -13,14 +13,11 @@ use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use function filesize;
 
 /**
- * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} uploaded file handling in stateless mode.
- *
- * Verifies correct extraction, creation, and reset of uploaded files in stateless Yii2 applications.
+ * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} uploaded file handling in stateless mode.
  *
  * Test coverage.
- * - Confirms PSR-7 uploaded file creation from PHP superglobals and multipart form data.
- * - Ensures correct response and file state for repeated requests.
- * - Validates reset and isolation of uploaded files between requests.
+ * - Ensures multipart uploads from PHP superglobals create expected uploaded file instances.
+ * - Verifies uploaded files are reset between requests in stateless handling.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -61,22 +58,8 @@ final class ApplicationUploadedTest extends TestCase
 
         $response = $app->handle($creator->createFromGlobals());
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route '/site/post'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route '/site/post'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"action": "upload"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected PSR-7 Response body '{\"action\":\"upload\"}'.",
+        $this->assertSitePostUploadJsonResponse(
+            $response,
         );
 
         $uploadedFiles = UploadedFile::getInstancesByName('avatar');
@@ -134,22 +117,8 @@ final class ApplicationUploadedTest extends TestCase
                 ),
         );
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route '/site/post'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route '/site/post'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"action": "upload"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected PSR-7 Response body '{\"action\":\"upload\"}'.",
+        $this->assertSitePostUploadJsonResponse(
+            $response,
         );
         self::assertNotEmpty(
             UploadedFile::getInstancesByName('file1'),
@@ -203,22 +172,8 @@ final class ApplicationUploadedTest extends TestCase
                 ),
         );
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route '/site/post'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route '/site/post'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"action": "upload"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected PSR-7 Response body '{\"action\":\"upload\"}'.",
+        $this->assertSitePostUploadJsonResponse(
+            $response,
         );
         self::assertNotEmpty(
             UploadedFile::getInstancesByName('file2'),

@@ -6,19 +6,15 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
-use yii2\extensions\psrbridge\tests\provider\StatelessApplicationProvider;
+use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 
 /**
- * Test suite for {@see \yii2\extensions\psrbridge\http\StatelessApplication} server parameter handling in stateless
- * mode.
- *
- * Verifies correct handling of remote IP addresses and server port extraction in stateless Yii2 applications.
+ * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} server parameter handling in stateless mode.
  *
  * Test coverage.
- * - Confirms remote IP address extraction for valid and invalid REMOTE_ADDR values.
- * - Ensures correct HTTP status codes, content types, and JSON response bodies for each route.
- * - Validates server port extraction from headers and server parameters, including trusted host scenarios.
+ * - Ensures remote IP resolution handles valid and invalid REMOTE_ADDR values.
+ * - Verifies server port resolution from trusted forwarded headers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -29,7 +25,7 @@ final class ApplicationServerParamsTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'remoteIPAddresses')]
+    #[DataProviderExternal(ApplicationProvider::class, 'remoteIPAddresses')]
     public function testGetRemoteIPHandlesValidAndInvalidAddresses(
         int|string $remoteAddr,
         string|null $expectedIP,
@@ -45,22 +41,8 @@ final class ApplicationServerParamsTest extends TestCase
             ),
         );
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertSame(
             $expectedIP,
@@ -74,7 +56,7 @@ final class ApplicationServerParamsTest extends TestCase
      *
      * @phpstan-param array<string, string> $headers
      */
-    #[DataProviderExternal(StatelessApplicationProvider::class, 'serverPortHeaders')]
+    #[DataProviderExternal(ApplicationProvider::class, 'serverPortHeaders')]
     public function testGetServerPortHandlesValidAndInvalidServerPortFromHeaders(
         array $headers,
         int|null $expectedPort,
@@ -99,22 +81,8 @@ final class ApplicationServerParamsTest extends TestCase
             ),
         );
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertSame(
             $expectedPort,

@@ -17,7 +17,7 @@ use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
 use yii\log\{Dispatcher, FileTarget};
 use yii\web\{AssetManager, JsonParser, RequestParserInterface, Session, UrlManager, User, View};
-use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response, StatelessApplication};
+use yii2\extensions\psrbridge\http\{Application, ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
@@ -34,17 +34,15 @@ use function str_contains;
 use function unlink;
 
 /**
- * Test suite for {@see StatelessApplication} core functionality in stateless mode.
- *
- * Verifies correct behavior of the core lifecycle, event order, PSR-7 container resolution, logging, and response
- * handling in stateless Yii2 applications.
+ * Unit tests for {@see Application} core behavior in stateless mode.
  *
  * Test coverage.
- * - Checks PSR-7 request headers and application aliasing after handle.
- * - Confirms PSR-7 factory resolution and container definitions.
- * - Covers redirect, exception rendering, response adapter caching, and core component configuration.
- * - Ensures immediate log flushing and file output.
- * - Validates event order during request handling.
+ * - Ensures lifecycle events run in the expected order during request handling.
+ * - Ensures response adapters are cached per response instance and isolated per request.
+ * - Validates parser behavior for configured, wildcard, and invalid parser definitions.
+ * - Verifies container definitions resolve PSR-7 factory interfaces.
+ * - Verifies core component mappings, aliases, and request start-time headers after handling.
+ * - Verifies redirects, debug exception rendering, and immediate log flushing behavior.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -115,13 +113,13 @@ final class ApplicationCoreTest extends TestCase
         $sequence = [];
 
         $app->on(
-            StatelessApplication::EVENT_BEFORE_REQUEST,
+            Application::EVENT_BEFORE_REQUEST,
             static function () use (&$sequence): void {
                 $sequence[] = 'before';
             },
         );
         $app->on(
-            StatelessApplication::EVENT_AFTER_REQUEST,
+            Application::EVENT_AFTER_REQUEST,
             static function () use (&$sequence): void {
                 $sequence[] = 'after';
             },
@@ -129,22 +127,8 @@ final class ApplicationCoreTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertSame(
             ['before', 'after'],
@@ -180,7 +164,7 @@ final class ApplicationCoreTest extends TestCase
         );
 
         $app->on(
-            StatelessApplication::EVENT_AFTER_REQUEST,
+            Application::EVENT_AFTER_REQUEST,
             static function (): void {
                 Yii::info('Test log message after request.', 'test');
             },
@@ -188,22 +172,8 @@ final class ApplicationCoreTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertFileExists(
             $this->logFile,
@@ -491,22 +461,8 @@ final class ApplicationCoreTest extends TestCase
         // first request - verify adapter caching behavior
         $response1 = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response1->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response1->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response1->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response1,
         );
 
         // access the Response component to test adapter behavior
@@ -696,22 +652,8 @@ final class ApplicationCoreTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
 
         $psr7Request = $app->request->getPsr7Request();
@@ -737,22 +679,8 @@ final class ApplicationCoreTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertSame(
             '',

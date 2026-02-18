@@ -167,22 +167,8 @@ final class ApplicationHookTest extends TestCase
                 ),
         );
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route '/site/post'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route '/site/post'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"action": "upload"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected PSR-7 Response body '{\"action\":\"upload\"}'.",
+        $this->assertSitePostUploadJsonResponse(
+            $response,
         );
         self::assertNotEmpty(
             UploadedFile::getInstancesByName('file1'),

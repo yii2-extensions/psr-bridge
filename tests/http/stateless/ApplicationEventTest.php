@@ -9,22 +9,21 @@ use PHPUnit\Framework\Attributes\{Group, TestWith};
 use ReflectionException;
 use yii\base\{Event, InvalidConfigException};
 use yii\web\IdentityInterface;
-use yii2\extensions\psrbridge\http\StatelessApplication;
+use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\EventComponent;
 
 use function count;
 
 /**
- * Test suite for {@see StatelessApplication} event handling in stateless mode.
- *
- * Verifies correct event registration, handler cleanup, and event firing order in stateless Yii2 applications.
+ * Unit tests for {@see Application} event handling in stateless mode.
  *
  * Test coverage.
- * - Confirms LIFO cleanup order for registered events and memory management.
- * - Ensures global and internal event handlers are properly managed.
- * - Tests event triggering during request handling and outside request context.
- * - Validates event registration and cleanup between requests.
+ * - Ensures component and global handlers are cleaned after each request.
+ * - Ensures internal component listeners can still fire outside request handling.
+ * - Verifies cleanup preserves reverse (LIFO) order for tracked events.
+ * - Verifies event handlers registered for a request do not leak into subsequent requests.
+ * - Verifies EVENT_BEFORE_REQUEST and EVENT_AFTER_REQUEST trigger during handling.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -118,22 +117,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertCount(
             1,
@@ -178,19 +163,19 @@ final class ApplicationEventTest extends TestCase
         $trackedCounts = [];
 
         $app->on(
-            StatelessApplication::EVENT_BEFORE_REQUEST,
+            Application::EVENT_BEFORE_REQUEST,
             static function (Event $event) use (&$eventsCaptured): void {
-                $version = $event->sender instanceof StatelessApplication ? $event->sender->version : 'unknown';
+                $version = $event->sender instanceof Application ? $event->sender->version : 'unknown';
                 $eventsCaptured[] = "before_request_{$version}";
             },
         );
         $app->on(
-            StatelessApplication::EVENT_AFTER_REQUEST,
+            Application::EVENT_AFTER_REQUEST,
             function (Event $event) use (&$eventsCaptured, &$trackedCounts): void {
-                $version = $event->sender instanceof StatelessApplication ? $event->sender->version : 'unknown';
+                $version = $event->sender instanceof Application ? $event->sender->version : 'unknown';
                 $eventsCaptured[] = "after_request_{$version}";
 
-                /** @var StatelessApplication<IdentityInterface> $sender */
+                /** @var Application<IdentityInterface> $sender */
                 $sender = $event->sender;
 
                 /** @var mixed[] $registeredEvents */
@@ -202,22 +187,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertGreaterThanOrEqual(
             2,
@@ -287,13 +258,13 @@ final class ApplicationEventTest extends TestCase
         $eventsTriggered = [];
 
         $app->on(
-            StatelessApplication::EVENT_BEFORE_REQUEST,
+            Application::EVENT_BEFORE_REQUEST,
             static function () use (&$eventsTriggered): void {
                 $eventsTriggered[] = 'app_before';
             },
         );
         $app->on(
-            StatelessApplication::EVENT_AFTER_REQUEST,
+            Application::EVENT_AFTER_REQUEST,
             static function () use (&$eventsTriggered): void {
                 $eventsTriggered[] = 'app_after';
             },
@@ -301,22 +272,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertCount(
             2,
@@ -341,7 +298,7 @@ final class ApplicationEventTest extends TestCase
         $eventsTriggered = [];
 
         $app->on(
-            StatelessApplication::EVENT_BEFORE_REQUEST,
+            Application::EVENT_BEFORE_REQUEST,
             static function () use (&$eventsTriggered): void {
                 $eventsTriggered[] = 'app_before_2';
             },
@@ -400,22 +357,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
 
         Event::trigger('', 'test.global.event');
@@ -454,22 +397,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
 
         $component = $app->get('eventComponent');
@@ -495,8 +424,8 @@ final class ApplicationEventTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    #[TestWith([StatelessApplication::EVENT_AFTER_REQUEST])]
-    #[TestWith([StatelessApplication::EVENT_BEFORE_REQUEST])]
+    #[TestWith([Application::EVENT_AFTER_REQUEST])]
+    #[TestWith([Application::EVENT_BEFORE_REQUEST])]
     public function testTriggerEventDuringHandle(string $eventName): void
     {
         $invocations = 0;
@@ -516,22 +445,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
 
-        self::assertSame(
-            200,
-            $response->getStatusCode(),
-            "Expected HTTP '200' for route 'site/index'.",
-        );
-        self::assertSame(
-            'application/json; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'application/json; charset=UTF-8' for route 'site/index'.",
-        );
-        self::assertJsonStringEqualsJsonString(
-            <<<JSON
-            {"hello":"world"}
-            JSON,
-            $response->getBody()->getContents(),
-            "Expected JSON Response body '{\"hello\":\"world\"}'.",
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertSame(
             1,
@@ -551,11 +466,13 @@ final class ApplicationEventTest extends TestCase
     }
 
     /**
+     * Asserts that the internal {@see Application::registeredEvents} list is empty.
+     *
      * @throws ReflectionException if the property does not exist or is inaccessible.
      *
-     * @phpstan-param StatelessApplication<IdentityInterface> $app
+     * @phpstan-param Application<IdentityInterface> $app
      */
-    private function assertEmptyRegisteredEvents(StatelessApplication $app, string $message): void
+    private function assertEmptyRegisteredEvents(Application $app, string $message): void
     {
         self::assertEmpty(
             ReflectionHelper::inaccessibleProperty($app, 'registeredEvents'),
