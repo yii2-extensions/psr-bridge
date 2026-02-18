@@ -6,7 +6,7 @@
 
 - `yii2\extensions\psrbridge\http\StatelessApplication` was renamed to `yii2\extensions\psrbridge\http\Application`.
 - No compatibility alias is provided for `StatelessApplication`; all imports and type hints must be updated.
-- `yii2\extensions\psrbridge\http\Application::reset()` was renamed to `prepareForRequest()`.
+- `yii2\extensions\psrbridge\http\StatelessApplication::reset()` was renamed to `yii2\extensions\psrbridge\http\Application::prepareForRequest()`.
 - `yii2\extensions\psrbridge\http\Request::$workerMode` was removed.
 
 ### Migration steps
