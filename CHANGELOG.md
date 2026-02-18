@@ -12,6 +12,7 @@
 - Bug #219: Extract `prepareErrorHandler()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #220: Extract `attachPsrRequest()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #221: Extract `syncCookieValidationState()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
+- Bug #222: Extract `openSessionFromRequestCookies()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 
 ## 0.1.5 January 28, 2026
 
