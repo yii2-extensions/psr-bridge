@@ -304,6 +304,8 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
      */
     public function init(): void
     {
+        parent::init();
+
         $this->state = self::STATE_INIT;
     }
 
@@ -405,7 +407,6 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->attachPsrRequest($request);
         $this->syncCookieValidationState();
         $this->openSessionFromRequestCookies();
-        $this->bootstrap();
         $this->finalizeSessionState();
     }
 
