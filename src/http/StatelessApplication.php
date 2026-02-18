@@ -329,6 +329,15 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
+     * Prepares the error handler for the current request lifecycle.
+     */
+    protected function prepareErrorHandler(): void
+    {
+        // re-register error handler to reset its state
+        $this->errorHandler->setResponse($this->response);
+    }
+
+    /**
      * Prepares the application lifecycle for a new PSR-7 request.
      *
      * Initializes per-request state, rebinds request and response context, resets uploaded file static state,
@@ -347,9 +356,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->resetUploadedFilesState();
         $this->reinitializeApplication();
         $this->resetRequestState();
-
-        // re-register error handler to reset its state
-        $this->errorHandler->setResponse($this->response);
+        $this->prepareErrorHandler();
 
         // inject the PSR-7 request into the Yii2 Request adapter
         $this->request->setPsr7Request($request);

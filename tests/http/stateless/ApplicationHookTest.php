@@ -13,8 +13,8 @@ use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
  *
  * Test coverage.
- * - Verifies that `handle()` invokes the overridden `terminate()` hook.
- * - Verifies that `prepareForRequest()` invokes the overridden `reinitializeApplication()` hook.
+ * - Verifies that `handle()` invokes in the correct sequence the overridden `resetUploadedFilesState()`,
+ *   `reinitializeApplication()`, `resetRequestState()`, `prepareErrorHandler()`, and `terminate()` hooks.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetRequestState()` hook.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetUploadedFilesState()` hook.
  *
@@ -27,7 +27,7 @@ final class ApplicationHookTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testPrepareForRequestCallsOverriddenReinitializeApplicationHook(): void
+    public function testHandleInvokesOverriddenCoreLifecycleHooks(): void
     {
         $app = $this->applicationRest();
 
@@ -36,9 +36,33 @@ final class ApplicationHookTest extends TestCase
         $this->assertSiteIndexJsonResponse(
             $response,
         );
+        // order assertions to verify the sequence of lifecycle hook invocations
+        self::assertSame(
+            [
+                'resetUploadedFilesState',
+                'reinitializeApplication',
+                'resetRequestState',
+                'prepareErrorHandler',
+                'terminate',
+            ],
+            $app->hookCallLog,
+            'Lifecycle hooks must be invoked in the documented sequence.',
+        );
+        self::assertTrue(
+            $app->resetUploadedFilesStateCalled,
+            "Overridden 'resetUploadedFilesState()' hook should be invoked by 'prepareForRequest()'.",
+        );
         self::assertTrue(
             $app->reinitializeApplicationCalled,
             "Overridden 'reinitializeApplication()' hook should be invoked by 'prepareForRequest()'.",
+        );
+        self::assertTrue(
+            $app->resetRequestStateCalled,
+            "Overridden 'resetRequestState()' hook should be invoked by 'prepareForRequest()'.",
+        );
+        self::assertTrue(
+            $app->prepareErrorHandlerCalled,
+            "Overridden 'prepareErrorHandler()' hook should be invoked by 'prepareForRequest()'.",
         );
         self::assertTrue(
             $app->terminateCalled,

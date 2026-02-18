@@ -21,6 +21,20 @@ use yii2\extensions\psrbridge\http\{Response, StatelessApplication};
 final class ApplicationRest extends StatelessApplication
 {
     /**
+     * Log of lifecycle hook calls for testing purposes.
+     *
+     * Each entry is a string representing the name of the lifecycle hook that was called.
+     *
+     * @phpstan-var list<string> $hookCallLog
+     */
+    public array $hookCallLog = [];
+
+    /**
+     * Indicates whether `prepareErrorHandler()` was invoked.
+     */
+    public bool $prepareErrorHandlerCalled = false;
+
+    /**
      * Indicates whether `reinitializeApplication()` was invoked.
      */
     public bool $reinitializeApplicationCalled = false;
@@ -48,11 +62,22 @@ final class ApplicationRest extends StatelessApplication
      */
     public function runPrepareForRequest(ServerRequestInterface $request): void
     {
+        $this->hookCallLog[] = 'prepareForRequest';
+
         $this->prepareForRequest($request);
+    }
+
+    protected function prepareErrorHandler(): void
+    {
+        $this->hookCallLog[] = 'prepareErrorHandler';
+        $this->prepareErrorHandlerCalled = true;
+
+        parent::prepareErrorHandler();
     }
 
     protected function reinitializeApplication(): void
     {
+        $this->hookCallLog[] = 'reinitializeApplication';
         $this->reinitializeApplicationCalled = true;
 
         parent::reinitializeApplication();
@@ -60,6 +85,7 @@ final class ApplicationRest extends StatelessApplication
 
     protected function resetRequestState(): void
     {
+        $this->hookCallLog[] = 'resetRequestState';
         $this->resetRequestStateCalled = true;
 
         parent::resetRequestState();
@@ -67,6 +93,7 @@ final class ApplicationRest extends StatelessApplication
 
     protected function resetUploadedFilesState(): void
     {
+        $this->hookCallLog[] = 'resetUploadedFilesState';
         $this->resetUploadedFilesStateCalled = true;
 
         parent::resetUploadedFilesState();
@@ -74,6 +101,7 @@ final class ApplicationRest extends StatelessApplication
 
     protected function terminate(Response $response): ResponseInterface
     {
+        $this->hookCallLog[] = 'terminate';
         $this->terminateCalled = true;
 
         return parent::terminate($response);
