@@ -289,14 +289,11 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
-     * Initializes the StatelessApplication.
-     *
-     * Calls {@see parent::init()} to run base Yii2 initialization (which sets STATE_INIT and executes
-     * {@see bootstrap()}), ensuring correct lifecycle ordering before request handling.
+     * Initializes the StatelessApplication state to `STATE_INIT`.
      */
     public function init(): void
     {
-        parent::init();
+        $this->state = self::STATE_INIT;
     }
 
     /**
@@ -375,17 +372,12 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
     }
 
     /**
-     * Prepares the application lifecycle for a new PSR-7 request.
+     * Prepares the application for a new PSR-7 request.
      *
-     * Initializes per-request state, rebinds request and response context, resets uploaded file static state,
-     * synchronizes session and cookie settings.
+     * Resets per-request state, prepares the error handler, attaches the PSR-7 request, synchronizes cookie validation
+     * settings, runs bootstrap, then opens and finalizes the session state from request cookies.
      *
-     * Bootstrap is executed automatically inside {@see reinitializeApplication()} via the parent constructor chain.
-     *
-     * This method is called internally before request handling to keep worker and SAPI execution stateless and
-     * repeatable.
-     *
-     * @param ServerRequestInterface $request PSR-7 request to bind to the Yii2 request adapter.
+     * @param ServerRequestInterface $request PSR-7 request to bind to the Yii request adapter.
      *
      * @throws InvalidConfigException if the application configuration is invalid.
      */
@@ -398,6 +390,7 @@ class StatelessApplication extends Application implements RequestHandlerInterfac
         $this->prepareErrorHandler();
         $this->attachPsrRequest($request);
         $this->syncCookieValidationState();
+        $this->bootstrap();
         $this->openSessionFromRequestCookies();
         $this->finalizeSessionState();
     }
