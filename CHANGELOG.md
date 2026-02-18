@@ -8,6 +8,7 @@
 - Bug #215: Extract `resetUploadedFilesState()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #216: Extract `reinitializeApplication()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
 - Bug #217: Extract `resetRequestState()` in `StatelessApplication` as a protected request-preparation hook (@terabytesoftw)
+- Bug #218: Better naming `ApplicationRestTest` for `ApplicationHookTest` to reflect its focus on testing lifecycle hooks (@terabytesoftw)
 
 ## 0.1.5 January 28, 2026
 

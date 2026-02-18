@@ -75,8 +75,26 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                         'enableCookieValidation' => false,
                         'enableCsrfCookie' => false,
                         'enableCsrfValidation' => false,
+                        'parsers' => [
+                            'application/json' => JsonParser::class,
+                        ],
                         'scriptFile' => __DIR__ . '/index.php',
                         'scriptUrl' => '/index.php',
+                    ],
+                    'urlManager' => [
+                        'showScriptName' => false,
+                        'enableStrictParsing' => false,
+                        'enablePrettyUrl' => true,
+                        'rules' => [
+                            'site/query/<test:\w+>' => 'site/query',
+                            'site/update/<id:\d+>' => 'site/update',
+                        ],
+                    ],
+                ],
+                'container' => [
+                    'definitions' => [
+                        ResponseFactoryInterface::class => ResponseFactory::class,
+                        StreamFactoryInterface::class => StreamFactory::class,
                     ],
                 ],
             ],
