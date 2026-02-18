@@ -25,7 +25,7 @@ final class ApplicationRest extends StatelessApplication
      *
      * Each entry is a string representing the name of the lifecycle hook that was called.
      *
-     * @phpstan-var mixed[] $hookCallLog
+     * @phpstan-var list<string> $hookCallLog
      */
     public array $hookCallLog = [];
 
