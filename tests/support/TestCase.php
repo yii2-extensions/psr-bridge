@@ -101,8 +101,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Closes the application and flushes the logger to ensure all logs are written out.
      *
-      * @throws RuntimeException if an error occurs while closing the application or flushing the logger.
-      */
+     * @throws RuntimeException if an error occurs while closing the application or flushing the logger.
+     */
     protected function closeApplication(): void
     {
         if (Yii::$app->has('session')) {
