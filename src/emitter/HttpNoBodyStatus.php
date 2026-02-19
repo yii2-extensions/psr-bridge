@@ -5,21 +5,9 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\emitter;
 
 /**
- * Enum for HTTP status codes that MUSTN'T include a message body, according to RFC 7231.
+ * Defines HTTP status codes that do not allow a response body.
  *
- * Represents the set of HTTP status codes for which the response mustn't include a message body, as specified by RFC
- * 7231 and related standards.
- *
- * This enum is used by HTTP response emitters and middleware to ensure protocol compliance when sending responses for
- * informational, successful, and redirection status codes that explicitly disallow a message body.
- *
- * Key features.
- * - Complete coverage of all status codes that mustn't include a message body ('1xx', '204', '205', '304').
- * - RFC-compliant for interoperability with HTTP clients and servers.
- * - Type-safe handling for HTTP response emission and protocol validation.
- * - Utility method for checking if a status code should have nobody.
- *
- * @link https://datatracker.ietf.org/doc/html/rfc7231
+ * @link https://datatracker.ietf.org/doc/html/rfc7231 RFC 7231.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -95,7 +83,7 @@ enum HttpNoBodyStatus: int
     case SWITCHING_PROTOCOLS = 101;
 
     /**
-     * Check if a given status code should have nobody.
+     * Returns whether the status code should not include a body.
      *
      * @param int $statusCode HTTP status code to check.
      */

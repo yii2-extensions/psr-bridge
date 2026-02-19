@@ -17,20 +17,7 @@ use function strtolower;
 use function ucwords;
 
 /**
- * SAPI (Server API) ResponseInterface Emitter.
- *
- * This class is responsible for emitting PSR-7 ResponseInterface objects to the output buffer using PHP's Server API.
- *
- * It handles the emission of headers, status line, and response body while supporting features like content range and
- * buffered output.
- *
- * According to 'HTTP/1.1' specifications, certain status codes MUST NOT include a message body:
- * - '1xx' (Informational): '100' Continue, '101' Switching Protocols, '102' Processing, '103' Early Hints.
- * - '204' No Content, '205' Reset Content.
- * - '304' Not Modified.
- *
- * When these status codes are used, the emitter will not emit anybody's content regardless of whether one is present
- * in the response object.
+ * Emits PSR-7 responses through PHP SAPI.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -55,26 +42,18 @@ final class SapiEmitter
     }
 
     /**
-     * Emit a response to the PHP output buffer.
+     * Emits a response to the PHP output buffer.
      *
-     * This method will emit the response headers and body to the PHP output buffer. If headers have already been sent
-     * or if content has already been emitted, an exception will be raised.
-     *
-     * Note: According to 'HTTP/1.1' specifications, responses with certain status codes
-     * ('100' - '103', '204', '205', '304') MUSTN'T include a message body. For these status codes, the body will not
-     * be emitted even if present in the response object. {@see HttpNoBodyStatus} for the complete list.
-     *
-     * @param ResponseInterface $response PSR-7 ResponseInterface instance.
-     * @param bool $body Whether to emit the response with body (default: `true`).
-     *
-     * @throws HeadersAlreadySentException if HTTP headers have already been sent to the client.
-     * @throws OutputAlreadySentException if response output has already been emitted.
-     *
+     * Usage example:
      * ```php
-     * $emitter = new SapiEmitter();
-     * $response = new Response();
+     * $emitter = new \yii2\extensions\psrbridge\emitter\SapiEmitter();
      * $emitter->emit($response);
      * ```
+     *
+     * @param ResponseInterface $response PSR-7 response to emit.
+     * @param bool $body Whether to emit the response body when allowed by status code.
+     * @throws HeadersAlreadySentException When headers are already sent.
+     * @throws OutputAlreadySentException When output is already emitted.
      */
     public function emit(ResponseInterface $response, bool $body = true): void
     {
@@ -162,8 +141,8 @@ final class SapiEmitter
     /**
      * Emit the response headers.
      *
-     * Iterates through the response headers and emits each one. Special handling is provided for the 'Set-Cookie'
-     * header to ensure multiple cookies are handled correctly.
+     * Iterates through the response headers and emits each one. Special handling is provided for the Set-Cookie header
+     * to ensure multiple cookies are handled correctly.
      *
      * @param ResponseInterface $response PSR-7 ResponseInterface instance.
      */

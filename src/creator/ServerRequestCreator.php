@@ -24,28 +24,7 @@ use function strtolower;
 use function substr;
 
 /**
- * PSR-7 ServerRequest creator for SAPI and worker environments.
- *
- * Provides a factory for creating {@see ServerRequestInterface} instances from PHP global variables, enabling seamless
- * interoperability between PSR-7 compatible HTTP stacks and Yii2 applications.
- *
- * This class delegates the creation of server requests, streams, and uploaded files to the provided PSR-7 factories,
- * supporting both traditional SAPI and worker-based environments.
- *
- * It ensures strict type safety and immutability throughout the request creation process.
- *
- * The creation process includes.
- * - Attaching the request body stream from 'php://input' for compatibility with raw payloads.
- * - Extracting HTTP method and URI from global variables.
- * - Handling uploaded files via {@see UploadedFileCreator} when present.
- * - Populating cookies, parsed body, and query parameters from PHP globals.
- *
- * Key features.
- * - Automatic handling of uploaded files and body streams.
- * - Designed for compatibility with SAPI and worker runtimes.
- * - Exception-safe body stream attachment.
- * - Immutable, type-safe request creation from PHP globals.
- * - PSR-7 factory integration for server requests, streams, and uploaded files.
+ * Creates PSR-7 server requests from PHP globals.
  *
  * @phpstan-type UnknownFileInput array<mixed>
  * @phpstan-type FilesArray array<UploadedFileInterface|UnknownFileInput>
@@ -74,17 +53,21 @@ final class ServerRequestCreator
      * Provides a factory method for building a PSR-7 server request using the current SAPI or worker environment
      * globals.
      *
-     * This method extracts the HTTP method and URI from '$_SERVER¿, attaches cookies, parsed body, and query
-     * parameters, and automatically handles uploaded files when present. The request body stream is attached from
-     * 'php://input' for compatibility with raw payloads.
-     *
-     * @return ServerRequestInterface PSR-7 ServerRequestInterface created from PHP globals.
+     * This method extracts the HTTP method and URI from $_SERVER, attaches cookies, parsed body, and query parameters,
+     * and automatically handles uploaded files when present. The request body stream is attached from `php://input` for
+     * compatibility with raw payloads.
      *
      * Usage example:
      * ```php
-     * $creator = new ServerRequestCreator($serverRequestFactory, $streamFactory, $uploadedFileFactory);
+     * $creator = new \yii2\extensions\psrbridge\creator\ServerRequestCreator(
+     *     $serverRequestFactory,
+     *     $streamFactory,
+     *     $uploadedFileFactory,
+     * );
      * $request = $creator->createFromGlobals();
      * ```
+     *
+     * @return ServerRequestInterface PSR-7 ServerRequestInterface created from PHP globals.
      */
     public function createFromGlobals(): ServerRequestInterface
     {
@@ -95,7 +78,7 @@ final class ServerRequestCreator
             ? $_SERVER['REQUEST_URI']
             : '/';
 
-        // extract HTTP headers from '$_SERVER'
+        // extract HTTP headers from $_SERVER
         $headers = $this->extractHeaders($_SERVER);
 
         $request = $this->serverRequestFactory->createServerRequest($method, $uri, $_SERVER);
@@ -125,13 +108,10 @@ final class ServerRequestCreator
     /**
      * Extracts HTTP headers from the provided server array in SAPI or worker environments.
      *
-     * Iterates over the input server array and collects all entries whose keys start with 'HTTP_'.
+     * Iterates over the input server array and collects all entries whose keys start with HTTP_.
      *
      * Each header is normalized to standard HTTP header format using {@see normalizeHeaderName()} and added to the
      * result array.
-     *
-     * This method ensures compatibility with PSR-7 header expectations by converting server variable names to proper
-     * HTTP header names.
      *
      * @param array $server Input server array, typically $_SERVER globals.
      *
@@ -159,15 +139,15 @@ final class ServerRequestCreator
     /**
      * Normalizes a server header name to standard HTTP header format.
      *
-     * Converts a header name from server variable format (for example, 'CONTENT_TYPE' or 'HTTP_X_CUSTOM_HEADER') to
-     * standard HTTP header format (for example, 'Content-Type' or 'X-Custom-Header').
+     * Converts a header name from server variable format (for example, CONTENT_TYPE or HTTP_X_CUSTOM_HEADER) to
+     * standard HTTP header format (for example, Content-Type or X-Custom-Header).
      *
      * This method replaces underscores with hyphens, lowercases the name, and capitalizes each segment for
      * compatibility with PSR-7 header expectations and interoperability with HTTP stacks.
      *
-     * @param string $name Header name in server variable format (for example, 'CONTENT_TYPE').
+     * @param string $name Header name in server variable format (for example, CONTENT_TYPE).
      *
-     * @return string Normalized HTTP header name (for example, 'Content-Type').
+     * @return string Normalized HTTP header name (for example, Content-Type).
      */
     private function normalizeHeaderName(string $name): string
     {
@@ -177,14 +157,11 @@ final class ServerRequestCreator
     }
 
     /**
-     * Attaches the request body stream from 'php://input' to the provided {@see ServerRequestInterface} instance.
+     * Attaches the request body stream from `php://input` to the provided {@see ServerRequestInterface} instance.
      *
-     * Attempts to open the 'php://input' stream in read-only binary mode and, if successful, creates a PSR-7 stream
+     * Attempts to open the `php://input` stream in read-only binary mode and, if successful, creates a PSR-7 stream
      * using the configured {@see StreamFactoryInterface}. The resulting stream is then attached to the request as the
      * body. If the stream cannot be opened or an exception occurs, the original request is returned unchanged.
-     *
-     * This method ensures exception-safe and immutable attachment of the request body stream for compatibility with
-     * raw payloads in SAPI and worker environments.
      *
      * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to attach the body stream to.
      *
