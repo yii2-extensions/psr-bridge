@@ -43,6 +43,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * Temporary file resources used during tests.
      *
      * @phpstan-var array<resource>
+     * @phpstan-ignore property.onlyWritten
      */
     private array $tmpFiles = [];
 
@@ -105,6 +106,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function closeApplication(): void
     {
+        if (Yii::$app === null) {
+            return;
+        }
+
         if (Yii::$app->has('session')) {
             $session = Yii::$app->getSession();
 
