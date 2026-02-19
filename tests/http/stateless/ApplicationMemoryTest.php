@@ -10,7 +10,7 @@ use ReflectionException;
 use stdClass;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function array_fill;
 use function end;
@@ -51,9 +51,9 @@ final class ApplicationMemoryTest extends TestCase
 
         ini_set('memory_limit', $memoryLimit);
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertFalse($app->clean(), $assertionMessage);
 
@@ -65,9 +65,9 @@ final class ApplicationMemoryTest extends TestCase
      */
     public function testCleanReturnsTrueWhenMemoryUsageIsExactlyPercentThreshold(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         $currentUsage = memory_get_usage(true);
 
@@ -95,9 +95,9 @@ final class ApplicationMemoryTest extends TestCase
         ob_start();
         $levels[] = ob_get_level();
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertGreaterThanOrEqual(
             3,
@@ -135,7 +135,7 @@ final class ApplicationMemoryTest extends TestCase
 
         gc_disable();
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         for ($i = 0; $i < $iterations; $i++) {
             $circular = new stdClass();
@@ -149,7 +149,7 @@ final class ApplicationMemoryTest extends TestCase
                 'REQUEST_URI' => "site/index?iteration={$i}",
             ];
 
-            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+            $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
             $obj1 = new stdClass();
             $obj2 = new stdClass();
@@ -194,7 +194,7 @@ final class ApplicationMemoryTest extends TestCase
 
         ini_set('memory_limit', '-1');
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         self::assertSame(
             PHP_INT_MAX,
@@ -202,7 +202,7 @@ final class ApplicationMemoryTest extends TestCase
             "Before 'handle()' memory limit should be PHP_INT_MAX when set to '-1' (unlimited).",
         );
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
         $app->clean();
 
         self::assertSame(
@@ -223,7 +223,7 @@ final class ApplicationMemoryTest extends TestCase
         int $expected,
         string $assertionMessage,
     ): void {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         self::assertSame(
             $expected,
@@ -244,9 +244,9 @@ final class ApplicationMemoryTest extends TestCase
 
         ini_set('memory_limit', '256M');
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         $firstMemoryLimit = $app->getMemoryLimit();
         $shouldRecalculateMemoryLimit = ReflectionHelper::inaccessibleProperty($app, 'shouldRecalculateMemoryLimit');
@@ -299,13 +299,13 @@ final class ApplicationMemoryTest extends TestCase
         int $memoryLimit,
         string $assertionMessage,
     ): void {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $app->setMemoryLimit($memoryLimit);
 
         self::assertSame($memoryLimit, $app->getMemoryLimit(), $assertionMessage);
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame($memoryLimit, $app->getMemoryLimit(), $assertionMessage);
     }

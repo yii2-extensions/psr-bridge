@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} content-type handling in stateless mode.
@@ -26,9 +26,9 @@ final class ApplicationContentTypesTest extends TestCase
      */
     public function testFileDownloadWhenRequestingFileRoute(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/file'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/file'));
 
         self::assertSame(
             200,
@@ -57,9 +57,9 @@ final class ApplicationContentTypesTest extends TestCase
      */
     public function testStreamContentWhenRequestingStreamRoute(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/stream'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/stream'));
 
         self::assertSame(
             200,

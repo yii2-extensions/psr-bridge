@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} server parameter handling in stateless mode.
@@ -31,10 +31,10 @@ final class ApplicationServerParamsTest extends TestCase
         string|null $expectedIP,
         string $assertionMessage,
     ): void {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 method: 'GET',
                 uri: '/site/index',
                 serverParams: ['REMOTE_ADDR' => $remoteAddr],
@@ -62,7 +62,7 @@ final class ApplicationServerParamsTest extends TestCase
         int|null $expectedPort,
         string $assertionMessage,
     ): void {
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'request' => [
@@ -73,7 +73,7 @@ final class ApplicationServerParamsTest extends TestCase
         );
 
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'GET',
                 '/site/index',
                 $headers,

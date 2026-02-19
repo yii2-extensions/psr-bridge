@@ -6,18 +6,15 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Group;
-use RuntimeException;
 use yii\base\{InvalidConfigException, Security};
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
-use function fclose;
 use function fopen;
-use function fwrite;
 use function gmdate;
 use function max;
 use function preg_match;
@@ -25,19 +22,16 @@ use function str_repeat;
 use function strlen;
 use function substr;
 use function time;
-use function unlink;
 use function urlencode;
 
 /**
- * Test suite for {@see ResponseAdapter} conversion functionality and behavior.
+ * Unit tests for {@see ResponseAdapter} PSR-7 conversion behavior.
  *
- * Validates conversion of Yii2 Response objects to PSR-7 responses, including file streaming, cookie formatting, header
- * preservation, and error handling.
- *
- * Key features:
- * - Checks header preservation and exception cases.
- * - Ensures correct stream and content handling for various response scenarios.
- * - Verifies cookie formatting and validation logic.
+ * Test coverage.
+ * - Ensures cookie formatting covers validation modes, expiration variants, SameSite handling, and deletion cookies.
+ * - Ensures file streams preserve headers and status codes across full, partial, large-range, and single-byte reads.
+ * - Ensures stream responses take precedence over response content and support empty-body fallbacks.
+ * - Verifies invalid cookie validation configuration raises InvalidConfigException.
  *
  * @copyright Copyright (C) 2025
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -58,8 +52,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -95,8 +89,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -145,8 +139,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -193,8 +187,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -246,8 +240,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -304,8 +298,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -348,8 +342,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -394,8 +388,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -446,8 +440,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -544,8 +538,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -615,8 +609,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -673,8 +667,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -730,8 +724,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -808,8 +802,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -886,8 +880,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -938,8 +932,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -984,15 +978,15 @@ final class ResponseAdapterTest extends TestCase
                 [
                     'name' => 'special_cookie',
                     'value' => 'special_value',
-                    'expire' => 1, // special case in Yii2 - no validation
+                    'expire' => 1, // special case in Yii - no validation
                 ],
             ),
         );
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1040,8 +1034,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1094,8 +1088,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1157,8 +1151,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1234,8 +1228,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1297,8 +1291,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1352,8 +1346,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1405,8 +1399,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1455,8 +1449,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1511,8 +1505,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1565,8 +1559,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1627,8 +1621,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1637,17 +1631,17 @@ final class ResponseAdapterTest extends TestCase
         self::assertSame(
             201,
             $psr7Response->getStatusCode(),
-            "PSR-7 response should have status code '201' when set explicitly on the Yii2 response.",
+            "PSR-7 response should have status code '201' when set explicitly on the Yii response.",
         );
         self::assertSame(
             'Created',
             $psr7Response->getReasonPhrase(),
-            "PSR-7 response should have reason phrase 'Created' when set explicitly on the Yii2 response.",
+            "PSR-7 response should have reason phrase 'Created' when set explicitly on the Yii response.",
         );
         self::assertSame(
             'Test response body',
             (string) $psr7Response->getBody(),
-            'PSR-7 response body should match the Yii2 response content.',
+            'PSR-7 response body should match the Yii response content.',
         );
         self::assertSame(
             ['Custom Value'],
@@ -1715,8 +1709,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter1 = new ResponseAdapter(
             $response1,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1727,8 +1721,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter2 = new ResponseAdapter(
             $response2,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1791,8 +1785,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1851,8 +1845,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1929,8 +1923,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -1978,8 +1972,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -2006,8 +2000,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -2029,8 +2023,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -2061,8 +2055,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -2087,8 +2081,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -2121,8 +2115,8 @@ final class ResponseAdapterTest extends TestCase
 
         $adapter = new ResponseAdapter(
             $response,
-            FactoryHelper::createResponseFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
             new Security(),
         );
 
@@ -2132,35 +2126,5 @@ final class ResponseAdapterTest extends TestCase
         );
 
         $adapter->toPsr7();
-    }
-
-    /**
-     * Creates a temporary file with the specified content for testing.
-     *
-     * @param string $content Content to write to the temporary file.
-     *
-     * @return string Path to the created temporary file.
-     */
-    private function createTempFileWithContent(string $content): string
-    {
-        $tmpPathFile = $this->createTmpFile();
-        $handle = fopen($tmpPathFile, 'wb');
-
-        if ($handle === false) {
-            unlink($tmpPathFile);
-
-            throw new RuntimeException('Unable to open temporary file for writing.');
-        }
-
-        $bytesWritten = fwrite($handle, $content);
-        fclose($handle);
-
-        if ($bytesWritten === false || $bytesWritten !== strlen($content)) {
-            unlink($tmpPathFile);
-
-            throw new RuntimeException('Unable to write content to temporary file.');
-        }
-
-        return $tmpPathFile;
     }
 }

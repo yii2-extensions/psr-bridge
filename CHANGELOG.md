@@ -19,6 +19,7 @@
 - Bug #226: Restore worker bootstrap timing by keeping `init()` lightweight and invoking `bootstrap()` in `prepareForRequest()` after PSR-7 request attachment in `StatelessApplication` class (@terabytesoftw)
 - Bug #227: Rename `yii2\extensions\psrbridge\http\StatelessApplication` to `yii2\extensions\psrbridge\http\Application` and update all framework/docs/tests references (@terabytesoftw)
 - Bug #228: Simplify `PAGE_NOT_FOUND` message in `Message` class by removing `in Application.` (@terabytesoftw)
+- Bug #229: Standardize PHPUnit PHPDoc headers across `tests/support`, `tests/adapter`, `tests/http`, and `tests/provider` (@terabytesoftw)
 
 ## 0.1.5 January 28, 2026
 

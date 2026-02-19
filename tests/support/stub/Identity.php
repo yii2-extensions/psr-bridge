@@ -8,9 +8,7 @@ use yii\base\BaseObject;
 use yii\web\IdentityInterface;
 
 /**
- * Stub identity class for testing authentication and user identity in Yii2 applications.
- *
- * Provides a static user list and implements {@see IdentityInterface} for authentication scenarios.
+ * Identity stub used to test Yii authentication flows.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

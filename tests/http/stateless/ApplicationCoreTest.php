@@ -18,7 +18,7 @@ use yii\i18n\{Formatter, I18N};
 use yii\log\{Dispatcher, FileTarget};
 use yii\web\{AssetManager, JsonParser, RequestParserInterface, Session, UrlManager, User, View};
 use yii2\extensions\psrbridge\http\{Application, ErrorHandler, Request, Response};
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
 use function array_filter;
@@ -61,7 +61,7 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testContainerResolvesPsrFactoriesWithDefinitions(): void
     {
-        $app = $this->statelessApplication([
+        $app = ApplicationFactory::stateless([
             'container' => [
                 'definitions' => [
                     ServerRequestFactoryInterface::class => ServerRequestFactory::class,
@@ -73,7 +73,7 @@ final class ApplicationCoreTest extends TestCase
 
         $container = $app->container();
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertTrue(
             $container->has(ServerRequestFactoryInterface::class),
@@ -109,7 +109,7 @@ final class ApplicationCoreTest extends TestCase
 
     public function testEventOrderDuringHandle(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
         $sequence = [];
 
         $app->on(
@@ -125,7 +125,7 @@ final class ApplicationCoreTest extends TestCase
             },
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -142,7 +142,7 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testFlushImmediateWritesLogsToFileImmediately(): void
     {
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'flushLogger' => true,
                 'components' => [
@@ -170,7 +170,7 @@ final class ApplicationCoreTest extends TestCase
             },
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -203,7 +203,7 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testHandleThrowsExceptionWithCorrectMessageWhenFallbackParserIsInvalid(): void
     {
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'request' => [
@@ -220,11 +220,11 @@ final class ApplicationCoreTest extends TestCase
         $jsonPayload = json_encode($payload, JSON_THROW_ON_ERROR);
 
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 method: 'POST',
                 uri: 'site/post',
                 headers: ['Content-Type' => 'application/vnd.unknown'],
-            )->withBody(FactoryHelper::createStreamFactory()->createStream($jsonPayload)),
+            )->withBody(HelperFactory::createStreamFactory()->createStream($jsonPayload)),
         );
 
         self::assertSame(
@@ -250,7 +250,7 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testHandleThrowsExceptionWithCorrectMessageWhenSpecificParserIsInvalid(): void
     {
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'request' => [
@@ -266,11 +266,11 @@ final class ApplicationCoreTest extends TestCase
         $payload = '<root>test</root>';
 
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 method: 'POST',
                 uri: 'site/post',
                 headers: ['Content-Type' => 'application/xml'],
-            )->withBody(FactoryHelper::createStreamFactory()->createStream($payload)),
+            )->withBody(HelperFactory::createStreamFactory()->createStream($payload)),
         );
 
         self::assertSame(
@@ -296,9 +296,9 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testRedirectWhenRouteIsSiteRedirect(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/redirect'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/redirect'));
 
         self::assertSame(
             302,
@@ -334,7 +334,7 @@ final class ApplicationCoreTest extends TestCase
         $originalDisplayErrors = ini_get('display_errors');
 
         try {
-            $app = $this->statelessApplication(
+            $app = ApplicationFactory::stateless(
                 [
                     'components' => [
                         'errorHandler' => ['errorAction' => null],
@@ -342,7 +342,7 @@ final class ApplicationCoreTest extends TestCase
                 ],
             );
 
-            $response = $app->handle(FactoryHelper::createRequest('GET', 'site/trigger-exception'));
+            $response = $app->handle(HelperFactory::createRequest('GET', 'site/trigger-exception'));
 
             self::assertSame(
                 500,
@@ -381,7 +381,7 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testRequestParsesBodyWithConfiguredParsers(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $payload = [
             'foo' => 'bar',
@@ -390,11 +390,11 @@ final class ApplicationCoreTest extends TestCase
 
         $jsonPayload = json_encode($payload, JSON_THROW_ON_ERROR);
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 method: 'POST',
                 uri: 'site/post',
                 headers: ['Content-Type' => 'application/json; charset=UTF-8'],
-            )->withBody(FactoryHelper::createStreamFactory()->createStream($jsonPayload)),
+            )->withBody(HelperFactory::createStreamFactory()->createStream($jsonPayload)),
         );
 
         self::assertSame(
@@ -415,7 +415,7 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testRequestUsesWildcardParser(): void
     {
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'request' => [
@@ -431,11 +431,11 @@ final class ApplicationCoreTest extends TestCase
 
         $jsonPayload = json_encode($payload, JSON_THROW_ON_ERROR);
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 method: 'POST',
                 uri: 'site/post',
                 headers: ['Content-Type' => 'application/vnd.custom+json'],
-            )->withBody(FactoryHelper::createStreamFactory()->createStream($jsonPayload)),
+            )->withBody(HelperFactory::createStreamFactory()->createStream($jsonPayload)),
         );
 
         self::assertSame(
@@ -456,10 +456,10 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testResponseAdapterCachingAndResetBehaviorAcrossMultipleRequests(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         // first request - verify adapter caching behavior
-        $response1 = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response1,
@@ -489,7 +489,7 @@ final class ApplicationCoreTest extends TestCase
         );
 
         // second request with different route - verify stateless behavior
-        $response2 = $app->handle(FactoryHelper::createRequest('GET', 'site/statuscode'));
+        $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/statuscode'));
 
         self::assertSame(
             201,
@@ -526,7 +526,7 @@ final class ApplicationCoreTest extends TestCase
         );
 
         // third request - verify adapter isolation between requests
-        $response3 = $app->handle(FactoryHelper::createRequest('GET', 'site/add-cookies-to-response'));
+        $response3 = $app->handle(HelperFactory::createRequest('GET', 'site/add-cookies-to-response'));
 
         self::assertSame(
             200,
@@ -590,9 +590,9 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testReturnCoreComponentsConfigurationAfterHandle(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             [
@@ -648,9 +648,9 @@ final class ApplicationCoreTest extends TestCase
 
         MockerFunctions::setMockedMicrotime($mockedTime);
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -675,9 +675,9 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testSetWebAndWebrootAliasesAfterHandleRequest(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,

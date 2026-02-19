@@ -11,14 +11,6 @@ use yii2\extensions\psrbridge\emitter\{ContentRange, ContentRangeUnit};
 /**
  * Test suite for {@see ContentRange} class functionality and behavior.
  *
- * Verifies 'Content-Range' header parsing, validation, and formatting for HTTP partial content responses.
- *
- * These tests ensure the ContentRange component correctly interprets and formats 'Content-Range' headers under various
- * scenarios, maintaining compliance with HTTP standards and robust error handling.
- *
- * The tests validate correct parsing of asterisk lengths, equal range values, invalid formats, unit verification, and
- * whitespace handling, which are essential for proper HTTP 206 response support in the framework.
- *
  * Test coverage.
  * - Format validation (invalid headers, units, and ranges).
  * - Header parsing (standard, asterisk, and whitespace variations).

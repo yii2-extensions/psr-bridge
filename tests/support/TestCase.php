@@ -4,37 +4,24 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\support;
 
-use HttpSoft\Message\{ResponseFactory, StreamFactory};
-use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
+use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Yii;
 use yii\base\Security;
-use yii\caching\FileCache;
-use yii\helpers\ArrayHelper;
-use yii\log\FileTarget;
-use yii\web\{IdentityInterface, JsonParser};
-use yii2\extensions\psrbridge\http\Application;
-use yii2\extensions\psrbridge\tests\support\stub\{ApplicationRest, Identity, MockerFunctions};
+use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
+use function array_pop;
 use function fclose;
+use function fwrite;
 use function is_resource;
 use function stream_get_meta_data;
+use function strlen;
 use function tmpfile;
 
 /**
- * Base test case providing common helpers and utilities for the test suite.
+ * Base class for package integration tests.
  *
- * Provides utilities to create and tear down Yii stateless and web application instances, manage temporary files used
- * during tests, sign cookies for cookie-validation scenarios, and reset PHP superglobals to ensure test isolation.
- *
- * Tests that require HTTP request/response factories, stream factories or application scaffolding should extend this
- * class.
- *
- * Key features.
- * - Creates {@see Application} and {@see \yii\web\Application} instances with a sane test configuration.
- * - Manages temporary file resources and ensures cleanup during `tearDown()`.
- * - Provides {@see self::signCookies()} helper for creating signed cookie values.
- * - Resets $_SERVER, $_GET, $_POST, $_FILES and $_COOKIE between tests to avoid cross-test contamination.
+ * Provides application bootstrap helpers, cookie-signing utilities, and temporary file cleanup for isolated tests.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -47,6 +34,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     protected const COOKIE_VALIDATION_KEY = 'test-cookie-validation-key';
 
     /**
+     * Original $_SERVER superglobal values before tests modify them, to ensure proper restoration after each test.
+     *
      * @phpstan-var array<mixed, mixed>
      */
     private array $originalServer = [];
@@ -59,51 +48,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     private array $tmpFiles = [];
 
     /**
-     * @phpstan-param array<string, mixed> $config
-     * @phpstan-return ApplicationRest<IdentityInterface>
+     * Asserts that the given PSR-7 response matches the expected JSON response for the 'site/index' route.
+     *
+     * @param ResponseInterface $response PSR-7 response to assert against the expected values.
      */
-    protected function applicationRest(array $config = []): ApplicationRest
-    {
-        /** @phpstan-var array<string, mixed> $configApplication */
-        $configApplication = ArrayHelper::merge(
-            [
-                'id' => 'stateless-app',
-                'basePath' => dirname(__DIR__, 2),
-                'controllerNamespace' => '\yii2\extensions\psrbridge\tests\support\stub',
-                'components' => [
-                    'request' => [
-                        'enableCookieValidation' => false,
-                        'enableCsrfCookie' => false,
-                        'enableCsrfValidation' => false,
-                        'parsers' => [
-                            'application/json' => JsonParser::class,
-                        ],
-                        'scriptFile' => __DIR__ . '/index.php',
-                        'scriptUrl' => '/index.php',
-                    ],
-                    'urlManager' => [
-                        'showScriptName' => false,
-                        'enableStrictParsing' => false,
-                        'enablePrettyUrl' => true,
-                        'rules' => [
-                            'site/query/<test:\w+>' => 'site/query',
-                            'site/update/<id:\d+>' => 'site/update',
-                        ],
-                    ],
-                ],
-                'container' => [
-                    'definitions' => [
-                        ResponseFactoryInterface::class => ResponseFactory::class,
-                        StreamFactoryInterface::class => StreamFactory::class,
-                    ],
-                ],
-            ],
-            $config,
-        );
-
-        return new ApplicationRest($configApplication);
-    }
-
     protected function assertSiteIndexJsonResponse(ResponseInterface $response): void
     {
         self::assertSame(
@@ -125,6 +73,11 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         );
     }
 
+    /**
+     * Asserts that the given PSR-7 response matches the expected JSON response for the 'site/post' route.
+     *
+     * @param ResponseInterface $response PSR-7 response to assert against the expected values.
+     */
     protected function assertSitePostUploadJsonResponse(ResponseInterface $response): void
     {
         self::assertSame(
@@ -146,8 +99,17 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         );
     }
 
+    /**
+     * Closes the application and flushes the logger to ensure all logs are written out.
+     *
+     * @throws RuntimeException if an error occurs while closing the application or flushing the logger.
+     */
     protected function closeApplication(): void
     {
+        if (Yii::$app === null) {
+            return;
+        }
+
         if (Yii::$app->has('session')) {
             $session = Yii::$app->getSession();
 
@@ -174,6 +136,38 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                 fclose($file);
             }
         }
+    }
+
+    /**
+     * Creates a temporary file with the specified content for testing.
+     *
+     * @param string $content Content to write to the temporary file.
+     *
+     * @throws RuntimeException if the temporary file cannot be created or written.
+     *
+     * @return string Path to the created temporary file.
+     */
+    protected function createTempFileWithContent(string $content): string
+    {
+        $resource = tmpfile();
+
+        if ($resource === false) {
+            throw new RuntimeException('Failed to create temporary file.');
+        }
+
+        $this->tmpFiles[] = $resource;
+
+        $tmpPathFile = stream_get_meta_data($resource)['uri'] ?? '';
+        $bytesWritten = fwrite($resource, $content);
+
+        if ($bytesWritten === false || $bytesWritten !== strlen($content)) {
+            array_pop($this->tmpFiles);
+            fclose($resource);
+
+            throw new RuntimeException('Unable to write content to temporary file.');
+        }
+
+        return $tmpPathFile;
     }
 
     /**
@@ -210,6 +204,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Signs the given cookie parameters using Yii's Security component and the defined cookie validation key.
+     *
      * @phpstan-param array<string, string|object> $cookieParams
      *
      * @phpstan-return array<string, string>
@@ -226,73 +222,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         return $signed;
     }
 
-    /**
-     * @phpstan-param array<string, mixed> $config
-     * @phpstan-return Application<IdentityInterface>
-     */
-    protected function statelessApplication(array $config = []): Application
-    {
-        /** @phpstan-var array<string, mixed> $configApplication */
-        $configApplication = ArrayHelper::merge(
-            [
-                'id' => 'stateless-app',
-                'basePath' => dirname(__DIR__, 2),
-                'bootstrap' => ['log'],
-                'controllerNamespace' => '\yii2\extensions\psrbridge\tests\support\stub',
-                'components' => [
-                    'cache' => [
-                        'class' => FileCache::class,
-                    ],
-                    'log' => [
-                        'traceLevel' => YII_DEBUG ? 3 : 0,
-                        'targets' => [
-                            [
-                                'class' => FileTarget::class,
-                                'levels' => [
-                                    'error',
-                                    'info',
-                                    'warning',
-                                ],
-                            ],
-                        ],
-                    ],
-                    'request' => [
-                        'enableCookieValidation' => false,
-                        'enableCsrfCookie' => false,
-                        'enableCsrfValidation' => false,
-                        'parsers' => [
-                            'application/json' => JsonParser::class,
-                        ],
-                        'scriptFile' => __DIR__ . '/index.php',
-                        'scriptUrl' => '/index.php',
-                    ],
-                    'user' => [
-                        'enableAutoLogin' => false,
-                        'identityClass' => Identity::class,
-                    ],
-                    'urlManager' => [
-                        'showScriptName' => false,
-                        'enableStrictParsing' => false,
-                        'enablePrettyUrl' => true,
-                        'rules' => [
-                            'site/query/<test:\w+>' => 'site/query',
-                            'site/update/<id:\d+>' => 'site/update',
-                        ],
-                    ],
-                ],
-                'container' => [
-                    'definitions' => [
-                        ResponseFactoryInterface::class => ResponseFactory::class,
-                        StreamFactoryInterface::class => StreamFactory::class,
-                    ],
-                ],
-            ],
-            $config,
-        );
-
-        return new Application($configApplication);
-    }
-
     protected function tearDown(): void
     {
         $_COOKIE = [];
@@ -301,37 +230,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $_POST = [];
         $_SERVER = $this->originalServer;
 
-        $this->closeTmpFile(...$this->tmpFiles);
-
+        $this->closeApplication();
         parent::tearDown();
-    }
-
-    /**
-     * @phpstan-param array<string, mixed> $config
-     */
-    protected function webApplication(array $config = []): void
-    {
-        /** @phpstan-var array<string, mixed> $configApplication */
-        $configApplication = ArrayHelper::merge(
-            [
-                'id' => 'web-app',
-                'basePath' => dirname(__DIR__, 2),
-                'aliases' => [
-                    '@bower' => '@vendor/bower-asset',
-                    '@npm' => '@vendor/npm-asset',
-                ],
-                'components' => [
-                    'request' => [
-                        'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                        'isConsoleRequest' => false,
-                        'scriptFile' => __DIR__ . '/index.php',
-                        'scriptUrl' => '/index.php',
-                    ],
-                ],
-            ],
-            $config,
-        );
-
-        new \yii\web\Application($configApplication);
     }
 }

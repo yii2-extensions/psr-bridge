@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} authentication handling in stateless mode.
@@ -37,9 +37,9 @@ final class ApplicationAuthTest extends TestCase
             'REQUEST_URI' => 'site/auth',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -69,9 +69,9 @@ final class ApplicationAuthTest extends TestCase
             'REQUEST_URI' => 'site/auth',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,

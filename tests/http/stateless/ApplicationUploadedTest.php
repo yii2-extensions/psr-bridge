@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\creator\ServerRequestCreator;
 use yii2\extensions\psrbridge\http\UploadedFile;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function filesize;
 
@@ -49,12 +49,12 @@ final class ApplicationUploadedTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $response = $app->handle($creator->createFromGlobals());
 
@@ -101,13 +101,13 @@ final class ApplicationUploadedTest extends TestCase
             'Temporary file should have a valid size greater than zero.',
         );
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $response = $app->handle(
-            FactoryHelper::createRequest('POST', '/site/post', parsedBody: ['action' => 'upload'])
+            HelperFactory::createRequest('POST', '/site/post', parsedBody: ['action' => 'upload'])
                 ->withUploadedFiles(
                     [
-                        'file1' => FactoryHelper::createUploadedFile(
+                        'file1' => HelperFactory::createUploadedFile(
                             'test1.txt',
                             'text/plain',
                             $tmpPath1,
@@ -126,7 +126,7 @@ final class ApplicationUploadedTest extends TestCase
         );
 
         $response = $app->handle(
-            FactoryHelper::createRequest('GET', '/site/post')
+            HelperFactory::createRequest('GET', '/site/post')
                 ->withQueryParams(['action' => 'check']),
         );
 
@@ -159,10 +159,10 @@ final class ApplicationUploadedTest extends TestCase
         );
 
         $response = $app->handle(
-            FactoryHelper::createRequest('POST', '/site/post', parsedBody: ['action' => 'upload'])
+            HelperFactory::createRequest('POST', '/site/post', parsedBody: ['action' => 'upload'])
                 ->withUploadedFiles(
                     [
-                        'file2' => FactoryHelper::createUploadedFile(
+                        'file2' => HelperFactory::createUploadedFile(
                             'test3.txt',
                             'text/plain',
                             $tmpPath2,

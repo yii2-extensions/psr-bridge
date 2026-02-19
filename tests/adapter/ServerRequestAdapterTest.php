@@ -10,22 +10,17 @@ use yii\base\InvalidConfigException;
 use yii\web\JsonParser;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 /**
- * Test suite for {@see Request} handling functionality and behavior.
- *
- * Verifies correct behavior of the Request handling when using PSR-7 requests, including body parameters, HTTP method
- * overrides, query string and params, raw body, and parsed body logic.
+ * Unit tests for {@see Request} request-data handling with the PSR-7 adapter.
  *
  * Test coverage.
- * - Data provider integration for query string and URL cases.
- * - Extraction and override of HTTP methods from body and headers.
- * - Handling of body parameters, including method param removal.
- * - Parent fallback logic when adapter is not set.
- * - Parsed body handling based on content type and parsers.
- * - Query string and query params precedence and fallback.
- * - Raw body and parsed body extraction for arrays and objects.
+ * - Ensures HTTP method resolution supports body and header overrides, custom method params, and parent fallback.
+ * - Ensures parsed-body handling respects parser configuration, content type availability, and pre-parsed bodies.
+ * - Ensures query params, query strings, URLs, and raw bodies are read from PSR-7 requests and parent fallbacks.
+ * - Verifies body params remove method override fields.
+ * - Verifies PSR-7 request instance retrieval when an adapter is set.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -41,11 +36,11 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/items',
                 ['Content-Type' => 'application/json'],
-            )->withBody(FactoryHelper::createStream()),
+            )->withBody(HelperFactory::createStream()),
         );
 
         self::assertNull(
@@ -61,7 +56,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $jsonData = '{"action":"create","item":"product"}';
 
-        $stream = FactoryHelper::createStream();
+        $stream = HelperFactory::createStream();
 
         $stream->write($jsonData);
 
@@ -70,7 +65,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->parsers = ['application/json' => JsonParser::class];
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/items',
                 ['Content-Type' => ''],
@@ -94,7 +89,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $jsonData = '{"action":"create","item":"product"}';
 
-        $stream = FactoryHelper::createStream();
+        $stream = HelperFactory::createStream();
 
         $stream->write($jsonData);
 
@@ -103,7 +98,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->parsers = ['application/json' => JsonParser::class];
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/items',
             )->withBody($stream),
@@ -122,7 +117,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $jsonData = '{"action":"create","item":"product"}';
 
-        $stream = FactoryHelper::createStream();
+        $stream = HelperFactory::createStream();
 
         $stream->write($jsonData);
 
@@ -131,7 +126,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->parsers = [];
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/items',
                 ['Content-Type' => 'application/json'],
@@ -156,7 +151,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $jsonContent = '{"name": "test", "value": 123}';
 
-        $stream = FactoryHelper::createStream();
+        $stream = HelperFactory::createStream();
 
         $stream->write($jsonContent);
         $stream->getContents();
@@ -166,7 +161,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->parsers = ['application/json' => JsonParser::class];
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/items',
                 ['Content-Type' => 'application/json'],
@@ -190,7 +185,7 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $jsonData = '{"action":"create","item":"product"}';
 
-        $stream = FactoryHelper::createStream();
+        $stream = HelperFactory::createStream();
 
         $stream->write($jsonData);
 
@@ -199,7 +194,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->parsers = ['application/json' => JsonParser::class];
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/items',
                 ['Content-Type' => 'application/json'],
@@ -234,7 +229,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->parsers = ['application/json' => JsonParser::class];
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/users',
                 ['Content-Type' => 'application/json'],
@@ -262,7 +257,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/test',
                 ['Content-Type' => 'application/x-www-form-urlencoded'],
@@ -315,7 +310,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/products'),
+            HelperFactory::createRequest('GET', '/products'),
         );
 
         self::assertEmpty(
@@ -332,7 +327,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
+            HelperFactory::createRequest('GET', '/test'),
         );
 
         self::assertEmpty(
@@ -349,7 +344,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/test'),
+            HelperFactory::createRequest('POST', '/test'),
         );
 
         self::assertSame(
@@ -367,7 +362,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'post',
                 '/test',
                 ['Content-Type' => 'application/x-www-form-urlencoded'],
@@ -393,7 +388,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/test',
                 ['Content-Type' => 'application/x-www-form-urlencoded'],
@@ -421,7 +416,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request->methodParam = 'custom_method';
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/test',
                 ['Content-Type' => 'application/x-www-form-urlencoded'],
@@ -447,7 +442,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/test', ['X-Http-Method-Override' => 'DELETE']),
+            HelperFactory::createRequest('POST', '/test', ['X-Http-Method-Override' => 'DELETE']),
         );
 
         self::assertSame(
@@ -465,7 +460,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
+            HelperFactory::createRequest('GET', '/test'),
         );
 
         self::assertSame(
@@ -539,7 +534,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/users',
                 ['Content-Type' => 'application/json'],
@@ -578,7 +573,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/api/users'),
+            HelperFactory::createRequest('GET', '/api/users'),
         );
 
         self::assertNull(
@@ -600,7 +595,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'PUT',
                 '/api/articles/1',
                 ['Content-Type' => 'application/json'],
@@ -639,7 +634,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
+            HelperFactory::createRequest('GET', '/test'),
         );
 
         self::assertInstanceOf(
@@ -658,7 +653,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/products?category=electronics&price=500&sort=desc'),
+            HelperFactory::createRequest('GET', '/products?category=electronics&price=500&sort=desc'),
         );
 
         $queryParams = $request->getQueryParams();
@@ -704,7 +699,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', "/test?{$queryString}"),
+            HelperFactory::createRequest('GET', "/test?{$queryString}"),
         );
 
         self::assertSame(
@@ -721,14 +716,14 @@ final class ServerRequestAdapterTest extends TestCase
     {
         $bodyContent = '{"name":"John","email":"john@example.com","message":"Hello World"}';
 
-        $stream = FactoryHelper::createStream();
+        $stream = HelperFactory::createStream();
 
         $stream->write($bodyContent);
 
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/api/contact')->withBody($stream),
+            HelperFactory::createRequest('POST', '/api/contact')->withBody($stream),
         );
 
         self::assertSame(
@@ -746,7 +741,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
+            HelperFactory::createRequest('GET', '/test'),
         );
 
         self::assertEmpty(
@@ -764,7 +759,7 @@ final class ServerRequestAdapterTest extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', $url),
+            HelperFactory::createRequest('GET', $url),
         );
 
         self::assertSame(

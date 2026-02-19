@@ -10,33 +10,9 @@ use function str_starts_with;
 use function strtolower;
 
 /**
- * Test double for system HTTP and environment functions with controlled state and inspection.
+ * Stateful stub for internal HTTP-related functions used by tests.
  *
- * Provides comprehensive mock implementations of core PHP HTTP header, response, and environment functions to enable
- * deterministic and isolated testing of emitter, response, and SAPI-dependent logic without side effects or global
- * state changes.
- *
- * This class allows tests to simulate, inspect, and manipulate HTTP header operations, response codes, output flushing,
- * microtime, time and stream reading by maintaining internal state and exposing static methods for fine-grained
- * control.
- *
- * The mock covers all critical PHP functions used in HTTP emission and environment-sensitive code, ensuring that tests
- * can validate emitter logic, header management, response code handling, output flushing, and time-dependent behavior
- * in complete isolation from the PHP runtime.
- *
- * Key features:
- * - Complete simulation of.
- *   - {@see \flush()} (output flush count tracking).
- *   - {@see \header()} (add/replace headers, response code).
- *   - {@see \header_remove()} (single/all headers).
- *   - {@see \headers_list()} (header inspection).
- *   - {@see \headers_sent()} (with file/line tracking).
- *   - {@see \http_response_code()} (get/set response code).
- *   - {@see \microtime()} (mockable time for timing tests).
- *   - {@see \stream_get_contents()} (controllable stream read/failure).
- *   - {@see \time()} (mockable time for timing tests).
- * - Consistent behavior matching PHP native functions for test reliability.
- * - State reset capability for test isolation and repeatability.
+ * Provides deterministic replacements for function calls for headers, response codes, time values, and stream reads.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

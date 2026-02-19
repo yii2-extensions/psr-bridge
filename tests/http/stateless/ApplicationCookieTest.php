@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function array_filter;
 use function implode;
@@ -43,7 +43,7 @@ final class ApplicationCookieTest extends TestCase
     ): void {
         $cookies = $signedCookies ? $this->signCookies($cookieParams) : $cookieParams;
 
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'request' => [
@@ -55,7 +55,7 @@ final class ApplicationCookieTest extends TestCase
         );
 
         $response = $app->handle(
-            FactoryHelper::createRequest('GET', 'site/getcookies')->withCookieParams($cookies),
+            HelperFactory::createRequest('GET', 'site/getcookies')->withCookieParams($cookies),
         );
 
         self::assertSame(
@@ -85,9 +85,9 @@ final class ApplicationCookieTest extends TestCase
             'REQUEST_URI' => 'site/deletecookie',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -118,9 +118,9 @@ final class ApplicationCookieTest extends TestCase
             'REQUEST_URI' => 'site/multiplecookies',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
