@@ -15,23 +15,7 @@ use function htmlspecialchars;
 use function ini_set;
 
 /**
- * Error handler extension with PSR-7 bridge support for Yii2 applications.
- *
- * Provides a drop-in replacement for {@see \yii\web\ErrorHandler} that integrates PSR-7 ResponseInterface handling,
- * enabling seamless interoperability with PSR-7 compatible HTTP stacks and modern PHP runtimes.
- *
- * This class overrides exception handling to produce PSR-7 ResponseInterface objects, supporting custom error views,
- * fallback rendering, and Yii2 error action integration.
- *
- * All exception handling is performed in a type-safe, immutable manner, ensuring compatibility with legacy Yii2
- * workflows and modern middleware stacks.
- *
- * Key features.
- * - Custom error view and error action support for HTML responses.
- * - Exception-safe conversion to PSR-7 ResponseInterface objects.
- * - Fallback rendering for nested exceptions and debug output.
- * - Integration with Yii2 error action and view rendering.
- * - Type-safe, immutable error handling for modern runtimes.
+ * Handles exceptions with Yii error rendering and PSR-7 bridge support.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -63,6 +47,12 @@ class ErrorHandler extends \yii\web\ErrorHandler
      * This method is used to discard any existing output before rendering an error Response, maintaining a clean output
      * state while preserving compatibility with the testing framework.
      *
+     * Usage example:
+     * ```php
+     * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
+     * $handler->clearOutput();
+     * ```
+     *
      * **PHPUnit Compatibility.**
      *
      * PHPUnit manages its own output buffer (typically at level '1') to capture and verify test output. Clearing this
@@ -72,11 +62,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
      * By preserving level '1' in test environments, we ensure compatibility with PHPUnit testing infrastructure.
      *
      * @see https://github.com/sebastianbergmann/phpunit/issues/risky-tests PHPUnit risky test detection
-     *
-     * Usage example:
-     * ```php
-     * $this->clearOutput(); // Clears buffers while respecting testing environment
-     * ```
      */
     public function clearOutput(): void
     {
@@ -98,13 +83,14 @@ class ErrorHandler extends \yii\web\ErrorHandler
     /**
      * Handles exceptions and produces a PSR-7 ResponseInterface object.
      *
-     * Overrides the default Yii2 exception handling to generate a PSR-7 ResponseInterface instance, supporting custom
-     * error views, fallback rendering, and integration with Yii2 error actions.
+     * Overrides the default Yii exception handling to generate a PSR-7 ResponseInterface instance, supporting custom
+     * error views, fallback rendering, and integration with Yii error actions.
      *
-     * Ensures type-safe, immutable error handling for modern runtimes.
-     *
-     * This method guarantees that all exceptions are converted to PSR-7 ResponseInterface, maintaining compatibility
-     * with both legacy Yii2 workflows and modern middleware stacks.
+     * Usage example:
+     * ```php
+     * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
+     * $handler->handleException($exception);
+     * ```
      *
      * @param Throwable $exception Exception to handle and convert to a PSR-7 ResponseInterface object.
      *
@@ -139,6 +125,12 @@ class ErrorHandler extends \yii\web\ErrorHandler
      * The provided Response will be used for error responses, preserving configuration such as format, charset, and
      * formatters. The Response will be cleared of any existing data before use.
      *
+     * Usage example:
+     * ```php
+     * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
+     * $handler->setResponse($response);
+     * ```
+     *
      * @param Response $response Response instance with desired configuration.
      */
     public function setResponse(Response $response): void
@@ -151,9 +143,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
      *
      * Produces a {@see Response} object with a generic error message and, in debug mode, includes detailed exception
      * information and a sanitized snapshot of server variables, excluding sensitive keys.
-     *
-     * This method ensures that nested or secondary exceptions do not expose sensitive data and provides a minimal
-     * diagnostic output for debugging purposes.
      *
      * @param Throwable $exception Exception thrown during error handling.
      * @param Throwable $previousException Original exception that triggered error handling.
@@ -197,9 +186,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
      * Renders the exception and produces a {@see Response} object with appropriate error content.
      *
      * Handles exception rendering for HTML, raw, and array formats, supporting custom error views and error actions.
-     *
-     * This method ensures type-safe, immutable error handling and maintains compatibility with Yii2 error actions and
-     * view rendering.
      *
      * @param Throwable $exception Exception to render and convert to a {@see Response} object.
      *

@@ -24,12 +24,6 @@ use function strtoupper;
 /**
  * Handles PSR-7 requests with a stateless Yii application lifecycle.
  *
- * Usage example:
- * ```php
- * $app = new \yii2\extensions\psrbridge\http\Application($config);
- * $psrResponse = $app->handle($psrRequest);
- * ```
- *
  * @template TUserIdentity of IdentityInterface
  * @extends \yii\web\Application<TUserIdentity>
  *
@@ -99,6 +93,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
+     * $app = new \yii2\extensions\psrbridge\http\Application($config);
+     *
      * if ($app->clean()) {
      *     // recycle worker
      * }
@@ -124,6 +120,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
+     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $container = $app->container();
      * $service = $container->get(MyService::class);
      * ```
@@ -147,6 +144,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
+     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $components = $app->coreComponents();
      * ```
      *
@@ -176,6 +174,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
+     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $limit = $app->getMemoryLimit();
      * ```
      *
@@ -197,6 +196,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
+     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $psrResponse = $app->handle($psrRequest);
      * ```
      *
@@ -245,6 +245,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
+     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $app->setMemoryLimit(134217728);
      * $app->setMemoryLimit(0); // recalculate from system setting
      * ```

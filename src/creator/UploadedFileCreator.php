@@ -16,28 +16,7 @@ use function is_int;
 use function is_string;
 
 /**
- * PSR-7 UploadedFile creation utility for SAPI and worker environments.
- *
- * Provides a factory for creating {@see UploadedFileInterface} instances from PHP file arrays, enabling seamless
- * interoperability between PSR-7 compatible HTTP stacks and Yii2 applications.
- *
- * This class delegates the creation of uploaded files and file trees to the provided PSR-7 factories, supporting both
- * traditional SAPI and worker-based environments. It ensures strict type safety and immutability throughout the file
- * creation process, handling both single and multiple file uploads.
- *
- * The creation process includes.
- * - Building nested file trees for multiple file uploads.
- * - Creating PSR-7 UploadedFileInterface instances from file arrays and global variables.
- * - Exception-safe conversion and validation of file input structures.
- * - Immutable, type-safe file creation from PHP globals and arrays.
- * - Validating file specification arrays for required and optional keys.
- *
- * Key features.
- * - Automatic handling of single and multiple uploaded files.
- * - Designed for compatibility with SAPI and worker runtimes.
- * - Exception-safe file spec validation and conversion.
- * - Immutable, type-safe uploaded file creation from PHP globals.
- * - PSR-7 factory integration for uploaded files and streams.
+ * Creates PSR-7 uploaded files from PHP file specifications.
  *
  * @phpstan-type TmpName array<array<mixed>|string>
  * @phpstan-type TmpSize array<array<mixed>|int>
@@ -82,13 +61,26 @@ final class UploadedFileCreator
     ) {}
 
     /**
-     * Creates a UploadedFileInterface instance from a file specification array.
+     * Creates an UploadedFileInterface instance from a file specification array.
      *
      * Validates the input file specification and delegates stream and uploaded file creation to the configured PSR-7
      * factories.
      *
-     * This method ensures strict type safety and immutability when converting PHP file arrays to PSR-7 uploaded file
-     * objects.
+     * Usage example:
+     * ```php
+     * $creator = new \yii2\extensions\psrbridge\creator\UploadedFileCreator(
+     *     $uploadedFileFactory,
+     *     $streamFactory,
+     * );
+     * $file = [
+     *     'tmp_name' => '/path/to/temp/file',
+     *     'size' => 12345,
+     *     'error' => 0,
+     *     'name' => 'example.txt',
+     *     'type' => 'text/plain',
+     * ];
+     * $uploadedFile = $creator->createFromArray($file);
+     * ```
      *
      * @param array $file File specification array containing required keys ('tmp_name', 'size', 'error') and optional
      * keys ('name', 'type').
@@ -97,19 +89,6 @@ final class UploadedFileCreator
      * array.
      *
      * @phpstan-param FileSpec $file
-     *
-     * Usage example:
-     * ```php
-     * $file = [
-     *     'tmp_name' => '/path/to/temp/file',
-     *     'size' => 12345,
-     *     'error' => 0,
-     *     'name' => 'example.txt',
-     *     'type' => 'text/plain',
-     * ];
-     *
-     * $uploadedFile = $creator->createFromArray($file);
-     * ```
      */
     public function createFromArray(array $file): UploadedFileInterface
     {
@@ -137,8 +116,14 @@ final class UploadedFileCreator
      *
      * Iterates over the provided files array and processes each entry using {@see processFileInput},
      *
-     * This method enables seamless conversion of PHP global file structures to PSR-7 UploadedFileInterface objects,
-     * supporting both single and multiple file uploads in SAPI and worker environments.
+     * Usage example:
+     * ```php
+     * $creator = new \yii2\extensions\psrbridge\creator\UploadedFileCreator(
+     *     $uploadedFileFactory,
+     *     $streamFactory,
+     * );
+     * $files = $creator->createFromGlobals($_FILES);
+     * ```
      *
      * @param array $files Array of uploaded file specifications or PSR-7 UploadedFileInterface instances.
      *
@@ -148,11 +133,6 @@ final class UploadedFileCreator
      * @phpstan-param FilesArray $files
      *
      * @phpstan-return FilesArray
-     *
-     * Usage example:
-     * ```php
-     * $files = $creator->createFromGlobals($_FILES);
-     * ```
      */
     public function createFromGlobals(array $files = []): array
     {
@@ -307,9 +287,6 @@ final class UploadedFileCreator
      * Validates that the provided temporary file name is a string and delegates the creation of the uploaded file
      * to the configured PSR-7 factories.
      *
-     * This method ensures strict type safety and immutability for single file uploads, supporting both SAPI and worker
-     * environments.
-     *
      * @param string $tmpName Temporary file name for the uploaded file.
      * @param int $size Size of the uploaded file in bytes.
      * @param int $error Error code associated with the file upload.
@@ -339,9 +316,6 @@ final class UploadedFileCreator
      *
      * Iterates over the required keys ('tmp_name', 'size', 'error') and checks for their presence in the input array.
      *
-     * This method is used to validate file specification arrays before processing them as uploaded files, ensuring
-     * strict type safety and consistency in the file creation workflow.
-     *
      * @param array $file File specification array to validate for required keys.
      *
      * @return bool `true` if all required keys are present; `false` otherwise.
@@ -365,9 +339,6 @@ final class UploadedFileCreator
      * Checks if the 'tmp_name' key exists and its value is an array, indicating a multiple file upload structure as
      * produced by PHP for input fields with the 'multiple' attribute.
      *
-     * This method is used to distinguish between single and multiple file upload specifications, ensuring correct
-     * processing and conversion to PSR-7 UploadedFileInterface instances.
-     *
      * @param array $file File specification array to check for multiple file upload structure.
      *
      * @return bool `true` if the file specification represents a multiple file upload; `false` otherwise.
@@ -383,14 +354,10 @@ final class UploadedFileCreator
      * Processes a file input and returns a PSR-7 UploadedFileInterface instance or a nested array of uploaded files.
      *
      * Determines the type of file input and delegate processing to the appropriate creation method.
-     *
      * - If the input is already an {@see UploadedFileInterface} instance, it is returned as-is.
      * - If required keys are missing, the input is treated as a global files array and processed recursively.
      * - For multiple file uploads, the input is converted to a nested array of uploaded files. For single file
      *   specifications, a PSR-7 UploadedFileInterface instance is created.
-     *
-     * This method ensures strict type safety and immutability when converting PHP file arrays to PSR-7 uploaded file
-     * objects, supporting both single and multiple file uploads in SAPI and worker environments.
      *
      * @param array|UploadedFileInterface $file File input to process, which may be a file specification array or an
      * uploaded file instance.

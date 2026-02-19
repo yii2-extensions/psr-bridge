@@ -27,26 +27,9 @@ use function time;
 use function urlencode;
 
 /**
- * Adapter for PSR-7 ResponseInterface to Yii2 Response component.
+ * Adapts Yii responses to PSR-7 responses.
  *
- * Provides a bridge between Yii2 Response and PSR-7 ResponseInterface, enabling seamless interoperability with PSR-7
- * compatible HTTP stacks in Yii2 Application.
- *
- * This adapter exposes methods to convert Yii2 Response objects to PSR-7 ResponseInterface, including header and cookie
- * translation, body stream creation, and support for Yii2 Cookie validation mechanism.
- *
- * All conversions are immutable and type-safe, ensuring compatibility with both legacy Yii2 workflows and modern PSR-7
- * middleware stacks.
- *
- * Key features.
- * - File streaming support with HTTP range handling.
- * - Handles cookie formatting and validation key enforcement.
- * - Immutable, fluent conversion for safe usage in middleware pipelines.
- * - PSR-7 to Yii2 Response component for seamless interoperability.
- * - Supports custom status text and content body.
- * - Translates headers and cookies, including Yii2 Cookie validation.
- *
- * @see ResponseInterface for PSR-7 ResponseInterface contract.
+ * {@see ResponseInterface} PSR-7 response contract.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -56,7 +39,7 @@ final class ResponseAdapter
     /**
      * Creates a new instance of the {@see ResponseAdapter} class.
      *
-     * @param Response $psrResponse Yii2 Response instance to adapt.
+     * @param Response $psrResponse Yii Response instance to adapt.
      * @param ResponseFactoryInterface $responseFactory PSR-7 ResponseFactoryInterface instance for response creation.
      * @param StreamFactoryInterface $streamFactory PSR-7 StreamFactoryInterface instance for body stream creation.
      * @param Security $security Optional Security component for cookie validation.
@@ -69,27 +52,29 @@ final class ResponseAdapter
     ) {}
 
     /**
-     * Converts the Yii2 Response instance to a PSR-7 ResponseInterface.
+     * Converts the Yii Response instance to a PSR-7 ResponseInterface.
      *
      * Creates a new PSR-7 ResponseInterface using the configured response and stream factories, copying status code,
-     * status text, headers, cookies, and body content from the Yii2 Response component.
-     *
+     * status text, headers, cookies, and body content from the Yii Response component.
      * - All headers are transferred to the PSR-7 ResponseInterface, with multiple values preserved.
      * - Cookies are formatted and added as separate 'Set-Cookie' headers.
      * - File streaming is supported with HTTP range handling for efficient large file downloads.
-     * - Response body is created from the Yii2 Response content or stream using the PSR-7 StreamFactoryInterface.
+     * - Response body is created from the Yii Response content or stream using the PSR-7 StreamFactoryInterface.
      *
-     * This method enables seamless interoperability between Yii2 and PSR-7 compatible HTTP stacks by providing a fully
-     * constructed PSR-7 ResponseInterface based on the Yii2 Response state.
+     * Usage example:
+     * ```php
+     * $adapter = new \yii2\extensions\psrbridge\adapter\ResponseAdapter(
+     *     $response,
+     *     $responseFactory,
+     *     $streamFactory,
+     *     $security,
+     * );
+     * $psr7Response = $adapter->toPsr7();
+     * ```
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
      * @return ResponseInterface PSR-7 ResponseInterface instance with headers, cookies, and body content.
-     *
-     * Usage example:
-     * ```php
-     * $psr7Response = $adapter->toPsr7();
-     * ```
      */
     public function toPsr7(): ResponseInterface
     {
@@ -119,11 +104,10 @@ final class ResponseAdapter
     }
 
     /**
-     * Builds and returns formatted cookie headers from the Yii2 Response component.
+     * Builds and returns formatted cookie headers from the Yii Response component.
      *
-     * Iterates over all cookies in the Yii2 Response component and generates an array of formatted cookie header
-     * strings suitable for use as 'Set-Cookie' headers in a PSR-7 ResponseInterface.
-     *
+     * Iterates over all cookies in the Yii Response component and generates an array of formatted cookie header strings
+     * suitable for use as Set-Cookie headers in a PSR-7 ResponseInterface.
      * - Each cookie is formatted using {@see formatCookieHeader()}.
      * - If cookie validation is enabled, each cookie value is validated using the configured validation key.
      * - Only non-empty cookie values are included in the result.
@@ -152,16 +136,12 @@ final class ResponseAdapter
     }
 
     /**
-     * Creates a PSR-7 body stream from the Yii2 Response content or file stream.
+     * Creates a PSR-7 body stream from the Yii Response content or file stream.
      *
      * Handles both regular content and file streaming scenarios.
-     *
-     * - If Yii2 Response component contains a file stream, this method delegates to {@see createStreamFromFileHandle()}
-     * to generate a stream for the specified file range.
+     * - If Yii Response component contains a file stream, this method delegates to {@see createStreamFromFileHandle()}
+     *   to generate a stream for the specified file range.
      * - Otherwise, it creates a stream from the response content using the configured PSR-7 StreamFactoryInterface.
-     *
-     * This method ensures compatibility with both standard content responses and efficient file downloads in PSR-7
-     * middleware pipelines.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
@@ -179,14 +159,13 @@ final class ResponseAdapter
     }
 
     /**
-     * Creates a PSR-7 stream from a file handle and byte range defined in the Yii2 Response component.
+     * Creates a PSR-7 stream from a file handle and byte range defined in the Yii Response component.
      *
-     * Reads the specified byte range from the file handle provided by the Yii2 Response stream property and return a
+     * Reads the specified byte range from the file handle provided by the Yii Response stream property and return a
      * new PSR-7 StreamInterface containing the file data.
      *
      * This method validates the stream format, range, and handle before reading, ensuring type safety and correct
      * operation for file streaming scenarios.
-     *
      * - Ensures the byte range is valid and the handle is a resource.
      * - Reads the requested range and closes the file handle after reading.
      * - Returns a new PSR-7 stream containing the file content for the specified range.
@@ -237,19 +216,15 @@ final class ResponseAdapter
     }
 
     /**
-     * Formats a {@see Cookie} object as a 'Set-Cookie' header string for PSR-7 ResponseInterface.
+     * Formats a {@see Cookie} object as a Set-Cookie header string for PSR-7 ResponseInterface.
      *
-     * Converts the provided {@see Cookie} instance into a formatted 'Set-Cookie' header string, applying Yii2 Cookie
+     * Converts the provided {@see Cookie} instance into a formatted Set-Cookie header string, applying Yii Cookie
      * validation if enabled and including all standard cookie attributes (expires, max-age, path, domain, secure,
      * httponly, samesite) as required.
-     *
-     * - If cookie validation is enabled and a validation key is provided, the cookie value is hashed using Yii2
-     *   Security component for integrity protection.
+     * - If cookie validation is enabled and a validation key is provided, the cookie value is hashed using Yii Security
+     *   component for integrity protection.
      * - Expiration is normalized to a UNIX timestamp, supporting numeric, string, and {@see DateTimeInterface} values.
      * - All attributes are appended in compliance with RFC 6265 for interoperability with HTTP clients.
-     *
-     * This method is used internally to generate 'Set-Cookie' headers for PSR-7 ResponseInterface objects, ensuring
-     * compatibility with both Yii2 and PSR-7 HTTP stacks.
      *
      * @param Cookie $cookie Cookie instance to format.
      *
@@ -303,7 +278,7 @@ final class ResponseAdapter
             'SameSite' => $cookie->sameSite,
         ];
 
-        // if 'SameSite=None', ensure Secure is present (browser requirement)
+        // if `SameSite=None`, ensure Secure is present (browser requirement)
         if ($attributes['SameSite'] === Cookie::SAME_SITE_NONE && $attributes['Secure'] === null) {
             $attributes['Secure'] = '';
         }

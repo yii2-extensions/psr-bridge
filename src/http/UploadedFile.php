@@ -18,22 +18,9 @@ use function str_starts_with;
 use function substr;
 
 /**
- * Uploaded file handler with PSR-7 bridge support.
+ * Extends Yii uploaded file handling with PSR-7 uploaded files.
  *
- * Provides a drop-in replacement for {@see \yii\web\UploadedFile} that integrates PSR-7 UploadedFileInterface handling,
- * enabling seamless interoperability with PSR-7 compatible HTTP stacks and modern PHP runtimes.
- *
- * This class allows file data to be sourced from either the global $_FILES array or a PSR-7 ServerRequestAdapter,
- * supporting both traditional SAPI and worker-based environments. The internal file cache is populated accordingly,
- * ensuring compatibility with Yii2 file validation and processing workflows.
- *
- * Key features.
- * - Compatible with both legacy and modern PHP runtimes.
- * - Conversion utilities for PSR-7 UploadedFileInterface to Yii2 format.
- * - Internal cache for efficient file lookup and repeated access.
- * - PSR-7 ServerRequestAdapter integration for file handling without global state.
- *
- * @see ServerRequestAdapter for PSR-7 to Yii2 file adapter.
+ * {@see ServerRequestAdapter} PSR-7 request adapter used for uploaded files.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -70,11 +57,6 @@ class UploadedFile extends \yii\web\UploadedFile
      * such as '[1]file' for tabular uploads or 'file[1]' for file arrays. The method resolves the input name using
      * {@see Html::getInputName()} and delegates to {@see getInstanceByName()} for file lookup.
      *
-     * @param Model $model Data model.
-     * @param string $attribute Attribute name, which may contain array indexes (for example, '[1]file', 'file[1]').
-     *
-     * @return UploadedFile|null Instance of the uploaded file, or `null` if no file was uploaded for the attribute.
-     *
      * Usage example:
      * ```php
      * $file = UploadedFile::getInstance($model, 'file');
@@ -83,6 +65,11 @@ class UploadedFile extends \yii\web\UploadedFile
      *     // process the uploaded file
      * }
      * ```
+     *
+     * @param Model $model Data model.
+     * @param string $attribute Attribute name, which may contain array indexes (for example, '[1]file', 'file[1]').
+     *
+     * @return UploadedFile|null Instance of the uploaded file, or `null` if no file was uploaded for the attribute.
      */
     public static function getInstance($model, $attribute): self|null
     {
@@ -94,10 +81,6 @@ class UploadedFile extends \yii\web\UploadedFile
     /**
      * Returns the instance of the uploaded file for the specified input name.
      *
-     * @param string $name Name of the file input field.
-     *
-     * @return self|null Instance of the uploaded file, or `null` if no file was uploaded for the name.
-     *
      * Usage example:
      * ```php
      * $file = UploadedFile::getInstanceByName('file');
@@ -106,6 +89,10 @@ class UploadedFile extends \yii\web\UploadedFile
      *     // process the uploaded file
      * }
      * ```
+     *
+     * @param string $name Name of the file input field.
+     *
+     * @return self|null Instance of the uploaded file, or `null` if no file was uploaded for the name.
      */
     public static function getInstanceByName($name): self|null
     {
@@ -121,14 +108,6 @@ class UploadedFile extends \yii\web\UploadedFile
      * {@see getInstancesByName()} for file lookup. Supports array-indexed attribute names for tabular file uploading,
      * such as '[1]file'.
      *
-     * @param Model $model Data model.
-     * @param string $attribute Attribute name, which may contain array indexes (for example, '[1]file').
-     *
-     * @return array Array of UploadedFile objects for the specified attribute. Returns an empty array if no
-     * files were uploaded.
-     *
-     * @phpstan-return UploadedFile[]
-     *
      * Usage example:
      * ```php
      * $files = UploadedFile::getInstances($model, 'file');
@@ -137,6 +116,14 @@ class UploadedFile extends \yii\web\UploadedFile
      *     // process each uploaded file
      * }
      * ```
+     *
+     * @param Model $model Data model.
+     * @param string $attribute Attribute name, which may contain array indexes (for example, '[1]file').
+     *
+     * @return array Array of UploadedFile objects for the specified attribute. Returns an empty array if no
+     * files were uploaded.
+     *
+     * @phpstan-return UploadedFile[]
      */
     public static function getInstances($model, $attribute): array
     {
@@ -151,13 +138,6 @@ class UploadedFile extends \yii\web\UploadedFile
      * Iterates over the internal file cache and collects all uploaded files whose keys match the given input name or
      * are prefixed with the input name followed by an opening bracket (for array-style file inputs).
      *
-     * @param string $name Name of the file input field or array of files.
-     *
-     * @return array Array of UploadedFile objects for the specified input name. Returns an empty array if no files were
-     * uploaded.
-     *
-     * @phpstan-return UploadedFile[]
-     *
      * Usage example:
      * ```php
      * $files = UploadedFile::getInstancesByName('file');
@@ -165,6 +145,13 @@ class UploadedFile extends \yii\web\UploadedFile
      *     // process each uploaded file
      * }
      * ```
+     *
+     * @param string $name Name of the file input field or array of files.
+     *
+     * @return array Array of UploadedFile objects for the specified input name. Returns an empty array if no files were
+     * uploaded.
+     *
+     * @phpstan-return UploadedFile[]
      */
     public static function getInstancesByName($name): array
     {
@@ -192,10 +179,6 @@ class UploadedFile extends \yii\web\UploadedFile
     /**
      * Resets the internal uploaded files cache, PSR-7 adapter state, and closes any open tempResource handles.
      *
-     * Clears all cached uploaded file data, PSR-7 adapter references and closes any open tempResource handles, ensuring
-     * a clean state for subsequent file handling operations. This method should be called to fully reset the file
-     * handling environment, including both legacy and PSR-7 file sources.
-     *
      * Usage example:
      * ```php
      * UploadedFile::reset();
@@ -212,20 +195,12 @@ class UploadedFile extends \yii\web\UploadedFile
     /**
      * Sets the PSR-7 ServerRequestAdapter for file handling.
      *
-     * Configures the bridge to use PSR-7 UploadedFileInterface data instead of reading from $_FILES global.
-     *
-     * This method should be called when initializing PSR-7 request processing to enable clean file handling without
-     * global state modification.
-     *
-     * The adapter will be used by {@see loadFiles()} to populate the internal file cache directly from PSR-7 data,
-     * ensuring compatibility with both worker environments and traditional SAPI setups.
-     *
-     * @param ServerRequestAdapter $adapter PSR-7 adapter containing UploadedFileInterface instances.
-     *
      * Usage example:
      * ```php
      * UploadedFile::setPsr7Adapter($serverRequestAdapter);
      * ```
+     *
+     * @param ServerRequestAdapter $adapter PSR-7 adapter containing UploadedFileInterface instances.
      */
     public static function setPsr7Adapter(ServerRequestAdapter $adapter): void
     {
@@ -245,17 +220,17 @@ class UploadedFile extends \yii\web\UploadedFile
     }
 
     /**
-     * Converts a PSR-7 UploadedFileInterface to Yii2 UploadedFile format.
+     * Converts a PSR-7 UploadedFileInterface to Yii UploadedFile format.
      *
-     * Maps PSR-7 file properties to the array structure expected by Yii2 UploadedFile constructor, ensuring proper
+     * Maps PSR-7 file properties to the array structure expected by Yii UploadedFile constructor, ensuring proper
      * handling of file metadata, error codes, and stream resources.
      *
      * Handles edge cases such as missing metadata, stream resource extraction, and proper error code mapping to
-     * maintain full compatibility with Yii2 file validation and processing workflows.
+     * maintain full compatibility with Yii file validation and processing workflows.
      *
      * @param UploadedFileInterface $psr7File PSR-7 UploadedFileInterface to convert.
      *
-     * @return array Yii2 compatible file data array.
+     * @return array Yii compatible file data array.
      *
      * @phpstan-return array{
      *   name: string,
@@ -303,9 +278,6 @@ class UploadedFile extends \yii\web\UploadedFile
      * Populates the internal file cache from either the PSR-7 adapter or the legacy $_FILES global, depending on the
      * current configuration and state.
      *
-     * This method ensures that the file cache is initialized only once per request lifecycle, and subsequent calls
-     * return the cached result.
-     *
      * @return array Internal uploaded files cache.
      *
      * @phpstan-return array<
@@ -339,7 +311,7 @@ class UploadedFile extends \yii\web\UploadedFile
      *
      * This is a copy of the parent class private method to maintain compatibility with legacy $_FILES processing.
      *
-     * The method handles both single files and array structures, preserving the original Yii2 logic.
+     * The method handles both single files and array structures, preserving the original Yii logic.
      *
      * @param string $key Key for identifying uploaded file (sub-array index).
      * @param string|string[] $names File name(s) provided by PHP.
@@ -390,9 +362,6 @@ class UploadedFile extends \yii\web\UploadedFile
      * Loads uploaded files from legacy $_FILES global array.
      *
      * Provides fallback functionality for traditional SAPI environments where PSR-7 is not available.
-     *
-     * This method is called automatically when no PSR-7 adapter is set, ensuring seamless operation in legacy
-     * environments without any configuration changes.
      */
     private static function loadLegacyFiles(): void
     {
@@ -427,15 +396,12 @@ class UploadedFile extends \yii\web\UploadedFile
     /**
      * Loads uploaded files from PSR-7 UploadedFileInterface instances.
      *
-     * Converts PSR-7 UploadedFileInterface data to Yii2 compatible format and populates the internal file cache
-     * directly, avoiding global $_FILES manipulation while maintaining full compatibility with Yii2 file handling
+     * Converts PSR-7 UploadedFileInterface data to Yii compatible format and populates the internal file cache
+     * directly, avoiding global $_FILES manipulation while maintaining full compatibility with Yii file handling
      * expectations.
      *
      * Handles both simple file uploads and complex nested file arrays, ensuring proper structure preservation for
      * form-based file uploads with array notation.
-     *
-     * This method enables clean separation of PSR-7 file handling from global state, improving testability and worker
-     * environment compatibility.
      */
     private static function loadPsr7Files(): void
     {
@@ -448,12 +414,12 @@ class UploadedFile extends \yii\web\UploadedFile
     }
 
     /**
-     * Processes a PSR-7 UploadedFileInterface and converts it to Yii2 format.
+     * Processes a PSR-7 UploadedFileInterface and converts it to Yii format.
      *
      * Handles both single files and arrays of files, recursively processing nested structures to maintain compatibility
      * with complex form-based file uploads using array notation.
      *
-     * Converts PSR-7 UploadedFileInterface properties to the format expected by Yii2 UploadedFile, including proper
+     * Converts PSR-7 UploadedFileInterface properties to the format expected by Yii UploadedFile, including proper
      * error code mapping and stream resource handling.
      *
      * @param string $name Field name for the uploaded file(s).
