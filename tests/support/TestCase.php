@@ -223,8 +223,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $_POST = [];
         $_SERVER = $this->originalServer;
 
-        $this->closeTmpFile(...$this->tmpFiles);
-
+        $this->closeApplication();
         parent::tearDown();
     }
 }

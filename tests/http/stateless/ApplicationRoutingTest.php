@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
-use yii2\extensions\psrbridge\tests\support\{ApplicationFactory,HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} routing in stateless mode.
