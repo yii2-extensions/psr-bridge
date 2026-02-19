@@ -10,12 +10,13 @@ use Yii;
 use yii\base\Security;
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
+use function array_pop;
 use function fclose;
 use function fwrite;
 use function is_resource;
 use function stream_get_meta_data;
+use function strlen;
 use function tmpfile;
-use function unlink;
 
 /**
  * Base class for package integration tests.
@@ -43,7 +44,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * Temporary file resources used during tests.
      *
      * @phpstan-var array<resource>
-     * @phpstan-ignore property.onlyWritten
      */
     private array $tmpFiles = [];
 
@@ -143,24 +143,26 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      *
      * @param string $content Content to write to the temporary file.
      *
+     * @throws RuntimeException if the temporary file cannot be created or written.
+     *
      * @return string Path to the created temporary file.
      */
     protected function createTempFileWithContent(string $content): string
     {
-        $tmpPathFile = $this->createTmpFile();
-        $handle = fopen($tmpPathFile, 'wb');
+        $resource = tmpfile();
 
-        if ($handle === false) {
-            unlink($tmpPathFile);
-
-            throw new RuntimeException('Unable to open temporary file for writing.');
+        if ($resource === false) {
+            throw new RuntimeException('Failed to create temporary file.');
         }
 
-        $bytesWritten = fwrite($handle, $content);
-        fclose($handle);
+        $this->tmpFiles[] = $resource;
+
+        $tmpPathFile = stream_get_meta_data($resource)['uri'] ?? '';
+        $bytesWritten = fwrite($resource, $content);
 
         if ($bytesWritten === false || $bytesWritten !== strlen($content)) {
-            unlink($tmpPathFile);
+            array_pop($this->tmpFiles);
+            fclose($resource);
 
             throw new RuntimeException('Unable to write content to temporary file.');
         }
