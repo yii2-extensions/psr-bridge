@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPUnit\Framework\Attributes\Group;
 use yii\base\{Action, InvalidConfigException};
 use yii2\extensions\psrbridge\http\UploadedFile;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 /**
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
@@ -31,9 +31,9 @@ final class ApplicationHookTest extends TestCase
      */
     public function testHandleInvokesOverriddenCoreLifecycleHooks(): void
     {
-        $app = $this->applicationRest();
+        $app = ApplicationFactory::rest();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -97,9 +97,9 @@ final class ApplicationHookTest extends TestCase
      */
     public function testPrepareForRequestCallsOverriddenResetRequestStateHook(): void
     {
-        $app = $this->applicationRest();
+        $app = ApplicationFactory::rest();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -116,7 +116,7 @@ final class ApplicationHookTest extends TestCase
 
         $app->resetRequestStateCalled = false;
 
-        $app->runPrepareForRequest(FactoryHelper::createRequest());
+        $app->runPrepareForRequest(HelperFactory::createRequest());
 
         self::assertSame(
             '',
@@ -151,13 +151,13 @@ final class ApplicationHookTest extends TestCase
             "'filesize()' must not fail on the temporary file.",
         );
 
-        $app = $this->applicationRest();
+        $app = ApplicationFactory::rest();
 
         $response = $app->handle(
-            FactoryHelper::createRequest('POST', '/site/post', parsedBody: ['action' => 'upload'])
+            HelperFactory::createRequest('POST', '/site/post', parsedBody: ['action' => 'upload'])
                 ->withUploadedFiles(
                     [
-                        'file1' => FactoryHelper::createUploadedFile(
+                        'file1' => HelperFactory::createUploadedFile(
                             'test1.txt',
                             'text/plain',
                             $tmpPath1,
@@ -177,7 +177,7 @@ final class ApplicationHookTest extends TestCase
 
         $app->resetUploadedFilesStateCalled = false;
 
-        $app->runPrepareForRequest(FactoryHelper::createRequest());
+        $app->runPrepareForRequest(HelperFactory::createRequest());
 
         self::assertSame(
             [],

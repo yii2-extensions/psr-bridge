@@ -5,16 +5,10 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\provider;
 
 /**
- * Data provider for {@see \yii2\extensions\psrbridge\tests\http\RequestTest} and related HTTP request test classes.
+ * Data provider for {@see \yii2\extensions\psrbridge\tests\http\RequestTest} test cases.
  *
- * Supplies comprehensive test data for HTTP request scenarios, including headers, methods, query strings, URLs, user
- * IP resolution, authorization, secure server detection, and trusted proxy handling.
- *
- * Key features.
- * - Covers trusted/untrusted proxy scenarios, RFC 7239, and header injection.
- * - Enables robust testing of query string, URL, and authorization header parsing.
- * - Provides data for edge cases in HTTP request parsing and normalization.
- * - Supports validation of AJAX, PJAX, and secure server detection logic.
+ * Provides representative input/output pairs for request parsing, header handling, proxy resolution, and security
+ * detection behaviors.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

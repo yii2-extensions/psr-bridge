@@ -11,7 +11,7 @@ use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
 use yii2\extensions\psrbridge\http\{Application, Response};
 use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function array_filter;
 use function is_array;
@@ -53,7 +53,7 @@ final class ApplicationErrorHandlerTest extends TestCase
     ): void {
         @\runkit_constant_redefine('YII_DEBUG', $debug);
 
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'errorHandler' => ['errorAction' => $action],
@@ -61,7 +61,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', $route));
+        $response = $app->handle(HelperFactory::createRequest('GET', $route));
 
         self::assertSame(
             $expectedStatusCode,
@@ -92,7 +92,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         $eventSender = null;
         $eventCount = 0;
 
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'flushLogger' => false,
                 'components' => [
@@ -113,7 +113,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             },
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/trigger-exception'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/trigger-exception'));
 
         self::assertSame(
             500,
@@ -173,7 +173,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             'SECRET_KEY' => 'not-a-real-secret-key',
         ];
 
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'errorHandler' => [
@@ -183,7 +183,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             500,
@@ -248,7 +248,7 @@ final class ApplicationErrorHandlerTest extends TestCase
      */
     public function testLogExceptionIsCalledWhenHandlingException(): void
     {
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'flushLogger' => false,
                 'components' => [
@@ -266,7 +266,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/trigger-exception'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/trigger-exception'));
 
         self::assertSame(
             500,
@@ -355,7 +355,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         );
 
         try {
-            $app = $this->statelessApplication(
+            $app = ApplicationFactory::stateless(
                 [
                     'components' => [
                         'errorHandler' => ['errorAction' => null],
@@ -363,7 +363,7 @@ final class ApplicationErrorHandlerTest extends TestCase
                 ],
             );
 
-            $response = $app->handle(FactoryHelper::createRequest('GET', '/site/trigger-exception'));
+            $response = $app->handle(HelperFactory::createRequest('GET', '/site/trigger-exception'));
 
             self::assertSame(
                 500,
@@ -432,7 +432,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         string $route,
         array $expectedContent,
     ): void {
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'response' => ['format' => $format],
@@ -441,7 +441,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', $route));
+        $response = $app->handle(HelperFactory::createRequest('GET', $route));
 
         self::assertSame(
             $expectedStatusCode,
@@ -500,7 +500,7 @@ final class ApplicationErrorHandlerTest extends TestCase
     {
         @\runkit_constant_redefine('YII_DEBUG', false);
 
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'errorHandler' => ['errorAction' => 'site/error-with-response'],
@@ -508,7 +508,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/trigger-exception'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/trigger-exception'));
 
         self::assertSame(
             500,
@@ -542,7 +542,7 @@ final class ApplicationErrorHandlerTest extends TestCase
      */
     public function testReturnHtmlErrorResponseWhenErrorHandlerActionIsInvalid(): void
     {
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'errorHandler' => ['errorAction' => 'invalid/nonexistent-action'],
@@ -550,7 +550,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/nonexistent-action'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/nonexistent-action'));
 
         self::assertSame(
             500,
@@ -581,9 +581,9 @@ final class ApplicationErrorHandlerTest extends TestCase
      */
     public function testThrowableOccursDuringRequestHandling(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/nonexistent/invalidaction'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/nonexistent/invalidaction'));
 
         self::assertSame(
             404,
@@ -607,9 +607,9 @@ final class ApplicationErrorHandlerTest extends TestCase
      */
     public function testThrowNotFoundHttpExceptionWhenStrictParsingDisabledAndRouteIsMissing(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/profile/123'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/profile/123'));
 
         self::assertSame(
             404,
@@ -638,7 +638,7 @@ final class ApplicationErrorHandlerTest extends TestCase
 
         $initialBufferLevel = ob_get_level();
 
-        $app = $this->statelessApplication(
+        $app = ApplicationFactory::stateless(
             [
                 'components' => [
                     'errorHandler' => ['errorAction' => null],
@@ -651,7 +651,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ],
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/profile/123'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/profile/123'));
 
         self::assertSame(
             404,

@@ -5,16 +5,10 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\provider;
 
 /**
- * Data provider for {@see \yii2\extensions\psrbridge\tests\adapter\ServerParamsPsr7Test} and related server params test
- * classes.
+ * Data provider for {@see \yii2\extensions\psrbridge\tests\adapter\ServerParamsPsr7Test} test cases.
  *
- * Supplies comprehensive test data for server parameter normalization and extraction scenarios, including remote host,
- * server name, and generic server parameter handling with and without default values.
- *
- * Key features.
- * - Covers edge cases for remote host and server name normalization (IPv4, IPv6, domain, boolean, integer, etc.).
- * - Provides test data for absent, null, array, object, and scalar server parameters.
- * - Supports validation of default value logic for missing or empty server parameters.
+ * Provides representative input/output pairs for remote host and server parameter normalization and default value
+ * handling.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

@@ -11,7 +11,7 @@ use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\emitter\SapiEmitter;
 use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
 use yii2\extensions\psrbridge\tests\provider\EmitterProvider;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
 use function fopen;
@@ -25,15 +25,6 @@ use function ob_start;
 
 /**
  * Test suite for {@see SapiEmitter} class functionality and behavior.
- *
- * Verifies the HTTP response emission capabilities through PHP's SAPI interface, ensuring correct response handling,
- * header management, and body streaming functionality.
- *
- * These tests ensure emission features work correctly under different conditions and maintain consistent behavior after
- * code changes.
- *
- * The tests validate proper HTTP response emission with various configurations for headers, body content, and buffer
- * management, which are essential for reliable HTTP communication in the framework.
  *
  * Test coverage.
  * - Buffer configuration (custom sizes, validation, zero/negative values).
@@ -60,7 +51,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithContentRangeAndSmallBuffer(): void
     {
-        $response = FactoryHelper::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: 'Contents');
+        $response = HelperFactory::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: 'Contents');
 
         (new SapiEmitter(1))->emit($response);
 
@@ -97,7 +88,7 @@ final class SapiEmitterTest extends TestCase
     {
         $emitter = new SapiEmitter(1);
 
-        $response = FactoryHelper::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: 'Contents');
+        $response = HelperFactory::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: 'Contents');
 
         $emitter->emit($response, false);
 
@@ -132,7 +123,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithCustomBufferLength(): void
     {
-        $response = FactoryHelper::createResponse();
+        $response = HelperFactory::createResponse();
 
         (new SapiEmitter(8192))->emit($response);
 
@@ -167,7 +158,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithCustomHeadersAndSmallBuffer(): void
     {
-        $response = FactoryHelper::createResponse(404, ['X-Test' => 'test'], 'Page not found', '2');
+        $response = HelperFactory::createResponse(404, ['X-Test' => 'test'], 'Page not found', '2');
 
         (new SapiEmitter(2))->emit($response);
 
@@ -206,7 +197,7 @@ final class SapiEmitterTest extends TestCase
         string $reasonPhrase,
         string $expectedHeader,
     ): void {
-        $response = FactoryHelper::createResponse($code);
+        $response = HelperFactory::createResponse($code);
 
         $response = $response->withStatus($code, $reasonPhrase);
 
@@ -230,7 +221,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithCustomStatusAndHeaders(): void
     {
-        $response = FactoryHelper::createResponse($code = 404, ['X-Test' => 'test'], $contents = 'Page not found', '2');
+        $response = HelperFactory::createResponse($code = 404, ['X-Test' => 'test'], $contents = 'Page not found', '2');
 
         (new SapiEmitter())->emit($response);
 
@@ -265,7 +256,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithDefaultBufferLength(): void
     {
-        $response = FactoryHelper::createResponse();
+        $response = HelperFactory::createResponse();
 
         (new SapiEmitter())->emit($response);
 
@@ -300,7 +291,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithEmptyContent(): void
     {
-        $response = FactoryHelper::createResponse(headers: ['Content-Range' => 'bytes 0-3/8']);
+        $response = HelperFactory::createResponse(headers: ['Content-Range' => 'bytes 0-3/8']);
 
         (new SapiEmitter(8192))->emit($response);
 
@@ -340,7 +331,7 @@ final class SapiEmitterTest extends TestCase
         $stream->method('isReadable')->willReturn(true);
         $stream->expects(self::once())->method('seek')->with(0);
 
-        $response = FactoryHelper::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: $stream);
+        $response = HelperFactory::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: $stream);
 
         (new SapiEmitter(8192))->emit($response);
 
@@ -354,7 +345,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithMultipleHeadersAndSetCookiesPreserved(): void
     {
-        $response = FactoryHelper::createResponse(headers: ['X-Test' => ['test-1']], body: 'Contents');
+        $response = HelperFactory::createResponse(headers: ['X-Test' => ['test-1']], body: 'Contents');
 
         $response = $response
             ->withAddedHeader('Set-Cookie', 'key-1=value-1')
@@ -392,7 +383,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithMultipleHeaderTypes(): void
     {
-        $response = FactoryHelper::createResponse(headers: ['Content-Type' => ['text/plain']]);
+        $response = HelperFactory::createResponse(headers: ['Content-Type' => ['text/plain']]);
 
         $response = $response
             ->withAddedHeader('Set-Cookie', 'key-1=value-1')
@@ -418,7 +409,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithMultipleSetCookieHeaders(): void
     {
-        $response = FactoryHelper::createResponse(200, ['Set-Cookie' => ['cookie1=value1', 'cookie2=value2']]);
+        $response = HelperFactory::createResponse(200, ['Set-Cookie' => ['cookie1=value1', 'cookie2=value2']]);
 
         (new SapiEmitter())->emit($response);
 
@@ -439,7 +430,7 @@ final class SapiEmitterTest extends TestCase
     #[DataProviderExternal(EmitterProvider::class, 'noBodyStatusCodes')]
     public function testEmitResponseWithNoBodyStatusCodes(int $code, string $phrase): void
     {
-        $response = FactoryHelper::createResponse(
+        $response = HelperFactory::createResponse(
             $code,
             ['Content-Type' => ['text/plain']],
             'This content should not be emitted',
@@ -477,7 +468,7 @@ final class SapiEmitterTest extends TestCase
     {
         $file = fopen('php://output', 'cb');
 
-        $response = FactoryHelper::createResponse(body: $file === false ? null : $file);
+        $response = HelperFactory::createResponse(body: $file === false ? null : $file);
 
         self::assertSame(
             'php://output',
@@ -521,7 +512,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithNormalizedHeaderNames(): void
     {
-        $response = FactoryHelper::createResponse(headers: ['CONTENT-Type' => 'text/plain', 'X-Custom-HEADER' => 'value']);
+        $response = HelperFactory::createResponse(headers: ['CONTENT-Type' => 'text/plain', 'X-Custom-HEADER' => 'value']);
 
         (new SapiEmitter())->emit($response);
 
@@ -541,7 +532,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithoutHeaders(): void
     {
-        $response = FactoryHelper::createResponse();
+        $response = HelperFactory::createResponse();
 
         (new SapiEmitter())->emit($response);
 
@@ -576,7 +567,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithSuppressedBody(): void
     {
-        $response = FactoryHelper::createResponse($code = 404, ['X-Test' => 'test'], 'Page not found', '2');
+        $response = HelperFactory::createResponse($code = 404, ['X-Test' => 'test'], 'Page not found', '2');
 
         (new SapiEmitter())->emit($response, false);
 
@@ -624,7 +615,7 @@ final class SapiEmitterTest extends TestCase
         $headers = $isContentRange ? ['Content-Range' => "bytes $first-$last/*"] : [];
         $expectedHeaders = $isContentRange ? ["Content-Range: bytes $first-$last/*"] : [];
 
-        $response = FactoryHelper::createResponse(200, $headers, $contents === '' ? null : $contents);
+        $response = HelperFactory::createResponse(200, $headers, $contents === '' ? null : $contents);
 
         (new SapiEmitter($buffer))->emit($response);
 
@@ -674,7 +665,7 @@ final class SapiEmitterTest extends TestCase
         $this->expectException(HeadersAlreadySentException::class);
         $this->expectExceptionMessage(Message::UNABLE_TO_EMIT_RESPONSE_HEADERS_ALREADY_SENT->getMessage());
 
-        (new SapiEmitter())->emit(FactoryHelper::createResponse());
+        (new SapiEmitter())->emit(HelperFactory::createResponse());
     }
 
     /**
@@ -684,7 +675,7 @@ final class SapiEmitterTest extends TestCase
     {
         $file = fopen('php://output', 'cb');
 
-        $response = FactoryHelper::createResponse(body: $file === false ? null : $file);
+        $response = HelperFactory::createResponse(body: $file === false ? null : $file);
 
         $response->getBody()->write('Contents');
 
@@ -708,7 +699,7 @@ final class SapiEmitterTest extends TestCase
         $this->expectException(OutputAlreadySentException::class);
 
         $emitter = new SapiEmitter();
-        $response = FactoryHelper::createResponse();
+        $response = HelperFactory::createResponse();
 
         try {
             $emitter->emit($response);
@@ -729,7 +720,7 @@ final class SapiEmitterTest extends TestCase
         ob_clean();
 
         $emitter = new SapiEmitter();
-        $response = FactoryHelper::createResponse();
+        $response = HelperFactory::createResponse();
 
         $emitter->emit($response);
 

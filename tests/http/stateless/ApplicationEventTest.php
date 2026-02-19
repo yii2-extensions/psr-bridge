@@ -10,7 +10,7 @@ use ReflectionException;
 use yii\base\{Event, InvalidConfigException};
 use yii\web\IdentityInterface;
 use yii2\extensions\psrbridge\http\Application;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\EventComponent;
 
 use function count;
@@ -37,7 +37,7 @@ final class ApplicationEventTest extends TestCase
      */
     public function testEventCleanupOrderMattersForProperMemoryManagement(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         // capture the global 'off()' call sequence to validate reverse cleanup order (LIFO)
         $offSequence = [];
@@ -115,7 +115,7 @@ final class ApplicationEventTest extends TestCase
 
         ReflectionHelper::setInaccessibleProperty($app, 'registeredEvents', $registeredEvents);
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -157,7 +157,7 @@ final class ApplicationEventTest extends TestCase
      */
     public function testEventRegistrationAndCleanupBetweenRequests(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $eventsCaptured = [];
         $trackedCounts = [];
@@ -185,7 +185,7 @@ final class ApplicationEventTest extends TestCase
             },
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -215,7 +215,7 @@ final class ApplicationEventTest extends TestCase
             'Events should be cleaned after request.',
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/statuscode'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/statuscode'));
 
         self::assertSame(
             201,
@@ -253,7 +253,7 @@ final class ApplicationEventTest extends TestCase
      */
     public function testGlobalEventCleanupWithoutSystemInterference(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $eventsTriggered = [];
 
@@ -270,7 +270,7 @@ final class ApplicationEventTest extends TestCase
             },
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -304,7 +304,7 @@ final class ApplicationEventTest extends TestCase
             },
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/statuscode'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/statuscode'));
 
         self::assertSame(
             201,
@@ -353,9 +353,9 @@ final class ApplicationEventTest extends TestCase
             },
         );
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -377,7 +377,7 @@ final class ApplicationEventTest extends TestCase
     {
         $internalEventCaptured = false;
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $this->assertEmptyRegisteredEvents(
             $app,
@@ -395,7 +395,7 @@ final class ApplicationEventTest extends TestCase
             },
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', '/site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', '/site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,
@@ -432,7 +432,7 @@ final class ApplicationEventTest extends TestCase
         $sender = null;
         $sequence = [];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $app->on(
             $eventName,
@@ -443,7 +443,7 @@ final class ApplicationEventTest extends TestCase
             },
         );
 
-        $response = $app->handle(FactoryHelper::createRequest('GET', 'site/index'));
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response,

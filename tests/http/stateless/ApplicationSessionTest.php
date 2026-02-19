@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function array_filter;
 use function array_key_exists;
@@ -53,9 +53,9 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => 'site/captcha',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -105,7 +105,7 @@ final class ApplicationSessionTest extends TestCase
             'QUERY_STRING' => 'refresh=1',
         ];
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -168,7 +168,7 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => $url,
         ];
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
         $imageContent = $response->getBody()->getContents();
 
         self::assertSame(
@@ -215,9 +215,9 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => 'site/setflash',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
         $sessionName = $app->session->getName();
 
         self::assertSame(
@@ -251,7 +251,7 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => 'site/getflash',
         ];
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         $flashData = Json::decode($response->getBody()->getContents());
 
@@ -292,7 +292,7 @@ final class ApplicationSessionTest extends TestCase
             self::fail("Failed to retrieve session name using 'session_name()'.");
         }
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $sessions = [];
 
@@ -305,7 +305,7 @@ final class ApplicationSessionTest extends TestCase
                 'REQUEST_URI' => 'site/setsessiondata',
             ];
 
-            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+            $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
             self::assertSame(
                 200,
@@ -335,7 +335,7 @@ final class ApplicationSessionTest extends TestCase
                 'REQUEST_URI' => 'site/getsessiondata',
             ];
 
-            $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+            $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
             self::assertSame(
                 200,
@@ -391,10 +391,10 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => 'site/setsession',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         // first request - set session data
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -419,7 +419,7 @@ final class ApplicationSessionTest extends TestCase
         ];
 
         // second request - same session ID should retrieve the data
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -474,10 +474,10 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => 'site/setsession',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         // first request - set a session value
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -502,7 +502,7 @@ final class ApplicationSessionTest extends TestCase
         ];
 
         // second request - different session
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -542,9 +542,9 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => 'site/getsession',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -602,9 +602,9 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => 'site/login',
         ];
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,
@@ -637,7 +637,7 @@ final class ApplicationSessionTest extends TestCase
             'REQUEST_URI' => 'site/checkauth',
         ];
 
-        $response = $app->handle(FactoryHelper::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
         self::assertSame(
             200,

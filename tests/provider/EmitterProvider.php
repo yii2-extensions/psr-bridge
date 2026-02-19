@@ -7,20 +7,9 @@ namespace yii2\extensions\psrbridge\tests\provider;
 use yii2\extensions\psrbridge\emitter\HttpNoBodyStatus;
 
 /**
- * Data provider for {@see \yii2\extensions\psrbridge\tests\emitter\SapiEmitterTest} class.
+ * Data provider for {@see \yii2\extensions\psrbridge\tests\emitter\SapiEmitterTest} test cases.
  *
- * Designed to ensure the HTTP response emitter correctly handles various response formats, status codes, and content
- * scenarios while maintaining proper HTTP protocol compliance.
- *
- * The test data covers various output scenarios to validate emission integrity for different content sizes and formats,
- * ensuring responses are formatted according to HTTP standards.
- *
- * Key features.
- * - Body chunking with various buffer sizes and ranges.
- * - Content range extraction and validation.
- * - HTTP reason phrase handling with edge cases.
- * - No-body status code compliance ('100', '101', '102', '103', '204', '205', '304').
- * - Response streaming optimization tests.
+ * Provides representative input/output pairs for body chunking, no-body status handling, and reason phrase formatting.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

@@ -9,15 +9,12 @@ use Psr\Http\Message\UploadedFileInterface;
 use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\creator\UploadedFileCreator;
 use yii2\extensions\psrbridge\exception\Message;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 use const UPLOAD_ERR_OK;
 
 /**
  * Test suite for {@see UploadedFileCreator} class functionality and behavior.
- *
- * Verifies correct behavior of PSR-7 UploadedFile creation from PHP file specs and globals, including edge cases,
- * recursion depth, error handling, and array structure validation.
  *
  * Test coverage.
  * - Confirms correct exception throwing for invalid input, recursion depth, and mismatched array structures.
@@ -41,8 +38,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $uploadedFile = $creator->createFromArray($fileSpec);
@@ -78,8 +75,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $uploadedFile = $creator->createFromArray($fileSpec);
@@ -110,8 +107,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $uploadedFile = $creator->createFromArray($fileSpec);
@@ -141,8 +138,8 @@ final class UploadedFileCreatorTest extends TestCase
     public function testCreateFromGlobalsWithEmptyArray(): void
     {
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         self::assertEmpty(
@@ -153,7 +150,7 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithExistingUploadedFileInterface(): void
     {
-        $existingUploadedFile = FactoryHelper::createUploadedFile(
+        $existingUploadedFile = HelperFactory::createUploadedFile(
             'existing.txt',
             'text/plain',
             '/tmp/existing',
@@ -166,8 +163,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $result = $creator->createFromGlobals($files);
@@ -219,8 +216,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $result = $creator->createFromGlobals($files);
@@ -326,8 +323,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $result = $creator->createFromGlobals($files);
@@ -426,8 +423,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $result = $creator->createFromGlobals($files);
@@ -539,8 +536,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $result = $creator->createFromGlobals($files);
@@ -585,8 +582,8 @@ final class UploadedFileCreatorTest extends TestCase
         $tenLevelFiles = $this->createDeeplyNestedFileStructure($this->createTmpFile(), 11);
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         // this should succeed without throwing an exception if 'depth' starts at '0'
@@ -617,8 +614,8 @@ final class UploadedFileCreatorTest extends TestCase
         $maxDepthFiles = $this->createDeeplyNestedFileStructure($this->createTmpFile(), 10);
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         // this should succeed because depth starts at 0, reaching exactly 'depth' = '10'
@@ -670,8 +667,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -699,8 +696,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -728,8 +725,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -749,8 +746,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -768,8 +765,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -789,8 +786,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -823,8 +820,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -845,8 +842,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -861,8 +858,8 @@ final class UploadedFileCreatorTest extends TestCase
         $deeplyNestedFiles = $this->createDeeplyNestedFileStructure($this->createTmpFile(), 15);
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -880,8 +877,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -904,8 +901,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -923,8 +920,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -944,8 +941,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -971,8 +968,8 @@ final class UploadedFileCreatorTest extends TestCase
             ],
         ];
 
-        $uploadedFileFactory = FactoryHelper::createUploadedFileFactory();
-        $streamFactory = FactoryHelper::createStreamFactory();
+        $uploadedFileFactory = HelperFactory::createUploadedFileFactory();
+        $streamFactory = HelperFactory::createStreamFactory();
 
         $creator = new UploadedFileCreator($uploadedFileFactory, $streamFactory);
 
@@ -998,8 +995,8 @@ final class UploadedFileCreatorTest extends TestCase
             ],
         ];
 
-        $uploadedFileFactory = FactoryHelper::createUploadedFileFactory();
-        $streamFactory = FactoryHelper::createStreamFactory();
+        $uploadedFileFactory = HelperFactory::createUploadedFileFactory();
+        $streamFactory = HelperFactory::createStreamFactory();
 
         $creator = new UploadedFileCreator($uploadedFileFactory, $streamFactory);
 
@@ -1014,8 +1011,8 @@ final class UploadedFileCreatorTest extends TestCase
         $elevenLevelFiles = $this->createDeeplyNestedFileStructure($this->createTmpFile(), 12);
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -1034,8 +1031,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);
@@ -1058,8 +1055,8 @@ final class UploadedFileCreatorTest extends TestCase
         ];
 
         $creator = new UploadedFileCreator(
-            FactoryHelper::createUploadedFileFactory(),
-            FactoryHelper::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+            HelperFactory::createStreamFactory(),
         );
 
         $this->expectException(InvalidArgumentException::class);

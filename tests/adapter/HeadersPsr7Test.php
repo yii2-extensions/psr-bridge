@@ -6,19 +6,15 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\Group;
 use yii2\extensions\psrbridge\http\Request;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 /**
- * Test suite for {@see Request} header handling functionality and behavior.
- *
- * Verifies correct behavior of the Request header handling when using PSR-7 requests, including CSRF token extraction,
- * content type precedence, secure header filtering, and case-insensitive header access.
+ * Unit tests for {@see Request} header handling with the PSR-7 adapter.
  *
  * Test coverage.
- * - Extraction of CSRF token from PSR-7 request headers, including custom and case-insensitive headers.
- * - Filtering of secure headers when request is not from trusted hosts.
- * - Handling of empty and missing CSRF headers.
- * - Precedence of PSR-7 'Content-Type' header over server globals.
+ * - Ensures CSRF token retrieval handles custom, case-insensitive, missing, and empty headers.
+ * - Ensures PSR-7 Content-Type takes precedence over $_SERVER['CONTENT_TYPE'].
+ * - Verifies secure headers are filtered for untrusted hosts.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -37,7 +33,7 @@ final class HeadersPsr7Test extends TestCase
         $request->csrfHeader = $csrfHeaderName;
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/test', [$csrfHeaderName => $expectedToken]),
+            HelperFactory::createRequest('POST', '/test', [$csrfHeaderName => $expectedToken]),
         );
 
         self::assertSame(
@@ -55,7 +51,7 @@ final class HeadersPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'POST',
                 '/api/upload',
                 ['Content-Type' => 'multipart/form-data; boundary=----WebKitFormBoundary'],
@@ -80,7 +76,7 @@ final class HeadersPsr7Test extends TestCase
         $request->csrfHeader = 'X-CSRF-Token';
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/test', ['x-csrf-token' => $csrfToken]),
+            HelperFactory::createRequest('POST', '/test', ['x-csrf-token' => $csrfToken]),
         );
 
         self::assertSame($csrfToken, $request->getCsrfTokenFromHeader());
@@ -94,7 +90,7 @@ final class HeadersPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/test', ['X-CSRF-Token' => $csrfToken]),
+            HelperFactory::createRequest('POST', '/test', ['X-CSRF-Token' => $csrfToken]),
         );
 
         self::assertSame(
@@ -115,7 +111,7 @@ final class HeadersPsr7Test extends TestCase
         $request->csrfHeader = $customHeaderName;
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('PUT', '/api/resource', [$customHeaderName => $csrfToken]),
+            HelperFactory::createRequest('PUT', '/api/resource', [$customHeaderName => $csrfToken]),
         );
 
         self::assertSame(
@@ -131,7 +127,7 @@ final class HeadersPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('PATCH', '/api/update', ['X-CSRF-Token' => '']),
+            HelperFactory::createRequest('PATCH', '/api/update', ['X-CSRF-Token' => '']),
         );
 
         self::assertSame(
@@ -148,7 +144,7 @@ final class HeadersPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('DELETE', '/api/resource'),
+            HelperFactory::createRequest('DELETE', '/api/resource'),
         );
 
         self::assertNull(
@@ -190,7 +186,7 @@ final class HeadersPsr7Test extends TestCase
         );
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'GET',
                 '/test',
                 [

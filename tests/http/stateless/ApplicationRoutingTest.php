@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory,HelperFactory, TestCase};
 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} routing in stateless mode.
@@ -28,10 +28,10 @@ final class ApplicationRoutingTest extends TestCase
      */
     public function testHandlePostParameters(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 method: 'POST',
                 uri: '/site/post',
                 headers: ['Content-Type' => 'application/x-www-form-urlencoded'],
@@ -66,10 +66,10 @@ final class ApplicationRoutingTest extends TestCase
      */
     public function testHandleQueryParameters(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 method: 'GET',
                 uri: '/site/get?foo=bar&a[b]=c',
             ),
@@ -99,10 +99,10 @@ final class ApplicationRoutingTest extends TestCase
      */
     public function testHandleRouteAndQueryParameters(): void
     {
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $response = $app->handle(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 method: 'GET',
                 uri: '/site/query/foo?q=1',
             ),
@@ -132,9 +132,9 @@ final class ApplicationRoutingTest extends TestCase
      */
     public function testHandleRouteParameters(): void
     {
-        $request = FactoryHelper::createRequest(method: 'GET', uri: 'site/update/123');
+        $request = HelperFactory::createRequest(method: 'GET', uri: 'site/update/123');
 
-        $app = $this->statelessApplication();
+        $app = ApplicationFactory::stateless();
 
         $response = $app->handle($request);
 

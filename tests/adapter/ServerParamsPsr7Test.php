@@ -8,24 +8,18 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\ServerParamsPsr7Provider;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 use function sprintf;
 use function var_export;
 
 /**
- * Test suite for {@see Request} server parameter handling functionality and behavior.
- *
- * Verifies correct behavior of the Request server parameter handling when using PSR-7 requests, including remote host,
- * remote IP, script name, server name, server port, and server params precedence and reset logic.
+ * Unit tests for {@see Request} server parameter handling with the PSR-7 adapter.
  *
  * Test coverage.
- * - Checks correct extraction of server parameters from PSR-7 requests and fallback to global server values.
- * - Confirms empty values and default handling for script URL and server params in various modes.
- * - Ensures independent requests maintain separate server parameter states.
- * - Uses data providers where applicable (remote host, server name, server params); remote IP and server port are
- *   covered via targeted tests.
- * - Validates reset and override behavior for remote host, server name, and server port.
+ * - Ensures PSR-7 server params override $_SERVER for remote IP, script URL, and server parameter lookups.
+ * - Ensures request state resets and remains isolated across instances for remote host, server name, and server port.
+ * - Verifies remote host, server name, and server parameter cases through data providers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -42,13 +36,13 @@ final class ServerParamsPsr7Test extends TestCase
         $request1 = new Request();
 
         $request1->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/api/v1/users', serverParams: ['REMOTE_HOST' => $host1]),
+            HelperFactory::createRequest('GET', '/api/v1/users', serverParams: ['REMOTE_HOST' => $host1]),
         );
 
         $request2 = new Request();
 
         $request2->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/api/v1/posts', serverParams: ['REMOTE_HOST' => $host2]),
+            HelperFactory::createRequest('POST', '/api/v1/posts', serverParams: ['REMOTE_HOST' => $host2]),
         );
 
         self::assertSame(
@@ -77,7 +71,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/first', serverParams: ['REMOTE_HOST' => $initialHost]),
+            HelperFactory::createRequest('GET', '/first', serverParams: ['REMOTE_HOST' => $initialHost]),
         );
 
         $result1 = $request->getRemoteHost();
@@ -89,7 +83,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/second', serverParams: ['REMOTE_HOST' => $newHost]),
+            HelperFactory::createRequest('POST', '/second', serverParams: ['REMOTE_HOST' => $newHost]),
         );
 
         $result2 = $request->getRemoteHost();
@@ -114,7 +108,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test'),
+            HelperFactory::createRequest('GET', '/test'),
         );
 
         self::assertEmpty(
@@ -128,7 +122,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/site/index', serverParams: ['SCRIPT_NAME' => 'web/index.php']),
+            HelperFactory::createRequest('GET', '/site/index', serverParams: ['SCRIPT_NAME' => 'web/index.php']),
         );
 
         self::assertSame(
@@ -150,7 +144,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', 'https://old.example.com/api'),
+            HelperFactory::createRequest('GET', 'https://old.example.com/api'),
         );
 
         self::assertEmpty(
@@ -166,7 +160,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => $serverValue]),
+            HelperFactory::createRequest('GET', '/test', serverParams: ['REMOTE_HOST' => $serverValue]),
         );
 
         $actual = $request->getRemoteHost();
@@ -191,7 +185,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'GET',
                 'https://old.example.com/api',
                 serverParams: ['REMOTE_ADDR' => '10.0.0.1'],
@@ -211,7 +205,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/index.php/site/index', serverParams: ['SCRIPT_NAME' => '/index.php']),
+            HelperFactory::createRequest('GET', '/index.php/site/index', serverParams: ['SCRIPT_NAME' => '/index.php']),
         );
 
         self::assertSame(
@@ -228,7 +222,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $serverValue]),
+            HelperFactory::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $serverValue]),
         );
 
         $actual = $request->getServerName();
@@ -258,7 +252,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: $serverParams),
+            HelperFactory::createRequest('GET', '/test', serverParams: $serverParams),
         );
 
         $actual = $request->getServerParam($paramName);
@@ -288,7 +282,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'GET',
                 'https://old.example.com/api',
                 serverParams: [
@@ -335,7 +329,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest(
+            HelperFactory::createRequest(
                 'GET',
                 'https://old.example.com/api',
                 serverParams: [
@@ -382,7 +376,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: $serverParams),
+            HelperFactory::createRequest('GET', '/test', serverParams: $serverParams),
         );
 
         $actual = $request->getServerParam($paramName, $default);
@@ -410,7 +404,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $initialServerName]),
+            HelperFactory::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $initialServerName]),
         );
 
         $result1 = $request->getServerName();
@@ -422,7 +416,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $newServerName]),
+            HelperFactory::createRequest('GET', '/test', serverParams: ['SERVER_NAME' => $newServerName]),
         );
 
         $result2 = $request->getServerName();
@@ -448,13 +442,13 @@ final class ServerParamsPsr7Test extends TestCase
         $request1 = new Request();
 
         $request1->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test1', serverParams: ['SERVER_NAME' => $serverName1]),
+            HelperFactory::createRequest('GET', '/test1', serverParams: ['SERVER_NAME' => $serverName1]),
         );
 
         $request2 = new Request();
 
         $request2->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test2', serverParams: ['SERVER_NAME' => $serverName2]),
+            HelperFactory::createRequest('GET', '/test2', serverParams: ['SERVER_NAME' => $serverName2]),
         );
 
         $result1 = $request1->getServerName();
@@ -486,7 +480,7 @@ final class ServerParamsPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $initialPort]),
+            HelperFactory::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $initialPort]),
         );
 
         $result1 = $request->getServerPort();
@@ -498,7 +492,7 @@ final class ServerParamsPsr7Test extends TestCase
         );
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $newPort]),
+            HelperFactory::createRequest('GET', '/test', serverParams: ['SERVER_PORT' => $newPort]),
         );
 
         $result2 = $request->getServerPort();
@@ -524,13 +518,13 @@ final class ServerParamsPsr7Test extends TestCase
         $request1 = new Request();
 
         $request1->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test1', serverParams: ['SERVER_PORT' => $port1]),
+            HelperFactory::createRequest('GET', '/test1', serverParams: ['SERVER_PORT' => $port1]),
         );
 
         $request2 = new Request();
 
         $request2->setPsr7Request(
-            FactoryHelper::createRequest('GET', '/test2', serverParams: ['SERVER_PORT' => $port2]),
+            HelperFactory::createRequest('GET', '/test2', serverParams: ['SERVER_PORT' => $port2]),
         );
 
         $result1 = $request1->getServerPort();

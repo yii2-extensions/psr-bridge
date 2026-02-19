@@ -10,7 +10,7 @@ use yii\web\IdentityInterface;
 use yii2\extensions\psrbridge\http\{Application, Response};
 
 /**
- * Stub for a REST application.
+ * REST application stub for lifecycle hook assertions.
  *
  * @template TUserIdentity of IdentityInterface
  * @extends Application<TUserIdentity>

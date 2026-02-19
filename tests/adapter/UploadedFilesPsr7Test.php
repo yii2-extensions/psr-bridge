@@ -7,19 +7,15 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 use PHPUnit\Framework\Attributes\Group;
 use yii\web\UploadedFile;
 use yii2\extensions\psrbridge\http\Request;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 /**
- * Test suite for {@see Request} uploaded files handling functionality and behavior.
- *
- * Verifies the correct behavior of the Request uploaded files handling when using PSR-7 requests, including nested,
- * array, and single file structures, as well as edge cases for file size and adapter state.
+ * Unit tests for {@see Request} uploaded-file handling with the PSR-7 adapter.
  *
  * Test coverage.
- * - Confirms correct handling when adapter is set and for zero-size files.
- * - Ensures correct conversion of multiple, nested, and array-structured uploaded files.
- * - Uses temporary files and stubs for robust test isolation.
- * - Validates recursive conversion of deeply nested uploaded file arrays.
+ * - Ensures PSR-7 uploaded files convert to Yii uploaded-file instances for single, nested, and array structures.
+ * - Ensures recursive conversion preserves expected uploaded-file properties in deeply nested arrays.
+ * - Verifies uploaded files default to size '0' when PSR-7 file size is `null`.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -47,26 +43,26 @@ final class UploadedFilesPsr7Test extends TestCase
         );
 
         $uploadedFiles = [
-            'simple1' => FactoryHelper::createUploadedFile(
+            'simple1' => HelperFactory::createUploadedFile(
                 'simple1.txt',
                 'text/plain',
                 $tmpPathFile1,
                 size: $tmpFileSize1,
             ),
-            'simple2' => FactoryHelper::createUploadedFile(
+            'simple2' => HelperFactory::createUploadedFile(
                 'simple2.php',
                 'application/x-php',
                 $tmpPathFile2,
                 size: $tmpFileSize2,
             ),
             'nested' => [
-                'level1' => FactoryHelper::createUploadedFile(
+                'level1' => HelperFactory::createUploadedFile(
                     'nested1.txt',
                     'text/plain',
                     $tmpPathFile1,
                     size: $tmpFileSize1,
                 ),
-                'level2' => FactoryHelper::createUploadedFile(
+                'level2' => HelperFactory::createUploadedFile(
                     'nested2.php',
                     'application/x-php',
                     $tmpPathFile2,
@@ -74,13 +70,13 @@ final class UploadedFilesPsr7Test extends TestCase
                 ),
             ],
             'array_files' => [
-                FactoryHelper::createUploadedFile(
+                HelperFactory::createUploadedFile(
                     'array1.txt',
                     'text/plain',
                     $tmpPathFile1,
                     size: $tmpFileSize1,
                 ),
-                FactoryHelper::createUploadedFile(
+                HelperFactory::createUploadedFile(
                     'array2.php',
                     'application/x-php',
                     $tmpPathFile2,
@@ -92,7 +88,7 @@ final class UploadedFilesPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/upload')->withUploadedFiles($uploadedFiles),
+            HelperFactory::createRequest('POST', '/upload')->withUploadedFiles($uploadedFiles),
         );
 
         $convertedFiles = $request->getUploadedFiles();
@@ -170,8 +166,8 @@ final class UploadedFilesPsr7Test extends TestCase
             "'filesize' for 'test2.php' should be an integer.",
         );
 
-        $uploadedFile1 = FactoryHelper::createUploadedFile('test1.txt', 'text/plain', $file1, size: $size1);
-        $uploadedFile2 = FactoryHelper::createUploadedFile('test2.php', 'application/x-php', $file2, size: $size2);
+        $uploadedFile1 = HelperFactory::createUploadedFile('test1.txt', 'text/plain', $file1, size: $size1);
+        $uploadedFile2 = HelperFactory::createUploadedFile('test2.php', 'application/x-php', $file2, size: $size2);
 
         $deepNestedFiles = [
             'docs' => [
@@ -182,7 +178,7 @@ final class UploadedFilesPsr7Test extends TestCase
             ],
         ];
 
-        $psr7Request = FactoryHelper::createRequest('POST', '/upload')->withUploadedFiles($deepNestedFiles);
+        $psr7Request = HelperFactory::createRequest('POST', '/upload')->withUploadedFiles($deepNestedFiles);
 
         $request = new Request();
 
@@ -251,16 +247,16 @@ final class UploadedFilesPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/upload')
+            HelperFactory::createRequest('POST', '/upload')
                 ->withUploadedFiles(
                     [
-                        'file1' => FactoryHelper::createUploadedFile(
+                        'file1' => HelperFactory::createUploadedFile(
                             'test1.txt',
                             'text/plain',
                             $file1,
                             size: $size1,
                         ),
-                        'file2' => FactoryHelper::createUploadedFile(
+                        'file2' => HelperFactory::createUploadedFile(
                             'test2.php',
                             'application/x-php',
                             $file2,
@@ -311,10 +307,10 @@ final class UploadedFilesPsr7Test extends TestCase
         $request = new Request();
 
         $request->setPsr7Request(
-            FactoryHelper::createRequest('POST', '/upload')
+            HelperFactory::createRequest('POST', '/upload')
                 ->withUploadedFiles(
                     [
-                        'test_file' => FactoryHelper::createUploadedFile(
+                        'test_file' => HelperFactory::createUploadedFile(
                             'test1.txt',
                             'text/plain',
                             $file1,

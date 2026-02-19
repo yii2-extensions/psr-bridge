@@ -9,19 +9,14 @@ use yii\base\{InvalidCallException, InvalidConfigException};
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 /**
- * Test suite for {@see Request} cookie handling functionality and behavior.
- *
- * Verifies correct PSR-7 cookie adapter behavior, including read-only cookie collection enforcement and validation key
- * requirements when processing cookies through the Yii2 PSR bridge layer.
+ * Unit tests for {@see Request} cookie handling with the PSR-7 adapter.
  *
  * Test coverage.
- * - Confirms read-only enforcement preventing modifications to cookie collections with PSR-7 adapter.
- * - Ensures proper cookie parameter processing from PSR-7 requests.
- * - Validates exception handling when cookie validation is enabled without a validation key.
- * - Verifies configuration validation for secure cookie handling.
+ * - Ensures cookie collections from PSR-7 requests are read-only.
+ * - Verifies missing cookie validation keys raise InvalidConfigException when validation is enabled.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -35,7 +30,7 @@ final class CookiesPsr7Test extends TestCase
      */
     public function testThrowInvalidCallExceptionWhenReturnReadOnlyCookieCollectionWhenAdapterIsSet(): void
     {
-        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+        $psr7Request = HelperFactory::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(
             [
@@ -68,7 +63,7 @@ final class CookiesPsr7Test extends TestCase
 
     public function testThrowInvalidConfigExceptionWhenValidationEnabledButNoValidationKey(): void
     {
-        $psr7Request = FactoryHelper::createRequest('GET', '/test');
+        $psr7Request = HelperFactory::createRequest('GET', '/test');
 
         $psr7Request = $psr7Request->withCookieParams(['session_id' => 'abc123']);
 

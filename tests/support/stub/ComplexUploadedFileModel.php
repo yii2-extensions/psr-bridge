@@ -8,7 +8,7 @@ use yii\base\Model;
 use yii2\extensions\psrbridge\http\UploadedFile;
 
 /**
- * Model for testing complex uploaded file scenarios in Yii2 applications.
+ * Model stub for testing complex uploaded file scenarios in Yii applications.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

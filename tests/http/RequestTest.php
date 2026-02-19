@@ -13,23 +13,20 @@ use yii\web\{JsonParser, NotFoundHttpException};
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
-use yii2\extensions\psrbridge\tests\support\TestCase;
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, TestCase};
 
 use function array_filter;
 use function str_starts_with;
 
 /**
- * Test suite for {@see Request} class functionality and behavior.
- *
- * Verifies correct behavior of HTTP request handling, CSRF validation, authentication, headers, server params, query
- * string, uploaded files, and edge cases in the Yii2 PSR bridge.
+ * Unit tests for {@see Request} HTTP request handling behavior.
  *
  * Test coverage.
- * - Confirms correct IP resolution, secure connection, and host info extraction.
- * - Covers query string, server params, uploaded files, and request method logic.
- * - Ensures correct parsing of authentication credentials and HTTP headers.
- * - Tests edge cases for AJAX, PJAX, forwarded headers, and parent fallback behavior.
- * - Validates CSRF token generation, validation, and header handling.
+ * - Ensures authentication credentials are resolved from server variables and authorization headers.
+ * - Ensures CSRF generation and validation handle header-only, body, custom-header, and safe-method scenarios.
+ * - Ensures host, scheme, IP, method, query, and server parameter resolution follows trusted-host rules.
+ * - Verifies body parsing, accept-header parsing, request resolving, and URL generation across supported inputs.
+ * - Verifies parent fallback behavior when the PSR-7 adapter is not set.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -82,7 +79,7 @@ final class RequestTest extends TestCase
 
     public function testCsrfHeaderValidation(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -126,7 +123,7 @@ final class RequestTest extends TestCase
      */
     public function testCsrfTokenContainsASCIIOnly(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -152,7 +149,7 @@ final class RequestTest extends TestCase
      */
     public function testCsrfTokenHeader(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -205,7 +202,7 @@ final class RequestTest extends TestCase
      */
     public function testCsrfTokenPost(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -250,7 +247,7 @@ final class RequestTest extends TestCase
 
     public function testCsrfTokenValidation(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -318,7 +315,7 @@ final class RequestTest extends TestCase
 
     public function testCustomHeaderCsrfHeaderValidation(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -350,7 +347,7 @@ final class RequestTest extends TestCase
 
     public function testCustomSafeMethodsCsrfTokenValidation(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -407,7 +404,7 @@ final class RequestTest extends TestCase
 
     public function testCustomUnsafeMethodsCsrfHeaderValidation(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -624,7 +621,7 @@ final class RequestTest extends TestCase
 
     public function testGetCsrfTokenFromHeaderUsesParentWhenAdapterIsNull(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $_SERVER['HTTP_X_CSRF_TOKEN'] = 'parent-csrf-token-456';
 
@@ -1205,7 +1202,7 @@ final class RequestTest extends TestCase
 
     public function testIssue15317(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $_COOKIE[(new Request())->csrfParam] = '';
 
@@ -1230,7 +1227,7 @@ final class RequestTest extends TestCase
 
     public function testNoCsrfTokenCsrfHeaderValidation(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 
@@ -1319,7 +1316,7 @@ final class RequestTest extends TestCase
 
     public function testPreferredLanguage(): void
     {
-        $this->webApplication(
+        ApplicationFactory::web(
             [
                 'language' => 'en',
             ],
@@ -1443,7 +1440,7 @@ final class RequestTest extends TestCase
      */
     public function testResolve(): void
     {
-        $this->webApplication(
+        ApplicationFactory::web(
             [
                 'components' => [
                     'urlManager' => [
@@ -1715,7 +1712,7 @@ final class RequestTest extends TestCase
 
     public function testThrowExceptionWhenRequestUriIsMissing(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $request = new Request();
 

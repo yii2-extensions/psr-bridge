@@ -12,7 +12,7 @@ use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\web\{Cookie, Session};
 use yii2\extensions\psrbridge\http\Response;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function count;
 use function str_contains;
@@ -20,19 +20,12 @@ use function time;
 use function urlencode;
 
 /**
- * Test suite for {@see Response} class functionality and behavior.
- *
- * Verifies correct conversion of Yii2 Response objects to PSR-7 responses, including session handling, headers,
- * cookies, events, and content.
- *
- * Ensures compatibility with active, inactive, and missing session scenarios.
+ * Unit tests for {@see Response} PSR-7 conversion behavior.
  *
  * Test coverage.
- * - Checks event triggering and header/cookie propagation.
- * - Confirms correct PSR-7 response generation with active session and session cookie.
- * - Ensures session cookie is formatted and included as expected.
- * - Validates response conversion with inactive and missing session.
- * - Verifies prepare method is called during PSR-7 conversion.
+ * - Ensures PSR-7 conversion preserves status, body, headers, and response event behavior.
+ * - Ensures session cookie handling works for active, inactive, missing, and default session configurations.
+ * - Verifies `prepare()` runs during PSR-7 conversion for formatted response payloads.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -46,7 +39,7 @@ final class ResponseTest extends TestCase
      */
     public function testConvertResponseWithActiveSession(): void
     {
-        $this->webApplication(
+        ApplicationFactory::web(
             [
                 'components' => [
                     'session' => [
@@ -96,8 +89,8 @@ final class ResponseTest extends TestCase
             },
         );
 
-        Yii::$container->set(ResponseFactoryInterface::class, FactoryHelper::createResponseFactory());
-        Yii::$container->set(StreamFactoryInterface::class, FactoryHelper::createStreamFactory());
+        Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
 
         $session = Yii::$app->getSession();
         $session->open();
@@ -221,7 +214,7 @@ final class ResponseTest extends TestCase
      */
     public function testConvertResponseWithInactiveSession(): void
     {
-        $this->webApplication(
+        ApplicationFactory::web(
             [
                 'components' => [
                     'session' => [
@@ -236,8 +229,8 @@ final class ResponseTest extends TestCase
 
         $response->content = 'Test content with inactive session';
 
-        Yii::$container->set(ResponseFactoryInterface::class, FactoryHelper::createResponseFactory());
-        Yii::$container->set(StreamFactoryInterface::class, FactoryHelper::createStreamFactory());
+        Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
 
         $session = Yii::$app->getSession();
 
@@ -279,7 +272,7 @@ final class ResponseTest extends TestCase
      */
     public function testConvertResponseWithoutSession(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $eventsBefore = [];
         $eventsAfter = [];
@@ -321,8 +314,8 @@ final class ResponseTest extends TestCase
             },
         );
 
-        Yii::$container->set(ResponseFactoryInterface::class, FactoryHelper::createResponseFactory());
-        Yii::$container->set(StreamFactoryInterface::class, FactoryHelper::createStreamFactory());
+        Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
         Yii::$app->clear('session');
 
         $psr7Response = $response->getPsr7Response();
@@ -382,7 +375,7 @@ final class ResponseTest extends TestCase
      */
     public function testFormatSessionCookieWithDefaultParams(): void
     {
-        $this->webApplication(
+        ApplicationFactory::web(
             [
                 'components' => [
                     'session' => [
@@ -402,8 +395,8 @@ final class ResponseTest extends TestCase
 
         $response->content = 'Test with default session params';
 
-        Yii::$container->set(ResponseFactoryInterface::class, FactoryHelper::createResponseFactory());
-        Yii::$container->set(StreamFactoryInterface::class, FactoryHelper::createStreamFactory());
+        Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
 
         $session = Yii::$app->getSession();
         $session->setCookieParams([]);
@@ -462,7 +455,7 @@ final class ResponseTest extends TestCase
      */
     public function testPrepareMethodIsCalledDuringPsr7Conversion(): void
     {
-        $this->webApplication();
+        ApplicationFactory::web();
 
         $response = new Response();
 
@@ -474,8 +467,8 @@ final class ResponseTest extends TestCase
             'timestamp' => time(),
         ];
 
-        Yii::$container->set(ResponseFactoryInterface::class, FactoryHelper::createResponseFactory());
-        Yii::$container->set(StreamFactoryInterface::class, FactoryHelper::createStreamFactory());
+        Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
 
         $psr7Response = $response->getPsr7Response();
         $body = (string) $psr7Response->getBody();

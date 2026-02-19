@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\support\stub;
 use yii\base\Component;
 
 /**
- * Component for testing event triggering in Yii2 applications.
+ * Component stub for testing event triggering in Yii applications.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

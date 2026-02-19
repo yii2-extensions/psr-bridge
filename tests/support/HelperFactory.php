@@ -30,23 +30,20 @@ use yii2\extensions\psrbridge\creator\ServerRequestCreator;
 use function parse_str;
 
 /**
- * Factory helper for creating test dependencies and PSR objects for unit testing.
- *
- * Provides a unified API for instantiating common PSR-7 object HTTP message objects.
- *
- * This class is designed to simplify test setup and ensure consistent, type-safe creation of dependencies across the
- * test suite.
- *
- * Key features.
- * - Create PSR-7 request, response, stream, and URI instances for HTTP message testing.
+ * Creates PSR-7 and PSR-17 objects used by tests.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
-final class FactoryHelper
+final class HelperFactory
 {
     /**
      * Creates a PSR-7 {@see ServerRequestInterface} instance.
+     *
+     * Usage example:
+     * ```php
+     * HelperFactory::createRequest($method, $uri, $headers, $parsedBody, $serverParams);
+     * ```
      *
      * @param string $method Request method.
      * @param string $uri Request URI.
@@ -55,11 +52,6 @@ final class FactoryHelper
      * @param array $serverParams Request server parameters.
      *
      * @return ServerRequestInterface PSR-7 server request instance.
-     *
-     * Usage example:
-     * ```php
-     * FactoryHelper::createRequest($method, $uri, $headers, $parsedBody, $serverParams);
-     * ```
      *
      * @phpstan-param array<string, array<int, string>|int|string> $headers
      * @phpstan-param array<string, mixed> $serverParams
@@ -91,6 +83,11 @@ final class FactoryHelper
     /**
      * Creates a PSR-7 {@see ResponseInterface} instance.
      *
+     * Usage example:
+     * ```php
+     * HelperFactory::createResponse($statusCode, $headers, $body, $protocol, $reasonPhrase);
+     * ```
+     *
      * @param int $statusCode Response status code.
      * @param array $headers Response headers.
      * @param resource|StreamInterface|string|null $body Response body.
@@ -98,11 +95,6 @@ final class FactoryHelper
      * @param string $reasonPhrase Response reason phrase.
      *
      * @return ResponseInterface PSR-7 response instance.
-     *
-     * Usage example:
-     * ```php
-     * FactoryHelper::createResponse($statusCode, $headers, $body, $protocol, $reasonPhrase);
-     * ```
      *
      * @phpstan-param array<string, array<int, string>|int|string> $headers
      */
@@ -129,12 +121,12 @@ final class FactoryHelper
     /**
      * Creates a PSR-17 {@see ResponseFactoryInterface} instance.
      *
-     * @return ResponseFactoryInterface PSR-17 response factory instance.
-     *
      * Usage example:
      * ```php
-     * FactoryHelper::createResponseFactory();
+     * HelperFactory::createResponseFactory();
      * ```
+     *
+     * @return ResponseFactoryInterface PSR-17 response factory instance.
      */
     public static function createResponseFactory(): ResponseFactoryInterface
     {
@@ -144,12 +136,12 @@ final class FactoryHelper
     /**
      * Creates a PSR-17 {@see ServerRequestCreator} instance.
      *
-     * @return ServerRequestCreator PSR-17 server request creator instance.
-     *
      * Usage example:
      * ```php
-     * FactoryHelper::createServerRequestCreator();
+     * HelperFactory::createServerRequestCreator();
      * ```
+     *
+     * @return ServerRequestCreator PSR-17 server request creator instance.
      */
     public static function createServerRequestCreator(): ServerRequestCreator
     {
@@ -163,12 +155,12 @@ final class FactoryHelper
     /**
      * Creates a PSR-17 {@see ServerRequestFactory} instance.
      *
-     * @return ServerRequestFactory PSR-17 server request factory instance.
-     *
      * Usage example:
      * ```php
-     * FactoryHelper::createServerRequestFactory();
+     * HelperFactory::createServerRequestFactory();
      * ```
+     *
+     * @return ServerRequestFactory PSR-17 server request factory instance.
      */
     public static function createServerRequestFactory(): ServerRequestFactory
     {
@@ -181,12 +173,12 @@ final class FactoryHelper
      * @param string $stream Stream content.
      * @param string $mode Stream mode.
      *
-     * @return StreamInterface PSR-7 stream instance.
-     *
      * Usage example:
      * ```php
-     * FactoryHelper::createStream($stream, $mode);
+     * HelperFactory::createStream($stream, $mode);
      * ```
+     *
+     * @return StreamInterface PSR-7 stream instance.
      */
     public static function createStream(string $stream = 'php://temp', string $mode = 'wb+'): StreamInterface
     {
@@ -196,12 +188,12 @@ final class FactoryHelper
     /**
      * Creates a PSR-17 {@see StreamFactoryInterface} instance.
      *
-     * @return StreamFactoryInterface PSR-17 stream factory instance.
-     *
      * Usage example:
      * ```php
-     * FactoryHelper::createStreamFactory();
+     * HelperFactory::createStreamFactory();
      * ```
+     *
+     * @return StreamFactoryInterface PSR-17 stream factory instance.
      */
     public static function createStreamFactory(): StreamFactoryInterface
     {
@@ -211,6 +203,11 @@ final class FactoryHelper
     /**
      * Creates a PSR-7 {@see UploadedFile} instance.
      *
+     * Usage example:
+     * ```php
+     * HelperFactory::createUploadedFile($name, $type, $tmpName, $error, $size);
+     * ```
+     *
      * @param string $name Client filename.
      * @param string $type Client media type.
      * @param StreamInterface|string $tmpName Temporary file name or stream.
@@ -218,11 +215,6 @@ final class FactoryHelper
      * @param int $size File size.
      *
      * @return UploadedFileInterface PSR-7 uploaded file instance.
-     *
-     * Usage example:
-     * ```php
-     * FactoryHelper::createUploadedFile($name, $type, $tmpName, $error, $size);
-     * ```
      */
     public static function createUploadedFile(
         string $name = '',
@@ -237,12 +229,12 @@ final class FactoryHelper
     /**
      * Creates a PSR-17 {@see UploadedFileFactoryInterface} instance.
      *
-     * @return UploadedFileFactoryInterface PSR-17 uploaded file factory instance.
-     *
      * Usage example:
      * ```php
-     * FactoryHelper::createUploadedFileFactory();
+     * HelperFactory::createUploadedFileFactory();
      * ```
+     *
+     * @return UploadedFileFactoryInterface PSR-17 uploaded file factory instance.
      */
     public static function createUploadedFileFactory(): UploadedFileFactoryInterface
     {
@@ -252,14 +244,14 @@ final class FactoryHelper
     /**
      * Creates a PSR-7 {@see UriInterface} instance.
      *
+     * Usage example:
+     * ```php
+     * HelperFactory::createUri($uri);
+     * ```
+     *
      * @param string $uri URI string.
      *
      * @return UriInterface PSR-7 URI instance.
-     *
-     * Usage example:
-     * ```php
-     * FactoryHelper::createUri($uri);
-     * ```
      */
     public static function createUri(string $uri = ''): UriInterface
     {

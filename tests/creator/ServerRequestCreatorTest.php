@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\creator;
 
 use PHPUnit\Framework\Attributes\Group;
-use Psr\Http\Message\StreamFactoryInterface;
-use Psr\Http\Message\StreamInterface;
-use Psr\Http\Message\UploadedFileInterface;
+use Psr\Http\Message\{StreamFactoryInterface, StreamInterface, UploadedFileInterface};
 use RuntimeException;
 use yii2\extensions\psrbridge\creator\ServerRequestCreator;
-use yii2\extensions\psrbridge\tests\support\{FactoryHelper, TestCase};
+use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 use function fclose;
 use function is_resource;
@@ -20,9 +18,6 @@ use const UPLOAD_ERR_OK;
 
 /**
  * Test suite for {@see ServerRequestCreator} class functionality and behavior.
- *
- * Verifies the correct behavior of PSR-7 ServerRequest creation from PHP superglobals, including headers, body streams,
- * cookies, files, and complex scenarios.
  *
  * Test coverage.
  * - Ensures correct mapping of server values and robust error handling for invalid input.
@@ -49,9 +44,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -91,9 +86,9 @@ final class ServerRequestCreatorTest extends TestCase
     public function testCreateFromGlobalsWithBodyStream(): void
     {
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -125,9 +120,9 @@ final class ServerRequestCreatorTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/test';
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
+            HelperFactory::createServerRequestFactory(),
             $failingStreamFactory,
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -155,9 +150,9 @@ final class ServerRequestCreatorTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/test-body-attachment';
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -204,9 +199,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -245,9 +240,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -318,9 +313,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -403,9 +398,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -436,9 +431,9 @@ final class ServerRequestCreatorTest extends TestCase
     public function testCreateFromGlobalsWithDefaultValues(): void
     {
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -481,9 +476,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -522,9 +517,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -572,9 +567,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -601,9 +596,9 @@ final class ServerRequestCreatorTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = null;
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -620,9 +615,9 @@ final class ServerRequestCreatorTest extends TestCase
         $_SERVER['REQUEST_URI'] = null;
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -649,9 +644,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -695,9 +690,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -772,9 +767,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -861,9 +856,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         self::assertEmpty(
@@ -883,9 +878,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -919,9 +914,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $headers = $creator->createFromGlobals()->getHeaders();
@@ -961,9 +956,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -983,9 +978,9 @@ final class ServerRequestCreatorTest extends TestCase
     public function testCreateFromGlobalsWithNoUploadedFiles(): void
     {
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -1005,9 +1000,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -1049,9 +1044,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -1094,9 +1089,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();
@@ -1139,9 +1134,9 @@ final class ServerRequestCreatorTest extends TestCase
         ];
 
         $creator = new ServerRequestCreator(
-            FactoryHelper::createServerRequestFactory(),
-            FactoryHelper::createStreamFactory(),
-            FactoryHelper::createUploadedFileFactory(),
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
         );
 
         $request = $creator->createFromGlobals();

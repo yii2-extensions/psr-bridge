@@ -10,14 +10,10 @@ use yii2\extensions\psrbridge\http\ServerExitCode;
 use yii2\extensions\psrbridge\tests\support\TestCase;
 
 /**
- * Test suite for {@see ServerExitCode} enum value mapping.
- *
- * Verifies that each ServerExitCode enum case returns the expected integer value, ensuring correct mapping between enum
- * cases and their integer representations.
+ * Unit tests for {@see ServerExitCode} enum value mappings.
  *
  * Test coverage.
- * - Confirms integer values for all ServerExitCode cases.
- * - Ensures enum-to-integer mapping is correct and stable.
+ * - Ensures ServerExitCode enum cases map to expected integer values.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

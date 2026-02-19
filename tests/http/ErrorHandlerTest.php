@@ -19,16 +19,12 @@ use function ob_start;
 use function str_repeat;
 
 /**
- * Test suite for {@see ErrorHandler} class functionality and behavior.
- *
- * Verifies correct error and exception handling, output buffer management, response clearing, and state reset in the
- * Yii2 PSR bridge.
+ * Unit tests for {@see ErrorHandler} exception-handling behavior.
  *
  * Test coverage.
- * - Confirms output buffer clearing and response data reset.
- * - Covers edge cases for nested, long, empty, and special character exceptions.
- * - Ensures correct state management and response format defaults.
- * - Validates exception handling for various exception types and messages.
+ * - Ensures exception handling resets response data, output buffers, and registration state.
+ * - Ensures status codes and response payloads are produced for multiple exception types and message variants.
+ * - Verifies error responses default to HTML format with non-empty string data.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
