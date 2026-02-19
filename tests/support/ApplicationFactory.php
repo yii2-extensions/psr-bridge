@@ -91,7 +91,7 @@ final class ApplicationFactory
                     ],
                     'user' => [
                         'enableAutoLogin' => false,
-                        'identityClass'   => Identity::class,
+                        'identityClass' => Identity::class,
                     ],
                 ],
             ],
@@ -124,12 +124,12 @@ final class ApplicationFactory
                 'id' => 'web-test-app',
                 'aliases' => [
                     '@bower' => '@vendor/bower-asset',
-                    '@npm'   => '@vendor/npm-asset',
+                    '@npm' => '@vendor/npm-asset',
                 ],
                 'components' => [
                     'request' => [
                         'cookieValidationKey' => self::COOKIE_VALIDATION_KEY,
-                        'isConsoleRequest'    => false,
+                        'isConsoleRequest' => false,
                     ],
                 ],
             ],
@@ -153,27 +153,27 @@ final class ApplicationFactory
             'container' => [
                 'definitions' => [
                     ResponseFactoryInterface::class => ResponseFactory::class,
-                    StreamFactoryInterface::class  => StreamFactory::class,
+                    StreamFactoryInterface::class => StreamFactory::class,
                 ],
             ],
             'components' => [
                 'request' => [
                     'scriptFile' => __DIR__ . '/index.php',
-                    'scriptUrl'  => '/index.php',
+                    'scriptUrl' => '/index.php',
                     'parsers' => [
                         'application/json' => JsonParser::class,
                     ],
                     'enableCookieValidation' => false,
-                    'enableCsrfValidation'   => false,
-                    'enableCsrfCookie'       => false,
+                    'enableCsrfValidation' => false,
+                    'enableCsrfCookie' => false,
                 ],
                 'urlManager' => [
-                    'enablePrettyUrl'     => true,
-                    'showScriptName'      => false,
+                    'enablePrettyUrl' => true,
+                    'showScriptName' => false,
                     'enableStrictParsing' => false,
                     'rules' => [
-                        'site/query/<test:\w+>'  => 'site/query',
-                        'site/update/<id:\d+>'   => 'site/update',
+                        'site/query/<test:\w+>' => 'site/query',
+                        'site/update/<id:\d+>' => 'site/update',
                     ],
                 ],
             ],
