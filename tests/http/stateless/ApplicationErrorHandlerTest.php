@@ -665,7 +665,7 @@ final class ApplicationErrorHandlerTest extends TestCase
         );
         self::assertJsonStringEqualsJsonString(
             <<<JSON
-            {"name":"Not Found","message":"Page not found in Application.","code":0,"status":404,"type":"yii\\\\web\\\\NotFoundHttpException"}
+            {"name":"Not Found","message":"Page not found.","code":0,"status":404,"type":"yii\\\\web\\\\NotFoundHttpException"}
             JSON,
             $response->getBody()->getContents(),
             'Response body should contain JSON with NotFoundHttpException details.',
