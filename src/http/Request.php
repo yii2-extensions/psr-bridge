@@ -339,6 +339,7 @@ class Request extends \yii\web\Request
 
         return parent::getQueryString();
     }
+
     /**
      * Retrieves the raw body content from the current request, supporting PSR-7 and Yii fallback.
      *
