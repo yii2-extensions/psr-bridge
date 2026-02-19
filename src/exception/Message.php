@@ -126,9 +126,9 @@ enum Message: string
     /**
      * Error when the page is not found.
      *
-     * Format: "Page not found in Application."
+     * Format: "Page not found."
      */
-    case PAGE_NOT_FOUND = 'Page not found in Application.';
+    case PAGE_NOT_FOUND = 'Page not found.';
 
     /**
      * Error when the PSR-7 request adapter is not set.
