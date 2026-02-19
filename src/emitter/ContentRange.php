@@ -11,8 +11,9 @@ use function preg_match;
 /**
  * Represents and parses HTTP Content-Range header values.
  *
- * @see ContentRangeUnit Supported range units.
- * @link https://tools.ietf.org/html/rfc7233#section-4.2 RFC 7233 section 4.2.
+ * {@see ContentRangeUnit} Supported range units.
+ *
+ * @link https://datatracker.ietf.org/doc/html/rfc7233#section-4.2 RFC 7233 section 4.2.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -47,8 +48,8 @@ final class ContentRange implements Stringable
     /**
      * Creates a new {@see ContentRange} instance from a Content-Range header string.
      *
-     * Parses a Content-Range header value in the format.
-     * '<unit> <first>-<last>/<length>' (for example, "bytes 0-1233/1234" or "bytes 42-1233/*").
+     * Parses a Content-Range header value in the format '<unit> <first>-<last>/<length>' (for example,
+     * "bytes 0-1233/1234" or "bytes 42-1233/*").
      *
      * This method validates the header structure, ensures the unit is supported, and checks that the first byte is not
      * greater than the last byte.

@@ -64,7 +64,6 @@ final class ServerRequestCreator
      *     $streamFactory,
      *     $uploadedFileFactory,
      * );
-     * $creator = new ServerRequestCreator($serverRequestFactory, $streamFactory, $uploadedFileFactory);
      * $request = $creator->createFromGlobals();
      * ```
      *

@@ -93,7 +93,7 @@ class Response extends \yii\web\Response
     /**
      * Retrieves the PSR-7 ResponseAdapter instance for the current Response.
      *
-     * Instantiates and returns a {@see ResponseAdapter} for bridging the Yii2 Response component with PSR-7
+     * Instantiates and returns a {@see ResponseAdapter} for bridging the Yii Response component with PSR-7
      * ResponseInterface.
      *
      * The adapter is created on first access and cached for subsequent calls, ensuring a single instance per Response

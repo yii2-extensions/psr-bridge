@@ -114,7 +114,7 @@ final class UploadedFileCreator
     /**
      * Creates UploadedFileInterface instances from PHP global files array.
      *
-     * Iterates over the provided files array and processes each entry using {@see processFileInput},
+     * Iterates over the provided files array and processes each entry using {@see processFileInput}.
      *
      * Usage example:
      * ```php
