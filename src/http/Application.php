@@ -36,22 +36,27 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 {
     /**
      * Flushes the logger during {@see terminate()} when set to `true`.
-     *
-     * Set to `false` to keep buffered log messages in memory across requests.
      */
     public bool $flushLogger = true;
 
     /**
      * Controls whether uploaded file static state is reset for each request.
+     *
+     * Set to `false` to retain static uploaded-file state across requests (advanced use only).
      */
     public bool $resetUploadedFiles = true;
 
     /**
      * Controls whether cookie validation settings are synchronized between request and response.
+     *
+     * Set to `false` to skip request-to-response cookie validation key synchronization.
      */
     public bool $syncCookieValidation = true;
+
     /**
      * Controls whether session lifecycle hooks run for each request.
+     *
+     * Set to `false` to skip bridge session open/finalize hooks for each request..
      */
     public bool $useSession = true;
 

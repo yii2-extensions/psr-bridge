@@ -111,6 +111,20 @@ final class ApplicationHookTest extends TestCase
             $app->resetUploadedFilesStateCalled,
             "'resetUploadedFilesState()' should not be invoked when 'resetUploadedFiles' is disabled.",
         );
+        self::assertSame(
+            [
+                'reinitializeApplication',
+                'resetRequestState',
+                'prepareErrorHandler',
+                'attachPsrRequest',
+                'syncCookieValidationState',
+                'openSessionFromRequestCookies',
+                'finalizeSessionState',
+                'terminate',
+            ],
+            $app->hookCallLog,
+            'Remaining lifecycle hooks must still fire in order when resetUploadedFiles is disabled.',
+        );
     }
 
     /**
@@ -133,6 +147,19 @@ final class ApplicationHookTest extends TestCase
             $app->finalizeSessionStateCalled,
             "'finalizeSessionState()' should not be invoked when 'useSession' is disabled.",
         );
+        self::assertSame(
+            [
+                'reinitializeApplication',
+                'resetUploadedFilesState',
+                'resetRequestState',
+                'prepareErrorHandler',
+                'attachPsrRequest',
+                'syncCookieValidationState',
+                'terminate',
+            ],
+            $app->hookCallLog,
+            'Remaining lifecycle hooks must still fire in order when useSession is disabled.',
+        );
     }
 
     /**
@@ -150,6 +177,20 @@ final class ApplicationHookTest extends TestCase
         self::assertFalse(
             $app->syncCookieValidationStateCalled,
             "'syncCookieValidationState()' should not be invoked when 'syncCookieValidation' is disabled.",
+        );
+        self::assertSame(
+            [
+                'reinitializeApplication',
+                'resetUploadedFilesState',
+                'resetRequestState',
+                'prepareErrorHandler',
+                'attachPsrRequest',
+                'openSessionFromRequestCookies',
+                'finalizeSessionState',
+                'terminate',
+            ],
+            $app->hookCallLog,
+            'Remaining lifecycle hooks must still fire in order when syncCookieValidation is disabled.',
         );
     }
 

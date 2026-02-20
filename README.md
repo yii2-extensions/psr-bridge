@@ -132,7 +132,13 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 - `syncCookieValidation=true`
 - `resetUploadedFiles=true`
 
-Disabling `resetUploadedFiles` is an advanced setting and may retain uploaded-file static state across requests. See the [Configuration Reference](docs/configuration.md) for details.
+> [!WARNING]
+> `Application::prepareForRequest()` calls `reinitializeApplication()` on each request, so values provided in the
+> application config array are reapplied and take precedence over post-construction property assignments.
+> Configure lifecycle flags in the config array when possible.
+>
+> `resetUploadedFiles=false` is an advanced setting and may retain uploaded-file static state across requests.
+> See the [Configuration Reference](docs/configuration.md) for details.
 
 ### Smart Body Parsing
 
