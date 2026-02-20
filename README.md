@@ -135,10 +135,19 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 > [!WARNING]
 > `Application::prepareForRequest()` calls `reinitializeApplication()` on each request, so values provided in the
 > application config array are reapplied and take precedence over post-construction property assignments.
-> Configure lifecycle flags in the config array when possible.
 >
-> `resetUploadedFiles=false` is an advanced setting and may retain uploaded-file static state across requests.
-> See the [Configuration Reference](docs/configuration.md) for details.
+> Configure lifecycle flags in the config array when possible.
+
+```php
+$config = [
+    'class' => Application::class,
+    // disable session, cookies, and uploaded file handling in worker mode (recommended for rest APIs, enable only if
+    // your app relies on sessions)
+    'useSession' => false,
+    'syncCookieValidation' => false,
+    'resetUploadedFiles' => true,
+];
+```
 
 ### Smart Body Parsing
 

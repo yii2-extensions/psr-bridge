@@ -56,7 +56,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Controls whether session lifecycle hooks run for each request.
      *
-     * Set to `false` to skip bridge session open/finalize hooks for each request..
+     * Set to `false` to skip bridge session open/finalize hooks for each request.
      */
     public bool $useSession = true;
 
