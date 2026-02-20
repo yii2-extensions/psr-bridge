@@ -13,7 +13,8 @@ use yii\web\{JsonParser, NotFoundHttpException};
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
-use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\stub\UrlManagerSpy;
 
 use function array_filter;
 use function str_starts_with;
@@ -1581,6 +1582,36 @@ final class RequestTest extends TestCase
             $_GET,
             "\$_GET should remain unchanged by 'setQueryParams()' after resolving the route with extra parameters.",
         );
+    }
+
+    public function testResolveWithPsr7AdapterInvokesParseRequestOnlyOnceWhenRouteMissing(): void
+    {
+        UrlManagerSpy::reset();
+
+        ApplicationFactory::web(
+            [
+                'components' => [
+                    'urlManager' => [
+                        'class' => UrlManagerSpy::class,
+                    ],
+                ],
+            ],
+        );
+
+        $request = new Request();
+        $request->setPsr7Request(HelperFactory::createRequest('GET', '/missing-route'));
+
+        try {
+            $request->resolve();
+
+            self::fail("'resolve()' should throw NotFoundHttpException when route parsing fails.");
+        } catch (NotFoundHttpException) {
+            self::assertSame(
+                1,
+                UrlManagerSpy::$parseRequestCalls,
+                "'parseRequest()' should be called exactly once when resolving fails in PSR-7 adapter mode.",
+            );
+        }
     }
 
     public function testReturnNullFromParentWhenRemoteHostNotSetInServerGlobals(): void
