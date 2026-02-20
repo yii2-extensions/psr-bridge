@@ -2,6 +2,8 @@
 
 ## 0.2.1 Under development
 
+- Bug #233: Update installation command to require version `0.2` of psr-bridge in `README.md` (@terabytesoftw)
+
 ## 0.2.0 February 20, 2026
 
 - Bug #211: Change classes from final to non-final in `ErrorHandler`, `Request`, `Response`, `StatelessApplication`, and `UploadedFile` classes for improved extensibility (@terabytesoftw)
