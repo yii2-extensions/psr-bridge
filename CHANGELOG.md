@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 0.2.0 Under development
+## 0.2.0 February 20, 2026
 
 - Bug #211: Change classes from final to non-final in `ErrorHandler`, `Request`, `Response`, `StatelessApplication`, and `UploadedFile` classes for improved extensibility (@terabytesoftw)
 - Bug #213: Remove worker mode property from `Request` class and update related tests for consistency (@terabytesoftw)
