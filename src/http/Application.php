@@ -36,10 +36,29 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 {
     /**
      * Flushes the logger during {@see terminate()} when set to `true`.
-     *
-     * Set to `false` to keep buffered log messages in memory across requests.
      */
     public bool $flushLogger = true;
+
+    /**
+     * Controls whether uploaded file static state is reset for each request.
+     *
+     * Set to `false` to retain static uploaded-file state across requests (advanced use only).
+     */
+    public bool $resetUploadedFiles = true;
+
+    /**
+     * Controls whether cookie validation settings are synchronized between request and response.
+     *
+     * Set to `false` to skip request-to-response cookie validation key synchronization.
+     */
+    public bool $syncCookieValidation = true;
+
+    /**
+     * Controls whether session lifecycle hooks run for each request.
+     *
+     * Set to `false` to skip bridge session open/finalize hooks for each request.
+     */
+    public bool $useSession = true;
 
     /**
      * Defines the application version string.
@@ -321,15 +340,26 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     protected function prepareForRequest(ServerRequestInterface $request): void
     {
         $this->startEventTracking();
-        $this->resetUploadedFilesState();
         $this->reinitializeApplication();
+
+        if ($this->resetUploadedFiles) {
+            $this->resetUploadedFilesState();
+        }
+
         $this->resetRequestState();
         $this->prepareErrorHandler();
         $this->attachPsrRequest($request);
-        $this->syncCookieValidationState();
+
+        if ($this->syncCookieValidation) {
+            $this->syncCookieValidationState();
+        }
+
         $this->bootstrap();
-        $this->openSessionFromRequestCookies();
-        $this->finalizeSessionState();
+
+        if ($this->useSession) {
+            $this->openSessionFromRequestCookies();
+            $this->finalizeSessionState();
+        }
     }
 
     /**

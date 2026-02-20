@@ -188,6 +188,31 @@ $config = [
 $app = new Application($config);
 ```
 
+### Worker lifecycle flags
+
+`yii2\extensions\psrbridge\http\Application` provides lifecycle flags to tune behavior in long-running workers.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use yii2\extensions\psrbridge\http\Application;
+
+$app = new Application($config);
+
+// Recommended defaults for worker mode
+$app->useSession = true;
+$app->syncCookieValidation = true;
+$app->resetUploadedFiles = true;
+```
+
+- `useSession=false` disables bridge session lifecycle hooks, but your application may still open sessions through other components.
+- `syncCookieValidation=false` disables request-to-response cookie validation synchronization and can break flows that expect matching cookie validation settings.
+- `resetUploadedFiles=false` is an advanced option and may leak static uploaded-file state between requests in long-running workers.
+
+Do not disable request cookie or uploaded-file access globally. `Request::getCookies()` and `Request::getUploadedFiles()` are input adapters and are expected to remain available in PSR-7 mode.
+
 ## Next steps
 
 - 💡 [Usage Examples](examples.md)
