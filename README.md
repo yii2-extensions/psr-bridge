@@ -141,8 +141,8 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 ```php
 $config = [
     'class' => Application::class,
-    // disable session, cookies, and uploaded file handling in worker mode (recommended for rest APIs, enable only if
-    // your app relies on sessions)
+    // disable session and cookie validation sync for stateless REST APIs; keep resetUploadedFiles=true (the default)
+    // unless you have a specific reason to retain uploaded file state across requests
     'useSession' => false,
     'syncCookieValidation' => false,
     'resetUploadedFiles' => true,
