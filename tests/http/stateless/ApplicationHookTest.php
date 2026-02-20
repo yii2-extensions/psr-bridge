@@ -13,12 +13,15 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
  *
  * Test coverage.
- * - Verifies that `handle()` invokes in the correct sequence the overridden `resetUploadedFilesState()`,
- *   `reinitializeApplication()`, `resetRequestState()`, `prepareErrorHandler()`, `attachPsrRequest()`,
- *   `syncCookieValidationState()`, `openSessionFromRequestCookies()`, `finalizeSessionState()`, and
- *   `terminate()` hooks.
+ * - Verifies that `handle()` invokes in the correct sequence the overridden `reinitializeApplication()`,
+ *   `resetUploadedFilesState()`, `resetRequestState()`, `prepareErrorHandler()`, `attachPsrRequest()`,
+ *   `syncCookieValidationState()`, `openSessionFromRequestCookies()`, `finalizeSessionState()`, and `terminate()`
+ *   hooks.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetRequestState()` hook.
  * - Verifies that `prepareForRequest()` invokes the overridden `resetUploadedFilesState()` hook.
+ * - Verifies that disabling `resetUploadedFiles` skips the uploaded-file reset hook.
+ * - Verifies that disabling `syncCookieValidation` skips the cookie-sync hook.
+ * - Verifies that disabling `useSession` skips session open/finalize hooks.
  *
  * @copyright Copyright (C) 2026 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -41,8 +44,8 @@ final class ApplicationHookTest extends TestCase
         // order assertions to verify the sequence of lifecycle hook invocations
         self::assertSame(
             [
-                'resetUploadedFilesState',
                 'reinitializeApplication',
+                'resetUploadedFilesState',
                 'resetRequestState',
                 'prepareErrorHandler',
                 'attachPsrRequest',
@@ -89,6 +92,64 @@ final class ApplicationHookTest extends TestCase
         self::assertTrue(
             $app->terminateCalled,
             "Overridden 'terminate()' hook should be invoked by 'handle()'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testHandleSkipsResetUploadedFilesHookWhenResetUploadedFilesIsDisabled(): void
+    {
+        $app = ApplicationFactory::rest(['resetUploadedFiles' => false]);
+
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $response,
+        );
+        self::assertFalse(
+            $app->resetUploadedFilesStateCalled,
+            "'resetUploadedFilesState()' should not be invoked when 'resetUploadedFiles' is disabled.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testHandleSkipsSessionHooksWhenUseSessionIsDisabled(): void
+    {
+        $app = ApplicationFactory::rest(['useSession' => false]);
+
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $response,
+        );
+        self::assertFalse(
+            $app->openSessionFromRequestCookiesCalled,
+            "'openSessionFromRequestCookies()' should not be invoked when 'useSession' is disabled.",
+        );
+        self::assertFalse(
+            $app->finalizeSessionStateCalled,
+            "'finalizeSessionState()' should not be invoked when 'useSession' is disabled.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testHandleSkipsSyncCookieValidationHookWhenSyncCookieValidationIsDisabled(): void
+    {
+        $app = ApplicationFactory::rest(['syncCookieValidation' => false]);
+
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $response,
+        );
+        self::assertFalse(
+            $app->syncCookieValidationStateCalled,
+            "'syncCookieValidationState()' should not be invoked when 'syncCookieValidation' is disabled.",
         );
     }
 

@@ -21,6 +21,7 @@
 - Bug #228: Simplify `PAGE_NOT_FOUND` message in `Message` class by removing `in Application.` (@terabytesoftw)
 - Bug #229: Standardize PHPUnit PHPDoc headers across `tests/support`, `tests/adapter`, `tests/http`, and `tests/provider` (@terabytesoftw)
 - Bug #230: Standardize PHPUnit PHPDoc headers across `src` (@terabytesoftw)
+- Bug #231: Add configurable lifecycle flags in `Application` (`useSession`, `resetUploadedFiles`, `syncCookieValidation`) with hook coverage tests and update documentation for worker lifecycle configuration (@terabytesoftw)
 
 ## 0.1.5 January 28, 2026
 

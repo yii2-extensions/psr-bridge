@@ -124,6 +124,16 @@ $emitter = new yii2\extensions\psrbridge\emitter\SapiEmitter();
 $emitter->emit($psr7Response);
 ```
 
+### Worker lifecycle defaults
+
+In long-running workers, keep `Application` lifecycle defaults unless you have a specific requirement:
+
+- `useSession=true`
+- `syncCookieValidation=true`
+- `resetUploadedFiles=true`
+
+Disabling `resetUploadedFiles` is an advanced setting and may retain uploaded-file static state across requests. See the [Configuration Reference](docs/configuration.md) for details.
+
 ### Smart Body Parsing
 
 The bridge automatically parses incoming PSR-7 request bodies based on the `Content-Type` header and your configured

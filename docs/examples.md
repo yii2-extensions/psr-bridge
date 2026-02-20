@@ -183,6 +183,29 @@ $runner = new RoadRunner(new Application($config));
 $runner->run();
 ```
 
+### Lifecycle flags for long-running workers
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use yii2\extensions\psrbridge\http\Application;
+
+$app = new Application($config);
+
+// Keep defaults unless you have a specific need.
+$app->useSession = true;
+$app->syncCookieValidation = true;
+$app->resetUploadedFiles = true;
+```
+
+Use non-default values only for advanced scenarios:
+
+- `useSession=false` skips bridge session hooks only.
+- `syncCookieValidation=false` skips cookie validation synchronization between request and response.
+- `resetUploadedFiles=false` can retain uploaded-file static state across requests and should be avoided in most worker deployments.
+
 ## Next steps
 
 - 📚 [Installation Guide](installation.md)

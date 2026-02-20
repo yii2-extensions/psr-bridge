@@ -42,6 +42,20 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public bool $flushLogger = true;
 
     /**
+     * Controls whether uploaded file static state is reset for each request.
+     */
+    public bool $resetUploadedFiles = true;
+
+    /**
+     * Controls whether cookie validation settings are synchronized between request and response.
+     */
+    public bool $syncCookieValidation = true;
+    /**
+     * Controls whether session lifecycle hooks run for each request.
+     */
+    public bool $useSession = true;
+
+    /**
      * Defines the application version string.
      */
     public string $version = '0.1.0';
@@ -321,15 +335,26 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     protected function prepareForRequest(ServerRequestInterface $request): void
     {
         $this->startEventTracking();
-        $this->resetUploadedFilesState();
         $this->reinitializeApplication();
+
+        if ($this->resetUploadedFiles) {
+            $this->resetUploadedFilesState();
+        }
+
         $this->resetRequestState();
         $this->prepareErrorHandler();
         $this->attachPsrRequest($request);
-        $this->syncCookieValidationState();
+
+        if ($this->syncCookieValidation) {
+            $this->syncCookieValidationState();
+        }
+
         $this->bootstrap();
-        $this->openSessionFromRequestCookies();
-        $this->finalizeSessionState();
+
+        if ($this->useSession) {
+            $this->openSessionFromRequestCookies();
+            $this->finalizeSessionState();
+        }
     }
 
     /**
