@@ -1,5 +1,7 @@
 # ChangeLog
 
+## 0.2.2 Under development
+
 ## 0.2.1 February 21, 2026
 
 - Bug #233: Update installation command to require version `0.2` of psr-bridge in `README.md` and `docs/installation.md` (@terabytesoftw)
