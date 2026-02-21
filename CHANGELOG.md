@@ -3,6 +3,7 @@
 ## 0.2.1 Under development
 
 - Bug #233: Update installation command to require version `0.2` of psr-bridge in `README.md` and `docs/installation.md` (@terabytesoftw)
+- Bug #234: Remove automatic `statelessAppStartTime` header injection from `Request::setPsr7Request()` so runtime-specific workers can set it explicitly (@terabytesoftw)
 
 ## 0.2.0 February 20, 2026
 

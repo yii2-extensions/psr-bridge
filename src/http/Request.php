@@ -644,7 +644,7 @@ class Request extends \yii\web\Request
     public function setPsr7Request(ServerRequestInterface $request): void
     {
         $this->adapter = new ServerRequestAdapter(
-            $request->withHeader('statelessAppStartTime', (string) microtime(true)),
+            $request,
             $this->parsers,
         );
 
