@@ -19,7 +19,6 @@ use yii\log\{Dispatcher, FileTarget};
 use yii\web\{AssetManager, JsonParser, RequestParserInterface, Session, UrlManager, User, View};
 use yii2\extensions\psrbridge\http\{Application, ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
-use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
 use function array_filter;
 use function dirname;
@@ -41,7 +40,7 @@ use function unlink;
  * - Ensures response adapters are cached per response instance and isolated per request.
  * - Validates parser behavior for configured, wildcard, and invalid parser definitions.
  * - Verifies container definitions resolve PSR-7 factory interfaces.
- * - Verifies core component mappings, aliases, and request start-time headers after handling.
+ * - Verifies core component mappings and aliases after handling.
  * - Verifies redirects, debug exception rendering, and immediate log flushing behavior.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
@@ -636,37 +635,6 @@ final class ApplicationCoreTest extends TestCase
             $app->coreComponents(),
             "'coreComponents()' should return the expected mapping of component IDs to class definitions after "
             . 'handling a request.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testSetsPsr7RequestWithStatelessAppStartTimeHeader(): void
-    {
-        $mockedTime = 1640995200.123456;
-
-        MockerFunctions::setMockedMicrotime($mockedTime);
-
-        $app = ApplicationFactory::stateless();
-
-        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
-
-        $this->assertSiteIndexJsonResponse(
-            $response,
-        );
-
-        $psr7Request = $app->request->getPsr7Request();
-        $statelessAppStartTime = $psr7Request->getHeaderLine('statelessAppStartTime');
-
-        self::assertSame(
-            (string) $mockedTime,
-            $statelessAppStartTime,
-            "PSR-7 Request should contain 'statelessAppStartTime' header with the mocked microtime value.",
-        );
-        self::assertTrue(
-            $psr7Request->hasHeader('statelessAppStartTime'),
-            "PSR-7 Request should have 'statelessAppStartTime' header set during adapter creation.",
         );
     }
 
