@@ -11,10 +11,11 @@ use yii\base\{Event, InvalidConfigException};
 use yii\di\{Container, NotInstantiableException};
 use yii\web\IdentityInterface;
 
+use function array_flip;
+use function array_intersect_key;
 use function array_merge;
 use function array_reverse;
 use function gc_collect_cycles;
-use function in_array;
 use function ini_get;
 use function is_array;
 use function memory_get_usage;
@@ -467,11 +468,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return $config;
         }
 
-        foreach ($config['components'] as $id => $_component) {
-            if (in_array($id, $this->requestScopedComponents, true) === false) {
-                unset($config['components'][$id]);
-            }
-        }
+        $scoped = array_flip($this->requestScopedComponents);
+        $config['components'] = array_intersect_key($config['components'], $scoped);
 
         return $config;
     }

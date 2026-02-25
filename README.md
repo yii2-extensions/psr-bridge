@@ -135,7 +135,7 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 > [!WARNING]
 > `Application::prepareForRequest()` calls `reinitializeApplication()` on each request, so values provided in the
 > application config array are reapplied for request-scoped components (`request`, `response`, `errorHandler`,
-> `session`, `user`).
+> `session`, `user`, `urlManager`).
 >
 > Request-scoped components listed in `Application::$requestScopedComponents` (defaults to `request`, `response`,
 > `errorHandler`, `session`, `user`, `urlManager`) are reinitialized on each request.
