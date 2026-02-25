@@ -137,8 +137,9 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 > application config array are reapplied for request-scoped components (`request`, `response`, `errorHandler`,
 > `session`, `user`).
 >
-> Persistent components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep their
-> loaded instances across requests in long-running workers.
+> Request-scoped components listed in `Application::$requestScopedComponents` (defaults to `request`, `response`,
+> `errorHandler`, `session`, `user`, `urlManager`) are reinitialized on each request.
+> Components not listed keep their loaded instances across requests in long-running workers.
 >
 > Configure lifecycle flags in the config array when possible.
 

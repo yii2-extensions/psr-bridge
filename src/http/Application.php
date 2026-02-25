@@ -41,13 +41,13 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public bool $flushLogger = true;
 
     /**
-     * Lists component IDs that should stay alive across requests in long-running workers.
+     * Lists component IDs that must be reinitialized for each request in long-running workers.
      *
-     * Keep request-sensitive components (such as `request` or `response`) out of this list.
+     * Components not listed here keep their resolved instances across requests.
      *
      * @var array<int, string>
      */
-    public array $persistentComponents = ['db', 'cache'];
+    public array $requestScopedComponents = ['request', 'response', 'errorHandler', 'session', 'user', 'urlManager'];
 
     /**
      * Controls whether uploaded file static state is reset for each request.
@@ -445,8 +445,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Builds the configuration used to reinitialize the Yii application for a new request.
      *
-     * Keeps configured persistent component instances alive between requests and avoids reconfiguring
-     * the global Yii container after the first worker initialization.
+     * Reconfigures only request-scoped components after the first request and avoids reconfiguring
+     * the global Yii container after worker initialization.
      *
      * @return array Reinitialization configuration for {@see parent::__construct()}.
      * @phpstan-return array<mixed, mixed>
@@ -463,10 +463,12 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return $config;
         }
 
-        $components = $this->getComponents(false);
+        if ($this->shouldConfigureGlobalContainer === true) {
+            return $config;
+        }
 
-        foreach ($components as $id => $component) {
-            if ($component !== null && in_array($id, $this->persistentComponents, true)) {
+        foreach ($config['components'] as $id => $_component) {
+            if (in_array($id, $this->requestScopedComponents, true) === false) {
                 unset($config['components'][$id]);
             }
         }

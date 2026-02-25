@@ -1,13 +1,11 @@
 # ChangeLog
 
-## 0.2.2 Under development
-
-- Bug #236: Preserve configured worker singletons and persistent components (`db`, `cache`) across requests while keeping request-scoped components reinitialized per request in `Application` (@terabytesoftw)
-
-## 0.2.1 February 21, 2026
+## 0.3.0 Under development
 
 - Bug #233: Update installation command to require version `0.2` of psr-bridge in `README.md` and `docs/installation.md` (@terabytesoftw)
 - Bug #234: Remove automatic `statelessAppStartTime` header injection from `Request::setPsr7Request()` so runtime-specific workers can set it explicitly (@terabytesoftw)
+- Bug #236: Preserve configured worker singletons and persistent components (`db`, `cache`) across requests while keeping request-scoped components reinitialized per request in `Application` (@terabytesoftw)
+- Bug #238: Invert worker component lifecycle configuration in `Application` by introducing `requestScopedComponents` (defaults to `request`, `response`, `errorHandler`, `session`, `user`, `urlManager`) so only listed components are reinitialized per request while others persist across requests (@terabytesoftw)
 
 ## 0.2.0 February 20, 2026
 

@@ -206,14 +206,14 @@ $app->useSession = true;
 $app->syncCookieValidation = true;
 $app->resetUploadedFiles = true;
 
-// Keep heavy components alive across requests
-$app->persistentComponents = ['db', 'cache'];
+// Reinitialize only request-scoped components each request
+$app->requestScopedComponents = ['request', 'response', 'errorHandler', 'session', 'user', 'urlManager'];
 ```
 
 - `useSession=false` disables bridge session lifecycle hooks, but your application may still open sessions through other components.
 - `syncCookieValidation=false` disables request-to-response cookie validation synchronization and can break flows that expect matching cookie validation settings.
 - `resetUploadedFiles=false` is an advanced option and may leak static uploaded-file state between requests in long-running workers.
-- `persistentComponents` controls component instances preserved between requests (defaults to `db` and `cache`). Keep request-scoped components (`request`, `response`, `errorHandler`, `session`, `user`) out of this list.
+- `requestScopedComponents` controls which component IDs are reinitialized per request. Components not listed preserve their loaded instances between requests.
 
 Do not disable request cookie or uploaded-file access globally. `Request::getCookies()` and `Request::getUploadedFiles()` are input adapters and are expected to remain available in PSR-7 mode.
 
