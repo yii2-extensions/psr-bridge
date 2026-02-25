@@ -214,6 +214,7 @@ $app->requestScopedComponents = ['request', 'response', 'errorHandler', 'session
 - `syncCookieValidation=false` disables request-to-response cookie validation synchronization and can break flows that expect matching cookie validation settings.
 - `resetUploadedFiles=false` is an advanced option and may leak static uploaded-file state between requests in long-running workers.
 - `requestScopedComponents` controls which component IDs are reinitialized per request. Components not listed preserve their loaded instances between requests.
+- `container.definitions` and `container.singletons` are applied to `Yii::$container` once per worker lifecycle and are not reapplied on each request.
 
 Do not disable request cookie or uploaded-file access globally. `Request::getCookies()` and `Request::getUploadedFiles()` are input adapters and are expected to remain available in PSR-7 mode.
 
