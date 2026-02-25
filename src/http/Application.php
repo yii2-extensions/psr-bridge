@@ -146,7 +146,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 
         $usage = memory_get_usage(true);
 
+        // @codeCoverageIgnoreStart
         return $usage >= $bound;
+        // @codeCoverageIgnoreEnd
     }
 
     /**

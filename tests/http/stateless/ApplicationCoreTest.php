@@ -103,6 +103,40 @@ final class ApplicationCoreTest extends TestCase
     }
 
     /**
+     * @throws ReflectionException if inaccessible method invocation fails.
+     */
+    public function testBuildReinitializationConfigReturnsConfigWhenComponentsAreNotArray(): void
+    {
+        $app = new Application(['components' => 'invalid']);
+
+        /** @phpstan-var array<string, mixed> $nextConfig */
+        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
+
+        self::assertSame(
+            ['components' => 'invalid'],
+            $nextConfig,
+            "'buildReinitializationConfig()' should return unchanged config when 'components' is not an array.",
+        );
+    }
+
+    /**
+     * @throws ReflectionException if inaccessible method invocation fails.
+     */
+    public function testBuildReinitializationConfigReturnsEmptyConfigWhenComponentsAreMissing(): void
+    {
+        $app = new Application([]);
+
+        /** @phpstan-var array<mixed> $nextConfig */
+        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
+
+        self::assertSame(
+            [],
+            $nextConfig,
+            "'buildReinitializationConfig()' should return unchanged empty config when 'components' key is missing.",
+        );
+    }
+
+    /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
      */
