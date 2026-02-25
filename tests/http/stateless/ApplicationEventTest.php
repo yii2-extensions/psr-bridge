@@ -201,12 +201,12 @@ final class ApplicationEventTest extends TestCase
             'Expected both events to be triggered.',
         );
         self::assertContains(
-            'before_request_0.1.0',
+            'before_request_0.2.0',
             $eventsCaptured,
             "Expected new before event 'before_request_{$app->version}' to be triggered.",
         );
         self::assertContains(
-            'after_request_0.1.0',
+            'after_request_0.2.0',
             $eventsCaptured,
             "Expected new after event 'after_request_{$app->version}' to be triggered.",
         );

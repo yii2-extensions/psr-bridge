@@ -141,6 +141,9 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 > `errorHandler`, `session`, `user`, `urlManager`) are reinitialized on each request.
 > Components not listed keep their loaded instances across requests in long-running workers.
 >
+> If your runtime resolves services from `Yii::$container` before the first call to `handle()`, call
+> `Application::bootstrapContainer()` during runtime bootstrap.
+>
 > Configure lifecycle flags in the config array when possible.
 
 ```php

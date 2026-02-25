@@ -186,6 +186,9 @@ $config = [
 ];
 
 $app = new Application($config);
+
+// Optional for runtime bootstraps that resolve services before first handle()
+$app->bootstrapContainer();
 ```
 
 ### Worker lifecycle flags
@@ -215,6 +218,7 @@ $app->requestScopedComponents = ['request', 'response', 'errorHandler', 'session
 - `resetUploadedFiles=false` is an advanced option and may leak static uploaded-file state between requests in long-running workers.
 - `requestScopedComponents` controls which component IDs are reinitialized per request. Components not listed preserve their loaded instances between requests.
 - `container.definitions` and `container.singletons` are applied to `Yii::$container` once per worker lifecycle and are not reapplied on each request.
+- `bootstrapContainer()` applies `container` bindings to `Yii::$container` before the first request and is idempotent.
 
 Do not disable request cookie or uploaded-file access globally. `Request::getCookies()` and `Request::getUploadedFiles()` are input adapters and are expected to remain available in PSR-7 mode.
 

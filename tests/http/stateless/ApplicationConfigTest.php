@@ -33,6 +33,31 @@ final class ApplicationConfigTest extends TestCase
 {
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testBootstrapContainerAppliesDefinitionsBeforeFirstRequest(): void
+    {
+        $app = ApplicationFactory::stateless(
+            [
+                'container' => [
+                    'definitions' => [
+                        'bootstrapContainerDefinition' => stdClass::class,
+                    ],
+                ],
+            ],
+        );
+
+        $app->bootstrapContainer();
+
+        self::assertInstanceOf(
+            stdClass::class,
+            Yii::$container->get('bootstrapContainerDefinition'),
+            'Container definitions should be resolvable after calling bootstrapContainer() before any request.',
+        );
+
+        Yii::$container->clear('bootstrapContainerDefinition');
+    }
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if inaccessible method invocation fails.
      */
     public function testBuildReinitializationConfigKeepsOnlyRequestScopedComponentsAfterFirstRequest(): void

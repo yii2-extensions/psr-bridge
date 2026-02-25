@@ -48,7 +48,14 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * @var array<int, string>
      */
-    public array $requestScopedComponents = ['request', 'response', 'errorHandler', 'session', 'user', 'urlManager'];
+    public array $requestScopedComponents = [
+        'errorHandler',
+        'request',
+        'response',
+        'session',
+        'urlManager',
+        'user',
+    ];
 
     /**
      * Controls whether uploaded file static state is reset for each request.
@@ -74,7 +81,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Defines the application version string.
      */
-    public string $version = '0.1.0';
+    public string $version = '0.2.0';
 
     /**
      * Stores the event handler used for global lifecycle tracking.
@@ -82,6 +89,11 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * @phpstan-var callable(Event $event): void
      */
     private $eventHandler;
+
+    /**
+     * Tracks whether the first application reinitialization cycle is being processed.
+     */
+    private bool $isFirstReinitialization = true;
 
     /**
      * Caches the memory limit in bytes.
@@ -116,6 +128,30 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public function __construct(private readonly array $config = [])
     {
         $this->initEventTracking();
+    }
+
+    /**
+     * Applies `container` configuration to `Yii::$container` once per worker lifecycle.
+     *
+     * @throws InvalidConfigException When `container` configuration is invalid.
+     */
+    public function bootstrapContainer(): void
+    {
+        if ($this->shouldConfigureGlobalContainer === false) {
+            return;
+        }
+
+        $container = $this->config['container'] ?? null;
+
+        if ($container !== null && !is_array($container)) {
+            throw new InvalidConfigException("The 'container' configuration must be an array.");
+        }
+
+        if ($container !== null) {
+            $this->setContainer($container);
+        }
+
+        $this->shouldConfigureGlobalContainer = false;
     }
 
     /**
@@ -358,11 +394,13 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function reinitializeApplication(): void
     {
+        $this->bootstrapContainer();
+
         // parent constructor is called because Application uses a custom initialization pattern
         // @phpstan-ignore-next-line
         parent::__construct($this->buildReinitializationConfig());
 
-        $this->shouldConfigureGlobalContainer = false;
+        $this->isFirstReinitialization = false;
     }
 
     /**
@@ -433,7 +471,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return $config;
         }
 
-        if ($this->shouldConfigureGlobalContainer === true) {
+        if ($this->isFirstReinitialization) {
             return $config;
         }
 
