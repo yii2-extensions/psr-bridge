@@ -14,6 +14,7 @@ use yii\web\IdentityInterface;
 use function array_merge;
 use function array_reverse;
 use function gc_collect_cycles;
+use function in_array;
 use function ini_get;
 use function is_array;
 use function memory_get_usage;
@@ -38,6 +39,15 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * Flushes the logger during {@see terminate()} when set to `true`.
      */
     public bool $flushLogger = true;
+
+    /**
+     * Lists component IDs that should stay alive across requests in long-running workers.
+     *
+     * Keep request-sensitive components (such as `request` or `response`) out of this list.
+     *
+     * @var array<int, string>
+     */
+    public array $persistentComponents = ['db', 'cache'];
 
     /**
      * Controls whether uploaded file static state is reset for each request.
@@ -90,6 +100,11 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     private array $registeredEvents = [];
 
     /**
+     * Tracks whether the global Yii container was configured for this worker process.
+     */
+    private bool $shouldConfigureGlobalContainer = true;
+
+    /**
      * Indicates whether to recalculate the memory limit.
      */
     private bool $shouldRecalculateMemoryLimit = false;
@@ -131,7 +146,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 
         $usage = memory_get_usage(true);
 
+        // @codeCoverageIgnoreStart
         return $usage >= $bound;
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -369,9 +386,13 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function reinitializeApplication(): void
     {
+        $config = $this->buildReinitializationConfig();
+
         // parent constructor is called because Application uses a custom initialization pattern
         // @phpstan-ignore-next-line
-        parent::__construct($this->config);
+        parent::__construct($config);
+
+        $this->shouldConfigureGlobalContainer = false;
     }
 
     /**
@@ -419,6 +440,38 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         }
 
         return $response->getPsr7Response();
+    }
+
+    /**
+     * Builds the configuration used to reinitialize the Yii application for a new request.
+     *
+     * Keeps configured persistent component instances alive between requests and avoids reconfiguring
+     * the global Yii container after the first worker initialization.
+     *
+     * @return array Reinitialization configuration for {@see parent::__construct()}.
+     * @phpstan-return array<mixed, mixed>
+     */
+    private function buildReinitializationConfig(): array
+    {
+        $config = $this->config;
+
+        if ($this->shouldConfigureGlobalContainer === false) {
+            unset($config['container']);
+        }
+
+        if (isset($config['components']) === false || is_array($config['components']) === false) {
+            return $config;
+        }
+
+        $components = $this->getComponents(false);
+
+        foreach ($components as $id => $component) {
+            if ($component !== null && in_array($id, $this->persistentComponents, true)) {
+                unset($config['components'][$id]);
+            }
+        }
+
+        return $config;
     }
 
     /**

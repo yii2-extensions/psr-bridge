@@ -56,6 +56,88 @@ final class ApplicationCoreTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if inaccessible method invocation fails.
+     */
+    public function testBuildReinitializationConfigKeepsDefinitionForUnloadedPersistentComponent(): void
+    {
+        $app = ApplicationFactory::stateless(
+            [
+                'persistentComponents' => ['lazyPersistent'],
+                'container' => [
+                    'definitions' => [
+                        'lazyServiceDefinition' => stdClass::class,
+                    ],
+                ],
+                'components' => [
+                    'lazyPersistent' => [
+                        'class' => stdClass::class,
+                    ],
+                ],
+            ],
+        );
+
+        $request = HelperFactory::createRequest('GET', 'site/index');
+
+        $app->handle($request);
+
+        /** @phpstan-var array<string, mixed> $nextConfig */
+        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
+
+        self::assertTrue(
+            isset($nextConfig['components']),
+            "'buildReinitializationConfig()' should return a configuration array containing 'components' key.",
+        );
+        self::assertIsArray(
+            $nextConfig['components'],
+            "'components' key in the reinitialization config should be an array.",
+        );
+        self::assertArrayHasKey(
+            'lazyPersistent',
+            $nextConfig['components'],
+            "'buildReinitializationConfig()' should keep definitions for persistent components that are not loaded.",
+        );
+        self::assertTrue(
+            $app->container()->has('lazyServiceDefinition'),
+            'Container definition should remain available when it is not declared as an application component.',
+        );
+    }
+
+    /**
+     * @throws ReflectionException if inaccessible method invocation fails.
+     */
+    public function testBuildReinitializationConfigReturnsConfigWhenComponentsAreNotArray(): void
+    {
+        $app = new Application(['components' => 'invalid']);
+
+        /** @phpstan-var array<string, mixed> $nextConfig */
+        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
+
+        self::assertSame(
+            ['components' => 'invalid'],
+            $nextConfig,
+            "'buildReinitializationConfig()' should return unchanged config when 'components' is not an array.",
+        );
+    }
+
+    /**
+     * @throws ReflectionException if inaccessible method invocation fails.
+     */
+    public function testBuildReinitializationConfigReturnsEmptyConfigWhenComponentsAreMissing(): void
+    {
+        $app = new Application([]);
+
+        /** @phpstan-var array<mixed> $nextConfig */
+        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
+
+        self::assertSame(
+            [],
+            $nextConfig,
+            "'buildReinitializationConfig()' should return unchanged empty config when 'components' key is missing.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
      */
     public function testContainerResolvesPsrFactoriesWithDefinitions(): void
@@ -198,6 +280,40 @@ final class ApplicationCoreTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testGlobalContainerSingletonDefinitionsPersistAcrossRequests(): void
+    {
+        $app = ApplicationFactory::stateless(
+            [
+                'container' => [
+                    'singletons' => [
+                        'demoSingleton' => stdClass::class,
+                    ],
+                ],
+            ],
+        );
+
+        $request = HelperFactory::createRequest('GET', 'site/index');
+
+        $app->handle($request);
+
+        $firstSingleton = Yii::$container->get('demoSingleton');
+
+        $app->handle($request);
+
+        $secondSingleton = Yii::$container->get('demoSingleton');
+
+        self::assertSame(
+            $firstSingleton,
+            $secondSingleton,
+            'Global container singleton definitions should keep the same instance across requests in worker mode.',
+        );
+
+        Yii::$container->clear('demoSingleton');
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws JsonException if JSON encoding fails.
      */
     public function testHandleThrowsExceptionWithCorrectMessageWhenFallbackParserIsInvalid(): void
@@ -287,6 +403,30 @@ final class ApplicationCoreTest extends TestCase
             . RequestParserInterface::class . '&apos;.',
             $response->getBody()->getContents(),
             'Response body should contain the expected error message for invalid fallback parser.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testPersistentCacheComponentKeepsSameInstanceAcrossRequests(): void
+    {
+        $app = ApplicationFactory::stateless();
+
+        $request = HelperFactory::createRequest('GET', 'site/index');
+
+        $app->handle($request);
+
+        $firstCache = $app->cache;
+
+        $app->handle($request);
+
+        $secondCache = $app->cache;
+
+        self::assertSame(
+            $firstCache,
+            $secondCache,
+            "'cache' component should keep the same instance across requests when configured as persistent.",
         );
     }
 

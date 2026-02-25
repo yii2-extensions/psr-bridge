@@ -134,7 +134,11 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 
 > [!WARNING]
 > `Application::prepareForRequest()` calls `reinitializeApplication()` on each request, so values provided in the
-> application config array are reapplied and take precedence over post-construction property assignments.
+> application config array are reapplied for request-scoped components (`request`, `response`, `errorHandler`,
+> `session`, `user`).
+>
+> Persistent components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep their
+> loaded instances across requests in long-running workers.
 >
 > Configure lifecycle flags in the config array when possible.
 

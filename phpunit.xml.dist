@@ -15,7 +15,7 @@
   </extensions>
 
   <testsuites>
-    <testsuite name="PSRBridge">
+    <testsuite name="Yii2Extensions-PSRBridge">
       <directory>tests</directory>
     </testsuite>
   </testsuites>
