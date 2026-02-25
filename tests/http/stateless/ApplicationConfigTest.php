@@ -236,6 +236,10 @@ final class ApplicationConfigTest extends TestCase
             Yii::$container->get(UploadedFileFactoryInterface::class),
             'Container should resolve UploadedFileFactoryInterface to an instance of UploadedFileFactory.',
         );
+
+        Yii::$container->clear(ServerRequestFactoryInterface::class);
+        Yii::$container->clear(StreamFactoryInterface::class);
+        Yii::$container->clear(UploadedFileFactoryInterface::class);
     }
 
     /**
