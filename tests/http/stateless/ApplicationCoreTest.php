@@ -21,7 +21,6 @@ use yii2\extensions\psrbridge\http\{Application, ErrorHandler, Request, Response
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function array_filter;
-use function array_key_exists;
 use function dirname;
 use function file_exists;
 use function file_get_contents;
@@ -92,8 +91,8 @@ final class ApplicationCoreTest extends TestCase
             $nextConfig['components'],
             "'components' key in the reinitialization config should be an array.",
         );
-        self::assertTrue(
-            array_key_exists('lazyPersistent', $nextConfig['components']),
+        self::assertArrayHasKey(
+            'lazyPersistent', $nextConfig['components'],
             "'buildReinitializationConfig()' should keep definitions for persistent components that are not loaded.",
         );
         self::assertTrue(
