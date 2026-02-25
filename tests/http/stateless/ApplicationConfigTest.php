@@ -56,6 +56,7 @@ final class ApplicationConfigTest extends TestCase
 
         Yii::$container->clear('bootstrapContainerDefinition');
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if inaccessible method invocation fails.
