@@ -2,6 +2,8 @@
 
 ## 0.2.2 Under development
 
+- Bug #236: Preserve configured worker singletons and persistent components (`db`, `cache`) across requests while keeping request-scoped components reinitialized per request in `Application` (@terabytesoftw)
+
 ## 0.2.1 February 21, 2026
 
 - Bug #233: Update installation command to require version `0.2` of psr-bridge in `README.md` and `docs/installation.md` (@terabytesoftw)
