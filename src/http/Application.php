@@ -8,7 +8,7 @@ use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use yii\base\{Event, InvalidConfigException};
-use yii\di\{Container, NotInstantiableException};
+use yii\di\NotInstantiableException;
 use yii\web\IdentityInterface;
 
 use function array_flip;
@@ -77,11 +77,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public string $version = '0.1.0';
 
     /**
-     * Caches the dependency injection container instance.
-     */
-    private Container|null $container = null;
-
-    /**
      * Stores the event handler used for global lifecycle tracking.
      *
      * @phpstan-var callable(Event $event): void
@@ -118,7 +113,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * @phpstan-param mixed[] $config
      * @phpstan-ignore constructor.missingParentCall
      */
-    public function __construct(private array $config = [])
+    public function __construct(private readonly array $config = [])
     {
         $this->initEventTracking();
     }
@@ -150,30 +145,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         // @codeCoverageIgnoreStart
         return $usage >= $bound;
         // @codeCoverageIgnoreEnd
-    }
-
-    /**
-     * Returns the configured Yii dependency injection container.
-     *
-     * Usage example:
-     * ```php
-     * $app = new \yii2\extensions\psrbridge\http\Application($config);
-     * $container = $app->container();
-     * $service = $container->get(MyService::class);
-     * ```
-     *
-     * @return Container Container configured from `container.definitions` and `container.singletons`.
-     */
-    public function container(): Container
-    {
-        $config = $this->config['container'] ?? [];
-
-        return $this->container ??= new Container(
-            [
-                'definitions' => is_array($config) && isset($config['definitions']) ? $config['definitions'] : [],
-                'singletons' => is_array($config) && isset($config['singletons']) ? $config['singletons'] : [],
-            ],
-        );
     }
 
     /**
@@ -387,11 +358,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function reinitializeApplication(): void
     {
-        $config = $this->buildReinitializationConfig();
-
         // parent constructor is called because Application uses a custom initialization pattern
         // @phpstan-ignore-next-line
-        parent::__construct($config);
+        parent::__construct($this->buildReinitializationConfig());
 
         $this->shouldConfigureGlobalContainer = false;
     }
@@ -512,6 +481,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     private function handleError(Throwable $exception): Response
     {
+        /** @var Response $response */
         $response = $this->errorHandler->handleException($exception);
 
         $this->trigger(self::EVENT_AFTER_REQUEST);
