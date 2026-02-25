@@ -92,7 +92,8 @@ final class ApplicationCoreTest extends TestCase
             "'components' key in the reinitialization config should be an array.",
         );
         self::assertArrayHasKey(
-            'lazyPersistent', $nextConfig['components'],
+            'lazyPersistent',
+            $nextConfig['components'],
             "'buildReinitializationConfig()' should keep definitions for persistent components that are not loaded.",
         );
         self::assertTrue(
