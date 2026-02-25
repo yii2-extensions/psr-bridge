@@ -141,13 +141,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return;
         }
 
-        $container = $this->config['container'] ?? null;
+        $container = $this->config['container'] ?? [];
 
-        if ($container !== null && !is_array($container)) {
-            throw new InvalidConfigException("The 'container' configuration must be an array.");
-        }
-
-        if ($container !== null) {
+        if (is_array($container) && $container !== []) {
             $this->setContainer($container);
         }
 
