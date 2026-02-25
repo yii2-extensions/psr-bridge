@@ -58,17 +58,24 @@ final class ApplicationCoreTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if inaccessible method invocation fails.
      */
-    public function testBuildReinitializationConfigKeepsDefinitionForUnloadedPersistentComponent(): void
+    public function testBuildReinitializationConfigKeepsOnlyRequestScopedComponentsAfterFirstRequest(): void
     {
         $app = ApplicationFactory::stateless(
             [
-                'persistentComponents' => ['lazyPersistent'],
+                'requestScopedComponents' => [
+                    'request',
+                    'user',
+                    'lazyScoped',
+                ],
                 'container' => [
                     'definitions' => [
                         'lazyServiceDefinition' => stdClass::class,
                     ],
                 ],
                 'components' => [
+                    'lazyScoped' => [
+                        'class' => stdClass::class,
+                    ],
                     'lazyPersistent' => [
                         'class' => stdClass::class,
                     ],
@@ -92,9 +99,29 @@ final class ApplicationCoreTest extends TestCase
             "'components' key in the reinitialization config should be an array.",
         );
         self::assertArrayHasKey(
+            'request',
+            $nextConfig['components'],
+            "'buildReinitializationConfig()' should keep request-scoped component definitions.",
+        );
+        self::assertArrayHasKey(
+            'user',
+            $nextConfig['components'],
+            "'buildReinitializationConfig()' should keep request-scoped component definitions.",
+        );
+        self::assertArrayHasKey(
+            'lazyScoped',
+            $nextConfig['components'],
+            "'buildReinitializationConfig()' should keep request-scoped component definitions.",
+        );
+        self::assertArrayNotHasKey(
             'lazyPersistent',
             $nextConfig['components'],
-            "'buildReinitializationConfig()' should keep definitions for persistent components that are not loaded.",
+            "'buildReinitializationConfig()' should remove non request-scoped component definitions after first request.",
+        );
+        self::assertArrayNotHasKey(
+            'cache',
+            $nextConfig['components'],
+            "'buildReinitializationConfig()' should remove non request-scoped component definitions after first request.",
         );
         self::assertTrue(
             $app->container()->has('lazyServiceDefinition'),
@@ -107,13 +134,21 @@ final class ApplicationCoreTest extends TestCase
      */
     public function testBuildReinitializationConfigReturnsConfigWhenComponentsAreNotArray(): void
     {
-        $app = new Application(['components' => 'invalid']);
+        $app = new Application(
+            [
+                'id' => 'test-app',
+                'components' => 'invalid',
+            ],
+        );
 
         /** @phpstan-var array<string, mixed> $nextConfig */
         $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
 
         self::assertSame(
-            ['components' => 'invalid'],
+            [
+                'id' => 'test-app',
+                'components' => 'invalid',
+            ],
             $nextConfig,
             "'buildReinitializationConfig()' should return unchanged config when 'components' is not an array.",
         );

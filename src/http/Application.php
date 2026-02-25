@@ -11,10 +11,11 @@ use yii\base\{Event, InvalidConfigException};
 use yii\di\{Container, NotInstantiableException};
 use yii\web\IdentityInterface;
 
+use function array_flip;
+use function array_intersect_key;
 use function array_merge;
 use function array_reverse;
 use function gc_collect_cycles;
-use function in_array;
 use function ini_get;
 use function is_array;
 use function memory_get_usage;
@@ -41,13 +42,13 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public bool $flushLogger = true;
 
     /**
-     * Lists component IDs that should stay alive across requests in long-running workers.
+     * Lists component IDs that must be reinitialized for each request in long-running workers.
      *
-     * Keep request-sensitive components (such as `request` or `response`) out of this list.
+     * Components not listed here keep their resolved instances across requests.
      *
      * @var array<int, string>
      */
-    public array $persistentComponents = ['db', 'cache'];
+    public array $requestScopedComponents = ['request', 'response', 'errorHandler', 'session', 'user', 'urlManager'];
 
     /**
      * Controls whether uploaded file static state is reset for each request.
@@ -445,8 +446,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Builds the configuration used to reinitialize the Yii application for a new request.
      *
-     * Keeps configured persistent component instances alive between requests and avoids reconfiguring
-     * the global Yii container after the first worker initialization.
+     * Reconfigures only request-scoped components after the first request and avoids reconfiguring
+     * the global Yii container after worker initialization.
      *
      * @return array Reinitialization configuration for {@see parent::__construct()}.
      * @phpstan-return array<mixed, mixed>
@@ -463,13 +464,12 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return $config;
         }
 
-        $components = $this->getComponents(false);
-
-        foreach ($components as $id => $component) {
-            if ($component !== null && in_array($id, $this->persistentComponents, true)) {
-                unset($config['components'][$id]);
-            }
+        if ($this->shouldConfigureGlobalContainer === true) {
+            return $config;
         }
+
+        $scoped = array_flip($this->requestScopedComponents);
+        $config['components'] = array_intersect_key($config['components'], $scoped);
 
         return $config;
     }
