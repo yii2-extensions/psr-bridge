@@ -451,10 +451,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return $config;
         }
 
-        $components = $this->getComponents(false);
-
-        foreach ($components as $id => $component) {
-            if ($component !== null && in_array($id, $this->persistentComponents, true)) {
+        foreach ($config['components'] as $id => $componentConfig) {
+            if (in_array($id, $this->persistentComponents, true) && $this->has($id, true)) {
                 unset($config['components'][$id]);
             }
         }
