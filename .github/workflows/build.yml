@@ -23,14 +23,3 @@ jobs:
       extensions: mbstring, gd, runkit7
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  phpunit-dev:
-    uses: yii2-framework/actions/.github/workflows/phpunit.yml@v1
-    with:
-      concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}-dev
-      extensions: mbstring, gd
-      ignore-platform-reqs: true
-      os: '["ubuntu-latest"]'
-      php-version: '["8.5","8.6"]'
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

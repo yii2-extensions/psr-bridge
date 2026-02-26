@@ -452,7 +452,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return $config;
         }
 
-        foreach ($config['components'] as $id => $componentConfig) {
+        foreach ($config['components'] as $id => $_componentConfig) {
             if (is_string($id) && $this->isPersistentComponent($id) && $this->has($id, true)) {
                 unset($config['components'][$id]);
             }
