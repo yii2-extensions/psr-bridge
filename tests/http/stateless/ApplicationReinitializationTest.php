@@ -32,32 +32,6 @@ final class ApplicationReinitializationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testYiiAppReferenceIsMaintainedAcrossRequests(): void
-    {
-        $app = ApplicationFactory::stateless();
-
-        $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
-
-        $this->assertSiteIndexJsonResponse($response1);
-        self::assertSame(
-            $app,
-            Yii::$app,
-            'Yii::$app should reference the same Application instance after first request.',
-        );
-
-        $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
-
-        $this->assertSiteIndexJsonResponse($response2);
-        self::assertSame(
-            $app,
-            Yii::$app,
-            'Yii::$app should reference the same Application instance after subsequent requests.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testApplicationStateTransitionsCorrectlyDuringReinitialization(): void
     {
         $app = ApplicationFactory::stateless();
@@ -84,38 +58,21 @@ final class ApplicationReinitializationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testRequestScopedComponentsAreRecreatedOnEachRequest(): void
+    public function testHighVolumeRequestsWithReinitialization(): void
     {
         $app = ApplicationFactory::stateless();
 
-        $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+        // Simulate multiple requests to verify stability
+        for ($i = 0; $i < 10; $i++) {
+            $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response1);
-
-        $request1 = $app->request;
-        $response1Component = $app->response;
-
-        $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/statuscode'));
-
-        self::assertSame(
-            201,
-            $response2->getStatusCode(),
-            "Expected HTTP '201' for route 'site/statuscode'.",
-        );
-
-        $request2 = $app->request;
-        $response2Component = $app->response;
-
-        self::assertNotSame(
-            $request1,
-            $request2,
-            'Request component should be a new instance on each request.',
-        );
-        self::assertNotSame(
-            $response1Component,
-            $response2Component,
-            'Response component should be a new instance on each request.',
-        );
+            $this->assertSiteIndexJsonResponse($response);
+            self::assertSame(
+                $app,
+                Yii::$app,
+                "Yii::\$app should remain consistent after request #{$i}.",
+            );
+        }
     }
 
     /**
@@ -181,6 +138,41 @@ final class ApplicationReinitializationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReinitializationPreservesAliases(): void
+    {
+        $app = ApplicationFactory::stateless();
+
+        // First request
+        $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse($response1);
+
+        $webAlias1 = Yii::getAlias('@web');
+        $webrootAlias1 = Yii::getAlias('@webroot');
+
+        // Second request
+        $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse($response2);
+
+        $webAlias2 = Yii::getAlias('@web');
+        $webrootAlias2 = Yii::getAlias('@webroot');
+
+        self::assertSame(
+            $webAlias1,
+            $webAlias2,
+            '@web alias should be preserved across reinitialization.',
+        );
+        self::assertSame(
+            $webrootAlias1,
+            $webrootAlias2,
+            '@webroot alias should be preserved across reinitialization.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReinitializationWithCustomComponentConfiguration(): void
     {
         $app = ApplicationFactory::stateless(
@@ -218,55 +210,62 @@ final class ApplicationReinitializationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReinitializationPreservesAliases(): void
+    public function testRequestScopedComponentsAreRecreatedOnEachRequest(): void
     {
         $app = ApplicationFactory::stateless();
 
-        // First request
         $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse($response1);
 
-        $webAlias1 = Yii::getAlias('@web');
-        $webrootAlias1 = Yii::getAlias('@webroot');
+        $request1 = $app->request;
+        $response1Component = $app->response;
 
-        // Second request
-        $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
-
-        $this->assertSiteIndexJsonResponse($response2);
-
-        $webAlias2 = Yii::getAlias('@web');
-        $webrootAlias2 = Yii::getAlias('@webroot');
+        $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/statuscode'));
 
         self::assertSame(
-            $webAlias1,
-            $webAlias2,
-            '@web alias should be preserved across reinitialization.',
+            201,
+            $response2->getStatusCode(),
+            "Expected HTTP '201' for route 'site/statuscode'.",
         );
-        self::assertSame(
-            $webrootAlias1,
-            $webrootAlias2,
-            '@webroot alias should be preserved across reinitialization.',
+
+        $request2 = $app->request;
+        $response2Component = $app->response;
+
+        self::assertNotSame(
+            $request1,
+            $request2,
+            'Request component should be a new instance on each request.',
+        );
+        self::assertNotSame(
+            $response1Component,
+            $response2Component,
+            'Response component should be a new instance on each request.',
         );
     }
-
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testHighVolumeRequestsWithReinitialization(): void
+    public function testYiiAppReferenceIsMaintainedAcrossRequests(): void
     {
         $app = ApplicationFactory::stateless();
 
-        // Simulate multiple requests to verify stability
-        for ($i = 0; $i < 10; $i++) {
-            $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+        $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-            $this->assertSiteIndexJsonResponse($response);
-            self::assertSame(
-                $app,
-                Yii::$app,
-                "Yii::\$app should remain consistent after request #{$i}.",
-            );
-        }
+        $this->assertSiteIndexJsonResponse($response1);
+        self::assertSame(
+            $app,
+            Yii::$app,
+            'Yii::$app should reference the same Application instance after first request.',
+        );
+
+        $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse($response2);
+        self::assertSame(
+            $app,
+            Yii::$app,
+            'Yii::$app should reference the same Application instance after subsequent requests.',
+        );
     }
 }
