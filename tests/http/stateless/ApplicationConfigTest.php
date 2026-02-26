@@ -51,8 +51,6 @@ final class ApplicationConfigTest extends TestCase
             ],
         );
 
-        $app->bootstrapContainer();
-
         self::assertInstanceOf(
             stdClass::class,
             Yii::$container->get('bootstrapContainerDefinition'),

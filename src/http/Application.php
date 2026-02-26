@@ -114,18 +114,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Applies `container` configuration to `Yii::$container` once per worker lifecycle.
-     */
-    public function bootstrapContainer(): void
-    {
-        $container = $this->config['container'] ?? [];
-
-        if (is_array($container) && $container !== []) {
-            $this->setContainer($container);
-        }
-    }
-
-    /**
      * Runs garbage collection and checks whether memory usage reached '90%' of the current limit.
      *
      * Usage example:
@@ -411,6 +399,18 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         }
 
         return $response->getPsr7Response();
+    }
+
+    /**
+     * Applies `container` configuration to `Yii::$container` once per worker lifecycle.
+     */
+    private function bootstrapContainer(): void
+    {
+        $container = $this->config['container'] ?? [];
+
+        if (is_array($container) && $container !== []) {
+            $this->setContainer($container);
+        }
     }
 
     /**
