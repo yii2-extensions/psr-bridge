@@ -119,12 +119,10 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 
     /**
      * Applies `container` configuration to `Yii::$container` once per worker lifecycle.
-     *
-     * @throws InvalidConfigException When `container` configuration is invalid.
      */
     public function bootstrapContainer(): void
     {
-        if ($this->shouldConfigureGlobalContainer === false) {
+        if (!$this->shouldConfigureGlobalContainer) {
             return;
         }
 
@@ -142,8 +140,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
-     * $app = new \yii2\extensions\psrbridge\http\Application($config);
-     *
      * if ($app->clean()) {
      *     // recycle worker
      * }
@@ -157,12 +153,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 
         $limit = $this->getMemoryLimit();
 
-        $bound = $limit * 0.9;
-
-        $usage = memory_get_usage(true);
-
         // @codeCoverageIgnoreStart
-        return $usage >= $bound;
+        return memory_get_usage(true) >= $limit * 0.9;
         // @codeCoverageIgnoreEnd
     }
 
@@ -171,7 +163,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
-     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $components = $app->coreComponents();
      * ```
      *
@@ -201,7 +192,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
-     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $limit = $app->getMemoryLimit();
      * ```
      *
@@ -223,7 +213,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
-     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $psrResponse = $app->handle($psrRequest);
      * ```
      *
@@ -251,16 +240,19 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 
             $this->state = self::STATE_END;
 
-            $psrResponse = $this->terminate($response);
+            return $this->terminate($response);
         } catch (Throwable $e) {
-            $psrResponse = $this->terminate($this->handleError($e));
+            return $this->terminate($this->handleError($e));
         }
-
-        return $psrResponse;
     }
 
     /**
      * Sets the application state to `STATE_INIT`.
+     *
+     * Usage example:
+     * ```php
+     * $app->init();
+     * ```
      */
     public function init(): void
     {
@@ -272,7 +264,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * Usage example:
      * ```php
-     * $app = new \yii2\extensions\psrbridge\http\Application($config);
      * $app->setMemoryLimit(134217728);
      * $app->setMemoryLimit(0); // recalculate from system setting
      * ```
@@ -297,7 +288,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function attachPsrRequest(ServerRequestInterface $request): void
     {
-        // inject the PSR-7 request into the Yii Request adapter
         $this->request->setPsr7Request($request);
     }
 
@@ -316,7 +306,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function openSessionFromRequestCookies(): void
     {
-        // reset the session to ensure a clean state
         // @codeCoverageIgnoreStart
         $this->session->close();
         // @codeCoverageIgnoreEnd
@@ -324,7 +313,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
         $this->session->setId($sessionId);
 
-        // start the session with the correct 'ID'
         // @codeCoverageIgnoreStart
         $this->session->open();
         // @codeCoverageIgnoreEnd
@@ -407,7 +395,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function syncCookieValidationState(): void
     {
-        // synchronize cookie validation settings between request and response
         $this->response->cookieValidationKey = $this->request->cookieValidationKey;
         $this->response->enableCookieValidation = $this->request->enableCookieValidation;
     }
@@ -444,11 +431,11 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     {
         $config = $this->config;
 
-        if ($this->shouldConfigureGlobalContainer === false) {
+        if (!$this->shouldConfigureGlobalContainer) {
             unset($config['container']);
         }
 
-        if (isset($config['components']) === false || is_array($config['components']) === false) {
+        if (!isset($config['components']) || !is_array($config['components'])) {
             return $config;
         }
 

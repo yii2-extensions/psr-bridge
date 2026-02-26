@@ -4,6 +4,7 @@
 
 - Bug #237: Preserve configured worker singletons and persistent components (`db`, `cache`) across requests while keeping request-scoped components reinitialized per request in `Application` (@terabytesoftw)
 - Bug #241: Simplify `Application` class by removing unused container property and related methods; add `bootstrapContainer()` method for container configuration and update documentation accordingly (@terabytesoftw)
+- Bug #242: Simplify conditionals and remove redundant comments in `Application` class for improved readability (@terabytesoftw)
 
 ## 0.2.1 February 21, 2026
 
