@@ -18,14 +18,19 @@ use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 /**
- * Unit tests for {@see Application} configuration and reinitialization behavior in stateless mode.
+ * Unit tests for the {@see Application} class configuration behavior in stateless mode.
  *
  * Test coverage.
- * - Verifies container definitions and singletons lifecycle across requests.
- * - Verifies invalid or missing `components` configuration handling.
- * - Verifies request-scoped component filtering in reinitialization config.
+ * - Ensures bootstrap container definitions are available before the first request.
+ * - Ensures container configuration is applied once per worker lifecycle.
+ * - Ensures global container singleton definitions persist across requests.
+ * - Verifies PSR factory interfaces resolve from configured container definitions.
+ * - Verifies reinitialization config keeps definitions for unloaded persistent components.
+ * - Verifies reinitialization config remains unchanged when components are missing.
+ * - Verifies reinitialization config remains unchanged when components are not an array.
+ * - Verifies wildcard persistence filtering removes loaded matching components and keeps non-matching components.
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
+ * @copyright Copyright (C) 2026 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
