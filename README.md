@@ -135,12 +135,10 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 > [!IMPORTANT]
 > If your runtime resolves services from `Yii::$container` before the first call to `handle()`, call
 > `$app->bootstrapContainer()` during runtime bootstrap.
-
 > [!WARNING]
 > Request-scoped components listed in `Application::$requestScopedComponents` (defaults to `request`, `response`,
 > `errorHandler`, `session`, `user`, `urlManager`) are reinitialized on each request.
 > Components not listed keep their loaded instances across requests in long-running workers.
-
 > [!TIP]
 > `Application::prepareForRequest()` calls `reinitializeApplication()` on each request, so values provided in the
 > application config array are reapplied for request-scoped components (`errorHandler`, `request`, `response`,
