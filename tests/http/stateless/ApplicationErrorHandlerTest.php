@@ -6,6 +6,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPForge\Support\LineEndingNormalizer;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
+use RuntimeException;
 use yii\base\{Event, Exception, InvalidConfigException};
 use yii\helpers\Json;
 use yii\log\{FileTarget, Logger};
@@ -676,6 +677,26 @@ final class ApplicationErrorHandlerTest extends TestCase
         }
 
         @\runkit_constant_redefine('YII_ENV_TEST', true);
+    }
+
+    public function testThrowRuntimeExceptionWhenReinitializationApplicationFails(): void
+    {
+        $config = [
+            'id' => 'test-app',
+            'basePath' => __DIR__,
+        ];
+
+        $app = new class ($config) extends Application {
+            protected function reinitializeApplication(): void
+            {
+                throw new RuntimeException('Bootstrap failed');
+            }
+        };
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Bootstrap failed');
+
+        $app->handle(HelperFactory::createRequest('GET', 'site/index'));
     }
 
     protected function tearDown(): void

@@ -73,7 +73,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Defines the application version string.
      */
-    public string $version = '0.1.0';
+    public string $version = '0.3.0';
 
     /**
      * Stores the event handler used for global lifecycle tracking.
@@ -95,11 +95,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     private array $registeredEvents = [];
 
     /**
-     * Tracks whether the global Yii container was configured for this worker process.
-     */
-    private bool $shouldConfigureGlobalContainer = true;
-
-    /**
      * Indicates whether to recalculate the memory limit.
      */
     private bool $shouldRecalculateMemoryLimit = false;
@@ -115,6 +110,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public function __construct(private readonly array $config = [])
     {
         $this->initEventTracking();
+        $this->bootstrapContainer();
     }
 
     /**
@@ -122,17 +118,11 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     public function bootstrapContainer(): void
     {
-        if (!$this->shouldConfigureGlobalContainer) {
-            return;
-        }
-
         $container = $this->config['container'] ?? [];
 
         if (is_array($container) && $container !== []) {
             $this->setContainer($container);
         }
-
-        $this->shouldConfigureGlobalContainer = false;
     }
 
     /**
@@ -218,6 +208,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * @param ServerRequestInterface $request Request to process.
      * @throws InvalidConfigException When application configuration is invalid.
+     * @throws Throwable When handling fails before the Yii error handler is initialized.
      * @return ResponseInterface Response produced by the Yii request lifecycle.
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
@@ -242,6 +233,10 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 
             return $this->terminate($response);
         } catch (Throwable $e) {
+            if (!$this->has('errorHandler')) {
+                throw $e;
+            }
+
             return $this->terminate($this->handleError($e));
         }
     }
@@ -365,8 +360,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function reinitializeApplication(): void
     {
-        $this->bootstrapContainer();
-
         // parent constructor is called because Application uses a custom initialization pattern
         // @phpstan-ignore-next-line
         parent::__construct($this->buildReinitializationConfig());
@@ -431,9 +424,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     {
         $config = $this->config;
 
-        if (!$this->shouldConfigureGlobalContainer) {
-            unset($config['container']);
-        }
+        unset($config['container']);
 
         if (!isset($config['components']) || !is_array($config['components'])) {
             return $config;
