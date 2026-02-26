@@ -17,7 +17,6 @@ use yii\web\{AssetManager, JsonParser, RequestParserInterface, Session, UrlManag
 use yii2\extensions\psrbridge\http\{Application, ErrorHandler, Request, Response};
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
-use function array_filter;
 use function dirname;
 use function file_exists;
 use function file_get_contents;
@@ -26,7 +25,6 @@ use function ini_set;
 use function json_encode;
 use function ob_get_level;
 use function ob_start;
-use function str_contains;
 use function unlink;
 
 /**
@@ -426,19 +424,15 @@ final class ApplicationCoreTest extends TestCase
     {
         $app = ApplicationFactory::stateless();
 
-        // first request - verify adapter caching behavior
         $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
         $this->assertSiteIndexJsonResponse(
             $response1,
         );
 
-        // access the Response component to test adapter behavior
         $bridgeResponse1 = $app->response;
 
-        // get PSR-7 Response twice to test caching
         $bridgeResponse1->getPsr7Response();
-
         $adapter1 = ReflectionHelper::inaccessibleProperty($bridgeResponse1, 'adapter');
 
         self::assertNotNull(
@@ -448,7 +442,6 @@ final class ApplicationCoreTest extends TestCase
 
         $bridgeResponse1->getPsr7Response();
 
-        // verify adapter is cached (same instance across multiple calls)
         self::assertSame(
             $adapter1,
             ReflectionHelper::inaccessibleProperty($bridgeResponse1, 'adapter'),
@@ -456,7 +449,6 @@ final class ApplicationCoreTest extends TestCase
             . 'confirming adapter caching behavior.',
         );
 
-        // second request with different route - verify stateless behavior
         $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/statuscode'));
 
         self::assertSame(
@@ -470,10 +462,8 @@ final class ApplicationCoreTest extends TestCase
             "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/statuscode'.",
         );
 
-        // verify that the Response component is fresh for each request (stateless)
         $bridgeResponse2 = $app->response;
 
-        // get PSR-7 Response twice to test caching and reset behavior
         $bridgeResponse2->getPsr7Response();
 
         $adapter2 = ReflectionHelper::inaccessibleProperty($bridgeResponse2, 'adapter');
@@ -493,7 +483,6 @@ final class ApplicationCoreTest extends TestCase
             'Each request should get its own adapter instance, confirming stateless behavior.',
         );
 
-        // third request - verify adapter isolation between requests
         $response3 = $app->handle(HelperFactory::createRequest('GET', 'site/add-cookies-to-response'));
 
         self::assertSame(
@@ -530,17 +519,6 @@ final class ApplicationCoreTest extends TestCase
 
         $cookieHeaders = $response3->getHeader('Set-Cookie');
 
-        // verify response headers are preserved correctly across adapter operations
-        $hasCookieHeader = array_filter(
-            $cookieHeaders,
-            static fn(string $h): bool => str_contains($h, 'test=test') || str_contains($h, 'test2=test2'),
-        ) !== [];
-
-        self::assertTrue(
-            $hasCookieHeader,
-            "PSR-7 Response should contain 'test=test' or 'test2=test2' in 'Set-Cookie' headers, confirming correct "
-            . 'adapter behavior.',
-        );
         self::assertContains(
             'test=test; Path=/; HttpOnly; SameSite=Lax',
             $cookieHeaders,
@@ -644,8 +622,6 @@ final class ApplicationCoreTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->closeApplication();
-
         if (file_exists($this->logFile)) {
             unlink($this->logFile);
         }
