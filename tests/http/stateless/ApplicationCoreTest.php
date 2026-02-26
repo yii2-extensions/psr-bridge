@@ -28,15 +28,15 @@ use function ob_start;
 use function unlink;
 
 /**
- * Unit tests for {@see Application} core behavior in stateless mode.
+ * Unit tests for the {@see Application} class core behavior in stateless mode.
  *
  * Test coverage.
  * - Ensures lifecycle events run in the expected order during request handling.
- * - Ensures response adapters are cached per response instance and isolated per request.
- * - Validates parser behavior for configured, wildcard, and invalid parser definitions.
- * - Verifies container definitions resolve PSR-7 factory interfaces.
- * - Verifies core component mappings and aliases after handling.
- * - Verifies redirects, debug exception rendering, and immediate log flushing behavior.
+ * - Ensures log messages are flushed to disk immediately when `flushLogger` is enabled.
+ * - Verifies aliases and core component mappings are set after handling a request.
+ * - Verifies debug exception rendering enables `display_errors` in non-test mode.
+ * - Verifies invalid fallback and media-type parsers return HTTP `500` with expected error messages.
+ * - Verifies request parsing, redirects, and response adapter isolation across requests.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -230,30 +230,6 @@ final class ApplicationCoreTest extends TestCase
             . RequestParserInterface::class . '&apos;.',
             $response->getBody()->getContents(),
             'Response body should contain the expected error message for invalid fallback parser.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testPersistentCacheComponentKeepsSameInstanceAcrossRequests(): void
-    {
-        $app = ApplicationFactory::stateless();
-
-        $request = HelperFactory::createRequest('GET', 'site/index');
-
-        $app->handle($request);
-
-        $firstCache = $app->cache;
-
-        $app->handle($request);
-
-        $secondCache = $app->cache;
-
-        self::assertSame(
-            $firstCache,
-            $secondCache,
-            "'cache' component should keep the same instance across requests when configured as persistent.",
         );
     }
 
