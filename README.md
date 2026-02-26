@@ -51,11 +51,11 @@ composer require yii2-extensions/psr-bridge:^0.2
 
 ### Quick start
 
-#### Worker mode (FrankenPHP)
-
 > [!IMPORTANT]
 > In worker runtimes, call `$app->bootstrapContainer()` before entering the worker loop so
 > services from `Yii::$container` are available from the first request.
+
+#### Worker mode (FrankenPHP)
 
 ```php
 <?php
@@ -91,10 +91,6 @@ $runner->run();
 ```
 
 #### Worker mode (RoadRunner)
-
-> [!IMPORTANT]
-> In worker runtimes, call `$app->bootstrapContainer()` before entering the worker loop so
-> services from `Yii::$container` are available from the first request.
 
 ```php
 <?php
