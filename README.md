@@ -114,7 +114,6 @@ $runner->run();
 > If your runtime resolves services from `Yii::$container` before the first call to `handle()`, call
 > `$app->bootstrapContainer()` during runtime bootstrap.
 
-
 #### PSR-7 Conversion
 
 ```php
