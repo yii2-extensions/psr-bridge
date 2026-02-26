@@ -190,8 +190,9 @@ $app = new Application($config);
 
 ### Container bootstrap in worker mode
 
-Use `bootstrapContainer()` when you need to initialize `Yii::$container` before processing the first request in a
-long-running worker.
+In worker runtimes, call `bootstrapContainer()` before processing requests.
+This initializes `Yii::$container` so container-based services are available
+from the first request.
 
 ```php
 <?php
@@ -202,18 +203,18 @@ use yii2\extensions\psrbridge\http\Application;
 
 $app = new Application($config);
 
-// Optional warm-up before entering the worker loop
+// Required warm-up before entering the worker loop
 $app->bootstrapContainer();
 ```
 
 - `bootstrapContainer()` applies the `container` section from application config to `Yii::$container`.
 - The method is idempotent for the worker lifecycle and executes once.
-- Manual invocation is optional; request handling also performs this step automatically.
+- Call it during worker bootstrap, before entering the request loop.
 
 ### Worker lifecycle flags
 
-`yii2\extensions\psrbridge\http\Application` exposes runtime flags to control per-request state isolation in
-long-running workers.
+`yii2\extensions\psrbridge\http\Application` exposes runtime flags for
+per-request state isolation in long-running workers.
 
 ```php
 <?php
@@ -233,19 +234,24 @@ $app->resetUploadedFiles = true;
 $app->persistentComponents = ['db', 'cache'];
 ```
 
-- `useSession`: keep `true` unless the application is strictly stateless. Setting it to `false` skips bridge session
-  open/finalize hooks; custom code may still open sessions.
-- `syncCookieValidation`: keep `true` in most cases. Setting it to `false` disables request-to-response synchronization
-  of cookie validation settings and can break login/identity flows.
-- `resetUploadedFiles`: keep `true` in long-running workers. Setting it to `false` is advanced and can leak static
-  uploaded-file state between requests.
-- `persistentComponents`: list of components to keep alive between requests (default: `['db', 'cache']`). Only include
-  components proven to be request-safe.
-- Never include request-scoped components in `persistentComponents` (`request`, `response`, `errorHandler`, `session`,
-  `user`).
+- `useSession`: keep `true` unless the app is strictly stateless.
+    Setting `false` skips bridge session open/finalize hooks; custom code may
+    still open sessions.
+- `syncCookieValidation`: keep `true` in most cases.
+    Setting `false` disables request-to-response synchronization of cookie
+    validation settings and can break login or identity flows.
+- `resetUploadedFiles`: keep `true` in long-running workers.
+    Setting `false` is advanced and can leak static uploaded-file state between
+    requests.
+- `persistentComponents`: components to keep alive between requests.
+    Default is `['db', 'cache']`. Include only components proven to be
+    request-safe.
+- Never include request-scoped components in `persistentComponents`:
+    `request`, `response`, `errorHandler`, `session`, `user`.
 
-Do not disable request cookie or uploaded-file access globally. `Request::getCookies()` and `Request::getUploadedFiles()`
-are input adapters and should remain available in PSR-7 mode.
+Do not disable request cookie or uploaded-file access globally.
+`Request::getCookies()` and `Request::getUploadedFiles()` are input adapters
+and should remain available in PSR-7 mode.
 
 ## Next steps
 

@@ -149,6 +149,72 @@ final class ApplicationConfigTest extends TestCase
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if inaccessible method invocation fails.
+     */
+    public function testBuildReinitializationConfigSupportsWildcardPersistentComponents(): void
+    {
+        $app = ApplicationFactory::stateless(
+            [
+                'persistentComponents' => ['redis*'],
+                'components' => [
+                    'redis1' => [
+                        'class' => \yii\base\Component::class,
+                    ],
+                    'redis2' => [
+                        'class' => \yii\base\Component::class,
+                    ],
+                    'redis3' => [
+                        'class' => \yii\base\Component::class,
+                    ],
+                    'mailer' => [
+                        'class' => \yii\base\Component::class,
+                    ],
+                ],
+            ],
+        );
+
+        $request = HelperFactory::createRequest('GET', 'site/index');
+
+        $app->handle($request);
+
+        // Load persistent components to simulate real runtime usage.
+        $app->get('redis1');
+        $app->get('redis2');
+        $app->get('redis3');
+        $app->get('mailer');
+
+        /** @phpstan-var array<string, mixed> $nextConfig */
+        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
+        $components = $nextConfig['components'] ?? null;
+
+        self::assertIsArray(
+            $components,
+            "'buildReinitializationConfig()' should return a 'components' array in reinitialization config.",
+        );
+        self::assertArrayNotHasKey(
+            'redis1',
+            $components,
+            "'buildReinitializationConfig()' should remove loaded persistent component matching wildcard 'redis*'.",
+        );
+        self::assertArrayNotHasKey(
+            'redis2',
+            $components,
+            "'buildReinitializationConfig()' should remove loaded persistent component matching wildcard 'redis*'.",
+        );
+        self::assertArrayNotHasKey(
+            'redis3',
+            $components,
+            "'buildReinitializationConfig()' should remove loaded persistent component matching wildcard 'redis*'.",
+        );
+        self::assertArrayHasKey(
+            'mailer',
+            $components,
+            "'buildReinitializationConfig()' should keep non-matching components in the reinitialization config.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     public function testContainerConfigurationIsAppliedOnlyOncePerWorker(): void
     {

@@ -13,6 +13,7 @@ use yii\web\IdentityInterface;
 
 use function array_merge;
 use function array_reverse;
+use function fnmatch;
 use function gc_collect_cycles;
 use function ini_get;
 use function is_array;
@@ -452,7 +453,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         }
 
         foreach ($config['components'] as $id => $componentConfig) {
-            if (in_array($id, $this->persistentComponents, true) && $this->has($id, true)) {
+            if (is_string($id) && $this->isPersistentComponent($id) && $this->has($id, true)) {
                 unset($config['components'][$id]);
             }
         }
@@ -515,6 +516,26 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         $this->eventHandler = function (Event $event): void {
             $this->registeredEvents[] = $event;
         };
+    }
+
+    /**
+     * Checks whether a component ID matches any persistent component pattern.
+     *
+     * Supports exact matches and shell wildcard patterns (e.g. `redis*`, `cache?`).
+     *
+     * @param string $id Component ID to check.
+     *
+     * @return bool Returns `true` when the ID matches a persistent component entry.
+     */
+    private function isPersistentComponent(string $id): bool
+    {
+        foreach ($this->persistentComponents as $pattern) {
+            if (fnmatch($pattern, $id, FNM_NOESCAPE)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
