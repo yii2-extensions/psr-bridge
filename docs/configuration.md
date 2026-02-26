@@ -188,29 +188,6 @@ $config = [
 $app = new Application($config);
 ```
 
-### Container bootstrap in worker mode
-
-In worker runtimes, call `bootstrapContainer()` before processing requests.
-This initializes `Yii::$container` so container-based services are available
-from the first request.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\Application;
-
-$app = new Application($config);
-
-// Required warm-up before entering the worker loop
-$app->bootstrapContainer();
-```
-
-- `bootstrapContainer()` applies the `container` section from application config to `Yii::$container`.
-- The method is idempotent for the worker lifecycle and executes once.
-- Call it during worker bootstrap, before entering the request loop.
-
 ### Worker lifecycle flags
 
 `yii2\extensions\psrbridge\http\Application` exposes runtime flags for

@@ -7,6 +7,7 @@
 - Bug #242: Simplify conditionals and remove redundant comments in `Application` class for improved readability (@terabytesoftw)
 - Bug #243: Remove redundant comments in `ApplicationConfigTest` and `ApplicationCoreTest` for improved clarity and maintainability (@terabytesoftw)
 - Bug #244: Update unit tests for `Application` class to enhance clarity and coverage; add `ApplicationReinitializationTest` for reinitialization behavior validation and update related documentation (@terabytesoftw)
+- Bug #245: Bootstrap DI container during `Application` construction, remove per-request container bootstrap, and avoid masking initialization failures behind missing `errorHandler` secondary exceptions (@terabytesoftw)
 
 ## 0.2.1 February 21, 2026
 
