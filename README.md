@@ -79,7 +79,8 @@ require_once dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php';
 
 $config = require_once dirname(__DIR__) . '/config/web/app.php';
 
-$runner = new FrankenPHP(new Application($config));
+$app = new Application($config);
+$runner = new FrankenPHP($app);
 
 $runner->run();
 ```
@@ -103,7 +104,8 @@ require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
 
 $config = require dirname(__DIR__) . '/config/web/app.php';
 
-$runner = new RoadRunner(new Application($config));
+$app = new Application($config);
+$runner = new RoadRunner($app);
 
 $runner->run();
 ```
@@ -133,14 +135,13 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 - `resetUploadedFiles=true`
 
 > [!WARNING]
-> `Application::prepareForRequest()` calls `reinitializeApplication()` on each request, so values provided in the
-> application config array are reapplied for request-scoped components (`request`, `response`, `errorHandler`,
-> `session`, `user`).
+> Keep request-scoped components (`request`, `response`, `errorHandler`, `session`, `user`) out of
+> `Application::$persistentComponents`.
 >
-> Persistent components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep their
-> loaded instances across requests in long-running workers.
->
-> Configure lifecycle flags in the config array when possible.
+> Components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep loaded
+> instances across requests.
+
+Define lifecycle flags before `run()` (via config or property setters).
 
 ```php
 $config = [
@@ -173,7 +174,7 @@ For detailed configuration options and advanced usage.
 
 [![PHP](https://img.shields.io/badge/%3E%3D8.1-777BB4.svg?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/releases/8.1/en.php)
 [![Yii 2.0.x](https://img.shields.io/badge/2.0.53-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/tree/2.0.53)
-[![Yii 22.0.x](https://img.shields.io/badge/22.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/tree/22.0)
+[![Yii 2.0.x](https://img.shields.io/badge/2.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/tree/2.0)
 [![Latest Stable Version](https://img.shields.io/packagist/v/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Stable)](https://packagist.org/packages/yii2-extensions/psr-bridge)
 [![Total Downloads](https://img.shields.io/packagist/dt/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=composer&logoColor=white&label=Downloads)](https://packagist.org/packages/yii2-extensions/psr-bridge)
 

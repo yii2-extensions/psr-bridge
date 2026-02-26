@@ -8,13 +8,13 @@ use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use yii\base\{Event, InvalidConfigException};
-use yii\di\{Container, NotInstantiableException};
+use yii\di\NotInstantiableException;
 use yii\web\IdentityInterface;
 
 use function array_merge;
 use function array_reverse;
+use function fnmatch;
 use function gc_collect_cycles;
-use function in_array;
 use function ini_get;
 use function is_array;
 use function memory_get_usage;
@@ -76,11 +76,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public string $version = '0.1.0';
 
     /**
-     * Caches the dependency injection container instance.
-     */
-    private Container|null $container = null;
-
-    /**
      * Stores the event handler used for global lifecycle tracking.
      *
      * @phpstan-var callable(Event $event): void
@@ -117,9 +112,29 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * @phpstan-param mixed[] $config
      * @phpstan-ignore constructor.missingParentCall
      */
-    public function __construct(private array $config = [])
+    public function __construct(private readonly array $config = [])
     {
         $this->initEventTracking();
+    }
+
+    /**
+     * Applies `container` configuration to `Yii::$container` once per worker lifecycle.
+     *
+     * @throws InvalidConfigException When `container` configuration is invalid.
+     */
+    public function bootstrapContainer(): void
+    {
+        if ($this->shouldConfigureGlobalContainer === false) {
+            return;
+        }
+
+        $container = $this->config['container'] ?? [];
+
+        if (is_array($container) && $container !== []) {
+            $this->setContainer($container);
+        }
+
+        $this->shouldConfigureGlobalContainer = false;
     }
 
     /**
@@ -149,30 +164,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         // @codeCoverageIgnoreStart
         return $usage >= $bound;
         // @codeCoverageIgnoreEnd
-    }
-
-    /**
-     * Returns the configured Yii dependency injection container.
-     *
-     * Usage example:
-     * ```php
-     * $app = new \yii2\extensions\psrbridge\http\Application($config);
-     * $container = $app->container();
-     * $service = $container->get(MyService::class);
-     * ```
-     *
-     * @return Container Container configured from `container.definitions` and `container.singletons`.
-     */
-    public function container(): Container
-    {
-        $config = $this->config['container'] ?? [];
-
-        return $this->container ??= new Container(
-            [
-                'definitions' => is_array($config) && isset($config['definitions']) ? $config['definitions'] : [],
-                'singletons' => is_array($config) && isset($config['singletons']) ? $config['singletons'] : [],
-            ],
-        );
     }
 
     /**
@@ -386,13 +377,11 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function reinitializeApplication(): void
     {
-        $config = $this->buildReinitializationConfig();
+        $this->bootstrapContainer();
 
         // parent constructor is called because Application uses a custom initialization pattern
         // @phpstan-ignore-next-line
-        parent::__construct($config);
-
-        $this->shouldConfigureGlobalContainer = false;
+        parent::__construct($this->buildReinitializationConfig());
     }
 
     /**
@@ -445,8 +434,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Builds the configuration used to reinitialize the Yii application for a new request.
      *
-     * Keeps configured persistent component instances alive between requests and avoids reconfiguring
-     * the global Yii container after the first worker initialization.
+     * Reconfigures only request-scoped components after the first request and avoids reconfiguring
+     * the global Yii container after worker initialization.
      *
      * @return array Reinitialization configuration for {@see parent::__construct()}.
      * @phpstan-return array<mixed, mixed>
@@ -463,10 +452,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return $config;
         }
 
-        $components = $this->getComponents(false);
-
-        foreach ($components as $id => $component) {
-            if ($component !== null && in_array($id, $this->persistentComponents, true)) {
+        foreach ($config['components'] as $id => $_) {
+            if (is_string($id) && $this->isPersistentComponent($id) && $this->has($id, true)) {
                 unset($config['components'][$id]);
             }
         }
@@ -529,6 +516,26 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         $this->eventHandler = function (Event $event): void {
             $this->registeredEvents[] = $event;
         };
+    }
+
+    /**
+     * Checks whether a component ID matches any persistent component pattern.
+     *
+     * Supports exact matches and shell wildcard patterns (e.g. `redis*`, `cache?`).
+     *
+     * @param string $id Component ID to check.
+     *
+     * @return bool Returns `true` when the ID matches a persistent component entry.
+     */
+    private function isPersistentComponent(string $id): bool
+    {
+        foreach ($this->persistentComponents as $pattern) {
+            if (fnmatch($pattern, $id, FNM_NOESCAPE)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

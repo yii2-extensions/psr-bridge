@@ -1,13 +1,14 @@
 # ChangeLog
 
-## 0.2.2 Under development
+## 0.3.0 Under development
 
-- Bug #236: Preserve configured worker singletons and persistent components (`db`, `cache`) across requests while keeping request-scoped components reinitialized per request in `Application` (@terabytesoftw)
+- Bug #237: Preserve configured worker singletons and persistent components (`db`, `cache`) across requests while keeping request-scoped components reinitialized per request in `Application` (@terabytesoftw)
+- Bug #241: Simplify `Application` class by removing unused container property and related methods; add `bootstrapContainer()` method for container configuration and update documentation accordingly (@terabytesoftw)
 
 ## 0.2.1 February 21, 2026
 
 - Bug #233: Update installation command to require version `0.2` of psr-bridge in `README.md` and `docs/installation.md` (@terabytesoftw)
-- Bug #234: Remove automatic `statelessAppStartTime` header injection from `Request::setPsr7Request()` so runtime-specific workers can set it explicitly (@terabytesoftw)
+- Bug #235: Remove automatic `statelessAppStartTime` header injection from `Request::setPsr7Request()` so runtime-specific workers can set it explicitly (@terabytesoftw)
 
 ## 0.2.0 February 20, 2026
 

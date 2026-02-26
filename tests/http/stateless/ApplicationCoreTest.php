@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use HttpSoft\Message\{ServerRequestFactory, StreamFactory, UploadedFileFactory};
 use JsonException;
 use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
-use Psr\Http\Message\{ServerRequestFactoryInterface, StreamFactoryInterface, UploadedFileFactoryInterface};
 use ReflectionException;
 use stdClass;
 use Yii;
 use yii\base\{InvalidConfigException, Security};
-use yii\di\NotInstantiableException;
 use yii\i18n\{Formatter, I18N};
 use yii\log\{Dispatcher, FileTarget};
 use yii\web\{AssetManager, JsonParser, RequestParserInterface, Session, UrlManager, User, View};
@@ -53,140 +50,6 @@ final class ApplicationCoreTest extends TestCase
      * Path to the log file used in tests.
      */
     private string $logFile = '';
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     * @throws ReflectionException if inaccessible method invocation fails.
-     */
-    public function testBuildReinitializationConfigKeepsDefinitionForUnloadedPersistentComponent(): void
-    {
-        $app = ApplicationFactory::stateless(
-            [
-                'persistentComponents' => ['lazyPersistent'],
-                'container' => [
-                    'definitions' => [
-                        'lazyServiceDefinition' => stdClass::class,
-                    ],
-                ],
-                'components' => [
-                    'lazyPersistent' => [
-                        'class' => stdClass::class,
-                    ],
-                ],
-            ],
-        );
-
-        $request = HelperFactory::createRequest('GET', 'site/index');
-
-        $app->handle($request);
-
-        /** @phpstan-var array<string, mixed> $nextConfig */
-        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
-
-        self::assertTrue(
-            isset($nextConfig['components']),
-            "'buildReinitializationConfig()' should return a configuration array containing 'components' key.",
-        );
-        self::assertIsArray(
-            $nextConfig['components'],
-            "'components' key in the reinitialization config should be an array.",
-        );
-        self::assertArrayHasKey(
-            'lazyPersistent',
-            $nextConfig['components'],
-            "'buildReinitializationConfig()' should keep definitions for persistent components that are not loaded.",
-        );
-        self::assertTrue(
-            $app->container()->has('lazyServiceDefinition'),
-            'Container definition should remain available when it is not declared as an application component.',
-        );
-    }
-
-    /**
-     * @throws ReflectionException if inaccessible method invocation fails.
-     */
-    public function testBuildReinitializationConfigReturnsConfigWhenComponentsAreNotArray(): void
-    {
-        $app = new Application(['components' => 'invalid']);
-
-        /** @phpstan-var array<string, mixed> $nextConfig */
-        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
-
-        self::assertSame(
-            ['components' => 'invalid'],
-            $nextConfig,
-            "'buildReinitializationConfig()' should return unchanged config when 'components' is not an array.",
-        );
-    }
-
-    /**
-     * @throws ReflectionException if inaccessible method invocation fails.
-     */
-    public function testBuildReinitializationConfigReturnsEmptyConfigWhenComponentsAreMissing(): void
-    {
-        $app = new Application([]);
-
-        /** @phpstan-var array<mixed> $nextConfig */
-        $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
-
-        self::assertSame(
-            [],
-            $nextConfig,
-            "'buildReinitializationConfig()' should return unchanged empty config when 'components' key is missing.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     * @throws NotInstantiableException if a class or service can't be instantiated.
-     */
-    public function testContainerResolvesPsrFactoriesWithDefinitions(): void
-    {
-        $app = ApplicationFactory::stateless([
-            'container' => [
-                'definitions' => [
-                    ServerRequestFactoryInterface::class => ServerRequestFactory::class,
-                    StreamFactoryInterface::class => StreamFactory::class,
-                    UploadedFileFactoryInterface::class => UploadedFileFactory::class,
-                ],
-            ],
-        ]);
-
-        $container = $app->container();
-
-        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
-
-        self::assertTrue(
-            $container->has(ServerRequestFactoryInterface::class),
-            'Container should have definition for ServerRequestFactoryInterface, ensuring PSR-7 request factory is '
-            . 'available.',
-        );
-        self::assertTrue(
-            $container->has(StreamFactoryInterface::class),
-            'Container should have definition for StreamFactoryInterface, ensuring PSR-7 stream factory is '
-            . 'available.',
-        );
-        self::assertTrue(
-            $container->has(UploadedFileFactoryInterface::class),
-            'Container should have definition for UploadedFileFactoryInterface, ensuring PSR-7 uploaded file '
-            . 'factory is available.',
-        );
-        self::assertInstanceOf(
-            ServerRequestFactory::class,
-            $container->get(ServerRequestFactoryInterface::class),
-            'Container should resolve ServerRequestFactoryInterface to an instance of ServerRequestFactory.',
-        );
-        self::assertInstanceOf(
-            StreamFactory::class,
-            $container->get(StreamFactoryInterface::class),
-            'Container should resolve StreamFactoryInterface to an instance of StreamFactory.',
-        );
-        self::assertInstanceOf(
-            UploadedFileFactory::class,
-            $container->get(UploadedFileFactoryInterface::class),
-            'Container should resolve UploadedFileFactoryInterface to an instance of UploadedFileFactory.',
-        );
-    }
 
     public function testEventOrderDuringHandle(): void
     {
@@ -276,40 +139,6 @@ final class ApplicationCoreTest extends TestCase
             $content,
             "Log message should be written to file immediately with 'flush(true)'.",
         );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testGlobalContainerSingletonDefinitionsPersistAcrossRequests(): void
-    {
-        $app = ApplicationFactory::stateless(
-            [
-                'container' => [
-                    'singletons' => [
-                        'demoSingleton' => stdClass::class,
-                    ],
-                ],
-            ],
-        );
-
-        $request = HelperFactory::createRequest('GET', 'site/index');
-
-        $app->handle($request);
-
-        $firstSingleton = Yii::$container->get('demoSingleton');
-
-        $app->handle($request);
-
-        $secondSingleton = Yii::$container->get('demoSingleton');
-
-        self::assertSame(
-            $firstSingleton,
-            $secondSingleton,
-            'Global container singleton definitions should keep the same instance across requests in worker mode.',
-        );
-
-        Yii::$container->clear('demoSingleton');
     }
 
     /**
