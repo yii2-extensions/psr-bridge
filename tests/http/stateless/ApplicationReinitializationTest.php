@@ -263,6 +263,7 @@ final class ApplicationReinitializationTest extends TestCase
             'Response component should be a new instance on each request.',
         );
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
