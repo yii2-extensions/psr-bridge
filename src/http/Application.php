@@ -234,6 +234,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             return $this->terminate($response);
         } catch (Throwable $e) {
             if (!$this->has('errorHandler')) {
+                $this->cleanupEvents();
+
                 throw $e;
             }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPForge\Support\LineEndingNormalizer;
+use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, RequiresPhpExtension};
 use RuntimeException;
 use yii\base\{Event, Exception, InvalidConfigException};
@@ -693,10 +694,24 @@ final class ApplicationErrorHandlerTest extends TestCase
             }
         };
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Bootstrap failed');
+        try {
+            $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+            self::fail('Expected RuntimeException to be rethrown when reinitialization fails.');
+        } catch (RuntimeException $exception) {
+            self::assertSame('Bootstrap failed', $exception->getMessage());
+        }
+
+        self::assertSame(
+            [],
+            ReflectionHelper::inaccessibleProperty(Event::class, '_events'),
+            'Global class-level event handlers should be cleaned when initialization fails before error handler setup.',
+        );
+        self::assertSame(
+            [],
+            ReflectionHelper::inaccessibleProperty(Event::class, '_eventWildcards'),
+            'Global wildcard event handlers should be cleaned when initialization fails before error handler setup.',
+        );
     }
 
     protected function tearDown(): void
