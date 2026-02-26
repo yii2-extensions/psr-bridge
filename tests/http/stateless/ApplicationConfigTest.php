@@ -12,7 +12,7 @@ use ReflectionException;
 use RuntimeException;
 use stdClass;
 use Yii;
-use yii\base\InvalidConfigException;
+use yii\base\{Component, InvalidConfigException};
 use yii\di\NotInstantiableException;
 use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
@@ -53,8 +53,6 @@ final class ApplicationConfigTest extends TestCase
             Yii::$container->get('bootstrapContainerDefinition'),
             'Container definitions should be resolvable after calling bootstrapContainer() before any request.',
         );
-
-        Yii::$container->clear('bootstrapContainerDefinition');
     }
 
     /**
@@ -86,12 +84,13 @@ final class ApplicationConfigTest extends TestCase
         /** @phpstan-var array<string, mixed> $nextConfig */
         $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
 
-        self::assertTrue(
-            isset($nextConfig['components']),
+        self::assertArrayHasKey(
+            'components',
+            $nextConfig,
             "'buildReinitializationConfig()' should return a configuration array containing 'components' key.",
         );
         self::assertIsArray(
-            $nextConfig['components'],
+            $nextConfig['components'] ?? null,
             "'components' key in the reinitialization config should be an array.",
         );
         self::assertArrayHasKey(
@@ -158,16 +157,16 @@ final class ApplicationConfigTest extends TestCase
                 'persistentComponents' => ['redis*'],
                 'components' => [
                     'redis1' => [
-                        'class' => \yii\base\Component::class,
+                        'class' => Component::class,
                     ],
                     'redis2' => [
-                        'class' => \yii\base\Component::class,
+                        'class' => Component::class,
                     ],
                     'redis3' => [
-                        'class' => \yii\base\Component::class,
+                        'class' => Component::class,
                     ],
                     'mailer' => [
-                        'class' => \yii\base\Component::class,
+                        'class' => Component::class,
                     ],
                 ],
             ],
@@ -247,8 +246,6 @@ final class ApplicationConfigTest extends TestCase
             Yii::$container->get('phase2Definition'),
             'Container definitions should not be reapplied on subsequent requests of the same worker.',
         );
-
-        Yii::$container->clear('phase2Definition');
     }
 
     /**
@@ -267,22 +264,10 @@ final class ApplicationConfigTest extends TestCase
             ],
         ]);
 
-        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
-        self::assertTrue(
-            Yii::$container->has(ServerRequestFactoryInterface::class),
-            'Container should have definition for ServerRequestFactoryInterface, ensuring PSR-7 request factory is '
-            . 'available.',
-        );
-        self::assertTrue(
-            Yii::$container->has(StreamFactoryInterface::class),
-            'Container should have definition for StreamFactoryInterface, ensuring PSR-7 stream factory is '
-            . 'available.',
-        );
-        self::assertTrue(
-            Yii::$container->has(UploadedFileFactoryInterface::class),
-            'Container should have definition for UploadedFileFactoryInterface, ensuring PSR-7 uploaded file '
-            . 'factory is available.',
+        $this->assertSiteIndexJsonResponse(
+            $response,
         );
         self::assertInstanceOf(
             ServerRequestFactory::class,
@@ -299,10 +284,6 @@ final class ApplicationConfigTest extends TestCase
             Yii::$container->get(UploadedFileFactoryInterface::class),
             'Container should resolve UploadedFileFactoryInterface to an instance of UploadedFileFactory.',
         );
-
-        Yii::$container->clear(ServerRequestFactoryInterface::class);
-        Yii::$container->clear(StreamFactoryInterface::class);
-        Yii::$container->clear(UploadedFileFactoryInterface::class);
     }
 
     /**
@@ -335,7 +316,5 @@ final class ApplicationConfigTest extends TestCase
             $secondSingleton,
             'Global container singleton definitions should keep the same instance across requests in worker mode.',
         );
-
-        Yii::$container->clear('demoSingleton');
     }
 }
