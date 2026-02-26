@@ -58,7 +58,7 @@ final class ApplicationReinitializationTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testHighVolumeRequestsWithReinitialization(): void
+    public function testMultipleRequestsWithReinitialization(): void
     {
         $app = ApplicationFactory::stateless();
 
@@ -66,7 +66,9 @@ final class ApplicationReinitializationTest extends TestCase
         for ($i = 0; $i < 10; $i++) {
             $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-            $this->assertSiteIndexJsonResponse($response);
+            $this->assertSiteIndexJsonResponse(
+                $response,
+            );
             self::assertSame(
                 $app,
                 Yii::$app,
@@ -84,14 +86,18 @@ final class ApplicationReinitializationTest extends TestCase
 
         $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response1);
+        $this->assertSiteIndexJsonResponse(
+            $response1,
+        );
 
         $cache1 = $app->cache;
 
         // Second request
         $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response2);
+        $this->assertSiteIndexJsonResponse(
+            $response2,
+        );
 
         $cache2 = $app->cache;
 
@@ -118,7 +124,9 @@ final class ApplicationReinitializationTest extends TestCase
         // First request - success
         $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response1);
+        $this->assertSiteIndexJsonResponse(
+            $response1,
+        );
 
         // Second request - error
         $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/trigger-exception'));
@@ -132,7 +140,9 @@ final class ApplicationReinitializationTest extends TestCase
         // Third request - success again (verify recovery)
         $response3 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response3);
+        $this->assertSiteIndexJsonResponse(
+            $response3,
+        );
     }
 
     /**
@@ -145,7 +155,9 @@ final class ApplicationReinitializationTest extends TestCase
         // First request
         $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response1);
+        $this->assertSiteIndexJsonResponse(
+            $response1,
+        );
 
         $webAlias1 = Yii::getAlias('@web');
         $webrootAlias1 = Yii::getAlias('@webroot');
@@ -153,7 +165,9 @@ final class ApplicationReinitializationTest extends TestCase
         // Second request
         $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response2);
+        $this->assertSiteIndexJsonResponse(
+            $response2,
+        );
 
         $webAlias2 = Yii::getAlias('@web');
         $webrootAlias2 = Yii::getAlias('@webroot');
@@ -189,14 +203,18 @@ final class ApplicationReinitializationTest extends TestCase
         // First request
         $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response1);
+        $this->assertSiteIndexJsonResponse(
+            $response1,
+        );
 
         $customComponent1 = $app->get('customPersistent');
 
         // Second request
         $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response2);
+        $this->assertSiteIndexJsonResponse(
+            $response2,
+        );
 
         $customComponent2 = $app->get('customPersistent');
 
@@ -216,7 +234,9 @@ final class ApplicationReinitializationTest extends TestCase
 
         $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response1);
+        $this->assertSiteIndexJsonResponse(
+            $response1,
+        );
 
         $request1 = $app->request;
         $response1Component = $app->response;
@@ -252,7 +272,9 @@ final class ApplicationReinitializationTest extends TestCase
 
         $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response1);
+        $this->assertSiteIndexJsonResponse(
+            $response1,
+        );
         self::assertSame(
             $app,
             Yii::$app,
@@ -261,7 +283,9 @@ final class ApplicationReinitializationTest extends TestCase
 
         $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        $this->assertSiteIndexJsonResponse($response2);
+        $this->assertSiteIndexJsonResponse(
+            $response2,
+        );
         self::assertSame(
             $app,
             Yii::$app,
