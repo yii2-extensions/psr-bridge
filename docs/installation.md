@@ -27,7 +27,7 @@ Install exactly one of the following PSR-7/PSR-17 HTTP message implementations.
 Install the extension.
 
 ```bash
-composer require yii2-extensions/psr-bridge:^0.2
+composer require yii2-extensions/psr-bridge:^0.3
 ```
 
 ### Method 2: Manual installation
@@ -37,7 +37,7 @@ Add to your `composer.json`.
 ```json
 {
     "require": {
-        "yii2-extensions/psr-bridge": "^0.2"
+        "yii2-extensions/psr-bridge": "^0.3"
     }
 }
 ```

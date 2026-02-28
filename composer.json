@@ -1,13 +1,19 @@
 {
     "name": "yii2-extensions/psr-bridge",
     "type": "library",
-    "description": "PSR bridge for Yii2",
+    "description": "PSR-7 bridge for Yii2 with worker mode support",
     "keywords": [
         "yii2-extension",
+        "yii2",
         "psr-bridge",
+        "psr-7",
+        "psr-17",
         "psr-http-factory",
         "psr-http-message",
-        "psr-http-server-handler"
+        "psr-http-server-handler",
+        "frankenphp",
+        "roadrunner",
+        "worker-mode"
     ],
     "license": "BSD-3-Clause",
     "require": {
@@ -46,7 +52,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "0.3.x-dev"
+            "dev-main": "0.4.x-dev"
         }
     },
     "config": {

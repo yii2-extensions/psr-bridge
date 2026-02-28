@@ -46,7 +46,7 @@ Long-running PHP workers for higher throughput and lower latency.
 ### Installation
 
 ```bash
-composer require yii2-extensions/psr-bridge:^0.2
+composer require yii2-extensions/psr-bridge:^0.3
 ```
 
 ### Quick start
