@@ -1,5 +1,7 @@
 # ChangeLog
 
+## 0.3.1 Under development
+
 ## 0.3.0 February 28, 2026
 
 - Bug #237: Preserve configured worker singletons and persistent components (`db`, `cache`) across requests while keeping request-scoped components reinitialized per request in `Application` (@terabytesoftw)
