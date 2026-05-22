@@ -1319,6 +1319,38 @@ final class RequestTest extends TestCase
         );
     }
 
+    public function testHttpAuthCredentialsPreserveEmptyPasswordFromPsrAuthorizationHeader(): void
+    {
+        $_SERVER['PHP_AUTH_USER'] = 'stale-user';
+        $_SERVER['PHP_AUTH_PW'] = 'stale-password';
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest(
+                'GET',
+                '/auth',
+                ['Authorization' => 'Basic ' . base64_encode('current-user:')],
+            ),
+        );
+
+        self::assertSame(
+            ['current-user', ''],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should preserve an empty password from the current PSR 'Authorization' header.",
+        );
+        self::assertSame(
+            'current-user',
+            $request->getAuthUser(),
+            "'getAuthUser()' should return the username from the current PSR 'Authorization' header.",
+        );
+        self::assertSame(
+            '',
+            $request->getAuthPassword(),
+            "'getAuthPassword()' should preserve the empty password from the current PSR 'Authorization' header.",
+        );
+    }
+
     public function testIssue15317(): void
     {
         ApplicationFactory::web();

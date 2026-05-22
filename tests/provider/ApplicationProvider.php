@@ -47,9 +47,9 @@ final class ApplicationProvider
             'empty password' => [
                 'Basic ' . base64_encode('user:'),
                 <<<JSON
-                {"username":"user","password":null}
+                {"username":"user","password":""}
                 JSON,
-                "Response body should be a JSON string with 'username' and 'password' as 'null' when password is empty.",
+                "Response body should be a JSON string with 'username' and empty 'password' when password is empty.",
             ],
             'empty username' => [
                 'Basic ' . base64_encode(':pass'),

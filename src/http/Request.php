@@ -90,7 +90,7 @@ class Request extends \yii\web\Request
 
             return [
                 $parts[0] === '' ? null : $parts[0],
-                (isset($parts[1]) && $parts[1] !== '') ? $parts[1] : null,
+                $parts[1] ?? null,
             ];
         }
 
