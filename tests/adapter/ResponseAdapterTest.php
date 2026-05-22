@@ -12,7 +12,7 @@ use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
-use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\{MockerFunctions, StreamFactorySpy};
 
 use function fopen;
 use function gmdate;
@@ -315,6 +315,51 @@ final class ResponseAdapterTest extends TestCase
             1,
             strlen($body),
             "PSR-7 response body should contain exactly one 'byte'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testConvertResponseWithFileStreamUsesResourceBody(): void
+    {
+        $content = str_repeat('0123456789ABCDEF', 512);
+
+        $tempFile = $this->createTempFileWithContent($content);
+
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $streamFactory = new StreamFactorySpy(HelperFactory::createStreamFactory());
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $adapter = new ResponseAdapter(
+            $response,
+            HelperFactory::createResponseFactory(),
+            $streamFactory,
+            new Security(),
+        );
+
+        $psr7Response = $adapter->toPsr7();
+
+        self::assertTrue(
+            $streamFactory->createdFromResource,
+            'File responses should create the PSR-7 body from a stream resource.',
+        );
+        self::assertFalse(
+            $streamFactory->createdFromString,
+            'File responses should not create the PSR-7 body from a fully buffered string.',
+        );
+        self::assertSame(
+            $content,
+            (string) $psr7Response->getBody(),
+            "Expected streamed file content to match for 'ResponseAdapter::toPsr7'.",
         );
     }
 
@@ -1956,6 +2001,36 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
+    public function testThrowExceptionWhenStreamCopyToStreamFailsToReadFile(): void
+    {
+        $content = 'Test content for stream failure';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource($handle, 'File handle should be a valid resource.');
+
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $adapter = new ResponseAdapter(
+            $response,
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
+            new Security(),
+        );
+
+        MockerFunctions::set_stream_copy_to_stream_should_fail();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            Message::RESPONSE_STREAM_READ_ERROR->getMessage(),
+        );
+
+        $adapter->toPsr7();
+    }
+
     public function testThrowExceptionWhenStreamFormatIsInvalid(): void
     {
         $tempFile = $this->createTempFileWithContent('test');
@@ -1980,36 +2055,6 @@ final class ResponseAdapterTest extends TestCase
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage(
             Message::RESPONSE_STREAM_FORMAT_INVALID->getMessage(),
-        );
-
-        $adapter->toPsr7();
-    }
-
-    public function testThrowExceptionWhenStreamGetContentsFailsToReadFile(): void
-    {
-        $content = 'Test content for stream failure';
-
-        $tempFile = $this->createTempFileWithContent($content);
-        $handle = fopen($tempFile, 'rb');
-
-        self::assertIsResource($handle, 'File handle should be a valid resource.');
-
-        $response = new Response(['charset' => 'UTF-8']);
-
-        $response->stream = [$handle, 0, strlen($content) - 1];
-
-        $adapter = new ResponseAdapter(
-            $response,
-            HelperFactory::createResponseFactory(),
-            HelperFactory::createStreamFactory(),
-            new Security(),
-        );
-
-        MockerFunctions::set_stream_get_contents_should_fail();
-
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage(
-            Message::RESPONSE_STREAM_READ_ERROR->getMessage(),
         );
 
         $adapter->toPsr7();
@@ -2089,6 +2134,40 @@ final class ResponseAdapterTest extends TestCase
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage(
             Message::RESPONSE_STREAM_RANGE_INVALID->getMessage(-1, 10),
+        );
+
+        $adapter->toPsr7();
+    }
+
+    public function testThrowExceptionWhenTemporaryStreamCannotBeOpened(): void
+    {
+        $content = 'Test content for temporary stream failure';
+
+        $tempFile = $this->createTempFileWithContent($content);
+
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $adapter = new ResponseAdapter(
+            $response,
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
+            new Security(),
+        );
+
+        MockerFunctions::set_fopen_should_fail();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            Message::RESPONSE_STREAM_READ_ERROR->getMessage(),
         );
 
         $adapter->toPsr7();

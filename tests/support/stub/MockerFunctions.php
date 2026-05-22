@@ -12,7 +12,7 @@ use function strtolower;
 /**
  * Stateful stub for internal HTTP-related functions used by tests.
  *
- * Provides deterministic replacements for function calls for headers, response codes, time values, and stream reads.
+ * Provides deterministic replacements for function calls for headers, response codes, time values, and stream handling.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -23,6 +23,11 @@ final class MockerFunctions
      * Tracks the number of times {@see \flush()} was called.
      */
     private static int $flushedTimes = 0;
+
+    /**
+     * Controls whether fopen should fail.
+     */
+    private static bool $fopenShouldFail = false;
 
     /**
      * Tracks the headers sent by the application.
@@ -66,6 +71,11 @@ final class MockerFunctions
     private static int $responseCode = 200;
 
     /**
+     * Controls whether stream_copy_to_stream should fail.
+     */
+    private static bool $streamCopyToStreamShouldFail = false;
+
+    /**
      * Controls whether stream_get_contents should fail.
      */
     private static bool $streamGetContentsShouldFail = false;
@@ -78,6 +88,23 @@ final class MockerFunctions
     public static function flush(): void
     {
         self::$flushedTimes++;
+    }
+
+    public static function fopen(
+        string $filename,
+        string $mode,
+        bool $useIncludePath = false,
+        mixed $context = null,
+    ): mixed {
+        if (self::$fopenShouldFail) {
+            return false;
+        }
+
+        if (is_resource($context)) {
+            return \fopen($filename, $mode, $useIncludePath, $context);
+        }
+
+        return \fopen($filename, $mode, $useIncludePath);
     }
 
     public static function getFlushTimes(): int
@@ -173,10 +200,17 @@ final class MockerFunctions
         self::$headersSent = false;
         self::$headersSentFile = '';
         self::$headersSentLine = 0;
+        self::$fopenShouldFail = false;
         self::$mockedTime = null;
         self::$responseCode = 200;
+        self::$streamCopyToStreamShouldFail = false;
         self::$streamGetContentsShouldFail = false;
         self::clearMockedMicrotime();
+    }
+
+    public static function set_fopen_should_fail(bool $shouldFail = true): void
+    {
+        self::$fopenShouldFail = $shouldFail;
     }
 
     public static function set_headers_sent(bool $value = false, string $file = '', int $line = 0): void
@@ -184,6 +218,11 @@ final class MockerFunctions
         self::$headersSent = $value;
         self::$headersSentFile = $file;
         self::$headersSentLine = $line;
+    }
+
+    public static function set_stream_copy_to_stream_should_fail(bool $shouldFail = true): void
+    {
+        self::$streamCopyToStreamShouldFail = $shouldFail;
     }
 
     public static function set_stream_get_contents_should_fail(bool $shouldFail = true): void
@@ -199,6 +238,19 @@ final class MockerFunctions
     public static function setMockedTime(int $time): void
     {
         self::$mockedTime = $time;
+    }
+
+    public static function stream_copy_to_stream(mixed $from, mixed $to, int|null $length = null, int $offset = 0): int|false
+    {
+        if (self::$streamCopyToStreamShouldFail) {
+            return false;
+        }
+
+        if (is_resource($from) === false || is_resource($to) === false) {
+            return false;
+        }
+
+        return \stream_copy_to_stream($from, $to, $length, $offset);
     }
 
     public static function stream_get_contents(mixed $resource, int $maxlength = -1, int $offset = -1): string|false

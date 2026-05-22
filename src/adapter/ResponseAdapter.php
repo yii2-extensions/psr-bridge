@@ -21,6 +21,7 @@ use function is_numeric;
 use function is_resource;
 use function is_string;
 use function max;
+use function rewind;
 use function serialize;
 use function strtotime;
 use function time;
@@ -36,6 +37,11 @@ use function urlencode;
  */
 final class ResponseAdapter
 {
+    /**
+     * Maximum bytes stored in memory before file response bodies spill to disk-backed temporary storage.
+     */
+    private const TEMP_STREAM_MAX_MEMORY = 2 * 1024 * 1024;
+
     /**
      * Creates a new instance of the {@see ResponseAdapter} class.
      *
@@ -199,20 +205,30 @@ final class ResponseAdapter
             throw new InvalidConfigException(Message::RESPONSE_STREAM_HANDLE_INVALID->getMessage());
         }
 
-        // read the specified range from the file
+        // stream the specified range into a disk-backed temporary stream to avoid large memory allocations
         fseek($handle, $begin);
 
-        $content = stream_get_contents($handle, $end - $begin + 1);
+        $tempStream = fopen('php://temp/maxmemory:' . self::TEMP_STREAM_MAX_MEMORY, 'w+b');
 
-        if ($content === false) {
+        if ($tempStream === false) {
             fclose($handle);
 
             throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
         }
 
+        $bytesCopied = stream_copy_to_stream($handle, $tempStream, $end - $begin + 1);
+
         fclose($handle);
 
-        return $this->streamFactory->createStream($content);
+        if ($bytesCopied === false) {
+            fclose($tempStream);
+
+            throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
+        }
+
+        rewind($tempStream);
+
+        return $this->streamFactory->createStreamFromResource($tempStream);
     }
 
     /**
