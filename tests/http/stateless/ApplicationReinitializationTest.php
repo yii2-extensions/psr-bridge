@@ -9,6 +9,7 @@ use Yii;
 use yii\base\{Component, InvalidConfigException};
 use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\stub\ErrorHandlerSpy;
 
 /**
  * Unit tests for the {@see Application} class reinitialization behavior in stateless mode.
@@ -21,6 +22,7 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
  * - Verifies high-volume request handling remains stable during reinitialization.
  * - Verifies request-scoped components are recreated for each request.
  * - Verifies the application recovers after an error on a prior request.
+ * - Verifies the previous error handler is unregistered before reinitialization.
  * - Verifies the Yii::$app reference remains bound to the same application instance.
  *
  * @copyright Copyright (C) 2026 Terabytesoftw.
@@ -181,6 +183,46 @@ final class ApplicationReinitializationTest extends TestCase
             $webrootAlias1,
             $webrootAlias2,
             '@webroot alias should be preserved across reinitialization.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReinitializationUnregistersPreviousErrorHandler(): void
+    {
+        ErrorHandlerSpy::reset();
+
+        $app = ApplicationFactory::stateless(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'class' => ErrorHandlerSpy::class,
+                    ],
+                ],
+            ],
+        );
+
+        $response1 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $response1,
+        );
+        self::assertSame(
+            0,
+            ErrorHandlerSpy::$unregisterCalls,
+            'The first request should not unregister an error handler on a fresh application instance.',
+        );
+
+        $response2 = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $response2,
+        );
+        self::assertSame(
+            1,
+            ErrorHandlerSpy::$unregisterCalls,
+            'The previous error handler should be unregistered before application reinitialization.',
         );
     }
 
