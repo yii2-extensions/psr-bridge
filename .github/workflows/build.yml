@@ -21,5 +21,6 @@ jobs:
     with:
       concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
       extensions: mbstring, gd, runkit7
+      php-version: '["8.3","8.4","8.5"]'
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
