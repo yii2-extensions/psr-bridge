@@ -13,7 +13,6 @@ use yii2\extensions\psrbridge\http\{Request, Response};
 
 use function count;
 use function fclose;
-use function fopen;
 use function fseek;
 use function gmdate;
 use function is_array;

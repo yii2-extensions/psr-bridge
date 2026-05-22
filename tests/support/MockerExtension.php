@@ -96,6 +96,21 @@ final class MockerExtension implements Extension
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\adapter',
+                'name' => 'fopen',
+                'function' => static fn(
+                    string $filename,
+                    string $mode,
+                    bool $use_include_path = false,
+                    $context = null,
+                ): mixed => MockerFunctions::fopen(
+                    $filename,
+                    $mode,
+                    $use_include_path,
+                    $context,
+                ),
+            ],
+            [
+                'namespace' => 'yii2\extensions\psrbridge\adapter',
                 'name' => 'stream_copy_to_stream',
                 'function' => static fn(
                     $from,
@@ -129,7 +144,7 @@ final class MockerExtension implements Extension
             ],
         ];
 
-        $mocker = new Mocker();
+        $mocker = new Mocker(stubPath: __DIR__ . '/internal-mocker-stubs.php');
         $mocker->load($mocks);
 
         MockerState::saveState();

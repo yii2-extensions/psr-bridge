@@ -12,7 +12,7 @@ use function strtolower;
 /**
  * Stateful stub for internal HTTP-related functions used by tests.
  *
- * Provides deterministic replacements for function calls for headers, response codes, time values, and stream reads.
+ * Provides deterministic replacements for function calls for headers, response codes, time values, and stream handling.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -23,6 +23,11 @@ final class MockerFunctions
      * Tracks the number of times {@see \flush()} was called.
      */
     private static int $flushedTimes = 0;
+
+    /**
+     * Controls whether fopen should fail.
+     */
+    private static bool $fopenShouldFail = false;
 
     /**
      * Tracks the headers sent by the application.
@@ -83,6 +88,23 @@ final class MockerFunctions
     public static function flush(): void
     {
         self::$flushedTimes++;
+    }
+
+    public static function fopen(
+        string $filename,
+        string $mode,
+        bool $useIncludePath = false,
+        mixed $context = null,
+    ): mixed {
+        if (self::$fopenShouldFail) {
+            return false;
+        }
+
+        if (is_resource($context)) {
+            return \fopen($filename, $mode, $useIncludePath, $context);
+        }
+
+        return \fopen($filename, $mode, $useIncludePath);
     }
 
     public static function getFlushTimes(): int
@@ -178,11 +200,17 @@ final class MockerFunctions
         self::$headersSent = false;
         self::$headersSentFile = '';
         self::$headersSentLine = 0;
+        self::$fopenShouldFail = false;
         self::$mockedTime = null;
         self::$responseCode = 200;
         self::$streamCopyToStreamShouldFail = false;
         self::$streamGetContentsShouldFail = false;
         self::clearMockedMicrotime();
+    }
+
+    public static function set_fopen_should_fail(bool $shouldFail = true): void
+    {
+        self::$fopenShouldFail = $shouldFail;
     }
 
     public static function set_headers_sent(bool $value = false, string $file = '', int $line = 0): void

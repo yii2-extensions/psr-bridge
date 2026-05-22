@@ -6,14 +6,13 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Group;
-use Psr\Http\Message\{StreamFactoryInterface, StreamInterface};
 use yii\base\{InvalidConfigException, Security};
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
-use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
+use yii2\extensions\psrbridge\tests\support\stub\{MockerFunctions, StreamFactorySpy};
 
 use function fopen;
 use function gmdate;
@@ -327,6 +326,7 @@ final class ResponseAdapterTest extends TestCase
         $content = str_repeat('0123456789ABCDEF', 512);
 
         $tempFile = $this->createTempFileWithContent($content);
+
         $handle = fopen($tempFile, 'rb');
 
         self::assertIsResource(
@@ -334,33 +334,7 @@ final class ResponseAdapterTest extends TestCase
             'File handle should be a valid resource.',
         );
 
-        $streamFactory = new class (HelperFactory::createStreamFactory()) implements StreamFactoryInterface {
-            public bool $createdFromResource = false;
-
-            public bool $createdFromString = false;
-
-            public function __construct(private readonly StreamFactoryInterface $streamFactory) {}
-
-            public function createStream(string $content = ''): StreamInterface
-            {
-                $this->createdFromString = true;
-
-                return $this->streamFactory->createStream($content);
-            }
-
-            public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
-            {
-                return $this->streamFactory->createStreamFromFile($filename, $mode);
-            }
-
-            public function createStreamFromResource($resource): StreamInterface
-            {
-                $this->createdFromResource = true;
-
-                return $this->streamFactory->createStreamFromResource($resource);
-            }
-        };
-
+        $streamFactory = new StreamFactorySpy(HelperFactory::createStreamFactory());
         $response = new Response(['charset' => 'UTF-8']);
 
         $response->stream = [$handle, 0, strlen($content) - 1];
@@ -2160,6 +2134,40 @@ final class ResponseAdapterTest extends TestCase
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage(
             Message::RESPONSE_STREAM_RANGE_INVALID->getMessage(-1, 10),
+        );
+
+        $adapter->toPsr7();
+    }
+
+    public function testThrowExceptionWhenTemporaryStreamCannotBeOpened(): void
+    {
+        $content = 'Test content for temporary stream failure';
+
+        $tempFile = $this->createTempFileWithContent($content);
+
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $adapter = new ResponseAdapter(
+            $response,
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
+            new Security(),
+        );
+
+        MockerFunctions::set_fopen_should_fail();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            Message::RESPONSE_STREAM_READ_ERROR->getMessage(),
         );
 
         $adapter->toPsr7();
