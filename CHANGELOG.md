@@ -2,6 +2,9 @@
 
 ## 0.3.1 Under development
 
+- fix(docs): warn against unsafe multipart body parser setup.
+- fix: clear Yii core `uploaded-file` cache when resetting bridge uploaded-file state to prevent cross-request upload leakage in workers.
+
 ## 0.3.0 February 28, 2026
 
 - Bug #237: Preserve configured worker singletons and persistent components (`db`, `cache`) across requests while keeping request-scoped components reinitialized per request in `Application` (@terabytesoftw)
@@ -10,7 +13,6 @@
 - Bug #243: Remove redundant comments in `ApplicationConfigTest` and `ApplicationCoreTest` for improved clarity and maintainability (@terabytesoftw)
 - Bug #244: Update unit tests for `Application` class to enhance clarity and coverage; add `ApplicationReinitializationTest` for reinitialization behavior validation and update related documentation (@terabytesoftw)
 - Bug #245: Bootstrap DI container during `Application` construction, remove per-request container bootstrap, and avoid masking initialization failures behind missing `errorHandler` secondary exceptions (@terabytesoftw)
-- fix(docs): warn against unsafe multipart body parser setup.
 
 ## 0.2.1 February 21, 2026
 
