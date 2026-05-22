@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: clear Yii core `uploaded-file` cache when resetting bridge uploaded-file state to prevent cross-request upload leakage in workers.
 - chore: update dependencies and configuration files.
 - fix(http): unregister previous error handler before reinit.
+- fix(security): isolate Basic authentication credential lookup to the current PSR request in worker mode.
 
 ## 0.3.0 February 28, 2026
 
