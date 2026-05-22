@@ -27,14 +27,13 @@ final class SapiEmitter
     /**
      * Creates a new instance of the {@see SapiEmitter} class.
      *
-     * @param int|null $bufferLength Length of the buffer to use when emitting the response body (default: `null`).
-     * - If `null`, the response body will be emitted all at once.
+     * @param int $bufferLength Length of the buffer to use when emitting the response body (default: `8192`).
      *
      * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
      */
-    public function __construct(private readonly int|null $bufferLength = null)
+    public function __construct(private readonly int $bufferLength = 8192)
     {
-        if ($bufferLength !== null && $bufferLength < 1) {
+        if ($bufferLength < 1) {
             throw new InvalidArgumentException(
                 Message::BUFFER_LENGTH_INVALID->getMessage(self::class, $bufferLength),
             );
@@ -80,12 +79,6 @@ final class SapiEmitter
      */
     private function emitBody(ResponseInterface $response): void
     {
-        if ($this->bufferLength === null) {
-            echo $response->getBody();
-
-            return;
-        }
-
         flush();
         $body = $response->getBody();
         $range = ContentRange::fromHeader($response->getHeaderLine('Content-Range'));

@@ -27,12 +27,12 @@ final class EmitterProvider
      *
      * @return array test data with body content, expected chunks, buffer sizes, start offsets, and end offsets.
      *
-     * @phpstan-return array<array{string, array<string>, int|null, int|null, int|null}>
+     * @phpstan-return array<array{string, array<string>, int, int|null, int|null}>
      */
     public static function body(): array
     {
         return [
-            ['', [],  null, null, null],
+            ['', [], 8192, null, null],
             ['Contents', ['C', 'o', 'n', 't', 'e', 'n', 't', 's'], 1, 0, 8],
             ['Contents', ['C', 'o', 'n', 't', 'e', 'n', 't', 's'], 1, null, null],
             ['Contents', ['Co', 'nt', 'en', 'ts'], 2, null, null],
@@ -43,7 +43,7 @@ final class EmitterProvider
             ['Contents', ['Content', 's'], 7, null, null],
             ['Contents', ['Contents'], 8192, 0, 8],
             ['Contents', ['Contents'], 8192, null, null],
-            ['Contents', ['Contents'], null, null, null],
+            ['Contents', ['Contents'], 8192, null, null],
             ['Contents', ['nte', 'nt'], 3, 2, 6],
             ['Contents', ['ts'], 2, 6, 8],
         ];
