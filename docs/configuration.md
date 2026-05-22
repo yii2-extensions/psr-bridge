@@ -59,15 +59,14 @@ This ensures that `Yii::$app->request->post()` and `Yii::$app->request->bodyPara
 populated immediately after the request is handled.
 
 > [!WARNING]
-> In worker runtimes (for example RoadRunner or FrankenPHP), configured body parsers
-> receive the full request body as a string. Avoid enabling automatic parsing for
-> `multipart/form-data` unless strict upload/body size limits are enforced at the
-> server and application levels. Uploaded files are already available via the PSR-7
-> uploaded-file interfaces.
+> In worker runtimes (for example RoadRunner or FrankenPHP), configured body parsers receive the full request body as a
+> string. Avoid enabling automatic parsing for `multipart/form-data` unless strict upload/body size limits are enforced
+> at the server and application levels. Uploaded files are already available via the PSR-7 uploaded-file interfaces.
 
 #### Wildcard parsing
 
-You can also configure a fallback parser using the `*` wildcard for small trusted payloads (for example JSON-only APIs). Avoid permissive wildcard parsing for untrusted large body types in worker deployments.
+You can also configure a fallback parser using the `*` wildcard for small trusted payloads (for example JSON-only APIs).
+Avoid permissive wildcard parsing for untrusted large body types in worker deployments.
 
 ```php
 'request' => [
