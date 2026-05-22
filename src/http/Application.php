@@ -350,6 +350,10 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function reinitializeApplication(): void
     {
+        if ($this->has('errorHandler')) {
+            $this->errorHandler->unregister();
+        }
+
         // parent constructor is called because Application uses a custom initialization pattern
         // @phpstan-ignore-next-line
         parent::__construct($this->buildReinitializationConfig());
