@@ -96,6 +96,21 @@ final class MockerExtension implements Extension
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\adapter',
+                'name' => 'stream_copy_to_stream',
+                'function' => static fn(
+                    $from,
+                    $to,
+                    int|null $length = null,
+                    int $offset = 0,
+                ): mixed => MockerFunctions::stream_copy_to_stream(
+                    $from,
+                    $to,
+                    $length,
+                    $offset,
+                ),
+            ],
+            [
+                'namespace' => 'yii2\extensions\psrbridge\adapter',
                 'name' => 'stream_get_contents',
                 'function' => static fn(
                     $resource,

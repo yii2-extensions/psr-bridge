@@ -6,6 +6,7 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Group;
+use Psr\Http\Message\{StreamFactoryInterface, StreamInterface};
 use yii\base\{InvalidConfigException, Security};
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
@@ -268,6 +269,76 @@ final class ResponseAdapterTest extends TestCase
         self::assertSame(
             $content,
             $body,
+            "Expected streamed file content to match for 'ResponseAdapter::toPsr7'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testConvertResponseWithFileStreamUsesResourceBody(): void
+    {
+        $content = str_repeat('0123456789ABCDEF', 512);
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $streamFactory = new class (HelperFactory::createStreamFactory()) implements StreamFactoryInterface {
+            public bool $createdFromResource = false;
+
+            public bool $createdFromString = false;
+
+            public function __construct(private readonly StreamFactoryInterface $streamFactory) {}
+
+            public function createStream(string $content = ''): StreamInterface
+            {
+                $this->createdFromString = true;
+
+                return $this->streamFactory->createStream($content);
+            }
+
+            public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
+            {
+                return $this->streamFactory->createStreamFromFile($filename, $mode);
+            }
+
+            public function createStreamFromResource($resource): StreamInterface
+            {
+                $this->createdFromResource = true;
+
+                return $this->streamFactory->createStreamFromResource($resource);
+            }
+        };
+
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $adapter = new ResponseAdapter(
+            $response,
+            HelperFactory::createResponseFactory(),
+            $streamFactory,
+            new Security(),
+        );
+
+        $psr7Response = $adapter->toPsr7();
+
+        self::assertTrue(
+            $streamFactory->createdFromResource,
+            'File responses should create the PSR-7 body from a stream resource.',
+        );
+        self::assertFalse(
+            $streamFactory->createdFromString,
+            'File responses should not create the PSR-7 body from a fully buffered string.',
+        );
+        self::assertSame(
+            $content,
+            (string) $psr7Response->getBody(),
             "Expected streamed file content to match for 'ResponseAdapter::toPsr7'.",
         );
     }
@@ -1985,7 +2056,7 @@ final class ResponseAdapterTest extends TestCase
         $adapter->toPsr7();
     }
 
-    public function testThrowExceptionWhenStreamGetContentsFailsToReadFile(): void
+    public function testThrowExceptionWhenStreamCopyToStreamFailsToReadFile(): void
     {
         $content = 'Test content for stream failure';
 
@@ -2005,7 +2076,7 @@ final class ResponseAdapterTest extends TestCase
             new Security(),
         );
 
-        MockerFunctions::set_stream_get_contents_should_fail();
+        MockerFunctions::set_stream_copy_to_stream_should_fail();
 
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage(

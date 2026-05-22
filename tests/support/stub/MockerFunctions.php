@@ -70,6 +70,11 @@ final class MockerFunctions
      */
     private static bool $streamGetContentsShouldFail = false;
 
+    /**
+     * Controls whether stream_copy_to_stream should fail.
+     */
+    private static bool $streamCopyToStreamShouldFail = false;
+
     public static function clearMockedMicrotime(): void
     {
         self::$mockedMicrotime = null;
@@ -175,6 +180,7 @@ final class MockerFunctions
         self::$headersSentLine = 0;
         self::$mockedTime = null;
         self::$responseCode = 200;
+        self::$streamCopyToStreamShouldFail = false;
         self::$streamGetContentsShouldFail = false;
         self::clearMockedMicrotime();
     }
@@ -189,6 +195,11 @@ final class MockerFunctions
     public static function set_stream_get_contents_should_fail(bool $shouldFail = true): void
     {
         self::$streamGetContentsShouldFail = $shouldFail;
+    }
+
+    public static function set_stream_copy_to_stream_should_fail(bool $shouldFail = true): void
+    {
+        self::$streamCopyToStreamShouldFail = $shouldFail;
     }
 
     public static function setMockedMicrotime(float $time): void
@@ -212,6 +223,19 @@ final class MockerFunctions
         }
 
         return \stream_get_contents($resource, $maxlength, $offset);
+    }
+
+    public static function stream_copy_to_stream(mixed $from, mixed $to, int|null $length = null, int $offset = 0): int|false
+    {
+        if (self::$streamCopyToStreamShouldFail) {
+            return false;
+        }
+
+        if (is_resource($from) === false || is_resource($to) === false) {
+            return false;
+        }
+
+        return \stream_copy_to_stream($from, $to, $length, $offset);
     }
 
     public static function time(): int

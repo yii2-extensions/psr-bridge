@@ -24,7 +24,6 @@ use function is_string;
 use function max;
 use function serialize;
 use function strtotime;
-use function stream_copy_to_stream;
 use function time;
 use function urlencode;
 use function rewind;
@@ -39,6 +38,8 @@ use function rewind;
  */
 final class ResponseAdapter
 {
+    private const TEMP_STREAM_MAX_MEMORY = 2 * 1024 * 1024;
+
     /**
      * Creates a new instance of the {@see ResponseAdapter} class.
      *
@@ -202,10 +203,10 @@ final class ResponseAdapter
             throw new InvalidConfigException(Message::RESPONSE_STREAM_HANDLE_INVALID->getMessage());
         }
 
-        // stream the specified range into a temporary stream to avoid materializing large payloads in memory
+        // stream the specified range into a disk-backed temporary stream to avoid large memory allocations
         fseek($handle, $begin);
 
-        $tempStream = fopen('php://temp', 'w+b');
+        $tempStream = fopen('php://temp/maxmemory:' . self::TEMP_STREAM_MAX_MEMORY, 'w+b');
 
         if ($tempStream === false) {
             fclose($handle);
