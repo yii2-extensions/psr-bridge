@@ -190,6 +190,7 @@ class UploadedFile extends \yii\web\UploadedFile
 
         self::$_files = [];
         self::$psr7Adapter = null;
+
         parent::reset();
     }
 

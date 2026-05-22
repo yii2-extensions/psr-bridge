@@ -8,7 +8,6 @@ use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\http\UploadedFile;
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\{ComplexUploadedFileModel, UploadedFileModel};
-use yii\web\UploadedFile as YiiUploadedFile;
 
 use const UPLOAD_ERR_CANT_WRITE;
 use const UPLOAD_ERR_OK;
@@ -1489,16 +1488,18 @@ final class UploadedFileTest extends TestCase
         ];
 
         self::assertInstanceOf(
-            YiiUploadedFile::class,
-            YiiUploadedFile::getInstanceByName('avatar'),
+            \yii\web\UploadedFile::class,
+            \yii\web\UploadedFile::getInstanceByName('avatar'),
             'Precondition failed: legacy Yii cache should contain an uploaded file before reset.',
         );
+
+        $_FILES = [];
 
         UploadedFile::reset();
 
         self::assertNull(
-            YiiUploadedFile::getInstanceByName('avatar'),
-            'Legacy Yii cache should be cleared when bridge UploadedFile::reset() is called.',
+            \yii\web\UploadedFile::getInstanceByName('avatar'),
+            "Legacy Yii cache should be cleared when bridge 'UploadedFile::reset()' is called.",
         );
     }
 
