@@ -1475,6 +1475,34 @@ final class UploadedFileTest extends TestCase
         );
     }
 
+    public function testResetShouldClearLegacyYiiUploadedFileCache(): void
+    {
+        $_FILES = [
+            'avatar' => [
+                'name' => 'alice-secret.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/php-avatar',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 16,
+            ],
+        ];
+
+        self::assertInstanceOf(
+            \yii\web\UploadedFile::class,
+            \yii\web\UploadedFile::getInstanceByName('avatar'),
+            'Precondition failed: legacy Yii cache should contain an uploaded file before reset.',
+        );
+
+        $_FILES = [];
+
+        UploadedFile::reset();
+
+        self::assertNull(
+            \yii\web\UploadedFile::getInstanceByName('avatar'),
+            "Legacy Yii cache should be cleared when bridge 'UploadedFile::reset()' is called.",
+        );
+    }
+
     public function testReturnUploadedFileInstanceWhenLegacyFilesSizeIsArray(): void
     {
         $_FILES = [

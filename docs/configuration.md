@@ -22,7 +22,7 @@ the `parsers` property.
 declare(strict_types=1);
 
 use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
-use yii\web\{JsonParser, MultipartFormDataParser};
+use yii\web\JsonParser;
 
 return [
     'components' => [
@@ -32,7 +32,6 @@ return [
             'enableCsrfValidation' => false,
             'parsers' => [
                 'application/json' => JsonParser::class,
-                'multipart/form-data' => MultipartFormDataParser::class,
             ],
         ],
         'response' => [
@@ -53,15 +52,21 @@ When `setPsr7Request()` is called (typically by the worker runner), the bridge w
 
 1. Detect the `Content-Type` of the incoming PSR-7 request.
 2. Check the `parsers` configuration for a matching parser.
-3. Parse the body content.
+3. Parse the body content with the configured parser.
 4. Update the PSR-7 Request instance using `withParsedBody()`.
 
 This ensures that `Yii::$app->request->post()` and `Yii::$app->request->bodyParams` are correctly
 populated immediately after the request is handled.
 
+> [!WARNING]
+> In worker runtimes (for example RoadRunner or FrankenPHP), configured body parsers receive the full request body as a
+> string. Avoid enabling automatic parsing for `multipart/form-data` unless strict upload/body size limits are enforced
+> at the server and application levels. Uploaded files are already available via the PSR-7 uploaded-file interfaces.
+
 #### Wildcard parsing
 
-You can also configure a fallback parser using the `*` wildcard.
+You can also configure a fallback parser using the `*` wildcard for small trusted payloads (for example JSON-only APIs).
+Avoid permissive wildcard parsing for untrusted large body types in worker deployments.
 
 ```php
 'request' => [

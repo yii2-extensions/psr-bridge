@@ -583,7 +583,7 @@ final class RequestProvider
                 base64_encode('user:'),
                 [
                     'user',
-                    null,
+                    '',
                 ],
             ],
             [
@@ -625,7 +625,7 @@ final class RequestProvider
                 base64_encode(':'),
                 [
                     null,
-                    null,
+                    '',
                 ],
             ],
         ];

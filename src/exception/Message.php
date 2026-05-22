@@ -71,7 +71,7 @@ enum Message: string
      * Format: "Invalid optional '%s' array in multiple file specification for '%s'. Expected 'array' or 'null'."
      */
     case INVALID_OPTIONAL_ARRAY_IN_MULTI_SPEC = "Invalid optional '%s' array in multiple file specification for '%s'. "
-    . "Expected 'array' or 'null'.";
+        . "Expected 'array' or 'null'.";
 
     /**
      * Error when a specific request parser is invalid.
@@ -107,7 +107,7 @@ enum Message: string
      * Format: "Missing or invalid '%s' array in multiple file specification for '%s'."
      */
     case MISSING_OR_INVALID_ARRAY_IN_MULTI_SPEC = "Missing or invalid '%s' array in multiple file specification for "
-    . "'%s'.";
+        . "'%s'.";
 
     /**
      * Error when a required key is missing in file specification.
@@ -143,7 +143,7 @@ enum Message: string
      * Format: "Response stream must be an 'array' with exactly '3' elements: ['handle', 'begin', 'end']."
      */
     case RESPONSE_STREAM_FORMAT_INVALID = "Response stream must be an 'array' with exactly '3' elements: "
-    . "['handle', 'begin', 'end'].";
+        . "['handle', 'begin', 'end'].";
 
     /**
      * Error when the response stream handle is invalid.
@@ -159,7 +159,7 @@ enum Message: string
      * Received: (begin='%d', end='%d')."
      */
     case RESPONSE_STREAM_RANGE_INVALID = 'Response stream range values must be valid: '
-    . "('begin' >= '0' and 'end' >= 'begin'). Received: (begin='%d', end='%d').";
+        . "('begin' >= '0' and 'end' >= 'begin'). Received: (begin='%d', end='%d').";
 
     /**
      * Error when unable to read from the response stream.
