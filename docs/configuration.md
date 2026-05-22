@@ -65,7 +65,6 @@ populated immediately after the request is handled.
 > server and application levels. Uploaded files are already available via the PSR-7
 > uploaded-file interfaces.
 
-
 #### Wildcard parsing
 
 You can also configure a fallback parser using the `*` wildcard for small trusted payloads (for example JSON-only APIs). Avoid permissive wildcard parsing for untrusted large body types in worker deployments.
