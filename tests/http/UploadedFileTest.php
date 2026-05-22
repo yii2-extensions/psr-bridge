@@ -8,6 +8,7 @@ use yii2\extensions\psrbridge\adapter\ServerRequestAdapter;
 use yii2\extensions\psrbridge\http\UploadedFile;
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\{ComplexUploadedFileModel, UploadedFileModel};
+use yii\web\UploadedFile as YiiUploadedFile;
 
 use const UPLOAD_ERR_CANT_WRITE;
 use const UPLOAD_ERR_OK;
@@ -1472,6 +1473,32 @@ final class UploadedFileTest extends TestCase
             0,
             $stillOpenAfterReset,
             "All resources should be closed after 'reset()' method.",
+        );
+    }
+
+    public function testResetShouldClearLegacyYiiUploadedFileCache(): void
+    {
+        $_FILES = [
+            'avatar' => [
+                'name' => 'alice-secret.txt',
+                'type' => 'text/plain',
+                'tmp_name' => '/tmp/php-avatar',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 16,
+            ],
+        ];
+
+        self::assertInstanceOf(
+            YiiUploadedFile::class,
+            YiiUploadedFile::getInstanceByName('avatar'),
+            "Precondition failed: legacy Yii cache should contain an uploaded file before reset.",
+        );
+
+        UploadedFile::reset();
+
+        self::assertNull(
+            YiiUploadedFile::getInstanceByName('avatar'),
+            "Legacy Yii cache should be cleared when bridge UploadedFile::reset() is called.",
         );
     }
 
