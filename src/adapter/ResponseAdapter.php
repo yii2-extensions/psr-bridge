@@ -13,6 +13,7 @@ use yii2\extensions\psrbridge\http\{Request, Response};
 
 use function count;
 use function fclose;
+use function fopen;
 use function fseek;
 use function gmdate;
 use function is_array;
@@ -23,8 +24,10 @@ use function is_string;
 use function max;
 use function serialize;
 use function strtotime;
+use function stream_copy_to_stream;
 use function time;
 use function urlencode;
+use function rewind;
 
 /**
  * Adapts Yii responses to PSR-7 responses.
@@ -199,20 +202,30 @@ final class ResponseAdapter
             throw new InvalidConfigException(Message::RESPONSE_STREAM_HANDLE_INVALID->getMessage());
         }
 
-        // read the specified range from the file
+        // stream the specified range into a temporary stream to avoid materializing large payloads in memory
         fseek($handle, $begin);
 
-        $content = stream_get_contents($handle, $end - $begin + 1);
+        $tempStream = fopen('php://temp', 'w+b');
 
-        if ($content === false) {
+        if ($tempStream === false) {
             fclose($handle);
 
             throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
         }
 
+        $bytesCopied = stream_copy_to_stream($handle, $tempStream, $end - $begin + 1);
+
         fclose($handle);
 
-        return $this->streamFactory->createStream($content);
+        if ($bytesCopied === false) {
+            fclose($tempStream);
+
+            throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
+        }
+
+        rewind($tempStream);
+
+        return $this->streamFactory->createStreamFromResource($tempStream);
     }
 
     /**
