@@ -67,17 +67,6 @@ class Request extends \yii\web\Request
      */
     public function getAuthCredentials(): array
     {
-        $username = isset($_SERVER['PHP_AUTH_USER']) && is_string($_SERVER['PHP_AUTH_USER'])
-            ? $_SERVER['PHP_AUTH_USER']
-            : null;
-        $password = isset($_SERVER['PHP_AUTH_PW']) && is_string($_SERVER['PHP_AUTH_PW'])
-            ? $_SERVER['PHP_AUTH_PW']
-            : null;
-
-        if ($username !== null || $password !== null) {
-            return [$username, $password];
-        }
-
         /**
          * Apache with php-cgi does not pass HTTP Basic authentication to PHP by default.
          * To make it work, add one of the following lines to your .htaccess file:
@@ -102,6 +91,16 @@ class Request extends \yii\web\Request
             return [
                 $parts[0] === '' ? null : $parts[0],
                 (isset($parts[1]) && $parts[1] !== '') ? $parts[1] : null,
+            ];
+        }
+
+        $username = $this->getServerParam('PHP_AUTH_USER');
+        $password = $this->getServerParam('PHP_AUTH_PW');
+
+        if (is_string($username) || is_string($password)) {
+            return [
+                is_string($username) ? $username : null,
+                is_string($password) ? $password : null,
             ];
         }
 

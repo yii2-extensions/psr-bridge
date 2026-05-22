@@ -1176,9 +1176,9 @@ final class RequestTest extends TestCase
 
     public function testHttpAuthCredentialsFromServerSuperglobal(): void
     {
-        [$user, $pw] = ['foo', 'bar'];
-        $_SERVER['PHP_AUTH_USER'] = $user;
-        $_SERVER['PHP_AUTH_PW'] = $pw;
+        $_SERVER['PHP_AUTH_USER'] = 'foo';
+        $_SERVER['PHP_AUTH_PW'] = 'bar';
+        [$user, $pw] = ['less-priority', 'than-PHP_AUTH_*'];
 
         $request = new Request();
 
@@ -1187,17 +1187,17 @@ final class RequestTest extends TestCase
         self::assertSame(
             [$user, $pw],
             $request->getAuthCredentials(),
-            "'getAuthCredentials()' should return credentials from 'PHP_AUTH_USER' and 'PHP_AUTH_PW' when set.",
+            "'getAuthCredentials()' should return credentials from 'Authorization' when available.",
         );
         self::assertSame(
             $user,
             $request->getAuthUser(),
-            "'getAuthUser()' should return the username from 'PHP_AUTH_USER' when set.",
+            "'getAuthUser()' should return the username from 'Authorization' when available.",
         );
         self::assertSame(
             $pw,
             $request->getAuthPassword(),
-            "'getAuthPassword()' should return the password from 'PHP_AUTH_PW' when set.",
+            "'getAuthPassword()' should return the password from 'Authorization' when available.",
         );
     }
 
