@@ -22,11 +22,11 @@ use function is_numeric;
 use function is_resource;
 use function is_string;
 use function max;
+use function rewind;
 use function serialize;
 use function strtotime;
 use function time;
 use function urlencode;
-use function rewind;
 
 /**
  * Adapts Yii responses to PSR-7 responses.
@@ -38,6 +38,9 @@ use function rewind;
  */
 final class ResponseAdapter
 {
+    /**
+     * Maximum bytes stored in memory before file response bodies spill to disk-backed temporary storage.
+     */
     private const TEMP_STREAM_MAX_MEMORY = 2 * 1024 * 1024;
 
     /**

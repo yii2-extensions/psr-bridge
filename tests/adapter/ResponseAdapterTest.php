@@ -276,6 +276,52 @@ final class ResponseAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testConvertResponseWithFileStreamSingleByte(): void
+    {
+        $content = 'ABCDEFGHIJKLMNOP';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource($handle, 'File handle should be a valid resource.');
+
+        // extract single byte at position 7: 'H'
+        $begin = 7;
+        $end = 7;
+
+        $expectedContent = $content[$begin];
+
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->stream = [$handle, $begin, $end];
+
+        $response->setStatusCode(206, 'Partial Content');
+
+        $adapter = new ResponseAdapter(
+            $response,
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
+            new Security(),
+        );
+
+        $psr7Response = $adapter->toPsr7();
+        $body = (string) $psr7Response->getBody();
+
+        self::assertSame(
+            $expectedContent,
+            $body,
+            "Expected single byte stream content at position '{$begin}'.",
+        );
+        self::assertSame(
+            1,
+            strlen($body),
+            "PSR-7 response body should contain exactly one 'byte'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testConvertResponseWithFileStreamUsesResourceBody(): void
     {
         $content = str_repeat('0123456789ABCDEF', 512);
@@ -340,52 +386,6 @@ final class ResponseAdapterTest extends TestCase
             $content,
             (string) $psr7Response->getBody(),
             "Expected streamed file content to match for 'ResponseAdapter::toPsr7'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testConvertResponseWithFileStreamSingleByte(): void
-    {
-        $content = 'ABCDEFGHIJKLMNOP';
-
-        $tempFile = $this->createTempFileWithContent($content);
-        $handle = fopen($tempFile, 'rb');
-
-        self::assertIsResource($handle, 'File handle should be a valid resource.');
-
-        // extract single byte at position 7: 'H'
-        $begin = 7;
-        $end = 7;
-
-        $expectedContent = $content[$begin];
-
-        $response = new Response(['charset' => 'UTF-8']);
-
-        $response->stream = [$handle, $begin, $end];
-
-        $response->setStatusCode(206, 'Partial Content');
-
-        $adapter = new ResponseAdapter(
-            $response,
-            HelperFactory::createResponseFactory(),
-            HelperFactory::createStreamFactory(),
-            new Security(),
-        );
-
-        $psr7Response = $adapter->toPsr7();
-        $body = (string) $psr7Response->getBody();
-
-        self::assertSame(
-            $expectedContent,
-            $body,
-            "Expected single byte stream content at position '{$begin}'.",
-        );
-        self::assertSame(
-            1,
-            strlen($body),
-            "PSR-7 response body should contain exactly one 'byte'.",
         );
     }
 
@@ -2027,35 +2027,6 @@ final class ResponseAdapterTest extends TestCase
         );
     }
 
-    public function testThrowExceptionWhenStreamFormatIsInvalid(): void
-    {
-        $tempFile = $this->createTempFileWithContent('test');
-        $handle = fopen($tempFile, 'rb');
-
-        self::assertIsResource(
-            $handle,
-            'File handle should be a valid resource.',
-        );
-
-        $response = new Response(['charset' => 'UTF-8']);
-
-        $response->stream = [$handle, 0]; // missing end parameter
-
-        $adapter = new ResponseAdapter(
-            $response,
-            HelperFactory::createResponseFactory(),
-            HelperFactory::createStreamFactory(),
-            new Security(),
-        );
-
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage(
-            Message::RESPONSE_STREAM_FORMAT_INVALID->getMessage(),
-        );
-
-        $adapter->toPsr7();
-    }
-
     public function testThrowExceptionWhenStreamCopyToStreamFailsToReadFile(): void
     {
         $content = 'Test content for stream failure';
@@ -2081,6 +2052,35 @@ final class ResponseAdapterTest extends TestCase
         $this->expectException(InvalidConfigException::class);
         $this->expectExceptionMessage(
             Message::RESPONSE_STREAM_READ_ERROR->getMessage(),
+        );
+
+        $adapter->toPsr7();
+    }
+
+    public function testThrowExceptionWhenStreamFormatIsInvalid(): void
+    {
+        $tempFile = $this->createTempFileWithContent('test');
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->stream = [$handle, 0]; // missing end parameter
+
+        $adapter = new ResponseAdapter(
+            $response,
+            HelperFactory::createResponseFactory(),
+            HelperFactory::createStreamFactory(),
+            new Security(),
+        );
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            Message::RESPONSE_STREAM_FORMAT_INVALID->getMessage(),
         );
 
         $adapter->toPsr7();
