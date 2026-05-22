@@ -1127,6 +1127,68 @@ final class RequestTest extends TestCase
         );
     }
 
+    public function testHttpAuthCredentialsFallbackToPsrServerParamsWhenAuthorizationHeaderIsAbsent(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest(
+                'GET',
+                '/auth',
+                serverParams: [
+                    'PHP_AUTH_USER' => 'server-user',
+                    'PHP_AUTH_PW' => 'server-password',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            ['server-user', 'server-password'],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should fall back to request-scoped 'PHP_AUTH_*' server params.",
+        );
+        self::assertSame(
+            'server-user',
+            $request->getAuthUser(),
+            "'getAuthUser()' should return the username from request-scoped 'PHP_AUTH_USER'.",
+        );
+        self::assertSame(
+            'server-password',
+            $request->getAuthPassword(),
+            "'getAuthPassword()' should return the password from request-scoped 'PHP_AUTH_PW'.",
+        );
+    }
+
+    public function testHttpAuthCredentialsFallbackToPsrServerParamsWhenOnlyPasswordIsPresent(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest(
+                'GET',
+                '/auth',
+                serverParams: [
+                    'PHP_AUTH_PW' => 'server-password',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            [null, 'server-password'],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should preserve a password-only request-scoped 'PHP_AUTH_PW' fallback.",
+        );
+        self::assertNull(
+            $request->getAuthUser(),
+            "'getAuthUser()' should be 'null' when request-scoped 'PHP_AUTH_USER' is absent.",
+        );
+        self::assertSame(
+            'server-password',
+            $request->getAuthPassword(),
+            "'getAuthPassword()' should return the password from request-scoped 'PHP_AUTH_PW'.",
+        );
+    }
+
     /**
      * @phpstan-param array<array{false|string|null, string|null}> $expected
      */
@@ -1198,6 +1260,62 @@ final class RequestTest extends TestCase
             $pw,
             $request->getAuthPassword(),
             "'getAuthPassword()' should return the password from 'Authorization' when available.",
+        );
+    }
+
+    public function testHttpAuthCredentialsIgnoreStaleSuperglobalsWhenPsrRequestHasNoCredentials(): void
+    {
+        $_SERVER['PHP_AUTH_USER'] = 'stale-user';
+        $_SERVER['PHP_AUTH_PW'] = 'stale-password';
+
+        $request = new Request();
+
+        $request->setPsr7Request(HelperFactory::createRequest('GET', '/auth'));
+
+        self::assertSame(
+            [null, null],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should not read stale process-global 'PHP_AUTH_*' values in PSR mode.",
+        );
+        self::assertNull(
+            $request->getAuthUser(),
+            "'getAuthUser()' should be 'null' when the current PSR request has no Basic credentials.",
+        );
+        self::assertNull(
+            $request->getAuthPassword(),
+            "'getAuthPassword()' should be 'null' when the current PSR request has no Basic credentials.",
+        );
+    }
+
+    public function testHttpAuthCredentialsPreferPsrAuthorizationHeaderOverStaleSuperglobals(): void
+    {
+        $_SERVER['PHP_AUTH_USER'] = 'stale-user';
+        $_SERVER['PHP_AUTH_PW'] = 'stale-password';
+
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest(
+                'GET',
+                '/auth',
+                ['Authorization' => 'Basic ' . base64_encode('current-user:current-password')],
+            ),
+        );
+
+        self::assertSame(
+            ['current-user', 'current-password'],
+            $request->getAuthCredentials(),
+            "'getAuthCredentials()' should prefer the current PSR 'Authorization' header over stale superglobals.",
+        );
+        self::assertSame(
+            'current-user',
+            $request->getAuthUser(),
+            "'getAuthUser()' should return the username from the current PSR 'Authorization' header.",
+        );
+        self::assertSame(
+            'current-password',
+            $request->getAuthPassword(),
+            "'getAuthPassword()' should return the password from the current PSR 'Authorization' header.",
         );
     }
 
