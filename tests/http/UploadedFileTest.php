@@ -1491,14 +1491,14 @@ final class UploadedFileTest extends TestCase
         self::assertInstanceOf(
             YiiUploadedFile::class,
             YiiUploadedFile::getInstanceByName('avatar'),
-            "Precondition failed: legacy Yii cache should contain an uploaded file before reset.",
+            'Precondition failed: legacy Yii cache should contain an uploaded file before reset.',
         );
 
         UploadedFile::reset();
 
         self::assertNull(
             YiiUploadedFile::getInstanceByName('avatar'),
-            "Legacy Yii cache should be cleared when bridge UploadedFile::reset() is called.",
+            'Legacy Yii cache should be cleared when bridge UploadedFile::reset() is called.',
         );
     }
 
