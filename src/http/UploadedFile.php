@@ -377,7 +377,7 @@ class UploadedFile extends \yii\web\UploadedFile
          *       size: int|int[],
          *       error: int|int[],
          *       full_path?: string|string[]|null,
-         *       tmp_resource?: resource|null|array<mixed>,
+         *       tmp_resource?: resource|array<mixed>|null,
          *    }
          * > $_FILES
          */
