@@ -606,7 +606,7 @@ final class SapiEmitterTest extends TestCase
     public function testEmitResponseWithVariousBodyContents(
         string $contents,
         array $expected,
-        int|null $buffer,
+        int $buffer,
         int|null $first,
         int|null $last,
     ): void {

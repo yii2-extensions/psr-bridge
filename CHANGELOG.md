@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(http): unregister previous error handler before reinit.
 - fix(security): isolate Basic authentication credential lookup to the current PSR request in worker mode.
 - fix: avoid buffering entire file responses in memory.
+- fix(security): stream PSR-7 response bodies by default in `SapiEmitter` to avoid memory exhaustion.
 
 ## 0.3.0 February 28, 2026
 
