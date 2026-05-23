@@ -22,8 +22,6 @@ $emitter = new SapiEmitter(8192);
 Update DI/container definitions in the same way by removing an explicit `null` constructor argument or replacing it with
 a positive integer.
 
-### Notes
-
 - Passing `null` now raises a PHP `TypeError`.
 - The previous full-body string emission path was removed to avoid memory exhaustion for large PSR-7 response bodies.
 
@@ -78,7 +76,5 @@ If your application config sets `workerMode`, remove it:
     ],
 ],
 ```
-
-### Notes
 
 - Classes changed from `final` to non-final are extensibility improvements and do not require migration.
