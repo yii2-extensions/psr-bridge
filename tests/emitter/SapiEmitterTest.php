@@ -73,6 +73,7 @@ final class SapiEmitterTest extends TestCase
             "Buffer length parameter should have a default value of '8192'.",
         );
     }
+
     /**
      * @throws HeadersAlreadySentException if HTTP headers have already been sent to the client.
      * @throws OutputAlreadySentException if response output has already been emitted.
