@@ -77,6 +77,25 @@ final class RangeStreamTest extends TestCase
         );
     }
 
+    /**
+     * @throws Exception if the mock object cannot be created.
+     */
+    public function testConstructorAcceptsNonSeekableStreamWithoutCallingSeek(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+
+        $stream->method('isSeekable')->willReturn(false);
+        $stream->expects(self::never())->method('seek');
+
+        $rangeStream = new RangeStream($stream, 0, 3);
+
+        self::assertSame(
+            4,
+            $rangeStream->getSize(),
+            'Construction must succeed for non-seekable streams.',
+        );
+    }
+
     public function testConstructorSeeksUnderlyingStreamToBegin(): void
     {
         $stream = $this->stream('0123456789');

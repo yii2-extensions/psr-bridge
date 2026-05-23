@@ -54,6 +54,9 @@ final class RangeStream implements StreamInterface
     /**
      * Creates a new instance of the {@see RangeStream} class.
      *
+     * Rewinds the underlying stream to `$begin` only when it reports as seekable; non-seekable streams must already be
+     * positioned at `$begin` by the caller.
+     *
      * @param StreamInterface $stream Underlying stream to expose a bounded view of.
      * @param int $begin Inclusive byte offset where the range starts (`0`-based, absolute in the underlying stream).
      * @param int $end Inclusive byte offset where the range ends (absolute in the underlying stream).
@@ -68,7 +71,10 @@ final class RangeStream implements StreamInterface
 
         $this->length = $end - $begin + 1;
         $this->stream = $stream;
-        $this->rewind();
+
+        if ($stream->isSeekable()) {
+            $this->rewind();
+        }
     }
 
     /**
