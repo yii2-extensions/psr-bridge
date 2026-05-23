@@ -83,6 +83,7 @@ final class ResponseAdapterTest extends TestCase
             'Handle must be closed when the stream factory throws.',
         );
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
