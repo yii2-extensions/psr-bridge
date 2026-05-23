@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Group;
-use Psr\Http\Message\{StreamFactoryInterface, StreamInterface};
+use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use yii\base\{InvalidConfigException, Security};
 use yii\web\Cookie;
@@ -14,7 +14,7 @@ use yii2\extensions\psrbridge\adapter\ResponseAdapter;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
-use yii2\extensions\psrbridge\tests\support\stub\{MockerFunctions, StreamFactorySpy};
+use yii2\extensions\psrbridge\tests\support\stub\{MockerFunctions, StreamFactorySpy, ThrowingStreamFactory};
 
 use function fclose;
 use function fopen;
@@ -45,6 +45,44 @@ use function urlencode;
 #[Group('adapter')]
 final class ResponseAdapterTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testCloseFileHandleWhenStreamFactoryCannotCreateFileStream(): void
+    {
+        $content = 'Test content for stream factory failure';
+
+        $tempFile = $this->createTempFileWithContent($content);
+        $handle = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $handle,
+            'File handle should be a valid resource.',
+        );
+
+        $response = new Response(['charset' => 'UTF-8']);
+
+        $response->stream = [$handle, 0, strlen($content) - 1];
+
+        $adapter = new ResponseAdapter(
+            $response,
+            HelperFactory::createResponseFactory(),
+            new ThrowingStreamFactory(),
+            new Security(),
+        );
+
+        try {
+            $adapter->toPsr7();
+            self::fail('Adapter must propagate the factory exception.');
+        } catch (RuntimeException) {
+            // expected
+        }
+
+        self::assertFalse(
+            is_resource($handle),
+            'Handle must be closed when the stream factory throws.',
+        );
+    }
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
@@ -211,17 +249,17 @@ final class ResponseAdapterTest extends TestCase
         );
 
         $psr7Response = $adapter->toPsr7();
-        $content = $psr7Response->getBody()->read($end - $begin + 1);
+        $body = (string) $psr7Response->getBody();
 
         self::assertSame(
             $expectedContent,
-            $content,
-            "Reading '\$length' bytes from '\$begin' must match the range.",
+            $body,
+            "Body must contain only bytes in '[\$begin, \$end]'.",
         );
         self::assertSame(
             $end - $begin + 1,
-            strlen($content),
-            'Bytes read must equal the large range size.',
+            strlen($body),
+            'Body length must equal the large range size.',
         );
     }
 
@@ -266,17 +304,17 @@ final class ResponseAdapterTest extends TestCase
             'PSR-7 response should maintain the partial content status code.',
         );
 
-        $content = $psr7Response->getBody()->read($end - $begin + 1);
+        $body = (string) $psr7Response->getBody();
 
         self::assertSame(
             $expectedContent,
-            $content,
-            "Reading '\$length' bytes from '\$begin' must match the range.",
+            $body,
+            "Body must contain only bytes in '[\$begin, \$end]'.",
         );
         self::assertSame(
             strlen($expectedContent),
-            strlen($content),
-            'Bytes read must equal the range size.',
+            strlen($body),
+            'Body length must equal the range size.',
         );
     }
 
@@ -370,17 +408,17 @@ final class ResponseAdapterTest extends TestCase
         );
 
         $psr7Response = $adapter->toPsr7();
-        $content = $psr7Response->getBody()->read(1);
+        $body = (string) $psr7Response->getBody();
 
         self::assertSame(
             $expectedContent,
-            $content,
-            "Reading one byte from '\$begin' must match the expected byte.",
+            $body,
+            "Body must contain only the single byte at '\$begin'.",
         );
         self::assertSame(
             1,
-            strlen($content),
-            "Bytes read must equal one 'byte'.",
+            strlen($body),
+            "Body length must equal one 'byte'.",
         );
     }
 
@@ -2296,22 +2334,7 @@ final class ResponseAdapterTest extends TestCase
         $adapter = new ResponseAdapter(
             $response,
             HelperFactory::createResponseFactory(),
-            new class implements StreamFactoryInterface {
-                public function createStream(string $content = ''): StreamInterface
-                {
-                    throw new RuntimeException('Stream creation failed.');
-                }
-
-                public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
-                {
-                    throw new RuntimeException('Stream creation failed.');
-                }
-
-                public function createStreamFromResource($resource): StreamInterface
-                {
-                    throw new RuntimeException('Stream creation failed.');
-                }
-            },
+            new ThrowingStreamFactory(),
             new Security(),
         );
 

@@ -6,6 +6,7 @@ namespace yii2\extensions\psrbridge\adapter;
 
 use DateTimeInterface;
 use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface, StreamInterface};
+use Throwable;
 use yii\base\{InvalidConfigException, Security};
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\exception\Message;
@@ -157,21 +158,15 @@ final class ResponseAdapter
     }
 
     /**
-     * Creates a PSR-7 stream from a file handle and byte range defined in the Yii Response component.
+     * Creates a PSR-7 stream bounded to the byte range defined in the Yii Response component.
      *
-     * Reads the specified byte range from the file handle provided by the Yii Response stream property and return a
-     * new PSR-7 StreamInterface containing the file data.
-     *
-     * This method validates the stream format, range, and handle before reading, ensuring type safety and correct
-     * operation for file streaming scenarios.
-     * - Ensures the byte range is valid and the handle is a resource.
-     * - Reads the requested range and closes the file handle after reading.
-     * - Returns a new PSR-7 stream containing the file content for the specified range.
-     * - Validates that the stream is a three-element array: [resource, int $begin, int $end].
+     * Seeks the file handle to the start offset and wraps it in a {@see RangeStream} so consumers cannot read past the
+     * declared `$end`, preserving the PSR-7 body contract for partial-content responses without buffering bytes into
+     * memory or temporary storage.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return StreamInterface PSR-7 StreamInterface containing the file data for the specified range.
+     * @return StreamInterface PSR-7 stream bounded to the requested byte range.
      */
     private function createStreamFromFileHandle(): StreamInterface
     {
@@ -197,12 +192,23 @@ final class ResponseAdapter
             throw new InvalidConfigException(Message::RESPONSE_STREAM_HANDLE_INVALID->getMessage());
         }
 
-        // seek to the requested start offset and stream directly from the original file handle
         if (fseek($handle, $begin) !== 0) {
+            fclose($handle);
+
             throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
         }
 
-        return $this->streamFactory->createStreamFromResource($handle);
+        try {
+            $body = $this->streamFactory->createStreamFromResource($handle);
+        } catch (Throwable $e) {
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
+
+            throw $e;
+        }
+
+        return new RangeStream($body, $begin, $end);
     }
 
     /**
