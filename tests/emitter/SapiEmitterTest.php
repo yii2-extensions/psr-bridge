@@ -7,6 +7,8 @@ namespace yii2\extensions\psrbridge\tests\emitter;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
 use PHPUnit\Framework\MockObject\{Exception, MockObject};
 use Psr\Http\Message\{ResponseInterface, StreamInterface};
+use ReflectionClass;
+use ReflectionParameter;
 use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\emitter\SapiEmitter;
 use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
@@ -14,6 +16,7 @@ use yii2\extensions\psrbridge\tests\provider\EmitterProvider;
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
+use function array_shift;
 use function fopen;
 use function implode;
 use function is_int;
@@ -45,6 +48,31 @@ use function ob_start;
 #[Group('emitter')]
 final class SapiEmitterTest extends TestCase
 {
+    public function testDefaultBufferLengthIsEightKilobytes(): void
+    {
+        $constructor = (new ReflectionClass(SapiEmitter::class))->getConstructor();
+
+        self::assertNotNull($constructor);
+
+        $parameters = $constructor->getParameters();
+
+        $parameter = array_shift($parameters);
+
+        self::assertInstanceOf(
+            ReflectionParameter::class,
+            $parameter,
+            'Constructor should have a parameter for buffer length.',
+        );
+        self::assertTrue(
+            $parameter->isDefaultValueAvailable(),
+            'Buffer length parameter should have a default value.',
+        );
+        self::assertSame(
+            8192,
+            $parameter->getDefaultValue(),
+            "Buffer length parameter should have a default value of '8192'.",
+        );
+    }
     /**
      * @throws HeadersAlreadySentException if HTTP headers have already been sent to the client.
      * @throws OutputAlreadySentException if response output has already been emitted.
