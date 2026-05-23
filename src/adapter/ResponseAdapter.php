@@ -12,7 +12,6 @@ use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
 
 use function count;
-use function fclose;
 use function fseek;
 use function gmdate;
 use function is_array;
@@ -21,7 +20,6 @@ use function is_numeric;
 use function is_resource;
 use function is_string;
 use function max;
-use function rewind;
 use function serialize;
 use function strtotime;
 use function time;
@@ -37,11 +35,6 @@ use function urlencode;
  */
 final class ResponseAdapter
 {
-    /**
-     * Maximum bytes stored in memory before file response bodies spill to disk-backed temporary storage.
-     */
-    private const TEMP_STREAM_MAX_MEMORY = 2 * 1024 * 1024;
-
     /**
      * Creates a new instance of the {@see ResponseAdapter} class.
      *
@@ -205,30 +198,12 @@ final class ResponseAdapter
             throw new InvalidConfigException(Message::RESPONSE_STREAM_HANDLE_INVALID->getMessage());
         }
 
-        // stream the specified range into a disk-backed temporary stream to avoid large memory allocations
-        fseek($handle, $begin);
-
-        $tempStream = fopen('php://temp/maxmemory:' . self::TEMP_STREAM_MAX_MEMORY, 'w+b');
-
-        if ($tempStream === false) {
-            fclose($handle);
-
+        // seek to the requested start offset and stream directly from the original file handle
+        if (fseek($handle, $begin) !== 0) {
             throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
         }
 
-        $bytesCopied = stream_copy_to_stream($handle, $tempStream, $end - $begin + 1);
-
-        fclose($handle);
-
-        if ($bytesCopied === false) {
-            fclose($tempStream);
-
-            throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
-        }
-
-        rewind($tempStream);
-
-        return $this->streamFactory->createStreamFromResource($tempStream);
+        return $this->streamFactory->createStreamFromResource($handle);
     }
 
     /**
