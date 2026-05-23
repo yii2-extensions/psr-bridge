@@ -160,7 +160,7 @@ final class RangeStreamTest extends TestCase
         );
         self::assertTrue(
             $rangeStream->eof(),
-            "Range EOF must trigger independently of underlying EOF.",
+            'Range EOF must trigger independently of underlying EOF.',
         );
     }
 
@@ -253,7 +253,7 @@ final class RangeStreamTest extends TestCase
 
         self::assertFalse(
             $rangeStream->isReadable(),
-            "Closed stream must report not readable.",
+            'Closed stream must report not readable.',
         );
     }
 
@@ -521,7 +521,7 @@ final class RangeStreamTest extends TestCase
         self::assertSame(
             '2345',
             (string) $rangeStream,
-            "String cast must rewind and yield the full range.",
+            'String cast must rewind and yield the full range.',
         );
     }
 
