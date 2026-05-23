@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\MockObject\Exception;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use yii2\extensions\psrbridge\adapter\RangeStream;
@@ -22,8 +23,8 @@ use const SEEK_END;
 /**
  * Unit tests for the {@see RangeStream} PSR-7 range-bounded stream wrapper.
  *
- * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 0.4.0
+ * @copyright Copyright (C) 2026 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
 final class RangeStreamTest extends TestCase
@@ -32,7 +33,10 @@ final class RangeStreamTest extends TestCase
     {
         $resource = fopen('php://memory', 'r+');
 
-        self::assertIsResource($resource, 'Setup: memory resource must be valid.');
+        self::assertIsResource(
+            $resource,
+            'Setup: memory resource must be valid.',
+        );
 
         fwrite($resource, 'test');
         fseek($resource, 0);
@@ -44,7 +48,7 @@ final class RangeStreamTest extends TestCase
 
         self::assertFalse(
             is_resource($resource),
-            'Underlying resource must be closed by `close()`.',
+            "Underlying resource must be closed by 'close()'.",
         );
     }
 
@@ -69,7 +73,7 @@ final class RangeStreamTest extends TestCase
 
         self::assertNull(
             $rangeStream->getSize(),
-            'Size must be `null` after close.',
+            "Size must be 'null' after close.",
         );
     }
 
@@ -85,18 +89,19 @@ final class RangeStreamTest extends TestCase
         self::assertSame(
             2,
             $stream->tell(),
-            'Underlying stream must be repositioned to `$begin`.',
+            "Underlying stream must be repositioned to '2'.",
         );
     }
 
     public function testDetachReturnsNullAfterClose(): void
     {
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+
         $rangeStream->close();
 
         self::assertNull(
             $rangeStream->detach(),
-            'Detach after close must return `null`.',
+            "Detach after close must return 'null'.",
         );
     }
 
@@ -112,7 +117,19 @@ final class RangeStreamTest extends TestCase
         );
         self::assertNull(
             $rangeStream->getSize(),
-            'Size must be `null` after detach.',
+            "Size must be 'null' after detach.",
+        );
+    }
+
+    public function testEofIsTrueAfterClose(): void
+    {
+        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+
+        $rangeStream->close();
+
+        self::assertTrue(
+            $rangeStream->eof(),
+            'EOF: closed stream.',
         );
     }
 
@@ -130,32 +147,65 @@ final class RangeStreamTest extends TestCase
 
     public function testEofIsTrueWhenRangeExhaustedBeforeUnderlyingEof(): void
     {
-        // underlying has bytes past `$end` so the underlying stream stays away from EOF
+        // underlying has bytes past `$end` so the underlying stream stays away from EOF.
         $stream = $this->stream('0123456789');
+
         $rangeStream = new RangeStream($stream, 2, 5);
 
         $rangeStream->read(4);
 
         self::assertFalse(
             $stream->eof(),
-            'Underlying must still have bytes past `$end`.',
+            "Underlying must still have bytes past '\$end'.",
         );
         self::assertTrue(
             $rangeStream->eof(),
-            'Range EOF must trigger independently of underlying EOF.',
+            "Range EOF must trigger independently of underlying EOF.",
+        );
+    }
+
+    /**
+     * @throws Exception if the mock object cannot be created.
+     */
+    public function testGetContentsBreaksWhenUnderlyingReturnsEmpty(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+
+        $stream->method('isSeekable')->willReturn(true);
+        $stream->method('eof')->willReturn(false);
+        $stream->method('tell')->willReturn(0);
+        $stream->method('read')->willReturn('');
+
+        $rangeStream = new RangeStream($stream, 0, 100);
+
+        self::assertSame(
+            '',
+            $rangeStream->getContents(),
+            'Break must short-circuit when underlying read yields empty.',
         );
     }
 
     public function testGetContentsConcatenatesMultipleChunks(): void
     {
-        // `> READ_BUFFER_LENGTH` (8192) to force multiple chunk reads
+        // `> READ_BUFFER_LENGTH` (8192) to force multiple chunk reads.
         $content = str_repeat('A', 20000);
+
         $rangeStream = new RangeStream($this->stream($content), 0, 19999);
 
         self::assertSame(
             $content,
             $rangeStream->getContents(),
             'All chunks must be concatenated.',
+        );
+    }
+
+    public function testGetMetadataReturnsArrayWhenStreamIsOpen(): void
+    {
+        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+
+        self::assertIsArray(
+            $rangeStream->getMetadata(),
+            "Open stream metadata must be an 'array'.",
         );
     }
 
@@ -203,7 +253,7 @@ final class RangeStreamTest extends TestCase
 
         self::assertFalse(
             $rangeStream->isReadable(),
-            'Closed stream must report not readable.',
+            "Closed stream must report not readable.",
         );
     }
 
@@ -253,6 +303,7 @@ final class RangeStreamTest extends TestCase
     public function testReadFromMidRangeReturnsOnlyRemainingBytes(): void
     {
         $rangeStream = new RangeStream($this->stream('0123456789'), 2, 5);
+
         $rangeStream->seek(1);
 
         self::assertSame(
@@ -269,7 +320,7 @@ final class RangeStreamTest extends TestCase
         self::assertSame(
             '',
             $rangeStream->read(0),
-            'Zero-length read must short-circuit to empty `string`.',
+            "Zero-length read must short-circuit to empty 'string'.",
         );
     }
 
@@ -282,13 +333,14 @@ final class RangeStreamTest extends TestCase
         self::assertSame(
             '',
             $rangeStream->read(10),
-            'Read past range EOF must yield empty `string`.',
+            "Read past range EOF must yield empty 'string'.",
         );
     }
 
     public function testSeekUpdatesUnderlyingStreamPosition(): void
     {
         $stream = $this->stream('0123456789');
+
         $rangeStream = new RangeStream($stream, 2, 5);
 
         $rangeStream->seek(2);
@@ -296,15 +348,15 @@ final class RangeStreamTest extends TestCase
         self::assertSame(
             4,
             $stream->tell(),
-            'Underlying position must equal `$begin + $offset`.',
+            "Underlying position must equal '\$begin + \$offset'.",
         );
     }
 
     public function testSeekWithSeekCurAdvancesRelativeToCurrentPosition(): void
     {
         $rangeStream = new RangeStream($this->stream('0123456789'), 2, 5);
-        $rangeStream->seek(1);
 
+        $rangeStream->seek(1);
         $rangeStream->seek(2, SEEK_CUR);
 
         self::assertSame(
@@ -323,13 +375,14 @@ final class RangeStreamTest extends TestCase
         self::assertSame(
             3,
             $rangeStream->tell(),
-            "'SEEK_END' must position relative to `length`.",
+            "'SEEK_END' must position relative to 'length'.",
         );
     }
 
     public function testTellReturnsLengthWhenUnderlyingIsPastEnd(): void
     {
         $stream = $this->stream('0123456789');
+
         $rangeStream = new RangeStream($stream, 2, 5);
 
         $stream->seek(8);
@@ -337,7 +390,7 @@ final class RangeStreamTest extends TestCase
         self::assertSame(
             4,
             $rangeStream->tell(),
-            'Position must clamp to `length` past `$end`.',
+            "Position must clamp to 'length' past '\$end'.",
         );
     }
 
@@ -351,7 +404,7 @@ final class RangeStreamTest extends TestCase
         self::assertSame(
             0,
             $rangeStream->tell(),
-            'Position must clamp to `0` below `$begin`.',
+            "Position must clamp to '0' below '\$begin'.",
         );
     }
 
@@ -360,7 +413,9 @@ final class RangeStreamTest extends TestCase
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Invalid seek mode.');
+        $this->expectExceptionMessage(
+            'Invalid seek mode.',
+        );
 
         $rangeStream->seek(0, 99);
     }
@@ -370,7 +425,9 @@ final class RangeStreamTest extends TestCase
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Cannot read a negative length from a stream.');
+        $this->expectExceptionMessage(
+            'Cannot read a negative length from a stream.',
+        );
 
         $rangeStream->read(-1);
     }
@@ -382,7 +439,9 @@ final class RangeStreamTest extends TestCase
         $rangeStream->close();
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('No stream available.');
+        $this->expectExceptionMessage(
+            'No stream available.',
+        );
 
         $rangeStream->tell();
     }
@@ -390,7 +449,9 @@ final class RangeStreamTest extends TestCase
     public function testThrowRuntimeExceptionWhenBeginIsNegative(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Invalid stream range.');
+        $this->expectExceptionMessage(
+            'Invalid stream range.',
+        );
 
         new RangeStream($this->stream('test'), -1, 5);
     }
@@ -398,7 +459,9 @@ final class RangeStreamTest extends TestCase
     public function testThrowRuntimeExceptionWhenEndIsLessThanBegin(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Invalid stream range.');
+        $this->expectExceptionMessage(
+            'Invalid stream range.',
+        );
 
         new RangeStream($this->stream('test'), 5, 3);
     }
@@ -408,7 +471,9 @@ final class RangeStreamTest extends TestCase
         $rangeStream = new RangeStream($this->stream('0123456789'), 2, 5);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Cannot seek before the beginning of the stream range.');
+        $this->expectExceptionMessage(
+            'Cannot seek before the beginning of the stream range.',
+        );
 
         $rangeStream->seek(-5);
     }
@@ -418,22 +483,45 @@ final class RangeStreamTest extends TestCase
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Range streams are not writable.');
+        $this->expectExceptionMessage(
+            'Range streams are not writable.',
+        );
 
         $rangeStream->write('x');
+    }
+
+    /**
+     * @throws Exception if the mock object cannot be created.
+     */
+    public function testToStringReturnsEmptyStringWhenUnderlyingThrows(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+
+        $stream->method('isSeekable')->willReturn(true);
+        $stream->method('eof')->willReturn(false);
+        $stream->method('tell')->willReturn(0);
+        $stream->method('read')->willThrowException(new RuntimeException('Read failed.'));
+
+        $rangeStream = new RangeStream($stream, 0, 3);
+
+        self::assertSame(
+            '',
+            (string) $rangeStream,
+            "String cast must yield empty 'string' when the underlying stream throws.",
+        );
     }
 
     public function testToStringRewindsBeforeReadingFullRange(): void
     {
         $rangeStream = new RangeStream($this->stream('0123456789'), 2, 5);
 
-        // advance the cursor before casting to `string` to verify rewind happens inside `__toString()`
+        // advance the cursor before casting to `string` to verify rewind happens inside `__toString()`.
         $rangeStream->read(2);
 
         self::assertSame(
             '2345',
             (string) $rangeStream,
-            'String cast must rewind and yield the full range.',
+            "String cast must rewind and yield the full range.",
         );
     }
 
