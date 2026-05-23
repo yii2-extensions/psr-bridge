@@ -96,45 +96,15 @@ final class MockerExtension implements Extension
             ],
             [
                 'namespace' => 'yii2\extensions\psrbridge\adapter',
-                'name' => 'fopen',
+                'name' => 'fseek',
                 'function' => static fn(
-                    string $filename,
-                    string $mode,
-                    bool $use_include_path = false,
-                    $context = null,
-                ): mixed => MockerFunctions::fopen(
-                    $filename,
-                    $mode,
-                    $use_include_path,
-                    $context,
-                ),
-            ],
-            [
-                'namespace' => 'yii2\extensions\psrbridge\adapter',
-                'name' => 'stream_copy_to_stream',
-                'function' => static fn(
-                    $from,
-                    $to,
-                    int|null $length = null,
-                    int $offset = 0,
-                ): mixed => MockerFunctions::stream_copy_to_stream(
-                    $from,
-                    $to,
-                    $length,
+                    $stream,
+                    int $offset,
+                    int $whence = SEEK_SET,
+                ): int => MockerFunctions::fseek(
+                    $stream,
                     $offset,
-                ),
-            ],
-            [
-                'namespace' => 'yii2\extensions\psrbridge\adapter',
-                'name' => 'stream_get_contents',
-                'function' => static fn(
-                    $resource,
-                    int $maxlength = -1,
-                    int $offset = -1,
-                ): mixed => MockerFunctions::stream_get_contents(
-                    $resource,
-                    $maxlength,
-                    $offset,
+                    $whence,
                 ),
             ],
             [
