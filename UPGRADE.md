@@ -34,7 +34,6 @@ a positive integer.
 - `yii2\extensions\psrbridge\http\StatelessApplication::reset()` was renamed to `yii2\extensions\psrbridge\http\Application::prepareForRequest()`.
 - `yii2\extensions\psrbridge\http\Request::$workerMode` was removed.
 
-
 ### 1) Update custom `StatelessApplication` subclasses
 
 Replace imports and instantiation sites:
