@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(security): isolate Basic authentication credential lookup to the current PSR request in worker mode.
 - fix: avoid buffering entire file responses in memory.
 - fix!(security): stream PSR-7 response bodies by default in `SapiEmitter` to avoid memory exhaustion.
+- fix(security): stream Yii file response bodies directly from the file handle without buffering in memory or disk-backed temporary storage.
 
 ## 0.3.0 February 28, 2026
 

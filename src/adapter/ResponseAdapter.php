@@ -12,7 +12,6 @@ use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
 
 use function count;
-use function fseek;
 use function gmdate;
 use function is_array;
 use function is_int;
