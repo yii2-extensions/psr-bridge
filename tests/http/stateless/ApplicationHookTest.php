@@ -50,6 +50,7 @@ final class ApplicationHookTest extends TestCase
             'Lifecycle hooks must still fire in order when resetUploadedFiles is set to false.',
         );
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
