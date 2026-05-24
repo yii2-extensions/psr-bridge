@@ -58,7 +58,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Controls whether uploaded file static state is reset for each request.
      *
-     * Set to `false` to retain static uploaded-file state across requests (advanced use only).
+     * This remains enabled for request isolation and is not intended to be disabled in workers.
      */
     public bool $resetUploadedFiles = true;
 
@@ -329,9 +329,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         $this->startEventTracking();
         $this->reinitializeApplication();
 
-        if ($this->resetUploadedFiles) {
-            $this->resetUploadedFilesState();
-        }
+        $this->resetUploadedFilesState();
 
         $this->resetRequestState();
         $this->prepareErrorHandler();

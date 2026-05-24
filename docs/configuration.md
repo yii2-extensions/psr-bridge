@@ -218,7 +218,7 @@ $app->persistentComponents = ['db', 'cache'];
 
 - `useSession`: keep `true` unless the application is strictly stateless. Setting it to `false` skips bridge session open/finalize hooks; custom code may still open sessions.
 - `syncCookieValidation`: keep `true` in most cases. Setting it to `false` disables request-to-response synchronization of cookie validation settings and can break login/identity flows.
-- `resetUploadedFiles`: keep `true` in long-running workers. Setting it to `false` is advanced and can leak static uploaded-file state between requests.
+- `resetUploadedFiles`: keep `true` in long-running workers to preserve per-request upload isolation.
 - `persistentComponents`: list of components to keep alive between requests (default: `['db', 'cache']`). Only include components proven to be request-safe.
 - Never include request-scoped components in `persistentComponents` (`request`, `response`, `errorHandler`, `session`, `user`).
 

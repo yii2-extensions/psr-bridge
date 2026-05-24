@@ -204,7 +204,7 @@ Use non-default values only for advanced scenarios:
 
 - `useSession=false` skips bridge session hooks only.
 - `syncCookieValidation=false` skips cookie validation synchronization between request and response.
-- `resetUploadedFiles=false` can retain uploaded-file static state across requests and should be avoided in most worker deployments.
+- Keep `resetUploadedFiles=true` to preserve per-request uploaded-file isolation in worker deployments.
 
 ## Next steps
 
