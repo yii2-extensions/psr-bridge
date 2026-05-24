@@ -124,15 +124,24 @@ final class RangeStreamTest extends TestCase
         );
     }
 
-    public function testDetachReturnsUnderlyingResource(): void
+    public function testDetachReturnsNullAndClosesUnderlyingResource(): void
     {
-        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+        $resource = fopen('php://memory', 'r+');
+        fwrite($resource, 'test');
+        fseek($resource, 0);
 
-        $resource = $rangeStream->detach();
+        $stream = HelperFactory::createStreamFactory()->createStreamFromResource($resource);
+        $rangeStream = new RangeStream($stream, 0, 3);
 
-        self::assertIsResource(
-            $resource,
-            'Detach must return the underlying resource.',
+        $detached = $rangeStream->detach();
+
+        self::assertNull(
+            $detached,
+            'Detach must not expose the underlying resource.',
+        );
+        self::assertFalse(
+            is_resource($resource),
+            "Underlying resource must be closed by 'detach()'.",
         );
         self::assertNull(
             $rangeStream->getSize(),
@@ -250,6 +259,21 @@ final class RangeStreamTest extends TestCase
         self::assertNull(
             $rangeStream->getMetadata('uri'),
             'Metadata key must yield `null` after close.',
+        );
+    }
+
+    public function testGetMetadataDoesNotExposeUri(): void
+    {
+        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+
+        self::assertNull(
+            $rangeStream->getMetadata('uri'),
+            "Metadata key 'uri' must not be exposed.",
+        );
+        self::assertArrayNotHasKey(
+            'uri',
+            $rangeStream->getMetadata(),
+            "Metadata array must not contain the 'uri' key.",
         );
     }
 

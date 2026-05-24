@@ -126,10 +126,10 @@ final class RangeStream implements StreamInterface
      */
     public function detach()
     {
-        $resource = $this->stream?->detach();
+        $this->stream?->close();
         $this->stream = null;
 
-        return $resource;
+        return null;
     }
 
     /**
@@ -202,7 +202,14 @@ final class RangeStream implements StreamInterface
             return $key === null ? [] : null;
         }
 
-        return $this->stream->getMetadata($key);
+        $metadata = $this->stream->getMetadata();
+        unset($metadata['uri']);
+
+        if ($key === null) {
+            return $metadata;
+        }
+
+        return $metadata[$key] ?? null;
     }
 
     /**
