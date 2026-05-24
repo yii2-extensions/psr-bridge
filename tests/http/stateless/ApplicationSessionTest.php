@@ -19,14 +19,6 @@ use function uniqid;
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} session handling in stateless mode.
  *
- * Test coverage.
- * - Ensures captcha state is isolated across session IDs and requests.
- * - Ensures flash messages remain isolated between sessions.
- * - Ensures session-backed authentication state does not leak between users.
- * - Verifies data persists when the same session ID is reused.
- * - Verifies requests without a session cookie create a new session cookie.
- * - Verifies worker-mode requests keep session data isolated across session IDs.
- *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

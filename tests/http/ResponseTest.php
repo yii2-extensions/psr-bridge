@@ -22,11 +22,6 @@ use function urlencode;
 /**
  * Unit tests for {@see Response} PSR-7 conversion behavior.
  *
- * Test coverage.
- * - Ensures PSR-7 conversion preserves status, body, headers, and response event behavior.
- * - Ensures session cookie handling works for active, inactive, missing, and default session configurations.
- * - Verifies `prepare()` runs during PSR-7 conversion for formatted response payloads.
- *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

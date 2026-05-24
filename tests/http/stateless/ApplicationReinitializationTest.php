@@ -14,17 +14,6 @@ use yii2\extensions\psrbridge\tests\support\stub\ErrorHandlerSpy;
 /**
  * Unit tests for the {@see Application} class reinitialization behavior in stateless mode.
  *
- * Test coverage.
- * - Ensures aliases remain consistent across reinitialization.
- * - Ensures application state reaches `STATE_END` after each handled request.
- * - Ensures custom persistent components keep the same instance across requests.
- * - Verifies built-in persistent components keep the same instance across requests.
- * - Verifies high-volume request handling remains stable during reinitialization.
- * - Verifies request-scoped components are recreated for each request.
- * - Verifies the application recovers after an error on a prior request.
- * - Verifies the previous error handler is unregistered before reinitialization.
- * - Verifies the Yii::$app reference remains bound to the same application instance.
- *
  * @copyright Copyright (C) 2026 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

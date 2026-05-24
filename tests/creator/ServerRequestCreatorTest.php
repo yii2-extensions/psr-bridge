@@ -17,14 +17,7 @@ use function stream_get_meta_data;
 use const UPLOAD_ERR_OK;
 
 /**
- * Test suite for {@see ServerRequestCreator} class functionality and behavior.
- *
- * Test coverage.
- * - Ensures correct mapping of server values and robust error handling for invalid input.
- * - Extraction and normalization of HTTP headers from $_SERVER, including case-insensitive and complex names.
- * - Handling of body streams, including readable streams and stream exceptions.
- * - Parsing of cookies, query parameters, POST data, and uploaded files from globals.
- * - Validation of default values, empty headers, and edge cases in global arrays.
+ * Unit tests for {@see ServerRequestCreator} global-request creation behavior.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

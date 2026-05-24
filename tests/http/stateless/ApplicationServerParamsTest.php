@@ -12,9 +12,7 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} server parameter handling in stateless mode.
  *
- * Test coverage.
- * - Ensures remote IP resolution handles valid and invalid REMOTE_ADDR values.
- * - Verifies server port resolution from trusted forwarded headers.
+ * {@see ApplicationProvider} for test case data providers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

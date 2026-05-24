@@ -33,13 +33,7 @@ use function urlencode;
 /**
  * Unit tests for {@see ResponseAdapter} PSR-7 conversion behavior.
  *
- * Test coverage.
- * - Ensures cookie formatting covers validation modes, expiration variants, SameSite handling, and deletion cookies.
- * - Ensures file streams preserve headers and status codes across full, partial, large-range, and single-byte reads.
- * - Ensures stream responses take precedence over response content and support empty-body fallbacks.
- * - Verifies invalid cookie validation configuration raises InvalidConfigException.
- *
- * @copyright Copyright (C) 2025
+ * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
