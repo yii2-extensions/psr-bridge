@@ -33,9 +33,6 @@ use function urlencode;
 /**
  * Unit tests for {@see ResponseAdapter} PSR-7 conversion behavior.
  *
- * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 1.0
- *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
