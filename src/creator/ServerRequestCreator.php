@@ -26,6 +26,16 @@ use function substr;
 /**
  * Creates PSR-7 server requests from PHP globals.
  *
+ * Usage example:
+ * ```php
+ * $creator = new \yii2\extensions\psrbridge\creator\ServerRequestCreator(
+ *     $serverRequestFactory,
+ *     $streamFactory,
+ *     $uploadedFileFactory,
+ * );
+ * $request = $creator->createFromGlobals();
+ * ```
+ *
  * @phpstan-type UnknownFileInput array<mixed>
  * @phpstan-type FilesArray array<UploadedFileInterface|UnknownFileInput>
  *

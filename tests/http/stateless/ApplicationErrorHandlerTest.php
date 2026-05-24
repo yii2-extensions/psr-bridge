@@ -26,13 +26,7 @@ use function str_contains;
 /**
  * Unit tests for {@see Application} error handling in stateless mode.
  *
- * Test coverage.
- * - Ensures EVENT_AFTER_REQUEST is triggered during exception handling.
- * - Ensures fallback responses mask sensitive server variable values.
- * - Verifies error view selection for debug and non-debug configurations.
- * - Verifies exception rendering across response formats and error-action configurations.
- * - Verifies exceptions are logged when request handling fails.
- * - Verifies invalid routes and strict parsing produce expected not found responses.
+ * {@see ApplicationProvider} for test case data providers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

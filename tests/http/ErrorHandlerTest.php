@@ -21,11 +21,6 @@ use function str_repeat;
 /**
  * Unit tests for {@see ErrorHandler} exception-handling behavior.
  *
- * Test coverage.
- * - Ensures exception handling resets response data, output buffers, and registration state.
- * - Ensures status codes and response payloads are produced for multiple exception types and message variants.
- * - Verifies error responses default to HTML format with non-empty string data.
- *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

@@ -15,12 +15,7 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 /**
  * Unit tests for {@see Request} request-data handling with the PSR-7 adapter.
  *
- * Test coverage.
- * - Ensures HTTP method resolution supports body and header overrides, custom method params, and parent fallback.
- * - Ensures parsed-body handling respects parser configuration, content type availability, and pre-parsed bodies.
- * - Ensures query params, query strings, URLs, and raw bodies are read from PSR-7 requests and parent fallbacks.
- * - Verifies body params remove method override fields.
- * - Verifies PSR-7 request instance retrieval when an adapter is set.
+ * {@see RequestProvider} for test case data providers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

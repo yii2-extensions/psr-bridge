@@ -14,10 +14,6 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 /**
  * Unit tests for {@see Request} cookie handling with the PSR-7 adapter.
  *
- * Test coverage.
- * - Ensures cookie collections from PSR-7 requests are read-only.
- * - Verifies missing cookie validation keys raise InvalidConfigException when validation is enabled.
- *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

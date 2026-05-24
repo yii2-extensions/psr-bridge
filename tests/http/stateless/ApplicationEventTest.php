@@ -18,13 +18,6 @@ use function count;
 /**
  * Unit tests for {@see Application} event handling in stateless mode.
  *
- * Test coverage.
- * - Ensures component and global handlers are cleaned after each request.
- * - Ensures internal component listeners can still fire outside request handling.
- * - Verifies cleanup preserves reverse (LIFO) order for tracked events.
- * - Verifies event handlers registered for a request do not leak into subsequent requests.
- * - Verifies EVENT_BEFORE_REQUEST and EVENT_AFTER_REQUEST trigger during handling.
- *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

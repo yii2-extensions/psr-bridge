@@ -12,9 +12,6 @@ use yii2\extensions\psrbridge\tests\support\TestCase;
 /**
  * Unit tests for {@see ServerExitCode} enum value mappings.
  *
- * Test coverage.
- * - Ensures ServerExitCode enum cases map to expected integer values.
- *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

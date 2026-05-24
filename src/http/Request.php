@@ -28,6 +28,14 @@ use function strncasecmp;
  *
  * {@see ServerRequestAdapter} PSR-7 to Yii request adapter.
  *
+ * Usage example:
+ * ```php
+ * $request = new \yii2\extensions\psrbridge\http\Request();
+ * $request->setPsr7Request($psr7Request);
+ * $method = $request->getMethod();
+ * $params = $request->getBodyParams();
+ * ```
+ *
  * @phpstan-property array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
