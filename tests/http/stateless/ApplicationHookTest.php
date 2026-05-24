@@ -21,6 +21,38 @@ final class ApplicationHookTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testHandleAlwaysResetsUploadedFilesStateEvenWhenFlagIsDisabled(): void
+    {
+        $app = ApplicationFactory::rest(['resetUploadedFiles' => false]);
+
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $response,
+        );
+        self::assertTrue(
+            $app->resetUploadedFilesStateCalled,
+            "'resetUploadedFilesState()' should always be invoked for request isolation.",
+        );
+        self::assertSame(
+            [
+                'reinitializeApplication',
+                'resetUploadedFilesState',
+                'resetRequestState',
+                'prepareErrorHandler',
+                'attachPsrRequest',
+                'syncCookieValidationState',
+                'openSessionFromRequestCookies',
+                'finalizeSessionState',
+                'terminate',
+            ],
+            $app->hookCallLog,
+            'Lifecycle hooks must still fire in order when resetUploadedFiles is set to false.',
+        );
+    }
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testHandleInvokesOverriddenCoreLifecycleHooks(): void
     {
         $app = ApplicationFactory::rest();
@@ -81,39 +113,6 @@ final class ApplicationHookTest extends TestCase
         self::assertTrue(
             $app->terminateCalled,
             "Overridden 'terminate()' hook should be invoked by 'handle()'.",
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testHandleAlwaysResetsUploadedFilesStateEvenWhenFlagIsDisabled(): void
-    {
-        $app = ApplicationFactory::rest(['resetUploadedFiles' => false]);
-
-        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
-
-        $this->assertSiteIndexJsonResponse(
-            $response,
-        );
-        self::assertTrue(
-            $app->resetUploadedFilesStateCalled,
-            "'resetUploadedFilesState()' should always be invoked for request isolation.",
-        );
-        self::assertSame(
-            [
-                'reinitializeApplication',
-                'resetUploadedFilesState',
-                'resetRequestState',
-                'prepareErrorHandler',
-                'attachPsrRequest',
-                'syncCookieValidationState',
-                'openSessionFromRequestCookies',
-                'finalizeSessionState',
-                'terminate',
-            ],
-            $app->hookCallLog,
-            'Lifecycle hooks must still fire in order when resetUploadedFiles is set to false.',
         );
     }
 
