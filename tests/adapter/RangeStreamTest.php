@@ -127,6 +127,12 @@ final class RangeStreamTest extends TestCase
     public function testDetachReturnsNullAndClosesUnderlyingResource(): void
     {
         $resource = fopen('php://memory', 'r+');
+
+        self::assertIsResource(
+            $resource,
+            'Setup: memory resource must be valid.',
+        );
+
         fwrite($resource, 'test');
         fseek($resource, 0);
 
@@ -146,6 +152,36 @@ final class RangeStreamTest extends TestCase
         self::assertNull(
             $rangeStream->getSize(),
             "Size must be 'null' after detach.",
+        );
+    }
+
+    public function testDetachReturnsNullForPartialRangeWithoutExposingUnderlyingResource(): void
+    {
+        $resource = fopen('php://memory', 'r+');
+
+        self::assertIsResource(
+            $resource,
+            'Setup: memory resource must be valid.',
+        );
+
+        fwrite($resource, '0123456789SECRET_AFTER_RANGE');
+        fseek($resource, 0);
+
+        $stream = HelperFactory::createStreamFactory()->createStreamFromResource($resource);
+        $rangeStream = new RangeStream($stream, 2, 5);
+
+        self::assertSame(
+            '23',
+            $rangeStream->read(2),
+            'Setup: range stream must read from the requested partial range.',
+        );
+        self::assertNull(
+            $rangeStream->detach(),
+            'Detach must not expose the unbounded underlying resource.',
+        );
+        self::assertFalse(
+            is_resource($resource),
+            "Underlying resource must be closed by 'detach()'.",
         );
     }
 
@@ -227,6 +263,59 @@ final class RangeStreamTest extends TestCase
         );
     }
 
+    public function testGetMetadataDoesNotExposeUnderlyingFileUri(): void
+    {
+        $tempFile = $this->createTempFileWithContent('0123456789SECRET_AFTER_RANGE');
+        $resource = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $resource,
+            'Setup: temporary file resource must be valid.',
+        );
+
+        $stream = HelperFactory::createStreamFactory()->createStreamFromResource($resource);
+        $rangeStream = new RangeStream($stream, 2, 5);
+        $metadata = $rangeStream->getMetadata();
+
+        self::assertIsArray(
+            $metadata,
+            "Metadata must be an 'array'.",
+        );
+
+        self::assertNull(
+            $rangeStream->getMetadata('uri'),
+            "Metadata key 'uri' must not expose the underlying file path.",
+        );
+        self::assertArrayNotHasKey(
+            'uri',
+            $metadata,
+            "Metadata array must not contain the underlying file path under 'uri'.",
+        );
+
+        $rangeStream->close();
+    }
+
+    public function testGetMetadataDoesNotExposeUri(): void
+    {
+        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+        $metadata = $rangeStream->getMetadata();
+
+        self::assertIsArray(
+            $metadata,
+            "Metadata must be an 'array'.",
+        );
+
+        self::assertNull(
+            $rangeStream->getMetadata('uri'),
+            "Metadata key 'uri' must not be exposed.",
+        );
+        self::assertArrayNotHasKey(
+            'uri',
+            $metadata,
+            "Metadata array must not contain the 'uri' key.",
+        );
+    }
+
     public function testGetMetadataReturnsArrayWhenStreamIsOpen(): void
     {
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
@@ -259,21 +348,6 @@ final class RangeStreamTest extends TestCase
         self::assertNull(
             $rangeStream->getMetadata('uri'),
             'Metadata key must yield `null` after close.',
-        );
-    }
-
-    public function testGetMetadataDoesNotExposeUri(): void
-    {
-        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
-
-        self::assertNull(
-            $rangeStream->getMetadata('uri'),
-            "Metadata key 'uri' must not be exposed.",
-        );
-        self::assertArrayNotHasKey(
-            'uri',
-            $rangeStream->getMetadata(),
-            "Metadata array must not contain the 'uri' key.",
         );
     }
 

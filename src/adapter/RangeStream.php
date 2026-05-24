@@ -8,6 +8,7 @@ use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
 
+use function is_array;
 use function max;
 use function min;
 
@@ -22,6 +23,10 @@ use const SEEK_SET;
  * bound so consumers cannot read past `$end` even when calling {@see StreamInterface::getContents()} or repeated
  * {@see StreamInterface::read()} calls. Reads proxy to the underlying stream chunk by chunk without buffering the range
  * into memory or temporary storage.
+ *
+ * This is a bounded view, not a transparent decorator for the wrapped stream. The wrapped stream resource and its
+ * original URI can represent bytes outside the declared range, so they are not exposed through {@see detach()} or
+ * `getMetadata('uri')`.
  *
  * Usage example:
  * ```php
@@ -111,22 +116,28 @@ final class RangeStream implements StreamInterface
     public function close(): void
     {
         $this->stream?->close();
+
         $this->stream = null;
     }
 
     /**
-     * Detaches the underlying resource from the wrapped stream and releases the internal reference.
+     * Closes the wrapped stream and releases the internal reference without exposing the underlying resource.
+     *
+     * The wrapped resource is not detached because it can contain bytes outside this bounded view. Returning that
+     * resource would allow consumers to bypass the range limit. Consumers that need the body contents must read through
+     * {@see read()} or {@see getContents()}.
      *
      * Usage example:
      * ```php
      * $resource = $rangeStream->detach();
      * ```
      *
-     * @return resource|null Detached resource handle, or `null` when no stream is available.
+     * @return resource|null Always returns `null` because no safe detachable resource represents this bounded view.
      */
     public function detach()
     {
         $this->stream?->close();
+
         $this->stream = null;
 
         return null;
@@ -184,7 +195,10 @@ final class RangeStream implements StreamInterface
     }
 
     /**
-     * Returns metadata associated with the underlying stream.
+     * Returns metadata associated with this bounded stream view.
+     *
+     * Resource locator metadata such as `uri` is omitted because the underlying URI identifies the unbounded wrapped
+     * stream, not this range-limited view.
      *
      * Usage example:
      * ```php
@@ -193,16 +207,21 @@ final class RangeStream implements StreamInterface
      *
      * @param string|null $key Specific metadata key, or `null` to return the full metadata array.
      *
-     * @return mixed Metadata value for `$key`, the full array when `$key` is `null`, or `null` when no stream is
-     * available and `$key` is provided.
+     * @return mixed Metadata value for `$key`, the full metadata array when `$key` is `null`, or `null` when no stream
+     * is available and `$key` is provided.
      */
-    public function getMetadata(string|null $key = null)
+    public function getMetadata(string|null $key = null): mixed
     {
         if ($this->stream === null) {
             return $key === null ? [] : null;
         }
 
         $metadata = $this->stream->getMetadata();
+
+        if (is_array($metadata) === false) {
+            return $key === null ? [] : null;
+        }
+
         unset($metadata['uri']);
 
         if ($key === null) {
