@@ -129,7 +129,7 @@ final class RangeStream implements StreamInterface
      *
      * Usage example:
      * ```php
-     * $resource = $rangeStream->detach();
+     * $rangeStream->detach();
      * ```
      *
      * @return resource|null Always returns `null` because no safe detachable resource represents this bounded view.
