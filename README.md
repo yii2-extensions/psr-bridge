@@ -146,8 +146,8 @@ Define lifecycle flags before `run()` (via config or property setters).
 ```php
 $config = [
     'class' => Application::class,
-    // disable session and cookie validation sync for stateless REST APIs; keep resetUploadedFiles=true (the default)
-    // unless you have a specific reason to retain uploaded file state across requests
+    // disable session and cookie validation sync for stateless REST APIs.
+    // keep resetUploadedFiles=true (default) for request isolation.
     'useSession' => false,
     'syncCookieValidation' => false,
     'resetUploadedFiles' => true,

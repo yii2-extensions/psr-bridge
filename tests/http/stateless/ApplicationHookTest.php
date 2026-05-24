@@ -87,7 +87,7 @@ final class ApplicationHookTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testHandleSkipsResetUploadedFilesHookWhenResetUploadedFilesIsDisabled(): void
+    public function testHandleAlwaysResetsUploadedFilesStateEvenWhenFlagIsDisabled(): void
     {
         $app = ApplicationFactory::rest(['resetUploadedFiles' => false]);
 
@@ -96,13 +96,14 @@ final class ApplicationHookTest extends TestCase
         $this->assertSiteIndexJsonResponse(
             $response,
         );
-        self::assertFalse(
+        self::assertTrue(
             $app->resetUploadedFilesStateCalled,
-            "'resetUploadedFilesState()' should not be invoked when 'resetUploadedFiles' is disabled.",
+            "'resetUploadedFilesState()' should always be invoked for request isolation.",
         );
         self::assertSame(
             [
                 'reinitializeApplication',
+                'resetUploadedFilesState',
                 'resetRequestState',
                 'prepareErrorHandler',
                 'attachPsrRequest',
@@ -112,7 +113,7 @@ final class ApplicationHookTest extends TestCase
                 'terminate',
             ],
             $app->hookCallLog,
-            'Remaining lifecycle hooks must still fire in order when resetUploadedFiles is disabled.',
+            'Lifecycle hooks must still fire in order when resetUploadedFiles is set to false.',
         );
     }
 
