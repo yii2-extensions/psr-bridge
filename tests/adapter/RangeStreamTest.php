@@ -339,6 +339,25 @@ final class RangeStreamTest extends TestCase
         );
     }
 
+    /**
+     * @throws Exception if the mock object cannot be created.
+     */
+    public function testGetMetadataReturnsEmptyArrayWhenUnderlyingMetadataIsNotArray(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+
+        $stream->method('isSeekable')->willReturn(false);
+        $stream->method('getMetadata')->willReturn('invalid-metadata');
+
+        $rangeStream = new RangeStream($stream, 0, 3);
+
+        self::assertSame(
+            [],
+            $rangeStream->getMetadata(),
+            "Metadata must be an empty 'array' when the underlying metadata is invalid.",
+        );
+    }
+
     public function testGetMetadataReturnsNullForKeyWhenClosed(): void
     {
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
@@ -348,6 +367,24 @@ final class RangeStreamTest extends TestCase
         self::assertNull(
             $rangeStream->getMetadata('uri'),
             'Metadata key must yield `null` after close.',
+        );
+    }
+
+    /**
+     * @throws Exception if the mock object cannot be created.
+     */
+    public function testGetMetadataReturnsNullForKeyWhenUnderlyingMetadataIsNotArray(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+
+        $stream->method('isSeekable')->willReturn(false);
+        $stream->method('getMetadata')->willReturn('invalid-metadata');
+
+        $rangeStream = new RangeStream($stream, 0, 3);
+
+        self::assertNull(
+            $rangeStream->getMetadata('uri'),
+            "Metadata key must yield 'null' when the underlying metadata is invalid.",
         );
     }
 
