@@ -17,6 +17,13 @@ use function ini_set;
 /**
  * Handles exceptions with Yii error rendering and PSR-7 bridge support.
  *
+ * Usage example:
+ * ```php
+ * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
+ * $handler->setResponse(new \yii2\extensions\psrbridge\http\Response());
+ * $response = $handler->handleException($exception);
+ * ```
+ *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

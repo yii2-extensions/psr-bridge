@@ -18,6 +18,15 @@ use function is_string;
 /**
  * Creates PSR-7 uploaded files from PHP file specifications.
  *
+ * Usage example:
+ * ```php
+ * $creator = new \yii2\extensions\psrbridge\creator\UploadedFileCreator(
+ *     $uploadedFileFactory,
+ *     $streamFactory,
+ * );
+ * $uploadedFiles = $creator->createFromGlobals($_FILES);
+ * ```
+ *
  * @phpstan-type TmpName array<array<mixed>|string>
  * @phpstan-type TmpSize array<array<mixed>|int>
  * @phpstan-type TmpError array<array<mixed>|int>

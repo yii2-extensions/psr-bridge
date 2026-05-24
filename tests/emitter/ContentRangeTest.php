@@ -9,16 +9,7 @@ use PHPUnit\Framework\TestCase;
 use yii2\extensions\psrbridge\emitter\{ContentRange, ContentRangeUnit};
 
 /**
- * Test suite for {@see ContentRange} class functionality and behavior.
- *
- * Test coverage.
- * - Format validation (invalid headers, units, and ranges).
- * - Header parsing (standard, asterisk, and whitespace variations).
- * - Range validation (equal, invalid, and numeric ranges).
- * - String conversion (to header format).
- * - Unit handling (ContentRangeUnit enum integration).
- *
- * @see ContentRangeUnit for enum of valid content range units.
+ * Unit tests for {@see ContentRange} content-range parsing and validation behavior.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

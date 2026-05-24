@@ -22,12 +22,7 @@ use function str_starts_with;
 /**
  * Unit tests for {@see Request} HTTP request handling behavior.
  *
- * Test coverage.
- * - Ensures authentication credentials are resolved from server variables and authorization headers.
- * - Ensures CSRF generation and validation handle header-only, body, custom-header, and safe-method scenarios.
- * - Ensures host, scheme, IP, method, query, and server parameter resolution follows trusted-host rules.
- * - Verifies body parsing, accept-header parsing, request resolving, and URL generation across supported inputs.
- * - Verifies parent fallback behavior when the PSR-7 adapter is not set.
+ * {@see RequestProvider} for test case data providers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

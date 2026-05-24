@@ -27,20 +27,9 @@ use function ob_get_level;
 use function ob_start;
 
 /**
- * Test suite for {@see SapiEmitter} class functionality and behavior.
+ * Unit tests for {@see SapiEmitter} HTTP response emission behavior.
  *
- * Test coverage.
- * - Buffer configuration (custom sizes, validation, zero/negative values).
- * - Content range processing (partial content, byte ranges, streaming).
- * - Error detection (headers already sent, output already sent, buffer validation).
- * - Header handling (normalization, multiple cookies, order preservation).
- * - Output buffering (flush control, buffer level validation, empty buffer handling).
- * - Protocol support (HTTP/1.1, HTTP/2 emission).
- * - Response body emission (full content, suppression, chunked reading).
- * - Status code handling (standard codes, custom reason phrases, no-body status codes).
- * - Stream handling (seekable streams, empty streams, non-readable streams).
- *
- * @see EmitterProvider for test case data providers.
+ * {@see EmitterProvider} for test case data providers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

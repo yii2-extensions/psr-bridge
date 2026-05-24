@@ -22,6 +22,15 @@ use function substr;
  *
  * {@see ServerRequestAdapter} PSR-7 request adapter used for uploaded files.
  *
+ * Usage example:
+ * ```php
+ * $file = \yii2\extensions\psrbridge\http\UploadedFile::getInstance($model, 'avatar');
+ *
+ * if ($file !== null) {
+ *     $file->saveAs('/uploads/avatar.png');
+ * }
+ * ```
+ *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

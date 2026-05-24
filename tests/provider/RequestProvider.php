@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\provider;
 
 /**
- * Data provider for {@see \yii2\extensions\psrbridge\tests\http\RequestTest} test cases.
+ * Data provider for {@see RequestTest} test cases.
  *
  * Provides representative input/output pairs for request parsing, header handling, proxy resolution, and security
  * detection behaviors.

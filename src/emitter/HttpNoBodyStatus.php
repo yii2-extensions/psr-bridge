@@ -85,7 +85,16 @@ enum HttpNoBodyStatus: int
     /**
      * Returns whether the status code should not include a body.
      *
+     * Usage example:
+     * ```php
+     * if (\yii2\extensions\psrbridge\emitter\HttpNoBodyStatus::shouldHaveNoBody(204)) {
+     *     // skip emitting the body
+     * }
+     * ```
+     *
      * @param int $statusCode HTTP status code to check.
+     *
+     * @return bool `true` when the status code must not carry a body; `false` otherwise.
      */
     public static function shouldHaveNoBody(int $statusCode): bool
     {

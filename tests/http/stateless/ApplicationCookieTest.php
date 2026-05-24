@@ -17,10 +17,7 @@ use function str_starts_with;
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} cookie handling in stateless mode.
  *
- * Test coverage.
- * - Ensures cookie validation and signature handling return expected JSON payloads.
- * - Verifies deletion responses emit expected Set-Cookie headers.
- * - Verifies multiple cookie responses include created cookies and omit deleted cookies.
+ * {@see ApplicationProvider} for test case data providers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

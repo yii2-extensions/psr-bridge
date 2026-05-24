@@ -13,7 +13,7 @@ use function base64_encode;
 use const PHP_INT_SIZE;
 
 /**
- * Data provider for {@see \yii2\extensions\psrbridge\http\Application} test cases.
+ * Data provider for {@see Application} test cases.
  *
  * Provides representative input/output pairs for stateless application authentication, cookies, errors, memory, and
  * server parameter handling.

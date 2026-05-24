@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\provider;
 use yii2\extensions\psrbridge\emitter\HttpNoBodyStatus;
 
 /**
- * Data provider for {@see \yii2\extensions\psrbridge\tests\emitter\SapiEmitterTest} test cases.
+ * Data provider for {@see SapiEmitterTest} test cases.
  *
  * Provides representative input/output pairs for body chunking, no-body status handling, and reason phrase formatting.
  *

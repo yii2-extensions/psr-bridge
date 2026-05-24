@@ -12,17 +12,6 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
 /**
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
  *
- * Test coverage.
- * - Verifies that `handle()` invokes in the correct sequence the overridden `reinitializeApplication()`,
- *   `resetUploadedFilesState()`, `resetRequestState()`, `prepareErrorHandler()`, `attachPsrRequest()`,
- *   `syncCookieValidationState()`, `openSessionFromRequestCookies()`, `finalizeSessionState()`, and `terminate()`
- *   hooks.
- * - Verifies that `prepareForRequest()` invokes the overridden `resetRequestState()` hook.
- * - Verifies that `prepareForRequest()` invokes the overridden `resetUploadedFilesState()` hook.
- * - Verifies that disabling `resetUploadedFiles` skips the uploaded-file reset hook.
- * - Verifies that disabling `syncCookieValidation` skips the cookie-sync hook.
- * - Verifies that disabling `useSession` skips session open/finalize hooks.
- *
  * @copyright Copyright (C) 2026 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

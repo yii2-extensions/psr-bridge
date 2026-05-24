@@ -16,10 +16,7 @@ use function var_export;
 /**
  * Unit tests for {@see Request} server parameter handling with the PSR-7 adapter.
  *
- * Test coverage.
- * - Ensures PSR-7 server params override $_SERVER for remote IP, script URL, and server parameter lookups.
- * - Ensures request state resets and remains isolated across instances for remote host, server name, and server port.
- * - Verifies remote host, server name, and server parameter cases through data providers.
+ * {@see ServerParamsPsr7Provider} for test case data providers.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

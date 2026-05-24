@@ -25,10 +25,16 @@ use function strtoupper;
 /**
  * Handles PSR-7 requests with a stateless Yii application lifecycle.
  *
+ * {@see RequestHandlerInterface} PSR-7 request handler contract.
+ *
+ * Usage example:
+ * ```php
+ * $app = new \yii2\extensions\psrbridge\http\Application($config);
+ * $psr7Response = $app->handle($psr7Request);
+ * ```
+ *
  * @template TUserIdentity of IdentityInterface
  * @extends \yii\web\Application<TUserIdentity>
- *
- * {@see RequestHandlerInterface} PSR-7 request handler contract.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

@@ -12,11 +12,6 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 /**
  * Unit tests for {@see Request} uploaded-file handling with the PSR-7 adapter.
  *
- * Test coverage.
- * - Ensures PSR-7 uploaded files convert to Yii uploaded-file instances for single, nested, and array structures.
- * - Ensures recursive conversion preserves expected uploaded-file properties in deeply nested arrays.
- * - Verifies uploaded files default to size '0' when PSR-7 file size is `null`.
- *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */

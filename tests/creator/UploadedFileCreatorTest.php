@@ -14,13 +14,7 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 use const UPLOAD_ERR_OK;
 
 /**
- * Test suite for {@see UploadedFileCreator} class functionality and behavior.
- *
- * Test coverage.
- * - Confirms correct exception throwing for invalid input, recursion depth, and mismatched array structures.
- * - Covers edge cases for missing or invalid fields, file existence, and type validation.
- * - Ensures correct creation of UploadedFileInterface instances from minimal, `null`, and valid file specs.
- * - Validates handling of empty, mixed, multiple, nested, and deeply nested file structures.
+ * Unit tests for {@see UploadedFileCreator} uploaded-file creation behavior.
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

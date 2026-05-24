@@ -16,6 +16,13 @@ use yii2\extensions\psrbridge\adapter\ResponseAdapter;
  *
  * {@see ResponseAdapter} Yii response to PSR-7 response adapter.
  *
+ * Usage example:
+ * ```php
+ * $response = new \yii2\extensions\psrbridge\http\Response();
+ * $response->data = ['ok' => true];
+ * $psr7Response = $response->getPsr7Response();
+ * ```
+ *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
