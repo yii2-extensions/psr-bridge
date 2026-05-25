@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\stub\SessionBootstrap;
 
 use function array_filter;
 use function array_key_exists;
@@ -25,6 +26,43 @@ use function uniqid;
 #[Group('http')]
 final class ApplicationSessionTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testBootstrapObservesSessionOpenedFromRequestCookie(): void
+    {
+        SessionBootstrap::$active = false;
+        SessionBootstrap::$id = '';
+
+        $sessionName = session_name();
+
+        if ($sessionName === false) {
+            self::fail("Failed to retrieve session name using 'session_name()'.");
+        }
+
+        $sessionId = 'probe-session-id';
+
+        $_COOKIE = [$sessionName => $sessionId];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/index',
+        ];
+
+        $app = ApplicationFactory::stateless(['bootstrap' => [SessionBootstrap::class]]);
+
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
+
+        self::assertTrue(
+            SessionBootstrap::$active,
+            'Session must be active during bootstrap.',
+        );
+        self::assertSame(
+            $sessionId,
+            SessionBootstrap::$id,
+            'Observed session `ID` must match the cookie.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
