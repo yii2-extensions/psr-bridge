@@ -339,11 +339,16 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             $this->syncCookieValidationState();
         }
 
-        $this->bootstrap();
+        try {
+            if ($this->useSession) {
+                $this->openSessionFromRequestCookies();
+            }
 
-        if ($this->useSession) {
-            $this->openSessionFromRequestCookies();
-            $this->finalizeSessionState();
+            $this->bootstrap();
+        } finally {
+            if ($this->useSession) {
+                $this->finalizeSessionState();
+            }
         }
     }
 

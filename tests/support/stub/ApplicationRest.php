@@ -95,6 +95,13 @@ final class ApplicationRest extends Application
         parent::attachPsrRequest($request);
     }
 
+    protected function bootstrap(): void
+    {
+        $this->hookCallLog[] = 'bootstrap';
+
+        parent::bootstrap();
+    }
+
     protected function finalizeSessionState(): void
     {
         $this->hookCallLog[] = 'finalizeSessionState';

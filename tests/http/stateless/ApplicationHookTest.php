@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use yii\base\{Action, InvalidConfigException};
 use yii2\extensions\psrbridge\http\UploadedFile;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\stub\ThrowingBootstrap;
 
 /**
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
@@ -43,11 +44,32 @@ final class ApplicationHookTest extends TestCase
                 'attachPsrRequest',
                 'syncCookieValidationState',
                 'openSessionFromRequestCookies',
+                'bootstrap',
                 'finalizeSessionState',
                 'terminate',
             ],
             $app->hookCallLog,
             'Lifecycle hooks must still fire in order when resetUploadedFiles is set to false.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testHandleFinalizesSessionStateWhenBootstrapThrows(): void
+    {
+        $app = ApplicationFactory::rest(['bootstrap' => [ThrowingBootstrap::class]]);
+
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Status must be '500'.",
+        );
+        self::assertTrue(
+            $app->finalizeSessionStateCalled,
+            'Session must be finalized.',
         );
     }
 
@@ -73,6 +95,7 @@ final class ApplicationHookTest extends TestCase
                 'attachPsrRequest',
                 'syncCookieValidationState',
                 'openSessionFromRequestCookies',
+                'bootstrap',
                 'finalizeSessionState',
                 'terminate',
             ],
@@ -145,6 +168,7 @@ final class ApplicationHookTest extends TestCase
                 'prepareErrorHandler',
                 'attachPsrRequest',
                 'syncCookieValidationState',
+                'bootstrap',
                 'terminate',
             ],
             $app->hookCallLog,
@@ -176,6 +200,7 @@ final class ApplicationHookTest extends TestCase
                 'prepareErrorHandler',
                 'attachPsrRequest',
                 'openSessionFromRequestCookies',
+                'bootstrap',
                 'finalizeSessionState',
                 'terminate',
             ],
