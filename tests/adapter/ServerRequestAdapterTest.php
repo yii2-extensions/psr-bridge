@@ -131,7 +131,7 @@ final class ServerRequestAdapterTest extends TestCase
         self::assertSame(
             [],
             $request->getBodyParams(),
-            "Body parameters should fallback to an empty array when parser returns a scalar value.",
+            'Body parameters should fallback to an empty array when parser returns a scalar value.',
         );
     }
 
