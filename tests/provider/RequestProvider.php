@@ -97,6 +97,11 @@ final class RequestProvider
                     'baz' => 1,
                 ],
             ],
+            'json scalar' => [
+                'application/json',
+                'false',
+                [],
+            ],
         ];
     }
 

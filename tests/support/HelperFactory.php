@@ -105,17 +105,15 @@ final class HelperFactory
         string $protocol = '1.1',
         string $reasonPhrase = '',
     ): ResponseInterface {
-        $response = new Response($statusCode, $headers, $body, $protocol, $reasonPhrase);
-
-        if ($body instanceof StreamInterface) {
-            return $response->withBody($body);
-        }
-
         if (is_string($body)) {
+            $response = new Response($statusCode, $headers, null, $protocol, $reasonPhrase);
+
             $response->getBody()->write($body);
+
+            return $response;
         }
 
-        return $response;
+        return new Response($statusCode, $headers, $body, $protocol, $reasonPhrase);
     }
 
     /**

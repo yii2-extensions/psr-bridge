@@ -882,6 +882,55 @@ final class RequestTest extends TestCase
         );
     }
 
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
+     * @phpstan-param array<array-key, mixed>|null $expected
+     */
+    #[TestWith(['{"foo":"bar"}', ['foo' => 'bar']])]
+    #[TestWith(['false', null])]
+    public function testGetParsedBodyNormalizesNativeBodyWithoutAdapter(string $rawBody, array|null $expected): void
+    {
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+
+        $request = new Request();
+
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setRawBody($rawBody);
+
+        self::assertSame(
+            $expected,
+            $request->getParsedBody(),
+            'Scalar yields `null`; structured body passes through.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testGetParsedBodyReturnsObjectForNativeObjectBodyWithoutAdapter(): void
+    {
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+
+        $request = new Request();
+
+        $request->parsers = [
+            'application/json' => [
+                'class' => JsonParser::class,
+                'asArray' => false,
+            ],
+        ];
+
+        $request->setRawBody('{"foo":"bar"}');
+
+        self::assertInstanceOf(
+            stdClass::class,
+            $request->getParsedBody(),
+            'Object body must pass through.',
+        );
+    }
+
     public function testGetQueryStringWhenEmpty(): void
     {
         $_SERVER['QUERY_STRING'] = '';

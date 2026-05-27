@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(security): prevent `RangeStream` bypass via `detach()` and metadata `uri` exposure.
 - fix(security): always reset uploaded-file state during request preparation to preserve worker request isolation, even when `resetUploadedFiles` is set to `false`.
 - fix(security): open the session before `bootstrap()` so worker bootstrap components observe the current request session, and finalize the session via `try`/`finally` to prevent lock leaks when bootstrap throws.
+- fix(security): ignore scalar request-parser results so scalar JSON bodies no longer break PSR-7 request handling.
 
 ## 0.3.0 February 28, 2026
 
