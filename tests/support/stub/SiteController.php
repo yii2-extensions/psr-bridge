@@ -85,6 +85,16 @@ final class SiteController extends Controller
         ];
     }
 
+    /**
+     * @phpstan-return array{csrf: string|null}
+     */
+    public function actionCsrf(): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        return ['csrf' => $this->request->getCsrfToken()];
+    }
+
     public function actionDeletecookie(): Response
     {
         MockerFunctions::setMockedTime(self::MOCK_TIME);
