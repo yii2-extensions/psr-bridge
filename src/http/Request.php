@@ -17,6 +17,7 @@ use function explode;
 use function filter_var;
 use function is_array;
 use function is_numeric;
+use function is_object;
 use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
@@ -139,7 +140,7 @@ class Request extends \yii\web\Request
             return $this->adapter->getBodyParams($this->methodParam);
         }
 
-        return parent::getBodyParams();
+        return $this->normalizeParentBodyParams() ?? [];
     }
 
     /**
@@ -276,7 +277,7 @@ class Request extends \yii\web\Request
             return $this->adapter->getParsedBody();
         }
 
-        return parent::getBodyParams();
+        return $this->normalizeParentBodyParams();
     }
 
     /**
@@ -725,5 +726,24 @@ class Request extends \yii\web\Request
         }
 
         return ''; // script-less worker mode fallback
+    }
+
+    /**
+     * Normalizes the parent body parameters to the bridge's `array|object|null` contract.
+     *
+     * Yii types {@see \yii\web\Request::getBodyParams()} as `mixed` because request parsers may return scalar values
+     * for valid scalar payloads; the bridge guarantees `array|object`, so scalar results are discarded.
+     *
+     * @throws InvalidConfigException if a registered parser does not implement RequestParserInterface.
+     *
+     * @return array|object|null Parsed body parameters, or `null` when the parser yields a scalar value.
+     *
+     * @phpstan-return array<array-key, mixed>|object|null
+     */
+    private function normalizeParentBodyParams(): array|object|null
+    {
+        $bodyParams = parent::getBodyParams();
+
+        return is_array($bodyParams) || is_object($bodyParams) ? $bodyParams : null;
     }
 }

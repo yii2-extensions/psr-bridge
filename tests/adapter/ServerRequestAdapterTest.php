@@ -763,4 +763,34 @@ final class ServerRequestAdapterTest extends TestCase
             "URL should match the expected value for: {$url}.",
         );
     }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testScalarParsedBodyFromParserIsIgnored(): void
+    {
+        $stream = HelperFactory::createStream();
+        $stream->write('false');
+
+        $request = new Request();
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => 'application/json; charset=UTF-8'],
+            )->withBody($stream),
+        );
+
+        self::assertNull(
+            $request->getPsr7Request()->getParsedBody(),
+            "PSR-7 request parsed body should remain 'null' when parser returns a scalar value.",
+        );
+        self::assertSame(
+            [],
+            $request->getBodyParams(),
+            'Body parameters should fallback to an empty array when parser returns a scalar value.',
+        );
+    }
 }

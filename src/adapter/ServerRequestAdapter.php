@@ -13,6 +13,7 @@ use yii2\extensions\psrbridge\exception\Message;
 use function implode;
 use function in_array;
 use function is_array;
+use function is_object;
 use function is_string;
 use function strpos;
 use function strtoupper;
@@ -517,6 +518,10 @@ final class ServerRequestAdapter
             $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
         }
 
-        return $request->withParsedBody($parsedParams);
+        if ($parsedParams === null || is_array($parsedParams) || is_object($parsedParams)) {
+            return $request->withParsedBody($parsedParams);
+        }
+
+        return $request;
     }
 }
