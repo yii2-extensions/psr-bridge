@@ -398,7 +398,6 @@ final class RequestTest extends TestCase
         $this->closeApplication();
     }
 
-
     public function testGetContentTypeReturnsEmptyStringWithoutHeaderInFallbackMode(): void
     {
         unset($_SERVER['CONTENT_TYPE'], $_SERVER['HTTP_CONTENT_TYPE']);
