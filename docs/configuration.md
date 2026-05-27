@@ -28,8 +28,10 @@ return [
     'components' => [
         'request' => [
             'class' => Request::class,
-            'enableCookieValidation' => false,
-            'enableCsrfValidation' => false,
+            // Keep validation enabled in production.
+            'enableCookieValidation' => true,
+            'enableCsrfValidation' => true,
+            'cookieValidationKey' => getenv('COOKIE_VALIDATION_KEY'),
             'parsers' => [
                 'application/json' => JsonParser::class,
             ],
