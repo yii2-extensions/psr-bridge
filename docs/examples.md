@@ -116,7 +116,8 @@ final class FileController extends \yii\web\Controller
         $file = UploadedFile::getInstanceByName('avatar');
 
         if ($file !== null && $file->error === UPLOAD_ERR_OK) {
-            $file->saveAs('@webroot/uploads/' . $file->name);
+            $safeName = sprintf('%s_%s', Yii::$app->security->generateRandomString(8), basename((string) $file->name));
+            $file->saveAs('@webroot/uploads/' . $safeName);
         }
 
         return $this->asJson(['status' => 'uploaded']);
@@ -146,7 +147,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad();
 
 // production default (change to 'true' for development)
-define('YII_DEBUG', $_ENV['YII_DEBUG'] ?? false);
+define('YII_DEBUG', filter_var($_ENV['YII_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));
 // production default (change to 'dev' for development)
 define('YII_ENV', $_ENV['YII_ENV'] ?? 'prod');
 
@@ -171,7 +172,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\roadrunner\RoadRunner;
 
-define('YII_DEBUG', getenv('YII_DEBUG') ?? false);
+define('YII_DEBUG', filter_var(getenv('YII_DEBUG') ?: false, FILTER_VALIDATE_BOOLEAN));
 define('YII_ENV', getenv('YII_ENV') ?? 'prod');
 
 require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
