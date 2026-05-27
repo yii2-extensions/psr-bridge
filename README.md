@@ -97,7 +97,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\roadrunner\RoadRunner;
 
-define('YII_DEBUG', filter_var(getenv('YII_DEBUG') ?? false, FILTER_VALIDATE_BOOLEAN));
+define('YII_DEBUG', filter_var(getenv('YII_DEBUG'), FILTER_VALIDATE_BOOLEAN));
 define('YII_ENV', getenv('YII_ENV') ?? 'prod');
 
 require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
