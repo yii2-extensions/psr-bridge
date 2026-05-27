@@ -398,6 +398,20 @@ final class RequestTest extends TestCase
         $this->closeApplication();
     }
 
+
+    public function testGetContentTypeReturnsEmptyStringWithoutHeaderInFallbackMode(): void
+    {
+        unset($_SERVER['CONTENT_TYPE'], $_SERVER['HTTP_CONTENT_TYPE']);
+
+        $request = new Request();
+
+        self::assertSame(
+            '',
+            $request->getContentType(),
+            "'getContentType()' should return an empty string when no Content-Type header exists in fallback mode.",
+        );
+    }
+
     public function testCustomUnsafeMethodsCsrfHeaderValidation(): void
     {
         ApplicationFactory::web();

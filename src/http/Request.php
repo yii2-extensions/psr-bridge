@@ -160,7 +160,7 @@ class Request extends \yii\web\Request
             return $this->getHeaders()->get('Content-Type') ?? '';
         }
 
-        return parent::getContentType();
+        return parent::getContentType() ?? '';
     }
 
     /**
