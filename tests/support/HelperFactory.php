@@ -31,9 +31,6 @@ use function parse_str;
 
 /**
  * Creates PSR-7 and PSR-17 objects used by tests.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class HelperFactory
 {

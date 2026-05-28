@@ -40,9 +40,6 @@ use function urlencode;
  * );
  * $psr7Response = $adapter->toPsr7();
  * ```
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ResponseAdapter
 {

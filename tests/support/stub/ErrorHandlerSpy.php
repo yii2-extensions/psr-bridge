@@ -8,9 +8,6 @@ use yii2\extensions\psrbridge\http\ErrorHandler;
 
 /**
  * Error handler stub that counts {@see unregister()} calls for testing purposes.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ErrorHandlerSpy extends ErrorHandler
 {

@@ -16,9 +16,6 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
  * Unit tests for {@see Request} request-data handling with the PSR-7 adapter.
  *
  * {@see RequestProvider} for test case data providers.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
 final class ServerRequestAdapterTest extends TestCase

@@ -23,9 +23,6 @@ use function ini_set;
  * $handler->setResponse(new \yii2\extensions\psrbridge\http\Response());
  * $response = $handler->handleException($exception);
  * ```
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 class ErrorHandler extends \yii\web\ErrorHandler
 {

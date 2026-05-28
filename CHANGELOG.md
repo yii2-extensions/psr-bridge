@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(docs): keep CSRF and cookie validation enabled in the basic configuration example to avoid insecure copypaste deployments.
 - fix(docs): align `README.md` RoadRunner `YII_DEBUG` example with `docs/examples.md`.
 - fix(security): clear cached query params when replacing the PSR-7 request to prevent cross-request leakage in reused `Request` instances.
+- refactor: consolidate package metadata in `composer.json` (`authors`) and `LICENSE`; drop redundant per-file `@copyright`/`@license` headers.
 
 ## 0.3.0 February 28, 2026
 

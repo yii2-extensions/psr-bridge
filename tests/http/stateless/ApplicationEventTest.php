@@ -17,9 +17,6 @@ use function count;
 
 /**
  * Unit tests for {@see Application} event handling in stateless mode.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationEventTest extends TestCase

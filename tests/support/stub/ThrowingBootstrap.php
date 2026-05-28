@@ -9,9 +9,6 @@ use yii\base\BootstrapInterface;
 
 /**
  * Bootstrap stub that always throws to exercise session finalization on bootstrap failure.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ThrowingBootstrap implements BootstrapInterface
 {

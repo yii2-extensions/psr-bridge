@@ -20,9 +20,6 @@ use function str_repeat;
 
 /**
  * Unit tests for {@see ErrorHandler} exception-handling behavior.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ErrorHandlerTest extends TestCase

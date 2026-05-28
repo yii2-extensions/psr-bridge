@@ -11,9 +11,6 @@ use yii2\extensions\psrbridge\tests\support\TestCase;
 
 /**
  * Unit tests for {@see ServerExitCode} enum value mappings.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ServerExitCodeTest extends TestCase

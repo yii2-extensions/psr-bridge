@@ -8,9 +8,6 @@ use Psr\Http\Message\{StreamFactoryInterface, StreamInterface};
 
 /**
  * Spy stream factory for verifying which PSR-17 stream creation method is used.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class StreamFactorySpy implements StreamFactoryInterface
 {

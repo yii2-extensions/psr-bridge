@@ -10,9 +10,6 @@ use yii2\extensions\psrbridge\emitter\HttpNoBodyStatus;
  * Data provider for {@see \yii2\extensions\psrbridge\tests\emitter\SapiEmitterTest} test cases.
  *
  * Provides representative input/output pairs for body chunking, no-body status handling, and reason phrase formatting.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class EmitterProvider
 {

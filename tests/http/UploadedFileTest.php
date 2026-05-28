@@ -14,9 +14,6 @@ use const UPLOAD_ERR_OK;
 
 /**
  * Unit tests for {@see UploadedFile} upload conversion and retrieval behavior.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class UploadedFileTest extends TestCase
 {
