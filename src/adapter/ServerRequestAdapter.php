@@ -57,7 +57,7 @@ final class ServerRequestAdapter
      *
      * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
      *
-     * @phpstan-param array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
+     * @phpstan-param array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
      */
     public function __construct(ServerRequestInterface $psrRequest, array $parsers = [])
     {
@@ -481,7 +481,7 @@ final class ServerRequestAdapter
      *
      * @return ServerRequestInterface Request with parsed body set if parsing was performed, or unchanged.
      *
-     * @phpstan-param array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
+     * @phpstan-param array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
      */
     private function parseBody(ServerRequestInterface $request, array $parsers): ServerRequestInterface
     {

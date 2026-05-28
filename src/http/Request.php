@@ -37,7 +37,7 @@ use function strncasecmp;
  * $params = $request->getBodyParams();
  * ```
  *
- * @phpstan-property array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
+ * @phpstan-property array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -651,6 +651,8 @@ class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
+        $this->setQueryParams([]);
+
         $this->adapter = new ServerRequestAdapter(
             $request,
             $this->parsers,

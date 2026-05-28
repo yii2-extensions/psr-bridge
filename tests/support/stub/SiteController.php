@@ -70,7 +70,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return  array{isGuest: bool, Identity?: string|null}
+     * @phpstan-return  array{isGuest: bool, identity: string|null}
      */
     public function actionCheckauth(): array
     {

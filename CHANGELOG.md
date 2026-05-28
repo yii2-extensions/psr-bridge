@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(docs): harden file upload and `YII_DEBUG` examples against path traversal and incorrect boolean parsing of string environment values.
 - fix(docs): keep CSRF and cookie validation enabled in the basic configuration example to avoid insecure copypaste deployments.
 - fix(docs): align `README.md` RoadRunner `YII_DEBUG` example with `docs/examples.md`.
+- fix(security): clear cached query params when replacing the PSR-7 request to prevent cross-request leakage in reused `Request` instances.
 
 ## 0.3.0 February 28, 2026
 
