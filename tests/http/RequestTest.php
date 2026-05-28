@@ -1953,7 +1953,7 @@ final class RequestTest extends TestCase
         self::assertSame(
             ['token' => 'second'],
             $request->getQueryParams(),
-            "Should clear stale cached query parameters before attaching a new PSR-7 request.",
+            'Should clear stale cached query parameters before attaching a new PSR-7 request.',
         );
     }
 
