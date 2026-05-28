@@ -1808,6 +1808,36 @@ final class RequestTest extends TestCase
         }
     }
 
+    public function testSetPsr7RequestClearsCachedQueryParamsFromPreviousRequest(): void
+    {
+        ApplicationFactory::web(
+            [
+                'components' => [
+                    'urlManager' => [
+                        'cache' => null,
+                        'enablePrettyUrl' => true,
+                        'showScriptName' => false,
+                        'rules' => [
+                            'posts' => 'post/list',
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $request = new Request();
+        $request->setPsr7Request(HelperFactory::createRequest('GET', '/posts?token=first'));
+        $request->resolve();
+
+        $request->setPsr7Request(HelperFactory::createRequest('GET', '/posts?token=second'));
+
+        self::assertSame(
+            ['token' => 'second'],
+            $request->getQueryParams(),
+            "'setPsr7Request()' should clear stale cached query parameters before attaching a new PSR-7 request.",
+        );
+    }
+
     public function testReturnNullFromParentWhenRemoteHostNotSetInServerGlobals(): void
     {
         unset($_SERVER['REMOTE_HOST']);

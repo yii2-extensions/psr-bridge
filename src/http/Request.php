@@ -651,6 +651,8 @@ class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
+        $this->setQueryParams([]);
+
         $this->adapter = new ServerRequestAdapter(
             $request,
             $this->parsers,
