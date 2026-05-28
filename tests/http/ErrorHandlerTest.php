@@ -430,6 +430,59 @@ final class ErrorHandlerTest extends TestCase
         );
     }
 
+    #[RequiresPhpExtension('runkit7')]
+    public function testRawErrorResponseHidesNonUserExceptionDetailsWhenDebugDisabled(): void
+    {
+        @\runkit_constant_redefine('YII_DEBUG', false);
+
+        try {
+            $errorHandler = new ErrorHandler();
+
+            $errorHandler->discardExistingOutput = false;
+
+            $response = new Response(['format' => Response::FORMAT_RAW]);
+
+            $errorHandler->setResponse($response);
+
+            $exception = new RuntimeException('SECRET_DSN=mysql://user:pass@db/internal');
+
+            $response = $errorHandler->handleException($exception);
+
+            self::assertSame(
+                Response::FORMAT_RAW,
+                $response->format,
+                'RAW error responses should preserve the configured response format.',
+            );
+            self::assertSame(
+                500,
+                $response->getStatusCode(),
+                "Should set status code to '500' for runtime exception.",
+            );
+            self::assertSame(
+                'An internal server error occurred.',
+                $response->data,
+                'RAW error responses should use a generic message for non-user exceptions when debug is disabled.',
+            );
+            self::assertStringNotContainsString(
+                'SECRET_DSN',
+                $response->data,
+                'RAW error responses should not expose exception messages when debug is disabled.',
+            );
+            self::assertStringNotContainsString(
+                __FILE__,
+                $response->data,
+                'RAW error responses should not expose file paths when debug is disabled.',
+            );
+            self::assertStringNotContainsString(
+                'Stack trace:',
+                $response->data,
+                'RAW error responses should not expose stack traces when debug is disabled.',
+            );
+        } finally {
+            @\runkit_constant_redefine('YII_DEBUG', true);
+        }
+    }
+
     public function testResponseDataIsNotEmpty(): void
     {
         $errorHandler = new ErrorHandler();
