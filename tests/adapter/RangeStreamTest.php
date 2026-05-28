@@ -22,9 +22,6 @@ use const SEEK_END;
 
 /**
  * Unit tests for the {@see RangeStream} PSR-7 range-bounded stream wrapper.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
 final class RangeStreamTest extends TestCase

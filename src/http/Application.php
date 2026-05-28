@@ -35,9 +35,6 @@ use function strtoupper;
  *
  * @template TUserIdentity of IdentityInterface
  * @extends \yii\web\Application<TUserIdentity>
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 class Application extends \yii\web\Application implements RequestHandlerInterface
 {

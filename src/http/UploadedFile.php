@@ -30,9 +30,6 @@ use function substr;
  *     $file->saveAs('/uploads/avatar.png');
  * }
  * ```
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 class UploadedFile extends \yii\web\UploadedFile
 {

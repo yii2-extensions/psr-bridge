@@ -22,9 +22,6 @@ use function tmpfile;
  * Base class for package integration tests.
  *
  * Provides application bootstrap helpers, cookie-signing utilities, and temporary file cleanup for isolated tests.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {

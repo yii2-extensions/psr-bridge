@@ -18,9 +18,6 @@ use function str_starts_with;
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} cookie handling in stateless mode.
  *
  * {@see ApplicationProvider} for test case data providers.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationCookieTest extends TestCase

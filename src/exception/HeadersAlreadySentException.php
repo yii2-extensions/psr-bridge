@@ -15,8 +15,5 @@ use yii\base\Exception;
  *     \yii2\extensions\psrbridge\exception\Message::UNABLE_TO_EMIT_RESPONSE_HEADERS_ALREADY_SENT->getMessage(),
  * );
  * ```
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class HeadersAlreadySentException extends Exception {}

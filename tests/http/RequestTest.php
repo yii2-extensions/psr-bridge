@@ -23,9 +23,6 @@ use function str_starts_with;
  * Unit tests for {@see Request} HTTP request handling behavior.
  *
  * {@see RequestProvider} for test case data providers.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class RequestTest extends TestCase

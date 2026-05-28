@@ -17,9 +17,6 @@ use function var_export;
  * Unit tests for {@see Request} server parameter handling with the PSR-7 adapter.
  *
  * {@see ServerParamsPsr7Provider} for test case data providers.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
 final class ServerParamsPsr7Test extends TestCase

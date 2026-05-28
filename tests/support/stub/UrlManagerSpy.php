@@ -6,9 +6,6 @@ namespace yii2\extensions\psrbridge\tests\support\stub;
 
 /**
  * UrlManager stub that counts {@see parseRequest()} calls for testing purposes.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class UrlManagerSpy extends \yii\web\UrlManager
 {

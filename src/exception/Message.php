@@ -10,9 +10,6 @@ use function sprintf;
  * Represents error message templates for attribute exceptions.
  *
  * Use {@see Message::getMessage()} to format the template with `sprintf()` arguments.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 enum Message: string
 {

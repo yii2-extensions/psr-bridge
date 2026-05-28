@@ -13,9 +13,6 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 /**
  * Unit tests for {@see Request} cookie handling with the PSR-7 adapter.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
 #[Group('cookies')]

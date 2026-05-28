@@ -29,9 +29,6 @@ use function unlink;
 
 /**
  * Unit tests for the {@see Application} class core behavior in stateless mode.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationCoreTest extends TestCase

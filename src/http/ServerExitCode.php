@@ -6,9 +6,6 @@ namespace yii2\extensions\psrbridge\http;
 
 /**
  * Represents process exit codes for server lifecycle outcomes.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 enum ServerExitCode: int
 {

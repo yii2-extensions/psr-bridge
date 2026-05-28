@@ -30,9 +30,6 @@ use function ob_start;
  * Unit tests for {@see SapiEmitter} HTTP response emission behavior.
  *
  * {@see EmitterProvider} for test case data providers.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('emitter')]
 final class SapiEmitterTest extends TestCase

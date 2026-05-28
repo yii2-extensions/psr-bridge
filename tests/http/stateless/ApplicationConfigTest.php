@@ -19,9 +19,6 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
 
 /**
  * Unit tests for the {@see Application} class configuration behavior in stateless mode.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationConfigTest extends TestCase

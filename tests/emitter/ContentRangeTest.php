@@ -10,9 +10,6 @@ use yii2\extensions\psrbridge\emitter\{ContentRange, ContentRangeUnit};
 
 /**
  * Unit tests for {@see ContentRange} content-range parsing and validation behavior.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('emitter')]
 final class ContentRangeTest extends TestCase

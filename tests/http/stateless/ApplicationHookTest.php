@@ -12,9 +12,6 @@ use yii2\extensions\psrbridge\tests\support\stub\ThrowingBootstrap;
 
 /**
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationHookTest extends TestCase
