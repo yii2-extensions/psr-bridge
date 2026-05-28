@@ -1943,7 +1943,9 @@ final class RequestTest extends TestCase
         );
 
         $request = new Request();
+
         $request->setPsr7Request(HelperFactory::createRequest('GET', '/posts?token=first'));
+
         $request->resolve();
 
         $request->setPsr7Request(HelperFactory::createRequest('GET', '/posts?token=second'));
@@ -1951,7 +1953,7 @@ final class RequestTest extends TestCase
         self::assertSame(
             ['token' => 'second'],
             $request->getQueryParams(),
-            "'setPsr7Request()' should clear stale cached query parameters before attaching a new PSR-7 request.",
+            "Should clear stale cached query parameters before attaching a new PSR-7 request.",
         );
     }
 
