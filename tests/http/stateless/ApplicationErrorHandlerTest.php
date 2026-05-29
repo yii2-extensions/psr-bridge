@@ -37,7 +37,7 @@ final class ApplicationErrorHandlerTest extends TestCase
     #[DataProviderExternal(ApplicationProvider::class, 'errorViewLogic')]
     #[RequiresPhpExtension('runkit7')]
     public function testErrorViewLogic(
-        bool $debug,
+        bool|int $debug,
         string $route,
         string $action,
         int $expectedStatusCode,
@@ -46,33 +46,35 @@ final class ApplicationErrorHandlerTest extends TestCase
     ): void {
         @\runkit_constant_redefine('YII_DEBUG', $debug);
 
-        $app = ApplicationFactory::stateless(
-            [
-                'components' => [
-                    'errorHandler' => ['errorAction' => $action],
+        try {
+            $app = ApplicationFactory::stateless(
+                [
+                    'components' => [
+                        'errorHandler' => ['errorAction' => $action],
+                    ],
                 ],
-            ],
-        );
+            );
 
-        $response = $app->handle(HelperFactory::createRequest('GET', $route));
+            $response = $app->handle(HelperFactory::createRequest('GET', $route));
 
-        self::assertSame(
-            $expectedStatusCode,
-            $response->getStatusCode(),
-            "Expected HTTP '{$expectedStatusCode}' for route '{$route}'.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'text/html; charset=UTF-8' for route '{$route}'.",
-        );
-        self::assertSame(
-            LineEndingNormalizer::normalize($expectedErrorViewContent),
-            LineEndingNormalizer::normalize($response->getBody()->getContents()),
-            $expectedAssertMessage,
-        );
-
-        @\runkit_constant_redefine('YII_DEBUG', true);
+            self::assertSame(
+                $expectedStatusCode,
+                $response->getStatusCode(),
+                "Expected HTTP '{$expectedStatusCode}' for route '{$route}'.",
+            );
+            self::assertSame(
+                'text/html; charset=UTF-8',
+                $response->getHeaderLine('Content-Type'),
+                "Expected Content-Type 'text/html; charset=UTF-8' for route '{$route}'.",
+            );
+            self::assertSame(
+                LineEndingNormalizer::normalize($expectedErrorViewContent),
+                LineEndingNormalizer::normalize($response->getBody()->getContents()),
+                $expectedAssertMessage,
+            );
+        } finally {
+            @\runkit_constant_redefine('YII_DEBUG', true);
+        }
     }
 
     /**
