@@ -13,9 +13,6 @@ use function array_diff_key;
 use function array_flip;
 use function htmlspecialchars;
 use function ini_set;
-use function ob_clean;
-use function ob_end_clean;
-use function ob_get_level;
 
 /**
  * Handles exceptions with Yii error rendering and PSR-7 bridge support.
@@ -72,14 +69,12 @@ class ErrorHandler extends \yii\web\ErrorHandler
      */
     public function clearOutput(): void
     {
-        $minLevel = YII_ENV === 'test' ? 1 : 0;
+        $minLevel = YII_ENV_TEST ? 1 : 0;
 
-        // Manual level counting (decrement unconditionally) guarantees termination even when a buffer cannot be removed,
-        // since `ob_clean()` does not reduce `ob_get_level()`.
         for ($level = ob_get_level(); $level > $minLevel; --$level) {
             if (@ob_end_clean() === false) {
                 // @codeCoverageIgnoreStart
-                @ob_clean();
+                ob_clean();
                 // @codeCoverageIgnoreEnd
             }
         }

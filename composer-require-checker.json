@@ -3,6 +3,6 @@
         "runkit_constant_redefine",
         "YII_BEGIN_TIME",
         "YII_DEBUG",
-        "YII_ENV"
+        "YII_ENV_TEST"
     ]
 }

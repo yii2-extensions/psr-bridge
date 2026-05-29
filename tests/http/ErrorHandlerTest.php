@@ -30,7 +30,7 @@ final class ErrorHandlerTest extends TestCase
         $initialLevel = ob_get_level();
 
         try {
-            @runkit_constant_redefine('YII_ENV', 'prod');
+            @runkit_constant_redefine('YII_ENV_TEST', false);
 
             $errorHandler = new ErrorHandler();
 
@@ -61,7 +61,7 @@ final class ErrorHandlerTest extends TestCase
                 ob_start();
             }
 
-            @runkit_constant_redefine('YII_ENV', 'test');
+            @runkit_constant_redefine('YII_ENV_TEST', true);
         }
     }
 
