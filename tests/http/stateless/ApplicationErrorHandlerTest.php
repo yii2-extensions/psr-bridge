@@ -328,7 +328,7 @@ final class ApplicationErrorHandlerTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionPassesExceptionParameterToTemplateView(): void
     {
-        @\runkit_constant_redefine('YII_ENV', 'prod');
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
 
         $initialBufferLevel = ob_get_level();
 
@@ -410,7 +410,7 @@ final class ApplicationErrorHandlerTest extends TestCase
                 ob_start();
             }
 
-            @\runkit_constant_redefine('YII_ENV', 'test');
+            @\runkit_constant_redefine('YII_ENV_TEST', true);
         }
     }
 
@@ -629,7 +629,7 @@ final class ApplicationErrorHandlerTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testThrowNotFoundHttpExceptionWhenStrictParsingEnabledAndRouteIsMissing(): void
     {
-        @\runkit_constant_redefine('YII_ENV', 'prod');
+        @\runkit_constant_redefine('YII_ENV_TEST', false);
 
         $initialBufferLevel = ob_get_level();
 
@@ -670,7 +670,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             ob_start();
         }
 
-        @\runkit_constant_redefine('YII_ENV', 'test');
+        @\runkit_constant_redefine('YII_ENV_TEST', true);
     }
 
     public function testThrowRuntimeExceptionWhenReinitializationApplicationFails(): void
