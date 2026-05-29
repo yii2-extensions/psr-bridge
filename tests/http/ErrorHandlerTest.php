@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use PHPForge\Support\ReflectionHelper;
-use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
+use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension, RunInSeparateProcess};
 use ReflectionException;
 use RuntimeException;
 use Throwable;
@@ -14,6 +14,9 @@ use yii\web\HttpException;
 use yii2\extensions\psrbridge\http\{ErrorHandler, Response};
 use yii2\extensions\psrbridge\tests\support\TestCase;
 
+use function defined;
+use function max;
+use function ob_end_clean;
 use function ob_get_level;
 use function ob_start;
 use function str_repeat;
@@ -24,6 +27,33 @@ use function str_repeat;
 #[Group('http')]
 final class ErrorHandlerTest extends TestCase
 {
+    #[RunInSeparateProcess]
+    public function testClearOutputUsesYiiEnvWhenYiiEnvTestConstantIsUndefined(): void
+    {
+        self::assertFalse(defined('YII_ENV_TEST'), "Test precondition: 'YII_ENV_TEST' must not be defined.");
+        self::assertSame('test', YII_ENV, "Test precondition: 'YII_ENV' should indicate test environment.");
+
+        $initialLevel = ob_get_level();
+        $errorHandler = new ErrorHandler();
+
+        try {
+            ob_start();
+            ob_start();
+
+            $errorHandler->clearOutput();
+
+            self::assertSame(
+                max(1, $initialLevel),
+                ob_get_level(),
+                "When 'YII_ENV_TEST' is undefined, 'clearOutput()' should use 'YII_ENV' and preserve the test buffer.",
+            );
+        } finally {
+            while (ob_get_level() > $initialLevel) {
+                ob_end_clean();
+            }
+        }
+    }
+
     #[RequiresPhpExtension('runkit7')]
     public function testClearOutputCleansAllBuffersInNonTestEnvironment(): void
     {

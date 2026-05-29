@@ -11,8 +11,13 @@ use yii\helpers\VarDumper;
 
 use function array_diff_key;
 use function array_flip;
+use function constant;
+use function defined;
 use function htmlspecialchars;
 use function ini_set;
+use function ob_clean;
+use function ob_end_clean;
+use function ob_get_level;
 
 /**
  * Handles exceptions with Yii error rendering and PSR-7 bridge support.
@@ -69,19 +74,27 @@ class ErrorHandler extends \yii\web\ErrorHandler
      */
     public function clearOutput(): void
     {
-        $currentLevel = ob_get_level();
+        $minLevel = $this->isTestEnvironment() ? 1 : 0;
 
-        $minLevel = YII_ENV_TEST ? 1 : 0;
-
-        while ($currentLevel > $minLevel) {
+        for ($level = ob_get_level(); $level > $minLevel; --$level) {
             if (@ob_end_clean() === false) {
                 // @codeCoverageIgnoreStart
-                ob_clean();
+                @ob_clean();
                 // @codeCoverageIgnoreEnd
             }
-
-            $currentLevel = ob_get_level();
         }
+    }
+
+    /**
+     * Determines whether output buffers managed by the test runner should be preserved.
+     */
+    private function isTestEnvironment(): bool
+    {
+        if (defined('YII_ENV_TEST')) {
+            return (bool) constant('YII_ENV_TEST');
+        }
+
+        return defined('YII_ENV') && constant('YII_ENV') === 'test';
     }
 
     /**
