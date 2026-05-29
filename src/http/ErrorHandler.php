@@ -69,18 +69,14 @@ class ErrorHandler extends \yii\web\ErrorHandler
      */
     public function clearOutput(): void
     {
-        $currentLevel = ob_get_level();
-
         $minLevel = YII_ENV_TEST ? 1 : 0;
 
-        while ($currentLevel > $minLevel) {
+        for ($level = ob_get_level(); $level > $minLevel; --$level) {
             if (@ob_end_clean() === false) {
                 // @codeCoverageIgnoreStart
                 ob_clean();
                 // @codeCoverageIgnoreEnd
             }
-
-            $currentLevel = ob_get_level();
         }
     }
 
