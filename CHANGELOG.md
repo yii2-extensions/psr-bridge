@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(security): clear cached query params when replacing the PSR-7 request to prevent cross-request leakage in reused `Request` instances.
 - refactor: consolidate package metadata in `composer.json` (`authors`) and `LICENSE`; drop redundant per-file `@copyright`/`@license` headers.
 - fix(security): hide exception details in `FORMAT_RAW` error responses when `YII_DEBUG` is disabled to prevent stack trace and file path disclosure.
+- fix(security): treat falsy non-boolean `YII_DEBUG` values (e.g. `0`) as debug-disabled in `ErrorHandler` to avoid leaking the debug exception page.
 
 ## 0.3.0 February 28, 2026
 
