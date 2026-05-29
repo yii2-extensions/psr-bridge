@@ -440,7 +440,7 @@ final class ErrorHandlerTest extends TestCase
 
             $errorHandler->discardExistingOutput = false;
 
-            $response = new Response(['format' => Response::FORMAT_RAW]);
+            $response = new Response(['charset' => 'UTF-8', 'format' => Response::FORMAT_RAW]);
 
             $errorHandler->setResponse($response);
 
@@ -451,32 +451,70 @@ final class ErrorHandlerTest extends TestCase
             self::assertSame(
                 Response::FORMAT_RAW,
                 $response->format,
-                'RAW error responses should preserve the configured response format.',
+                'RAW format must be preserved.',
             );
             self::assertSame(
                 500,
                 $response->getStatusCode(),
-                "Should set status code to '500' for runtime exception.",
+                'Status must be `500`.',
             );
             self::assertSame(
                 'An internal server error occurred.',
                 $response->data,
-                'RAW error responses should use a generic message for non-user exceptions when debug is disabled.',
+                'Generic message must replace the exception body.',
             );
             self::assertStringNotContainsString(
                 'SECRET_DSN',
                 $response->data,
-                'RAW error responses should not expose exception messages when debug is disabled.',
+                'Exception message must not leak.',
             );
             self::assertStringNotContainsString(
                 __FILE__,
                 $response->data,
-                'RAW error responses should not expose file paths when debug is disabled.',
+                'File path must not leak.',
             );
             self::assertStringNotContainsString(
                 'Stack trace:',
                 $response->data,
-                'RAW error responses should not expose stack traces when debug is disabled.',
+                'Stack trace must not leak.',
+            );
+        } finally {
+            @\runkit_constant_redefine('YII_DEBUG', true);
+        }
+    }
+
+    #[RequiresPhpExtension('runkit7')]
+    public function testRawErrorResponseReturnsUserExceptionMessageWhenDebugDisabled(): void
+    {
+        @\runkit_constant_redefine('YII_DEBUG', false);
+
+        try {
+            $errorHandler = new ErrorHandler();
+
+            $errorHandler->discardExistingOutput = false;
+
+            $response = new Response(['charset' => 'UTF-8', 'format' => Response::FORMAT_RAW]);
+
+            $errorHandler->setResponse($response);
+
+            $exception = new UserException('Invalid request parameters.');
+
+            $response = $errorHandler->handleException($exception);
+
+            self::assertSame(
+                Response::FORMAT_RAW,
+                $response->format,
+                'RAW format must be preserved.',
+            );
+            self::assertSame(
+                'Invalid request parameters.',
+                $response->data,
+                'User exception message must be returned verbatim.',
+            );
+            self::assertStringNotContainsString(
+                'Stack trace:',
+                $response->data,
+                'Stack trace must not leak.',
             );
         } finally {
             @\runkit_constant_redefine('YII_DEBUG', true);
