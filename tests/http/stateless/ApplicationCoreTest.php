@@ -258,7 +258,7 @@ final class ApplicationCoreTest extends TestCase
     #[RequiresPhpExtension('runkit7')]
     public function testRenderExceptionSetsDisplayErrorsInDebugMode(): void
     {
-        @\runkit_constant_redefine('YII_ENV_TEST', false);
+        @\runkit_constant_redefine('YII_ENV', 'prod');
 
         $initialBufferLevel = ob_get_level();
 
@@ -302,7 +302,7 @@ final class ApplicationCoreTest extends TestCase
                 ob_start();
             }
 
-            @\runkit_constant_redefine('YII_ENV_TEST', true);
+            @\runkit_constant_redefine('YII_ENV', 'test');
         }
     }
 

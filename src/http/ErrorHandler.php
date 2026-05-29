@@ -11,8 +11,6 @@ use yii\helpers\VarDumper;
 
 use function array_diff_key;
 use function array_flip;
-use function constant;
-use function defined;
 use function htmlspecialchars;
 use function ini_set;
 use function ob_clean;
@@ -74,8 +72,10 @@ class ErrorHandler extends \yii\web\ErrorHandler
      */
     public function clearOutput(): void
     {
-        $minLevel = $this->isTestEnvironment() ? 1 : 0;
+        $minLevel = YII_ENV === 'test' ? 1 : 0;
 
+        // Manual level counting (decrement unconditionally) guarantees termination even when a buffer cannot be removed,
+        // since `ob_clean()` does not reduce `ob_get_level()`.
         for ($level = ob_get_level(); $level > $minLevel; --$level) {
             if (@ob_end_clean() === false) {
                 // @codeCoverageIgnoreStart
@@ -83,18 +83,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
                 // @codeCoverageIgnoreEnd
             }
         }
-    }
-
-    /**
-     * Determines whether output buffers managed by the test runner should be preserved.
-     */
-    private function isTestEnvironment(): bool
-    {
-        if (defined('YII_ENV_TEST')) {
-            return (bool) constant('YII_ENV_TEST');
-        }
-
-        return defined('YII_ENV') && constant('YII_ENV') === 'test';
     }
 
     /**
