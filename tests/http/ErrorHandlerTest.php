@@ -430,6 +430,97 @@ final class ErrorHandlerTest extends TestCase
         );
     }
 
+    #[RequiresPhpExtension('runkit7')]
+    public function testRawErrorResponseHidesNonUserExceptionDetailsWhenDebugDisabled(): void
+    {
+        @\runkit_constant_redefine('YII_DEBUG', false);
+
+        try {
+            $errorHandler = new ErrorHandler();
+
+            $errorHandler->discardExistingOutput = false;
+
+            $response = new Response(['charset' => 'UTF-8', 'format' => Response::FORMAT_RAW]);
+
+            $errorHandler->setResponse($response);
+
+            $exception = new RuntimeException('SECRET_DSN=mysql://user:pass@db/internal');
+
+            $response = $errorHandler->handleException($exception);
+
+            self::assertSame(
+                Response::FORMAT_RAW,
+                $response->format,
+                'RAW format must be preserved.',
+            );
+            self::assertSame(
+                500,
+                $response->getStatusCode(),
+                'Status must be `500`.',
+            );
+            self::assertSame(
+                'An internal server error occurred.',
+                $response->data,
+                'Generic message must replace the exception body.',
+            );
+            self::assertStringNotContainsString(
+                'SECRET_DSN',
+                $response->data,
+                'Exception message must not leak.',
+            );
+            self::assertStringNotContainsString(
+                __FILE__,
+                $response->data,
+                'File path must not leak.',
+            );
+            self::assertStringNotContainsString(
+                'Stack trace:',
+                $response->data,
+                'Stack trace must not leak.',
+            );
+        } finally {
+            @\runkit_constant_redefine('YII_DEBUG', true);
+        }
+    }
+
+    #[RequiresPhpExtension('runkit7')]
+    public function testRawErrorResponseReturnsUserExceptionMessageWhenDebugDisabled(): void
+    {
+        @\runkit_constant_redefine('YII_DEBUG', false);
+
+        try {
+            $errorHandler = new ErrorHandler();
+
+            $errorHandler->discardExistingOutput = false;
+
+            $response = new Response(['charset' => 'UTF-8', 'format' => Response::FORMAT_RAW]);
+
+            $errorHandler->setResponse($response);
+
+            $exception = new UserException('Invalid request parameters.');
+
+            $response = $errorHandler->handleException($exception);
+
+            self::assertSame(
+                Response::FORMAT_RAW,
+                $response->format,
+                'RAW format must be preserved.',
+            );
+            self::assertSame(
+                'Invalid request parameters.',
+                $response->data,
+                'User exception message must be returned verbatim.',
+            );
+            self::assertStringNotContainsString(
+                'Stack trace:',
+                $response->data,
+                'Stack trace must not leak.',
+            );
+        } finally {
+            @\runkit_constant_redefine('YII_DEBUG', true);
+        }
+    }
+
     public function testResponseDataIsNotEmpty(): void
     {
         $errorHandler = new ErrorHandler();

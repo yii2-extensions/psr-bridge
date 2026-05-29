@@ -228,12 +228,32 @@ class ErrorHandler extends \yii\web\ErrorHandler
                 $response->data = $this->renderFile($file, ['exception' => $exception]);
             }
         } elseif ($response->format === Response::FORMAT_RAW) {
-            $response->data = self::convertExceptionToString($exception);
+            $response->data = $this->convertExceptionToRawString($exception);
         } else {
             $response->data = $this->convertExceptionToArray($exception);
         }
 
         return $response;
+    }
+
+    /**
+     * Converts an exception to a RAW response string without exposing sensitive details in production.
+     *
+     * @param Throwable $exception Exception to convert.
+     *
+     * @return string Safe RAW response body.
+     */
+    private function convertExceptionToRawString(Throwable $exception): string
+    {
+        if (YII_DEBUG) {
+            return self::convertExceptionToString($exception);
+        }
+
+        if ($exception instanceof UserException) {
+            return $exception->getMessage();
+        }
+
+        return 'An internal server error occurred.';
     }
 
     /**
