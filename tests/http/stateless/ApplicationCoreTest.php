@@ -275,6 +275,61 @@ final class ApplicationCoreTest extends TestCase
         );
     }
 
+    public function testHandleUsesFreshResponseAfterPreviousResponseEnds(): void
+    {
+        $app = ApplicationFactory::stateless();
+
+        $firstPsrResponse = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $firstPsrResponse,
+        );
+
+        $firstYiiResponse = $app->response;
+
+        self::assertInstanceOf(
+            Response::class,
+            $firstYiiResponse,
+            'Response component should be an instance of the Yii Response class.',
+        );
+
+        $firstYiiResponse->end();
+
+        self::assertTrue(
+            $firstYiiResponse->isSent,
+            'First response should be marked as sent after calling end.',
+        );
+
+        $secondPsrResponse = $app->handle(HelperFactory::createRequest('GET', 'site/statuscode'));
+
+        $secondYiiResponse = $app->response;
+
+        self::assertInstanceOf(
+            Response::class,
+            $secondYiiResponse,
+            'Response component should be an instance of the Yii Response class.',
+        );
+        self::assertNotSame(
+            $firstYiiResponse,
+            $secondYiiResponse,
+            'A subsequent request should use a fresh Yii response instance.',
+        );
+        self::assertFalse(
+            $secondYiiResponse->isSent,
+            'The fresh response for the subsequent request should not inherit the previous sent state.',
+        );
+        self::assertSame(
+            201,
+            $secondPsrResponse->getStatusCode(),
+            "Expected HTTP '201' for route 'site/statuscode'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $secondPsrResponse->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/statuscode'.",
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */

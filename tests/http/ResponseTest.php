@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http;
 use PHPUnit\Framework\Attributes\Group;
 use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 use Yii;
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidCallException, InvalidConfigException};
 use yii\di\NotInstantiableException;
 use yii\helpers\Json;
 use yii\web\{Cookie, Session};
@@ -660,6 +660,32 @@ final class ResponseTest extends TestCase
             $response->isSent,
             "Response should not be marked as sent after 'getPsr7Response()'.",
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testThrowExceptionWhenGetPsr7ResponseIsCalledAfterResponseEnds(): void
+    {
+        ApplicationFactory::web();
+
+        $response = new Response();
+
+        $response->content = 'Closed content';
+
+        Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
+
+        $response->getPsr7Response();
+        $response->end();
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage(
+            'Response has already been sent.',
+        );
+
+        $response->getPsr7Response();
     }
 
     protected function tearDown(): void

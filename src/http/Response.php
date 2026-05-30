@@ -6,7 +6,7 @@ namespace yii2\extensions\psrbridge\http;
 
 use Psr\Http\Message\{ResponseFactoryInterface, ResponseInterface, StreamFactoryInterface};
 use Yii;
-use yii\base\InvalidConfigException;
+use yii\base\{InvalidCallException, InvalidConfigException};
 use yii\di\NotInstantiableException;
 use yii\web\Cookie;
 use yii2\extensions\psrbridge\adapter\ResponseAdapter;
@@ -89,6 +89,7 @@ class Response extends \yii\web\Response
      * $psrResponse = $response->getPsr7Response();
      * ```
      *
+     * @throws InvalidCallException if the response has already been sent.
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
      *
@@ -96,6 +97,10 @@ class Response extends \yii\web\Response
      */
     public function getPsr7Response(): ResponseInterface
     {
+        if ($this->isSent) {
+            throw new InvalidCallException('Response has already been sent.');
+        }
+
         $this->prepareForPsr7();
 
         return $this->createAdapter()->toPsr7();
@@ -130,7 +135,7 @@ class Response extends \yii\web\Response
      */
     private function prepareForPsr7(): void
     {
-        if ($this->isPreparedForPsr7 || $this->isSent) {
+        if ($this->isPreparedForPsr7) {
             return;
         }
 
