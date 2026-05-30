@@ -432,9 +432,11 @@ final class UploadedFileCreatorTest extends TestCase
 
     public function testCreateFromGlobalsWithMultipleUploadErrorUsesEmptyStream(): void
     {
+        $successfulTmpName = $this->createTmpFile();
+
         $files = [
             'documents' => [
-                'tmp_name' => [$this->createTmpFile(), ''],
+                'tmp_name' => [$successfulTmpName, ''],
                 'size' => [128, 0],
                 'error' => [UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE],
                 'name' => ['document.txt', ''],
@@ -477,9 +479,10 @@ final class UploadedFileCreatorTest extends TestCase
             $failedDocument->getError(),
             "Should preserve 'upload error' code for failed multiple upload entries.",
         );
-        self::assertTrue(
-            $streamFactory->createdFromFile,
-            "Should still open 'tmp_name' for successful multiple upload entries.",
+        self::assertSame(
+            [$successfulTmpName],
+            $streamFactory->createdFromFileNames,
+            "Only the successful 'tmp_name' must be opened.",
         );
         self::assertTrue(
             $streamFactory->createdFromString,

@@ -12,6 +12,11 @@ use Psr\Http\Message\{StreamFactoryInterface, StreamInterface};
 final class StreamFactorySpy implements StreamFactoryInterface
 {
     public bool $createdFromFile = false;
+
+    /**
+     * @var list<string>
+     */
+    public array $createdFromFileNames = [];
     public bool $createdFromResource = false;
     public bool $createdFromString = false;
 
@@ -27,6 +32,7 @@ final class StreamFactorySpy implements StreamFactoryInterface
     public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
     {
         $this->createdFromFile = true;
+        $this->createdFromFileNames[] = $filename;
 
         return $this->streamFactory->createStreamFromFile($filename, $mode);
     }
