@@ -89,45 +89,6 @@ final class UploadedFileCreatorTest extends TestCase
         );
     }
 
-    public function testCreateFromArrayWithValidFileSpec(): void
-    {
-        $fileSpec = [
-            'tmp_name' => $this->createTmpFile(),
-            'size' => 1024,
-            'error' => UPLOAD_ERR_OK,
-            'name' => 'test.txt',
-            'type' => 'text/plain',
-        ];
-
-        $creator = new UploadedFileCreator(
-            HelperFactory::createUploadedFileFactory(),
-            HelperFactory::createStreamFactory(),
-        );
-
-        $uploadedFile = $creator->createFromArray($fileSpec);
-
-        self::assertSame(
-            'test.txt',
-            $uploadedFile->getClientFilename(),
-            "Should preserve 'client filename' from file specification.",
-        );
-        self::assertSame(
-            'text/plain',
-            $uploadedFile->getClientMediaType(),
-            "Should preserve 'client media type' from file specification.",
-        );
-        self::assertSame(
-            1024,
-            $uploadedFile->getSize(),
-            "Should preserve 'file size' from file specification.",
-        );
-        self::assertSame(
-            UPLOAD_ERR_OK,
-            $uploadedFile->getError(),
-            "Should preserve 'error code' from file specification.",
-        );
-    }
-
     public function testCreateFromArrayWithUploadErrorUsesEmptyStream(): void
     {
         $fileSpec = [
@@ -166,56 +127,42 @@ final class UploadedFileCreatorTest extends TestCase
         );
     }
 
-    public function testCreateFromGlobalsWithMultipleUploadErrorUsesEmptyStream(): void
+    public function testCreateFromArrayWithValidFileSpec(): void
     {
-        $files = [
-            'documents' => [
-                'tmp_name' => [$this->createTmpFile(), ''],
-                'size' => [128, 0],
-                'error' => [UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE],
-                'name' => ['document.txt', ''],
-                'type' => ['text/plain', ''],
-            ],
+        $fileSpec = [
+            'tmp_name' => $this->createTmpFile(),
+            'size' => 1024,
+            'error' => UPLOAD_ERR_OK,
+            'name' => 'test.txt',
+            'type' => 'text/plain',
         ];
-        $streamFactory = new StreamFactorySpy(HelperFactory::createStreamFactory());
 
         $creator = new UploadedFileCreator(
             HelperFactory::createUploadedFileFactory(),
-            $streamFactory,
+            HelperFactory::createStreamFactory(),
         );
 
-        $result = $creator->createFromGlobals($files);
-        $documents = $result['documents'] ?? null;
-
-        self::assertIsArray(
-            $documents,
-            "Should create 'uploaded files' for multiple upload entries.",
-        );
-        self::assertInstanceOf(
-            UploadedFileInterface::class,
-            $documents[0] ?? null,
-            "Should create an 'UploadedFileInterface' for successful multiple upload entries.",
-        );
-        self::assertInstanceOf(
-            UploadedFileInterface::class,
-            $documents[1] ?? null,
-            "Should create an 'UploadedFileInterface' for failed multiple upload entries.",
-        );
-        /** @var UploadedFileInterface $failedDocument */
-        $failedDocument = $documents[1];
+        $uploadedFile = $creator->createFromArray($fileSpec);
 
         self::assertSame(
-            UPLOAD_ERR_NO_FILE,
-            $failedDocument->getError(),
-            "Should preserve 'upload error' code for failed multiple upload entries.",
+            'test.txt',
+            $uploadedFile->getClientFilename(),
+            "Should preserve 'client filename' from file specification.",
         );
-        self::assertTrue(
-            $streamFactory->createdFromFile,
-            "Should still open 'tmp_name' for successful multiple upload entries.",
+        self::assertSame(
+            'text/plain',
+            $uploadedFile->getClientMediaType(),
+            "Should preserve 'client media type' from file specification.",
         );
-        self::assertTrue(
-            $streamFactory->createdFromString,
-            "Should create a safe empty 'stream' for failed multiple upload entries.",
+        self::assertSame(
+            1024,
+            $uploadedFile->getSize(),
+            "Should preserve 'file size' from file specification.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_OK,
+            $uploadedFile->getError(),
+            "Should preserve 'error code' from file specification.",
         );
     }
 
@@ -480,6 +427,63 @@ final class UploadedFileCreatorTest extends TestCase
             1536,
             $secondFile->getSize(),
             "Should preserve 'file size' for second file in 'documents'.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithMultipleUploadErrorUsesEmptyStream(): void
+    {
+        $files = [
+            'documents' => [
+                'tmp_name' => [$this->createTmpFile(), ''],
+                'size' => [128, 0],
+                'error' => [UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE],
+                'name' => ['document.txt', ''],
+                'type' => ['text/plain', ''],
+            ],
+        ];
+
+        $streamFactory = new StreamFactorySpy(
+            HelperFactory::createStreamFactory(),
+        );
+        $creator = new UploadedFileCreator(
+            HelperFactory::createUploadedFileFactory(),
+            $streamFactory,
+        );
+
+        $result = $creator->createFromGlobals($files);
+
+        $documents = $result['documents'] ?? null;
+
+        self::assertIsArray(
+            $documents,
+            "Should create 'uploaded files' for multiple upload entries.",
+        );
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $documents[0] ?? null,
+            "Should create an 'UploadedFileInterface' for successful multiple upload entries.",
+        );
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $documents[1] ?? null,
+            "Should create an 'UploadedFileInterface' for failed multiple upload entries.",
+        );
+
+        /** @var UploadedFileInterface $failedDocument */
+        $failedDocument = $documents[1];
+
+        self::assertSame(
+            UPLOAD_ERR_NO_FILE,
+            $failedDocument->getError(),
+            "Should preserve 'upload error' code for failed multiple upload entries.",
+        );
+        self::assertTrue(
+            $streamFactory->createdFromFile,
+            "Should still open 'tmp_name' for successful multiple upload entries.",
+        );
+        self::assertTrue(
+            $streamFactory->createdFromString,
+            "Should create a safe empty 'stream' for failed multiple upload entries.",
         );
     }
 

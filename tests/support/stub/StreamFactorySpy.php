@@ -11,11 +11,9 @@ use Psr\Http\Message\{StreamFactoryInterface, StreamInterface};
  */
 final class StreamFactorySpy implements StreamFactoryInterface
 {
-    public bool $createdFromResource = false;
-
-    public bool $createdFromString = false;
-
     public bool $createdFromFile = false;
+    public bool $createdFromResource = false;
+    public bool $createdFromString = false;
 
     public function __construct(private readonly StreamFactoryInterface $streamFactory) {}
 
