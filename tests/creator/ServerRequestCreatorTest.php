@@ -9,11 +9,13 @@ use Psr\Http\Message\{StreamFactoryInterface, StreamInterface, UploadedFileInter
 use RuntimeException;
 use yii2\extensions\psrbridge\creator\ServerRequestCreator;
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\stub\StreamFactorySpy;
 
 use function fclose;
 use function is_resource;
 use function stream_get_meta_data;
 
+use const UPLOAD_ERR_NO_FILE;
 use const UPLOAD_ERR_OK;
 
 /**
@@ -1170,6 +1172,44 @@ final class ServerRequestCreatorTest extends TestCase
             UPLOAD_ERR_OK,
             $uploadedFile->getError(),
             'Should preserve error code from \'$_FILES\'.',
+        );
+    }
+
+    public function testCreateFromGlobalsWithUploadErrorDoesNotOpenEmptyTmpName(): void
+    {
+        $_FILES['avatar'] = [
+            'name' => '',
+            'type' => '',
+            'tmp_name' => '',
+            'error' => UPLOAD_ERR_NO_FILE,
+            'size' => 0,
+        ];
+
+        $streamFactory = new StreamFactorySpy(
+            HelperFactory::createStreamFactory(),
+        );
+        $creator = new ServerRequestCreator(
+            HelperFactory::createServerRequestFactory(),
+            $streamFactory,
+            HelperFactory::createUploadedFileFactory(),
+        );
+
+        $request = $creator->createFromGlobals();
+        $uploadedFile = $request->getUploadedFiles()['avatar'] ?? null;
+
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $uploadedFile,
+            "Should create an 'UploadedFileInterface' for failed upload entries.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_NO_FILE,
+            $uploadedFile->getError(),
+            "Should preserve the failed 'upload error' code during request creation.",
+        );
+        self::assertFalse(
+            $streamFactory->createdFromFile,
+            "Should not open 'tmp_name' for failed upload entries during request creation.",
         );
     }
 }

@@ -11,8 +11,8 @@ use Psr\Http\Message\{StreamFactoryInterface, StreamInterface};
  */
 final class StreamFactorySpy implements StreamFactoryInterface
 {
+    public bool $createdFromFile = false;
     public bool $createdFromResource = false;
-
     public bool $createdFromString = false;
 
     public function __construct(private readonly StreamFactoryInterface $streamFactory) {}
@@ -26,6 +26,8 @@ final class StreamFactorySpy implements StreamFactoryInterface
 
     public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
     {
+        $this->createdFromFile = true;
+
         return $this->streamFactory->createStreamFromFile($filename, $mode);
     }
 
