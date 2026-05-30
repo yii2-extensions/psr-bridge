@@ -465,6 +465,24 @@ final class ServerRequestAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnHttpMethodWithoutOverrideWhenAdapterIsSet(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest('GET', '/test'),
+        );
+
+        self::assertSame(
+            'GET',
+            $request->getMethod(),
+            'HTTP method should return original method when no override is present and adapter is set.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     #[TestWith(['GET'])]
     #[TestWith(['HEAD'])]
     #[TestWith(['OPTIONS'])]
@@ -481,24 +499,6 @@ final class ServerRequestAdapterTest extends TestCase
             'POST',
             $request->getMethod(),
             'HTTP method safe header override should be ignored when adapter is set.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnHttpMethodWithoutOverrideWhenAdapterIsSet(): void
-    {
-        $request = new Request();
-
-        $request->setPsr7Request(
-            HelperFactory::createRequest('GET', '/test'),
-        );
-
-        self::assertSame(
-            'GET',
-            $request->getMethod(),
-            'HTTP method should return original method when no override is present and adapter is set.',
         );
     }
 
