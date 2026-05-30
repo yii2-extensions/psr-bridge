@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(security): treat falsy non-boolean `YII_DEBUG` values (e.g. `0`) as debug-disabled in `ErrorHandler` to avoid leaking the debug exception page.
 - fix(security): bound `ErrorHandler::clearOutput()` buffer loop to prevent worker hangs when an output buffer cannot be removed.
 - fix(security): reject safe-method (`GET`/`HEAD`/`OPTIONS`) `X-Http-Method-Override` overrides and normalize to uppercase to prevent CSRF method-downgrade.
+- fix(security): skip stream access for failed uploads in `UploadedFileCreator` and `Request::getUploadedFiles()` to prevent unauthenticated request DoS.
 
 ## 0.3.0 February 28, 2026
 

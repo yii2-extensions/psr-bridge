@@ -140,6 +140,50 @@ final class UploadedFilesPsr7Test extends TestCase
         );
     }
 
+    public function testReturnUploadedFileForFailedUploadWithoutAccessingStream(): void
+    {
+        $uploadedFileFactory = HelperFactory::createUploadedFileFactory();
+        $streamFactory = HelperFactory::createStreamFactory();
+
+        $failedUpload = $uploadedFileFactory->createUploadedFile(
+            $streamFactory->createStream(),
+            0,
+            UPLOAD_ERR_NO_FILE,
+            '',
+            '',
+        );
+
+        $psr7Request = HelperFactory::createRequest('POST', '/upload')
+            ->withUploadedFiles(['avatar' => $failedUpload]);
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $files = $request->getUploadedFiles();
+
+        $avatar = $files['avatar'] ?? null;
+
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $avatar,
+            "Failed upload must still yield an 'UploadedFile'.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_NO_FILE,
+            $avatar->error,
+            'Error code must be preserved.',
+        );
+        self::assertSame(
+            '',
+            $avatar->tempName,
+            'Temp name must be empty for failed uploads.',
+        );
+        self::assertSame(
+            0,
+            $avatar->size,
+            'Size must be preserved as `int`.',
+        );
+    }
+
     public function testReturnUploadedFilesRecursivelyConvertsNestedArrays(): void
     {
         $file1 = dirname(__DIR__) . '/support/stub/files/test1.txt';

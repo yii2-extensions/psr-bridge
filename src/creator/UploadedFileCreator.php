@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\creator;
 
-use Psr\Http\Message\{StreamFactoryInterface, UploadedFileFactoryInterface, UploadedFileInterface};
+use Psr\Http\Message\{StreamFactoryInterface, StreamInterface, UploadedFileFactoryInterface, UploadedFileInterface};
 use Throwable;
 use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\exception\Message;
@@ -14,6 +14,8 @@ use function array_map;
 use function is_array;
 use function is_int;
 use function is_string;
+
+use const UPLOAD_ERR_OK;
 
 /**
  * Creates PSR-7 uploaded files from PHP file specifications.
@@ -100,13 +102,7 @@ final class UploadedFileCreator
     {
         $this->validateFileSpec($file);
 
-        try {
-            $stream = $this->streamFactory->createStreamFromFile($file['tmp_name']);
-        } catch (Throwable) {
-            throw new InvalidArgumentException(
-                Message::FAILED_CREATE_STREAM_FROM_TMP_FILE->getMessage($file['tmp_name']),
-            );
-        }
+        $stream = $this->createStreamForUpload($file['tmp_name'], $file['error']);
 
         return $this->uploadedFileFactory->createUploadedFile(
             $stream,
@@ -309,12 +305,41 @@ final class UploadedFileCreator
         string|null $type = null,
     ): UploadedFileInterface {
         return $this->uploadedFileFactory->createUploadedFile(
-            $this->streamFactory->createStreamFromFile($tmpName),
+            $this->createStreamForUpload($tmpName, $error),
             $size,
             $error,
             $name,
             $type,
         );
+    }
+
+    /**
+     * Creates a stream for an uploaded file without opening failed upload temporary paths.
+     *
+     * PHP uses an empty or otherwise unusable temporary path for failed upload entries, including
+     * {@see \UPLOAD_ERR_NO_FILE}. The PSR uploaded file still carries the error code, so failed uploads receive a
+     * safe empty stream instead of opening the reported temporary path.
+     *
+     * @param string $tmpName Temporary file name reported by PHP.
+     * @param int $error PHP upload error code.
+     *
+     * @throws InvalidArgumentException if opening a successful upload temporary file fails.
+     *
+     * @return StreamInterface Stream for the uploaded file.
+     */
+    private function createStreamForUpload(string $tmpName, int $error): StreamInterface
+    {
+        if ($error !== UPLOAD_ERR_OK) {
+            return $this->streamFactory->createStream();
+        }
+
+        try {
+            return $this->streamFactory->createStreamFromFile($tmpName);
+        } catch (Throwable) {
+            throw new InvalidArgumentException(
+                Message::FAILED_CREATE_STREAM_FROM_TMP_FILE->getMessage($tmpName),
+            );
+        }
     }
 
     /**

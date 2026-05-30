@@ -24,6 +24,8 @@ use function mb_substr;
 use function str_starts_with;
 use function strncasecmp;
 
+use const UPLOAD_ERR_OK;
+
 /**
  * Extends Yii request handling with PSR-7 request data.
  *
@@ -693,20 +695,40 @@ class Request extends \yii\web\Request
      * Converts a {@see UploadedFileInterface} object to a Yii {@see UploadedFile} instance by extracting the error
      * code, client filename, file size, temporary file path, and media type from the PSR-7 UploadedFileInterface.
      *
+     * For failed uploads (`error` other than `UPLOAD_ERR_OK`), the temporary path and resource stay empty and the
+     * PSR-7 stream is never accessed, since PSR-7 implementations reject `getStream()` on error-state uploads.
+     *
      * @param UploadedFileInterface $psrFile PSR-7 UploadedFileInterface instance to convert.
      *
      * @return UploadedFile Yii UploadedFile instance created from the PSR-7 UploadedFileInterface.
      */
     private function createUploadedFile(UploadedFileInterface $psrFile): UploadedFile
     {
+        $error = $psrFile->getError();
+
+        if ($error !== UPLOAD_ERR_OK) {
+            return new UploadedFile(
+                [
+                    'error' => $error,
+                    'name' => $psrFile->getClientFilename() ?? '',
+                    'size' => $psrFile->getSize(),
+                    'tempName' => '',
+                    'type' => $psrFile->getClientMediaType() ?? '',
+                    'tempResource' => null,
+                ],
+            );
+        }
+
+        $stream = $psrFile->getStream();
+
         return new UploadedFile(
             [
-                'error' => $psrFile->getError(),
+                'error' => $error,
                 'name' => $psrFile->getClientFilename() ?? '',
                 'size' => $psrFile->getSize(),
-                'tempName' => $psrFile->getStream()->getMetadata('uri') ?? '',
+                'tempName' => $stream->getMetadata('uri') ?? '',
                 'type' => $psrFile->getClientMediaType() ?? '',
-                'tempResource' => $psrFile->getStream()->detach(),
+                'tempResource' => $stream->detach(),
             ],
         );
     }
