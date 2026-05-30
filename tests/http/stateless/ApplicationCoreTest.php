@@ -128,6 +128,59 @@ final class ApplicationCoreTest extends TestCase
         );
     }
 
+    public function testHandleLeavesResponseOpenUntilResponseEndIsCalled(): void
+    {
+        $app = ApplicationFactory::stateless();
+        $events = [];
+
+        $app->on(
+            Application::EVENT_BEFORE_REQUEST,
+            static function () use (&$events): void {
+                $response = Yii::$app->response;
+
+                self::assertInstanceOf(Response::class, $response);
+
+                $response->on(
+                    Response::EVENT_AFTER_SEND,
+                    static function () use (&$events): void {
+                        $events[] = 'afterSend';
+                    },
+                );
+            },
+        );
+
+        $psrResponse = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $psrResponse,
+        );
+        self::assertSame(
+            [],
+            $events,
+            "'EVENT_AFTER_SEND' should not run while 'handle()' only converts the response.",
+        );
+
+        $response = $app->response;
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertFalse(
+            $response->isSent,
+            "Response should remain open until 'Response::end()' is called.",
+        );
+
+        $response->end();
+
+        self::assertSame(
+            ['afterSend'],
+            $events,
+            "'EVENT_AFTER_SEND' should run after 'Response::end()'.",
+        );
+        self::assertTrue(
+            $response->isSent,
+            "Response should be marked as sent after 'Response::end()'.",
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws JsonException if JSON encoding fails.

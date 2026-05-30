@@ -65,8 +65,15 @@ public function actionDownload()
     // Use with PSR-7 compatible tools
     $emitter = new SapiEmitter();
     $emitter->emit($psr7Response);
+
+    // End Yii response lifecycle after the PSR runtime has sent the response
+    $response->end();
 }
 ```
+
+> [!WARNING]
+> Call `$response->end()` only after the PSR runtime has emitted the returned response. This keeps
+> `EVENT_AFTER_SEND` cleanup compatible with lazy `sendFile()` and `sendStreamAsFile()` response bodies.
 
 ### Development & Debugging
 
@@ -182,6 +189,18 @@ $config = require dirname(__DIR__) . '/config/web/app.php';
 $runner = new RoadRunner(new Application($config));
 
 $runner->run();
+```
+
+### Custom PSR runtime loops
+
+If you call `Application::handle()` directly, end the Yii response after the runtime sends the PSR-7 response:
+
+```php
+$psr7Response = $app->handle($psr7Request);
+
+// Send with your runtime, for example: $worker->respond($psr7Response)
+
+$app->response->end();
 ```
 
 ### Lifecycle flags for long-running workers

@@ -124,6 +124,25 @@ $psr7Response = $response->getPsr7Response();
 // Emit PSR-7 response
 $emitter = new yii2\extensions\psrbridge\emitter\SapiEmitter();
 $emitter->emit($psr7Response);
+
+// End Yii response lifecycle after the PSR runtime has sent the response
+$response->end();
+```
+
+> [!WARNING]
+> Call `$response->end()` only after the PSR runtime has emitted the returned response. This keeps
+> `EVENT_AFTER_SEND` cleanup compatible with lazy `sendFile()` and `sendStreamAsFile()` response bodies.
+
+#### Custom PSR runtime loops
+
+If you call `Application::handle()` directly, end the Yii response after the runtime sends the PSR-7 response:
+
+```php
+$psr7Response = $app->handle($psr7Request);
+
+// Send with your runtime, for example: $worker->respond($psr7Response)
+
+$app->response->end();
 ```
 
 ### Worker lifecycle defaults

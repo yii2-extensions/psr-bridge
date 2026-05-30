@@ -15,8 +15,13 @@ use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function count;
+use function fclose;
+use function is_array;
+use function is_file;
+use function is_resource;
 use function str_contains;
 use function time;
+use function unlink;
 use function urlencode;
 
 /**
@@ -29,10 +34,11 @@ final class ResponseTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
      */
-    public function testConvertResponseFinalizesLifecycleOnlyOnceWhenCalledMultipleTimes(): void
+    public function testConvertResponsePreparesOnceAndEndsLifecycleExplicitly(): void
     {
         ApplicationFactory::web();
 
+        $afterPrepareCount = 0;
         $afterSendCount = 0;
         $beforeSendCount = 0;
 
@@ -52,6 +58,12 @@ final class ResponseTest extends TestCase
                 $afterSendCount++;
             },
         );
+        $response->on(
+            Response::EVENT_AFTER_PREPARE,
+            static function () use (&$afterPrepareCount): void {
+                $afterPrepareCount++;
+            },
+        );
 
         Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
         Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
@@ -66,8 +78,13 @@ final class ResponseTest extends TestCase
         );
         self::assertSame(
             1,
+            $afterPrepareCount,
+            "'EVENT_AFTER_PREPARE' must fire once across repeated calls.",
+        );
+        self::assertSame(
+            0,
             $afterSendCount,
-            "'EVENT_AFTER_SEND' must fire once across repeated calls.",
+            "'EVENT_AFTER_SEND' must not fire during PSR-7 conversion.",
         );
         self::assertSame(
             'Idempotent content',
@@ -79,9 +96,22 @@ final class ResponseTest extends TestCase
             (string) $secondResponse->getBody(),
             'Repeated conversion must reproduce the same body.',
         );
+        self::assertFalse(
+            $response->isSent,
+            'Response must not be marked as sent during PSR-7 conversion.',
+        );
+
+        $response->end();
+        $response->end();
+
+        self::assertSame(
+            1,
+            $afterSendCount,
+            "'EVENT_AFTER_SEND' must fire once when ending the response lifecycle.",
+        );
         self::assertTrue(
             $response->isSent,
-            'Response must stay marked as sent across repeated calls.',
+            'Response must stay marked as sent after ending the response lifecycle.',
         );
     }
 
@@ -245,14 +275,14 @@ final class ResponseTest extends TestCase
             $eventsBefore,
             "'EVENT_AFTER_PREPARE' should be triggered.",
         );
-        self::assertContains(
+        self::assertNotContains(
             'EVENT_AFTER_SEND',
             $eventsAfter,
-            "'EVENT_AFTER_SEND' should be triggered during conversion.",
+            "'EVENT_AFTER_SEND' should not be triggered during conversion.",
         );
-        self::assertTrue(
+        self::assertFalse(
             $response->isSent,
-            "Response should be marked as sent after 'getPsr7Response()'.",
+            "Response should not be marked as sent after 'getPsr7Response()'.",
         );
         self::assertFalse(
             $session->getIsActive(),
@@ -312,9 +342,9 @@ final class ResponseTest extends TestCase
             $sessionCookieFound,
             "No session cookie should be added when session is 'not active'.",
         );
-        self::assertTrue(
+        self::assertFalse(
             $response->isSent,
-            "Response should be marked as sent after 'getPsr7Response()'.",
+            "Response should not be marked as sent after 'getPsr7Response()'.",
         );
     }
 
@@ -410,14 +440,88 @@ final class ResponseTest extends TestCase
             $eventsBefore,
             "'EVENT_AFTER_PREPARE' should be triggered.",
         );
-        self::assertContains(
+        self::assertNotContains(
             'EVENT_AFTER_SEND',
             $eventsAfter,
-            "'EVENT_AFTER_SEND' should be triggered during conversion.",
+            "'EVENT_AFTER_SEND' should not be triggered during conversion.",
+        );
+        self::assertFalse(
+            $response->isSent,
+            "Response should not be marked as sent after 'getPsr7Response()'.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testFileResponseCleanupRunsAfterPsrBodyIsConsumedAndResponseEnds(): void
+    {
+        ApplicationFactory::web();
+
+        $content = 'download-body';
+        $events = [];
+
+        $path = $this->createTempFileWithContent($content);
+
+        $response = new Response();
+
+        $response->sendFile(
+            $path,
+            'artifact.txt',
+            [
+                'mimeType' => 'text/plain',
+            ],
+        );
+        $response->on(
+            Response::EVENT_AFTER_SEND,
+            static function () use ($path, $response, &$events): void {
+                $events[] = 'EVENT_AFTER_SEND';
+
+                if (is_array($response->stream) && is_resource($response->stream[0] ?? null)) {
+                    fclose($response->stream[0]);
+                }
+
+                if (is_file($path)) {
+                    unlink($path);
+                }
+            },
+        );
+
+        Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
+
+        $psr7Response = $response->getPsr7Response();
+
+        self::assertSame(
+            [],
+            $events,
+            "'EVENT_AFTER_SEND' cleanup must not run during PSR-7 conversion.",
+        );
+        self::assertFalse(
+            $response->isSent,
+            'Response must not be marked as sent during PSR-7 conversion.',
+        );
+        self::assertSame(
+            $content,
+            $psr7Response->getBody()->getContents(),
+            'PSR-7 body must remain readable before after-send cleanup runs.',
+        );
+
+        $response->end();
+
+        self::assertSame(
+            ['EVENT_AFTER_SEND'],
+            $events,
+            "'EVENT_AFTER_SEND' cleanup must run when the response lifecycle ends.",
         );
         self::assertTrue(
             $response->isSent,
-            "Response should be marked as sent after 'getPsr7Response()'.",
+            'Response must be marked as sent after ending the response lifecycle.',
+        );
+        self::assertFalse(
+            is_file($path),
+            'Temporary file must be deleted by after-send cleanup after the body is consumed.',
         );
     }
 
@@ -552,9 +656,9 @@ final class ResponseTest extends TestCase
             $contentTypeHeaders[0] ?? '',
             "'Content-Type' should be 'application/json' for JSON format responses.",
         );
-        self::assertTrue(
+        self::assertFalse(
             $response->isSent,
-            "Response should be marked as sent after 'getPsr7Response()'.",
+            "Response should not be marked as sent after 'getPsr7Response()'.",
         );
     }
 

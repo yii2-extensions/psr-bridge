@@ -192,9 +192,14 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Handles one PSR-7 request and returns a PSR-7 response.
      *
+     * After the consuming runtime sends the returned response, call {@see Response::end()} on the application response
+     * component to complete the Yii after-send lifecycle.
+     *
      * Usage example:
      * ```php
      * $psrResponse = $app->handle($psrRequest);
+     * // Emit or respond with $psrResponse.
+     * $app->response->end();
      * ```
      *
      * @param ServerRequestInterface $request Request to process.
@@ -393,12 +398,12 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Finalizes request handling and returns a PSR-7 response.
+     * Completes request handling and returns a PSR-7 response.
      *
-     * @param Response $response Yii response to finalize.
+     * @param Response $response Yii response to convert.
      * @throws InvalidConfigException When configuration is invalid.
      * @throws NotInstantiableException When a service cannot be instantiated.
-     * @return ResponseInterface Final PSR-7 response.
+     * @return ResponseInterface Converted PSR-7 response.
      */
     protected function terminate(Response $response): ResponseInterface
     {
