@@ -84,6 +84,7 @@ final class ResponseTest extends TestCase
             'Response must stay marked as sent across repeated calls.',
         );
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
