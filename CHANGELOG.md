@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(security): bound `ErrorHandler::clearOutput()` buffer loop to prevent worker hangs when an output buffer cannot be removed.
 - fix(security): reject safe-method (`GET`/`HEAD`/`OPTIONS`) `X-Http-Method-Override` overrides and normalize to uppercase to prevent CSRF method-downgrade.
 - fix(security): skip stream access for failed uploads in `UploadedFileCreator` and `Request::getUploadedFiles()` to prevent unauthenticated request DoS.
+- fix(http): finalize PSR-7 responses once by restoring `EVENT_AFTER_SEND`/`isSent` and short-circuiting repeated `getPsr7Response()` calls.
 
 ## 0.3.0 February 28, 2026
 

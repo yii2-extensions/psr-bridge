@@ -29,6 +29,65 @@ final class ResponseTest extends TestCase
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
      */
+    public function testConvertResponseFinalizesLifecycleOnlyOnceWhenCalledMultipleTimes(): void
+    {
+        ApplicationFactory::web();
+
+        $afterSendCount = 0;
+        $beforeSendCount = 0;
+
+        $response = new Response();
+
+        $response->content = 'Idempotent content';
+
+        $response->on(
+            Response::EVENT_BEFORE_SEND,
+            static function () use (&$beforeSendCount): void {
+                $beforeSendCount++;
+            },
+        );
+        $response->on(
+            Response::EVENT_AFTER_SEND,
+            static function () use (&$afterSendCount): void {
+                $afterSendCount++;
+            },
+        );
+
+        Yii::$container->set(ResponseFactoryInterface::class, HelperFactory::createResponseFactory());
+        Yii::$container->set(StreamFactoryInterface::class, HelperFactory::createStreamFactory());
+
+        $firstResponse = $response->getPsr7Response();
+        $secondResponse = $response->getPsr7Response();
+
+        self::assertSame(
+            1,
+            $beforeSendCount,
+            "'EVENT_BEFORE_SEND' must fire once across repeated calls.",
+        );
+        self::assertSame(
+            1,
+            $afterSendCount,
+            "'EVENT_AFTER_SEND' must fire once across repeated calls.",
+        );
+        self::assertSame(
+            'Idempotent content',
+            (string) $firstResponse->getBody(),
+            'First conversion must carry the response body.',
+        );
+        self::assertSame(
+            'Idempotent content',
+            (string) $secondResponse->getBody(),
+            'Repeated conversion must reproduce the same body.',
+        );
+        self::assertTrue(
+            $response->isSent,
+            'Response must stay marked as sent across repeated calls.',
+        );
+    }
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
     public function testConvertResponseWithActiveSession(): void
     {
         ApplicationFactory::web(

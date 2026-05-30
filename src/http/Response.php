@@ -31,7 +31,6 @@ class Response extends \yii\web\Response
      * Set this property when {@see enableCookieValidation} is `true`.
      */
     public string $cookieValidationKey = '';
-
     /**
      * @var bool Whether to validate cookies with {@see cookieValidationKey}.
      */
@@ -48,6 +47,9 @@ class Response extends \yii\web\Response
      * Delegates the conversion process to a {@see ResponseAdapter}, triggering Yii Response lifecycle events and
      * ensuring session cookies are attached when a session is active.
      *
+     * Finalizes the response only once: repeated calls short-circuit on {@see $isSent} and reconvert without
+     * re-firing lifecycle events, mirroring {@see \yii\web\Response::send()}.
+     *
      * Usage example:
      * ```php
      * $response = new \yii2\extensions\psrbridge\http\Response();
@@ -61,6 +63,10 @@ class Response extends \yii\web\Response
      */
     public function getPsr7Response(): ResponseInterface
     {
+        if ($this->isSent) {
+            return $this->createAdapter()->toPsr7();
+        }
+
         $this->trigger(self::EVENT_BEFORE_SEND);
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
