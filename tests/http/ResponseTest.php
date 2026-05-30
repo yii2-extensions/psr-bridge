@@ -185,14 +185,14 @@ final class ResponseTest extends TestCase
             $eventsBefore,
             "'EVENT_AFTER_PREPARE' should be triggered.",
         );
-        self::assertNotContains(
+        self::assertContains(
             'EVENT_AFTER_SEND',
             $eventsAfter,
-            "'EVENT_AFTER_SEND' should NOT be triggered during conversion.",
+            "'EVENT_AFTER_SEND' should be triggered during conversion.",
         );
-        self::assertFalse(
+        self::assertTrue(
             $response->isSent,
-            "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
+            "Response should be marked as sent after 'getPsr7Response()'.",
         );
         self::assertFalse(
             $session->getIsActive(),
@@ -252,9 +252,9 @@ final class ResponseTest extends TestCase
             $sessionCookieFound,
             "No session cookie should be added when session is 'not active'.",
         );
-        self::assertFalse(
+        self::assertTrue(
             $response->isSent,
-            "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
+            "Response should be marked as sent after 'getPsr7Response()'.",
         );
     }
 
@@ -350,14 +350,14 @@ final class ResponseTest extends TestCase
             $eventsBefore,
             "'EVENT_AFTER_PREPARE' should be triggered.",
         );
-        self::assertNotContains(
+        self::assertContains(
             'EVENT_AFTER_SEND',
             $eventsAfter,
-            "'EVENT_AFTER_SEND' should NOT be triggered during conversion.",
+            "'EVENT_AFTER_SEND' should be triggered during conversion.",
         );
-        self::assertFalse(
+        self::assertTrue(
             $response->isSent,
-            "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
+            "Response should be marked as sent after 'getPsr7Response()'.",
         );
     }
 
@@ -492,9 +492,9 @@ final class ResponseTest extends TestCase
             $contentTypeHeaders[0] ?? '',
             "'Content-Type' should be 'application/json' for JSON format responses.",
         );
-        self::assertFalse(
+        self::assertTrue(
             $response->isSent,
-            "Response should NOT be marked as sent after 'getPsr7Response()' - only converted.",
+            "Response should be marked as sent after 'getPsr7Response()'.",
         );
     }
 

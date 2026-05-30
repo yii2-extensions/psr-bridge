@@ -91,7 +91,13 @@ class Response extends \yii\web\Response
             $session->close();
         }
 
-        return $this->createAdapter()->toPsr7();
+        $response = $this->createAdapter()->toPsr7();
+
+        $this->trigger(self::EVENT_AFTER_SEND);
+
+        $this->isSent = true;
+
+        return $response;
     }
 
     /**
