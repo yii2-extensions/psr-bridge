@@ -15,6 +15,8 @@ final class StreamFactorySpy implements StreamFactoryInterface
 
     public bool $createdFromString = false;
 
+    public bool $createdFromFile = false;
+
     public function __construct(private readonly StreamFactoryInterface $streamFactory) {}
 
     public function createStream(string $content = ''): StreamInterface
@@ -26,6 +28,8 @@ final class StreamFactorySpy implements StreamFactoryInterface
 
     public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
     {
+        $this->createdFromFile = true;
+
         return $this->streamFactory->createStreamFromFile($filename, $mode);
     }
 

@@ -14,6 +14,7 @@ use function fclose;
 use function is_resource;
 use function stream_get_meta_data;
 
+use const UPLOAD_ERR_NO_FILE;
 use const UPLOAD_ERR_OK;
 
 /**
@@ -1110,6 +1111,37 @@ final class ServerRequestCreatorTest extends TestCase
             '/api/users?page=1',
             (string) $request->getUri(),
             "Should use 'REQUEST_URI' from '\$_SERVER' when set.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithUploadErrorDoesNotOpenEmptyTmpName(): void
+    {
+        $_FILES['avatar'] = [
+            'name' => '',
+            'type' => '',
+            'tmp_name' => '',
+            'error' => UPLOAD_ERR_NO_FILE,
+            'size' => 0,
+        ];
+
+        $creator = new ServerRequestCreator(
+            HelperFactory::createServerRequestFactory(),
+            HelperFactory::createStreamFactory(),
+            HelperFactory::createUploadedFileFactory(),
+        );
+
+        $request = $creator->createFromGlobals();
+        $uploadedFile = $request->getUploadedFiles()['avatar'] ?? null;
+
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $uploadedFile,
+            "Should create an 'UploadedFileInterface' for failed upload entries.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_NO_FILE,
+            $uploadedFile->getError(),
+            "Should preserve the failed 'upload error' code during request creation.",
         );
     }
 
