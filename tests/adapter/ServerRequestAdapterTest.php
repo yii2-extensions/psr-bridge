@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\adapter;
 
-use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
 use Psr\Http\Message\ServerRequestInterface;
 use yii\base\InvalidConfigException;
 use yii\web\JsonParser;
@@ -447,6 +447,24 @@ final class ServerRequestAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnHttpMethodWithLowercaseHeaderOverrideWhenAdapterIsSet(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest('POST', '/test', ['X-Http-Method-Override' => 'patch']),
+        );
+
+        self::assertSame(
+            'PATCH',
+            $request->getMethod(),
+            'HTTP method header override should be normalized to uppercase when adapter is set.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithoutOverrideWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -459,6 +477,28 @@ final class ServerRequestAdapterTest extends TestCase
             'GET',
             $request->getMethod(),
             'HTTP method should return original method when no override is present and adapter is set.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith(['GET'])]
+    #[TestWith(['HEAD'])]
+    #[TestWith(['OPTIONS'])]
+    #[TestWith(['get'])]
+    public function testReturnOriginalHttpMethodWithSafeHeaderOverrideWhenAdapterIsSet(string $overrideMethod): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest('POST', '/test', ['X-Http-Method-Override' => $overrideMethod]),
+        );
+
+        self::assertSame(
+            'POST',
+            $request->getMethod(),
+            'HTTP method safe header override should be ignored when adapter is set.',
         );
     }
 

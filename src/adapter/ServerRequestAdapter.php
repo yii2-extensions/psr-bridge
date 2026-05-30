@@ -207,7 +207,11 @@ final class ServerRequestAdapter
             $overrideHeader = $this->psrRequest->getHeaderLine('X-Http-Method-Override');
 
             if ($overrideHeader !== '') {
-                return $overrideHeader;
+                $methodOverride = strtoupper($overrideHeader);
+
+                if (in_array($methodOverride, ['GET', 'HEAD', 'OPTIONS'], true) === false) {
+                    return $methodOverride;
+                }
             }
         }
 
