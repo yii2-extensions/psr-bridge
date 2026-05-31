@@ -25,6 +25,45 @@ use function urlencode;
 #[Group('http')]
 final class ResponseTest extends TestCase
 {
+    public function testCompleteSendTriggersAfterSendAndMarksResponseSent(): void
+    {
+        $eventsAfter = [];
+
+        $response = new Response();
+
+        $response->on(
+            Response::EVENT_AFTER_SEND,
+            static function () use (&$eventsAfter): void {
+                $eventsAfter[] = 'EVENT_AFTER_SEND';
+            },
+        );
+
+        self::assertFalse(
+            $response->isSent,
+            'Fresh response must not be marked as sent.',
+        );
+
+        $response->completeSend();
+
+        self::assertContains(
+            'EVENT_AFTER_SEND',
+            $eventsAfter,
+            "'EVENT_AFTER_SEND' must fire on finalization.",
+        );
+        self::assertTrue(
+            $response->isSent,
+            'Response must be marked as sent after finalization.',
+        );
+
+        $response->completeSend();
+
+        self::assertCount(
+            1,
+            $eventsAfter,
+            'Repeated finalization must be a no-op.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.

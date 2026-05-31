@@ -7,7 +7,7 @@ namespace yii2\extensions\psrbridge\tests\support;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Yii;
-use yii\base\Security;
+use yii\base\{Event, Security};
 use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 
 use function array_pop;
@@ -226,6 +226,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $_GET = [];
         $_POST = [];
         $_SERVER = $this->originalServer;
+
+        // detach any global event handlers left attached when a test does not call `finalize()`.
+        Event::offAll();
 
         $this->closeApplication();
         parent::tearDown();

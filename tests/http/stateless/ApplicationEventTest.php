@@ -110,6 +110,10 @@ final class ApplicationEventTest extends TestCase
         $this->assertSiteIndexJsonResponse(
             $response,
         );
+
+        // cleanup is deferred to `finalize()`, called by the runtime after emission.
+        $app->finalize();
+
         self::assertCount(
             1,
             $mockComponent1->offCalls,
@@ -180,6 +184,9 @@ final class ApplicationEventTest extends TestCase
         $this->assertSiteIndexJsonResponse(
             $response,
         );
+
+        $app->finalize();
+
         self::assertGreaterThanOrEqual(
             2,
             $trackedCounts[0] ?? 0,
@@ -221,6 +228,9 @@ final class ApplicationEventTest extends TestCase
             $response->getBody()->getContents(),
             'Expected Response body should be empty.',
         );
+
+        $app->finalize();
+
         self::assertCount(
             2,
             $eventsCaptured,
@@ -265,6 +275,9 @@ final class ApplicationEventTest extends TestCase
         $this->assertSiteIndexJsonResponse(
             $response,
         );
+
+        $app->finalize();
+
         self::assertCount(
             2,
             $eventsTriggered,
@@ -310,6 +323,9 @@ final class ApplicationEventTest extends TestCase
             $response->getBody()->getContents(),
             'Expected Response body should be empty.',
         );
+
+        $app->finalize();
+
         self::assertCount(
             1,
             $eventsTriggered,
@@ -350,6 +366,8 @@ final class ApplicationEventTest extends TestCase
         $this->assertSiteIndexJsonResponse(
             $response,
         );
+
+        $app->finalize();
 
         Event::trigger('', 'test.global.event');
 
@@ -398,6 +416,9 @@ final class ApplicationEventTest extends TestCase
             $component,
             'Event component should be an instance of EventComponent.',
         );
+
+        // detaches the global tracker so the post-request manual trigger is not recorded.
+        $app->finalize();
 
         $component->triggerTestEvent();
 

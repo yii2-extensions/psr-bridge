@@ -106,6 +106,10 @@ final class ApplicationCoreTest extends TestCase
         $this->assertSiteIndexJsonResponse(
             $response,
         );
+
+        // the logger flush now runs in `finalize()`, after the runtime emits the response.
+        $app->finalize();
+
         self::assertFileExists(
             $this->logFile,
             "Log file should exist after 'flush(true)'.",
