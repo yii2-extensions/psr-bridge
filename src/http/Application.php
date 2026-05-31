@@ -39,9 +39,15 @@ use function strtoupper;
  *
  * $psr7Response = $app->handle($psr7Request);
  *
- * (new \yii2\extensions\psrbridge\emitter\SapiEmitter())->emit($psr7Response);
+ * try {
+ *     (new \yii2\extensions\psrbridge\emitter\SapiEmitter())->emit($psr7Response);
  *
- * $app->finalize();
+ *     $app->finalize();
+ * } catch (\Throwable $e) {
+ *     $app->finalize(false);
+ *
+ *     throw $e;
+ * }
  * ```
  *
  * @template TUserIdentity of IdentityInterface

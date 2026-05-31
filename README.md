@@ -128,7 +128,7 @@ $emitter->emit($psr7Response);
 
 > [!NOTE]
 > This shows the low-level conversion API. Serving a full request in a long-running worker goes through the
-> `handle() → emit → finalize()` cycle (or a runner) — see
+> `handle() → emit → finalize()` cycle (or a runner). See
 > [Response lifecycle finalization](docs/examples.md#response-lifecycle-finalization).
 
 ### Worker lifecycle defaults

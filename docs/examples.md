@@ -69,8 +69,8 @@ public function actionDownload()
 ```
 
 > [!NOTE]
-> This demonstrates the conversion primitive. A full worker request cycle is `handle() → emit → finalize()` —
-> see [Response lifecycle finalization](#response-lifecycle-finalization).
+> This demonstrates the conversion primitive. A full worker request cycle is `handle() → emit → finalize()`.
+> See [Response lifecycle finalization](#response-lifecycle-finalization).
 
 ### Development & Debugging
 
@@ -213,8 +213,8 @@ Use non-default values only for advanced scenarios:
 
 ## Response lifecycle finalization
 
-This bridge models the request lifecycle as a **mandatory two-step contract** — `handle()` then `finalize()` — rather
-than a single PSR-15 `handle()` call (mirroring Symfony's `HttpKernelInterface::handle()` plus
+This bridge models the request lifecycle as a **mandatory two-step contract** (`handle()` then `finalize()`), not a
+single PSR-15 `handle()` call (mirroring Symfony's `HttpKernelInterface::handle()` plus
 `TerminableInterface::terminate()`). A worker runtime must perform both; `handle()` alone is not a complete request.
 
 `Application::handle()` runs the request and returns a PSR-7 response, but it intentionally stops at the **pre-send**
