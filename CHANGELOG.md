@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(security): reject safe-method (`GET`/`HEAD`/`OPTIONS`) `X-Http-Method-Override` overrides and normalize to uppercase to prevent CSRF method-downgrade.
 - fix(security): skip stream access for failed uploads in `UploadedFileCreator` and `Request::getUploadedFiles()` to prevent unauthenticated request DoS.
 - fix(http): finalize the Yii `after-send` lifecycle and worker cleanup in new `Application::finalize()`, called after the runtime emits the response.
+- docs: document the two-step worker request lifecycle contract (`handle()`, emit, `finalize()`) in `Application`, `examples.md`, and `README.md`.
 
 ## 0.3.0 February 28, 2026
 

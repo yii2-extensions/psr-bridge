@@ -27,10 +27,27 @@ use function strtoupper;
  *
  * {@see RequestHandlerInterface} PSR-7 request handler contract.
  *
+ * This is a Yii-to-PSR bridge for long-running worker runtimes, not a generic PSR-15 handler. The request lifecycle
+ * spans two calls: {@see handle()} runs the request and returns the PSR-7 response (pre-send), then the runtime emits
+ * it and MUST call {@see finalize()} to complete Yii's after-send lifecycle and release per-request worker state.
+ *
+ * Calling {@see handle()} without {@see finalize()} leaves event tracking attached across requests in workers.
+ *
  * Usage example:
  * ```php
  * $app = new \yii2\extensions\psrbridge\http\Application($config);
+ *
  * $psr7Response = $app->handle($psr7Request);
+ *
+ * try {
+ *     (new \yii2\extensions\psrbridge\emitter\SapiEmitter())->emit($psr7Response);
+ *
+ *     $app->finalize();
+ * } catch (\Throwable $e) {
+ *     $app->finalize(false);
+ *
+ *     throw $e;
+ * }
  * ```
  *
  * @template TUserIdentity of IdentityInterface
