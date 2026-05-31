@@ -177,8 +177,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * Finalizes the request lifecycle after the runtime emits the PSR-7 response.
      *
      * On success, completes the converted Yii response through {@see Response::completeSend()} (triggers
-     * `EVENT_AFTER_SEND` and marks it sent). Always detaches request-scoped event handlers and flushes the logger so
-     * long-running workers stay isolated across requests.
+     * `EVENT_AFTER_SEND` and marks it sent). Detaches request-scoped event handlers and flushes the logger so
+     * long-running workers stay isolated across requests, even when an after-send handler throws (the exception is
+     * rethrown after cleanup runs).
      *
      * Pass `false` when emission failed: after-send finalization is skipped because the response was not delivered,
      * while worker cleanup still runs.
@@ -194,17 +195,19 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     public function finalize(bool $success = true): void
     {
-        if ($success) {
-            $this->lastResponse?->completeSend();
+        try {
+            if ($success) {
+                $this->lastResponse?->completeSend();
+            }
+        } finally {
+            $this->cleanupEvents();
+
+            if ($this->flushLogger && $this->lastResponse !== null) {
+                $this->getLog()->getLogger()->flush(true);
+            }
+
+            $this->lastResponse = null;
         }
-
-        $this->cleanupEvents();
-
-        if ($this->flushLogger) {
-            $this->getLog()->getLogger()->flush(true);
-        }
-
-        $this->lastResponse = null;
     }
 
     /**

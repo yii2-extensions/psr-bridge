@@ -7,6 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\Group;
 use ReflectionException;
+use RuntimeException;
 use yii\base\{Event, InvalidConfigException};
 use yii2\extensions\psrbridge\http\Response;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
@@ -18,6 +19,46 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
 #[Group('http')]
 final class ApplicationFinalizeTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws ReflectionException if the property does not exist or is inaccessible.
+     */
+    public function testFinalizeCleansUpWorkerStateWhenAfterSendHandlerThrows(): void
+    {
+        Event::on(
+            Response::class,
+            Response::EVENT_AFTER_SEND,
+            static function (): void {
+                throw new RuntimeException('after-send failure');
+            },
+        );
+
+        $app = ApplicationFactory::stateless();
+
+        $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        try {
+            $app->finalize();
+
+            self::fail('After-send handler exception must propagate.');
+        } catch (RuntimeException $e) {
+            self::assertSame(
+                'after-send failure',
+                $e->getMessage(),
+                'Original after-send exception must propagate.',
+            );
+        }
+
+        self::assertEmpty(
+            ReflectionHelper::inaccessibleProperty($app, 'registeredEvents'),
+            'Worker events must be cleaned even when after-send throws.',
+        );
+        self::assertNull(
+            ReflectionHelper::inaccessibleProperty($app, 'lastResponse'),
+            'Stored reference must be cleared even when after-send throws.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws ReflectionException if the property does not exist or is inaccessible.
@@ -124,9 +165,10 @@ final class ApplicationFinalizeTest extends TestCase
 
         $app = ApplicationFactory::stateless();
 
-        // the application defers parent initialization to the first handle(); skip the logger flush so the no-op path
-        // does not resolve the uninitialized 'log' component
-        $app->flushLogger = false;
+        self::assertTrue(
+            $app->flushLogger,
+            'Default logger flushing must remain enabled.',
+        );
 
         $app->finalize();
 

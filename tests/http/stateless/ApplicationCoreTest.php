@@ -103,12 +103,13 @@ final class ApplicationCoreTest extends TestCase
 
         $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
-        // the logger flush now runs in `finalize()`, after the runtime emits the response.
-        $app->finalize();
-
         $this->assertSiteIndexJsonResponse(
             $response,
         );
+
+        // the logger flush now runs in `finalize()`, after the runtime emits the response.
+        $app->finalize();
+
         self::assertFileExists(
             $this->logFile,
             "Log file should exist after 'flush(true)'.",
