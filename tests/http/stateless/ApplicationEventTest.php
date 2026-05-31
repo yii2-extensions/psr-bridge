@@ -107,6 +107,9 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(HelperFactory::createRequest('GET', '/site/index'));
 
+        // cleanup is deferred to `finalize()`, called by the runtime after emission.
+        $app->finalize();
+
         $this->assertSiteIndexJsonResponse(
             $response,
         );
@@ -177,6 +180,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(HelperFactory::createRequest('GET', '/site/index'));
 
+        $app->finalize();
+
         $this->assertSiteIndexJsonResponse(
             $response,
         );
@@ -206,6 +211,8 @@ final class ApplicationEventTest extends TestCase
         );
 
         $response = $app->handle(HelperFactory::createRequest('GET', '/site/statuscode'));
+
+        $app->finalize();
 
         self::assertSame(
             201,
@@ -262,6 +269,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(HelperFactory::createRequest('GET', '/site/index'));
 
+        $app->finalize();
+
         $this->assertSiteIndexJsonResponse(
             $response,
         );
@@ -295,6 +304,8 @@ final class ApplicationEventTest extends TestCase
         );
 
         $response = $app->handle(HelperFactory::createRequest('GET', 'site/statuscode'));
+
+        $app->finalize();
 
         self::assertSame(
             201,
@@ -347,6 +358,8 @@ final class ApplicationEventTest extends TestCase
 
         $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
 
+        $app->finalize();
+
         $this->assertSiteIndexJsonResponse(
             $response,
         );
@@ -386,6 +399,9 @@ final class ApplicationEventTest extends TestCase
         );
 
         $response = $app->handle(HelperFactory::createRequest('GET', '/site/index'));
+
+        // detaches the global tracker so the post-request manual trigger is not recorded.
+        $app->finalize();
 
         $this->assertSiteIndexJsonResponse(
             $response,

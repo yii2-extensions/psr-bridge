@@ -207,6 +207,47 @@ Use non-default values only for advanced scenarios:
 - `syncCookieValidation=false` skips cookie validation synchronization between request and response.
 - Keep `resetUploadedFiles=true` to preserve per-request uploaded-file isolation in worker deployments.
 
+## Response lifecycle finalization
+
+`Application::handle()` runs the request and returns a PSR-7 response, but it intentionally stops at the **pre-send**
+phase: it triggers `EVENT_BEFORE_SEND`, prepares the body, and triggers `EVENT_AFTER_PREPARE`. It does **not** trigger
+`EVENT_AFTER_SEND` or mark the Yii response as sent, because the runtime emits the body afterward and lazy file streams
+(`sendFile()`, `sendStreamAsFile()`) must still be readable at that point.
+
+After the response has been emitted, call `Application::finalize()` to run the **post-send** phase: it triggers
+`EVENT_AFTER_SEND`, marks the response sent, and cleans up per-request event handlers so long-running workers stay
+isolated across requests. Pass `false` when emission failed so after-send is skipped (the response was not delivered)
+while worker cleanup still runs.
+
+The official runners (FrankenPHP, RoadRunner) call this for you. When you drive the bridge yourself, you **must** call
+it after emitting; otherwise after-send handlers (temporary file cleanup, audit/metrics logging, per-request state
+reset) never run and worker state leaks across requests.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use yii2\extensions\psrbridge\emitter\SapiEmitter;
+use yii2\extensions\psrbridge\http\Application;
+
+$app = new Application($config);
+
+$psr7Response = $app->handle($psr7Request);
+
+try {
+    (new SapiEmitter())->emit($psr7Response);
+
+    // finalize: triggers EVENT_AFTER_SEND, marks the response sent, cleans up worker event state
+    $app->finalize();
+} catch (\Throwable $e) {
+    // emission failed: skip after-send, but still clean up worker state
+    $app->finalize(false);
+
+    throw $e;
+}
+```
+
 ## Next steps
 
 - 📚 [Installation Guide](installation.md)

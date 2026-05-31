@@ -43,6 +43,34 @@ class Response extends \yii\web\Response
     private ResponseAdapter|null $adapter = null;
 
     /**
+     * Completes the Yii response send lifecycle after the runtime emits the PSR-7 body.
+     *
+     * Triggers {@see EVENT_AFTER_SEND} and marks the response as sent, running the back half of {@see send()} that
+     * {@see getPsr7Response()} intentionally defers. Returns immediately when the response is already sent.
+     *
+     * Call this after the PSR-7 response has been emitted so lazy body streams (such as {@see sendFile()} or
+     * {@see sendStreamAsFile()}) are consumed before after-send handlers run.
+     *
+     * Usage example:
+     * ```php
+     * $response = new \yii2\extensions\psrbridge\http\Response();
+     * $psr7Response = $response->getPsr7Response();
+     * // emit $psr7Response through the runtime, then finalize the Yii lifecycle:
+     * $response->completeSend();
+     * ```
+     */
+    public function completeSend(): void
+    {
+        if ($this->isSent) {
+            return;
+        }
+
+        $this->trigger(self::EVENT_AFTER_SEND);
+
+        $this->isSent = true;
+    }
+
+    /**
      * Converts the Yii Response component to a PSR-7 ResponseInterface instance.
      *
      * Delegates the conversion process to a {@see ResponseAdapter}, triggering Yii Response lifecycle events and

@@ -39,7 +39,7 @@ use function strtoupper;
 class Application extends \yii\web\Application implements RequestHandlerInterface
 {
     /**
-     * Flushes the logger during {@see terminate()} when set to `true`.
+     * Flushes the logger during {@see finalize()} when set to `true`.
      */
     public bool $flushLogger = true;
 
@@ -84,6 +84,11 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * @phpstan-var callable(Event $event): void
      */
     private $eventHandler;
+
+    /**
+     * Stores the converted Yii response awaiting after-send finalization.
+     */
+    private Response|null $lastResponse = null;
 
     /**
      * Caches the memory limit in bytes.
@@ -166,6 +171,40 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
                 ],
             ],
         );
+    }
+
+    /**
+     * Finalizes the request lifecycle after the runtime emits the PSR-7 response.
+     *
+     * On success, completes the converted Yii response through {@see Response::completeSend()} (triggers
+     * `EVENT_AFTER_SEND` and marks it sent). Always detaches request-scoped event handlers and flushes the logger so
+     * long-running workers stay isolated across requests.
+     *
+     * Pass `false` when emission failed: after-send finalization is skipped because the response was not delivered,
+     * while worker cleanup still runs.
+     *
+     * Usage example:
+     * ```php
+     * $psr7Response = $app->handle($psr7Request);
+     * (new \yii2\extensions\psrbridge\emitter\SapiEmitter())->emit($psr7Response);
+     * $app->finalize();
+     * ```
+     *
+     * @param bool $success Whether the runtime emitted the response successfully.
+     */
+    public function finalize(bool $success = true): void
+    {
+        if ($success) {
+            $this->lastResponse?->completeSend();
+        }
+
+        $this->cleanupEvents();
+
+        if ($this->flushLogger) {
+            $this->getLog()->getLogger()->flush(true);
+        }
+
+        $this->lastResponse = null;
     }
 
     /**
@@ -393,20 +432,21 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Finalizes request handling and returns a PSR-7 response.
+     * Converts the Yii response to PSR-7 and stores it for deferred after-send finalization.
      *
-     * @param Response $response Yii response to finalize.
+     * Runs the pre-send conversion only. After-send finalization, event cleanup, and logger flushing are deferred to
+     * {@see finalize()}, which the runtime calls once the PSR-7 response has been emitted.
+     *
+     * @param Response $response Yii response to convert.
+     *
      * @throws InvalidConfigException When configuration is invalid.
      * @throws NotInstantiableException When a service cannot be instantiated.
-     * @return ResponseInterface Final PSR-7 response.
+     *
+     * @return ResponseInterface PSR-7 response produced by the conversion.
      */
     protected function terminate(Response $response): ResponseInterface
     {
-        $this->cleanupEvents();
-
-        if ($this->flushLogger) {
-            $this->getLog()->getLogger()->flush(true);
-        }
+        $this->lastResponse = $response;
 
         return $response->getPsr7Response();
     }
