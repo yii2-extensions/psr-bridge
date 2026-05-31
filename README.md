@@ -126,6 +126,11 @@ $emitter = new yii2\extensions\psrbridge\emitter\SapiEmitter();
 $emitter->emit($psr7Response);
 ```
 
+> [!NOTE]
+> This shows the low-level conversion API. Serving a full request in a long-running worker goes through the
+> `handle() → emit → finalize()` cycle (or a runner) — see
+> [Response lifecycle finalization](docs/examples.md#response-lifecycle-finalization).
+
 ### Worker lifecycle defaults
 
 In long-running workers, keep `Application` lifecycle defaults unless you have a specific requirement:
@@ -138,8 +143,8 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 > Keep request-scoped components (`request`, `response`, `errorHandler`, `session`, `user`) out of
 > `Application::$persistentComponents`.
 >
-> Components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep loaded
-> instances across requests.
+> Components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep loaded instances across
+> requests.
 
 Define lifecycle flags before `run()` (via config or property setters).
 
