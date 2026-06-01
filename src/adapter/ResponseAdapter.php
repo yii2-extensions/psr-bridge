@@ -30,8 +30,16 @@ use function urlencode;
  *
  * {@see ResponseInterface} PSR-7 response contract.
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Usage example:
+ * ```php
+ * $adapter = new \yii2\extensions\psrbridge\adapter\ResponseAdapter(
+ *     $yiiResponse,
+ *     $responseFactory,
+ *     $streamFactory,
+ *     $security,
+ * );
+ * $psr7Response = $adapter->toPsr7();
+ * ```
  */
 final class ResponseAdapter
 {

@@ -22,15 +22,7 @@ use function str_starts_with;
 /**
  * Unit tests for {@see Request} HTTP request handling behavior.
  *
- * Test coverage.
- * - Ensures authentication credentials are resolved from server variables and authorization headers.
- * - Ensures CSRF generation and validation handle header-only, body, custom-header, and safe-method scenarios.
- * - Ensures host, scheme, IP, method, query, and server parameter resolution follows trusted-host rules.
- * - Verifies body parsing, accept-header parsing, request resolving, and URL generation across supported inputs.
- * - Verifies parent fallback behavior when the PSR-7 adapter is not set.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see RequestProvider} for test case data providers.
  */
 #[Group('http')]
 final class RequestTest extends TestCase
@@ -884,6 +876,55 @@ final class RequestTest extends TestCase
         self::assertNull(
             $request->getOrigin(),
             "'getOrigin()' should return 'null' when 'HTTP_ORIGIN' is not set.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
+     * @phpstan-param array<array-key, mixed>|null $expected
+     */
+    #[TestWith(['{"foo":"bar"}', ['foo' => 'bar']])]
+    #[TestWith(['false', null])]
+    public function testGetParsedBodyNormalizesNativeBodyWithoutAdapter(string $rawBody, array|null $expected): void
+    {
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+
+        $request = new Request();
+
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setRawBody($rawBody);
+
+        self::assertSame(
+            $expected,
+            $request->getParsedBody(),
+            'Scalar yields `null`; structured body passes through.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testGetParsedBodyReturnsObjectForNativeObjectBodyWithoutAdapter(): void
+    {
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+
+        $request = new Request();
+
+        $request->parsers = [
+            'application/json' => [
+                'class' => JsonParser::class,
+                'asArray' => false,
+            ],
+        ];
+
+        $request->setRawBody('{"foo":"bar"}');
+
+        self::assertInstanceOf(
+            stdClass::class,
+            $request->getParsedBody(),
+            'Object body must pass through.',
         );
     }
 
@@ -1878,6 +1919,38 @@ final class RequestTest extends TestCase
             'servername.com',
             $request->getHostName(),
             "'getHostName()' should return the host name extracted from the value set by 'setHostInfo()'.",
+        );
+    }
+
+    public function testSetPsr7RequestClearsCachedQueryParamsFromPreviousRequest(): void
+    {
+        ApplicationFactory::web(
+            [
+                'components' => [
+                    'urlManager' => [
+                        'cache' => null,
+                        'enablePrettyUrl' => true,
+                        'showScriptName' => false,
+                        'rules' => [
+                            'posts' => 'post/list',
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $request = new Request();
+
+        $request->setPsr7Request(HelperFactory::createRequest('GET', '/posts?token=first'));
+
+        $request->resolve();
+
+        $request->setPsr7Request(HelperFactory::createRequest('GET', '/posts?token=second'));
+
+        self::assertSame(
+            ['token' => 'second'],
+            $request->getQueryParams(),
+            'Should clear stale cached query parameters before attaching a new PSR-7 request.',
         );
     }
 

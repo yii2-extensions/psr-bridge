@@ -8,14 +8,16 @@ use Psr\Http\Message\{StreamFactoryInterface, StreamInterface};
 
 /**
  * Spy stream factory for verifying which PSR-17 stream creation method is used.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class StreamFactorySpy implements StreamFactoryInterface
 {
-    public bool $createdFromResource = false;
+    public bool $createdFromFile = false;
 
+    /**
+     * @var list<string>
+     */
+    public array $createdFromFileNames = [];
+    public bool $createdFromResource = false;
     public bool $createdFromString = false;
 
     public function __construct(private readonly StreamFactoryInterface $streamFactory) {}
@@ -29,6 +31,9 @@ final class StreamFactorySpy implements StreamFactoryInterface
 
     public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
     {
+        $this->createdFromFile = true;
+        $this->createdFromFileNames[] = $filename;
+
         return $this->streamFactory->createStreamFromFile($filename, $mode);
     }
 

@@ -14,14 +14,6 @@ use const UPLOAD_ERR_OK;
 
 /**
  * Unit tests for {@see UploadedFile} upload conversion and retrieval behavior.
- *
- * Test coverage.
- * - Ensures PSR-7 uploads convert with expected metadata for success, error, and `null` size scenarios.
- * - Ensures `getInstance()` and `getInstances()` support legacy `$_FILES`, PSR-7 inputs, complex names, and arrays.
- * - Verifies missing uploads return `null` or empty arrays, depending on the retrieval method.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class UploadedFileTest extends TestCase
 {

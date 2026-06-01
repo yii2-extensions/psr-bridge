@@ -10,13 +10,6 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} content-type handling in stateless mode.
- *
- * Test coverage.
- * - Ensures file download responses include expected content headers.
- * - Verifies stream responses return the expected plain-text body.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationContentTypesTest extends TestCase

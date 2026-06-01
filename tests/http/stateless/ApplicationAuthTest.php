@@ -12,12 +12,7 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} authentication handling in stateless mode.
  *
- * Test coverage.
- * - Ensures credentials are extracted from the Authorization header.
- * - Verifies partial credentials when only PHP_AUTH_USER is present.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see ApplicationProvider} for test case data providers.
  */
 #[Group('http')]
 final class ApplicationAuthTest extends TestCase

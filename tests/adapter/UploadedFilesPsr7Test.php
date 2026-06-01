@@ -11,14 +11,6 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 /**
  * Unit tests for {@see Request} uploaded-file handling with the PSR-7 adapter.
- *
- * Test coverage.
- * - Ensures PSR-7 uploaded files convert to Yii uploaded-file instances for single, nested, and array structures.
- * - Ensures recursive conversion preserves expected uploaded-file properties in deeply nested arrays.
- * - Verifies uploaded files default to size '0' when PSR-7 file size is `null`.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
 #[Group('uploaded-files')]
@@ -145,6 +137,50 @@ final class UploadedFilesPsr7Test extends TestCase
             UploadedFile::class,
             $convertedFiles['array_files'][1] ?? null,
             "'array_files[1]' should be an instance of 'UploadedFile', representing the second file in the array.",
+        );
+    }
+
+    public function testReturnUploadedFileForFailedUploadWithoutAccessingStream(): void
+    {
+        $uploadedFileFactory = HelperFactory::createUploadedFileFactory();
+        $streamFactory = HelperFactory::createStreamFactory();
+
+        $failedUpload = $uploadedFileFactory->createUploadedFile(
+            $streamFactory->createStream(),
+            0,
+            UPLOAD_ERR_NO_FILE,
+            '',
+            '',
+        );
+
+        $psr7Request = HelperFactory::createRequest('POST', '/upload')
+            ->withUploadedFiles(['avatar' => $failedUpload]);
+        $request = new Request();
+
+        $request->setPsr7Request($psr7Request);
+        $files = $request->getUploadedFiles();
+
+        $avatar = $files['avatar'] ?? null;
+
+        self::assertInstanceOf(
+            UploadedFile::class,
+            $avatar,
+            "Failed upload must still yield an 'UploadedFile'.",
+        );
+        self::assertSame(
+            UPLOAD_ERR_NO_FILE,
+            $avatar->error,
+            'Error code must be preserved.',
+        );
+        self::assertSame(
+            '',
+            $avatar->tempName,
+            'Temp name must be empty for failed uploads.',
+        );
+        self::assertSame(
+            0,
+            $avatar->size,
+            'Size must be preserved as `int`.',
         );
     }
 

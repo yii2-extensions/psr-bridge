@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\adapter;
 
-use PHPUnit\Framework\Attributes\{DataProviderExternal, Group};
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
 use Psr\Http\Message\ServerRequestInterface;
 use yii\base\InvalidConfigException;
 use yii\web\JsonParser;
@@ -15,15 +15,7 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 /**
  * Unit tests for {@see Request} request-data handling with the PSR-7 adapter.
  *
- * Test coverage.
- * - Ensures HTTP method resolution supports body and header overrides, custom method params, and parent fallback.
- * - Ensures parsed-body handling respects parser configuration, content type availability, and pre-parsed bodies.
- * - Ensures query params, query strings, URLs, and raw bodies are read from PSR-7 requests and parent fallbacks.
- * - Verifies body params remove method override fields.
- * - Verifies PSR-7 request instance retrieval when an adapter is set.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see RequestProvider} for test case data providers.
  */
 #[Group('adapter')]
 final class ServerRequestAdapterTest extends TestCase
@@ -455,6 +447,24 @@ final class ServerRequestAdapterTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnHttpMethodWithLowercaseHeaderOverrideWhenAdapterIsSet(): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest('POST', '/test', ['X-Http-Method-Override' => 'patch']),
+        );
+
+        self::assertSame(
+            'PATCH',
+            $request->getMethod(),
+            'HTTP method header override should be normalized to uppercase when adapter is set.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnHttpMethodWithoutOverrideWhenAdapterIsSet(): void
     {
         $request = new Request();
@@ -467,6 +477,28 @@ final class ServerRequestAdapterTest extends TestCase
             'GET',
             $request->getMethod(),
             'HTTP method should return original method when no override is present and adapter is set.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith(['GET'])]
+    #[TestWith(['HEAD'])]
+    #[TestWith(['OPTIONS'])]
+    #[TestWith(['get'])]
+    public function testReturnOriginalHttpMethodWithSafeHeaderOverrideWhenAdapterIsSet(string $overrideMethod): void
+    {
+        $request = new Request();
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest('POST', '/test', ['X-Http-Method-Override' => $overrideMethod]),
+        );
+
+        self::assertSame(
+            'POST',
+            $request->getMethod(),
+            'HTTP method safe header override should be ignored when adapter is set.',
         );
     }
 
@@ -766,6 +798,36 @@ final class ServerRequestAdapterTest extends TestCase
             $expectedUrl,
             $request->getUrl(),
             "URL should match the expected value for: {$url}.",
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testScalarParsedBodyFromParserIsIgnored(): void
+    {
+        $stream = HelperFactory::createStream();
+        $stream->write('false');
+
+        $request = new Request();
+        $request->parsers = ['application/json' => JsonParser::class];
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest(
+                'POST',
+                '/api/items',
+                ['Content-Type' => 'application/json; charset=UTF-8'],
+            )->withBody($stream),
+        );
+
+        self::assertNull(
+            $request->getPsr7Request()->getParsedBody(),
+            "PSR-7 request parsed body should remain 'null' when parser returns a scalar value.",
+        );
+        self::assertSame(
+            [],
+            $request->getBodyParams(),
+            'Body parameters should fallback to an empty array when parser returns a scalar value.',
         );
     }
 }

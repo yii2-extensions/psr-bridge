@@ -17,21 +17,29 @@ use function explode;
 use function filter_var;
 use function is_array;
 use function is_numeric;
+use function is_object;
 use function is_string;
 use function mb_check_encoding;
 use function mb_substr;
 use function str_starts_with;
 use function strncasecmp;
 
+use const UPLOAD_ERR_OK;
+
 /**
  * Extends Yii request handling with PSR-7 request data.
  *
  * {@see ServerRequestAdapter} PSR-7 to Yii request adapter.
  *
- * @phpstan-property array<string, class-string|array{class?: class-string, __class?: class-string, ...}|callable(): object> $parsers
+ * Usage example:
+ * ```php
+ * $request = new \yii2\extensions\psrbridge\http\Request();
+ * $request->setPsr7Request($psr7Request);
+ * $method = $request->getMethod();
+ * $params = $request->getBodyParams();
+ * ```
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * @phpstan-property array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
  */
 class Request extends \yii\web\Request
 {
@@ -131,7 +139,7 @@ class Request extends \yii\web\Request
             return $this->adapter->getBodyParams($this->methodParam);
         }
 
-        return parent::getBodyParams();
+        return $this->normalizeParentBodyParams() ?? [];
     }
 
     /**
@@ -268,7 +276,7 @@ class Request extends \yii\web\Request
             return $this->adapter->getParsedBody();
         }
 
-        return parent::getBodyParams();
+        return $this->normalizeParentBodyParams();
     }
 
     /**
@@ -642,6 +650,8 @@ class Request extends \yii\web\Request
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {
+        $this->setQueryParams([]);
+
         $this->adapter = new ServerRequestAdapter(
             $request,
             $this->parsers,
@@ -685,20 +695,40 @@ class Request extends \yii\web\Request
      * Converts a {@see UploadedFileInterface} object to a Yii {@see UploadedFile} instance by extracting the error
      * code, client filename, file size, temporary file path, and media type from the PSR-7 UploadedFileInterface.
      *
+     * For failed uploads (`error` other than `UPLOAD_ERR_OK`), the temporary path and resource stay empty and the
+     * PSR-7 stream is never accessed, since PSR-7 implementations reject `getStream()` on error-state uploads.
+     *
      * @param UploadedFileInterface $psrFile PSR-7 UploadedFileInterface instance to convert.
      *
      * @return UploadedFile Yii UploadedFile instance created from the PSR-7 UploadedFileInterface.
      */
     private function createUploadedFile(UploadedFileInterface $psrFile): UploadedFile
     {
+        $error = $psrFile->getError();
+
+        if ($error !== UPLOAD_ERR_OK) {
+            return new UploadedFile(
+                [
+                    'error' => $error,
+                    'name' => $psrFile->getClientFilename() ?? '',
+                    'size' => $psrFile->getSize(),
+                    'tempName' => '',
+                    'type' => $psrFile->getClientMediaType() ?? '',
+                    'tempResource' => null,
+                ],
+            );
+        }
+
+        $stream = $psrFile->getStream();
+
         return new UploadedFile(
             [
-                'error' => $psrFile->getError(),
+                'error' => $error,
                 'name' => $psrFile->getClientFilename() ?? '',
                 'size' => $psrFile->getSize(),
-                'tempName' => $psrFile->getStream()->getMetadata('uri') ?? '',
+                'tempName' => $stream->getMetadata('uri') ?? '',
                 'type' => $psrFile->getClientMediaType() ?? '',
-                'tempResource' => $psrFile->getStream()->detach(),
+                'tempResource' => $stream->detach(),
             ],
         );
     }
@@ -717,5 +747,24 @@ class Request extends \yii\web\Request
         }
 
         return ''; // script-less worker mode fallback
+    }
+
+    /**
+     * Normalizes the parent body parameters to the bridge's `array|object|null` contract.
+     *
+     * Yii types {@see \yii\web\Request::getBodyParams()} as `mixed` because request parsers may return scalar values
+     * for valid scalar payloads; the bridge guarantees `array|object`, so scalar results are discarded.
+     *
+     * @throws InvalidConfigException if a registered parser does not implement RequestParserInterface.
+     *
+     * @return array|object|null Parsed body parameters, or `null` when the parser yields a scalar value.
+     *
+     * @phpstan-return array<array-key, mixed>|object|null
+     */
+    private function normalizeParentBodyParams(): array|object|null
+    {
+        $bodyParams = parent::getBodyParams();
+
+        return is_array($bodyParams) || is_object($bodyParams) ? $bodyParams : null;
     }
 }

@@ -71,7 +71,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad();
 
 // production default (change to 'true' for development)
-define('YII_DEBUG', $_ENV['YII_DEBUG'] ?? false);
+define('YII_DEBUG', filter_var($_ENV['YII_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));
 // production default (change to 'dev' for development)
 define('YII_ENV', $_ENV['YII_ENV'] ?? 'prod');
 
@@ -97,7 +97,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use yii2\extensions\psrbridge\http\Application;
 use yii2\extensions\roadrunner\RoadRunner;
 
-define('YII_DEBUG', getenv('YII_DEBUG') ?? false);
+define('YII_DEBUG', filter_var(getenv('YII_DEBUG'), FILTER_VALIDATE_BOOLEAN));
 define('YII_ENV', getenv('YII_ENV') ?? 'prod');
 
 require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
@@ -126,6 +126,11 @@ $emitter = new yii2\extensions\psrbridge\emitter\SapiEmitter();
 $emitter->emit($psr7Response);
 ```
 
+> [!NOTE]
+> This shows the low-level conversion API. Serving a full request in a long-running worker goes through the
+> `handle() → emit → finalize()` cycle (or a runner). See
+> [Response lifecycle finalization](docs/examples.md#response-lifecycle-finalization).
+
 ### Worker lifecycle defaults
 
 In long-running workers, keep `Application` lifecycle defaults unless you have a specific requirement:
@@ -138,16 +143,16 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 > Keep request-scoped components (`request`, `response`, `errorHandler`, `session`, `user`) out of
 > `Application::$persistentComponents`.
 >
-> Components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep loaded
-> instances across requests.
+> Components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep loaded instances across
+> requests.
 
 Define lifecycle flags before `run()` (via config or property setters).
 
 ```php
 $config = [
     'class' => Application::class,
-    // disable session and cookie validation sync for stateless REST APIs; keep resetUploadedFiles=true (the default)
-    // unless you have a specific reason to retain uploaded file state across requests
+    // disable session and cookie validation sync for stateless REST APIs.
+    // keep resetUploadedFiles=true (default) for request isolation.
     'useSession' => false,
     'syncCookieValidation' => false,
     'resetUploadedFiles' => true,
@@ -187,6 +192,9 @@ For detailed configuration options and advanced usage.
 ## Our social networks
 
 [![Follow on X](https://img.shields.io/badge/-Follow%20on%20X-1DA1F2.svg?style=for-the-badge&logo=x&logoColor=white&labelColor=000000)](https://x.com/Terabytesoftw)
+[![Follow on Facebook](https://img.shields.io/badge/-Follow%20on%20Facebook-1877F2.svg?style=for-the-badge&logo=facebook&logoColor=white&labelColor=000000)](https://www.facebook.com/wilmer.arambula.9)
+[![Join our Subreddit](https://img.shields.io/badge/-Join%20our%20Subreddit-FF4500.svg?style=for-the-badge&logo=reddit&logoColor=white&labelColor=000000)](https://www.reddit.com/r/Yii2/)
+[![Join on Telegram](https://img.shields.io/badge/-Join%20on%20Telegram-26A5E4.svg?style=for-the-badge&logo=telegram&logoColor=white&labelColor=000000)](https://t.me/yii_framework_in_english)
 
 ## License
 

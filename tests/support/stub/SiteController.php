@@ -7,7 +7,8 @@ namespace yii2\extensions\psrbridge\tests\support\stub;
 use Yii;
 use yii\base\{Exception, InvalidRouteException, UserException};
 use yii\captcha\CaptchaAction;
-use yii\web\{Application, Controller, Cookie, RangeNotSatisfiableHttpException, Response};
+use yii\web\{Controller, Cookie, RangeNotSatisfiableHttpException};
+use yii2\extensions\psrbridge\http\{Application, Response};
 
 use function fwrite;
 use function htmlspecialchars;
@@ -19,8 +20,7 @@ use function tmpfile;
 /**
  * Controller stub for testing various HTTP actions and behaviors in Yii applications.
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * @property Response $response The PSR bridge response component bound to the current request.
  *
  * @extends Controller<Application>
  */
@@ -70,7 +70,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array{isGuest: bool, identity: string|null}
+     * @phpstan-return  array{isGuest: bool, identity: string|null}
      */
     public function actionCheckauth(): array
     {
@@ -83,6 +83,16 @@ final class SiteController extends Controller
             'isGuest' => $user->isGuest,
             'identity' => $username,
         ];
+    }
+
+    /**
+     * @phpstan-return array{csrf: string|null}
+     */
+    public function actionCsrf(): array
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        return ['csrf' => $this->request->getCsrfToken()];
     }
 
     public function actionDeletecookie(): Response
@@ -178,6 +188,17 @@ final class SiteController extends Controller
         $tmpFilePath = stream_get_meta_data($tmpFile)['uri'] ?? '';
 
         return $this->response->sendFile($tmpFilePath, 'testfile.txt', ['mimeType' => 'text/plain']);
+    }
+
+    public function actionFreshResponse(): Response
+    {
+        // returns a brand-new Response instance, not $this->response, to exercise lifecycle finalization
+        return new Response(
+            [
+                'format' => Response::FORMAT_JSON,
+                'data' => ['fresh' => true],
+            ],
+        );
     }
 
     public function actionGet(): mixed

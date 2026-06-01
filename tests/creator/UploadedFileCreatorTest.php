@@ -10,20 +10,13 @@ use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\creator\UploadedFileCreator;
 use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\stub\StreamFactorySpy;
 
+use const UPLOAD_ERR_NO_FILE;
 use const UPLOAD_ERR_OK;
 
 /**
- * Test suite for {@see UploadedFileCreator} class functionality and behavior.
- *
- * Test coverage.
- * - Confirms correct exception throwing for invalid input, recursion depth, and mismatched array structures.
- * - Covers edge cases for missing or invalid fields, file existence, and type validation.
- * - Ensures correct creation of UploadedFileInterface instances from minimal, `null`, and valid file specs.
- * - Validates handling of empty, mixed, multiple, nested, and deeply nested file structures.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Unit tests for {@see UploadedFileCreator} uploaded-file creation behavior.
  */
 #[Group('http')]
 #[Group('creator')]
@@ -93,6 +86,44 @@ final class UploadedFileCreatorTest extends TestCase
             256,
             $uploadedFile->getSize(),
             "Should preserve 'file size' when optional fields are 'null'.",
+        );
+    }
+
+    public function testCreateFromArrayWithUploadErrorUsesEmptyStream(): void
+    {
+        $fileSpec = [
+            'tmp_name' => '',
+            'size' => 0,
+            'error' => UPLOAD_ERR_NO_FILE,
+            'name' => '',
+            'type' => '',
+        ];
+        $streamFactory = new StreamFactorySpy(HelperFactory::createStreamFactory());
+
+        $creator = new UploadedFileCreator(
+            HelperFactory::createUploadedFileFactory(),
+            $streamFactory,
+        );
+
+        $uploadedFile = $creator->createFromArray($fileSpec);
+
+        self::assertSame(
+            UPLOAD_ERR_NO_FILE,
+            $uploadedFile->getError(),
+            "Should preserve 'upload error' code for failed upload entries.",
+        );
+        self::assertSame(
+            0,
+            $uploadedFile->getSize(),
+            "Should preserve 'file size' for failed upload entries.",
+        );
+        self::assertTrue(
+            $streamFactory->createdFromString,
+            "Should create a safe empty 'stream' for failed upload entries.",
+        );
+        self::assertFalse(
+            $streamFactory->createdFromFile,
+            "Should not open 'tmp_name' for failed upload entries.",
         );
     }
 
@@ -396,6 +427,66 @@ final class UploadedFileCreatorTest extends TestCase
             1536,
             $secondFile->getSize(),
             "Should preserve 'file size' for second file in 'documents'.",
+        );
+    }
+
+    public function testCreateFromGlobalsWithMultipleUploadErrorUsesEmptyStream(): void
+    {
+        $successfulTmpName = $this->createTmpFile();
+
+        $files = [
+            'documents' => [
+                'tmp_name' => [$successfulTmpName, ''],
+                'size' => [128, 0],
+                'error' => [UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE],
+                'name' => ['document.txt', ''],
+                'type' => ['text/plain', ''],
+            ],
+        ];
+
+        $streamFactory = new StreamFactorySpy(
+            HelperFactory::createStreamFactory(),
+        );
+        $creator = new UploadedFileCreator(
+            HelperFactory::createUploadedFileFactory(),
+            $streamFactory,
+        );
+
+        $result = $creator->createFromGlobals($files);
+
+        $documents = $result['documents'] ?? null;
+
+        self::assertIsArray(
+            $documents,
+            "Should create 'uploaded files' for multiple upload entries.",
+        );
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $documents[0] ?? null,
+            "Should create an 'UploadedFileInterface' for successful multiple upload entries.",
+        );
+        self::assertInstanceOf(
+            UploadedFileInterface::class,
+            $documents[1] ?? null,
+            "Should create an 'UploadedFileInterface' for failed multiple upload entries.",
+        );
+
+        /** @var UploadedFileInterface $failedDocument */
+        $failedDocument = $documents[1];
+
+        self::assertSame(
+            UPLOAD_ERR_NO_FILE,
+            $failedDocument->getError(),
+            "Should preserve 'upload error' code for failed multiple upload entries.",
+        );
+        self::assertSame(
+            [$successfulTmpName],
+            $streamFactory->createdFromFileNames,
+            "Only the successful 'tmp_name' must be opened.",
+        );
+        self::assertTrue(
+            $streamFactory->createdFromString,
+            "Should create a safe empty 'stream' for failed multiple upload entries.",
         );
     }
 

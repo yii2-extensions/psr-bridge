@@ -29,17 +29,6 @@ use function unlink;
 
 /**
  * Unit tests for the {@see Application} class core behavior in stateless mode.
- *
- * Test coverage.
- * - Ensures lifecycle events run in the expected order during request handling.
- * - Ensures log messages are flushed to disk immediately when `flushLogger` is enabled.
- * - Verifies aliases and core component mappings are set after handling a request.
- * - Verifies debug exception rendering enables `display_errors` in non-test mode.
- * - Verifies invalid fallback and media-type parsers return HTTP `500` with expected error messages.
- * - Verifies request parsing, redirects, and response adapter isolation across requests.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationCoreTest extends TestCase
@@ -117,6 +106,10 @@ final class ApplicationCoreTest extends TestCase
         $this->assertSiteIndexJsonResponse(
             $response,
         );
+
+        // the logger flush now runs in `finalize()`, after the runtime emits the response.
+        $app->finalize();
+
         self::assertFileExists(
             $this->logFile,
             "Log file should exist after 'flush(true)'.",

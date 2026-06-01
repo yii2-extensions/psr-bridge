@@ -28,15 +28,7 @@ use const PHP_INT_MAX;
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} memory handling in stateless mode.
  *
- * Test coverage.
- * - Ensures memory limit parsing and recalculation handle supported formats and boundary values.
- * - Ensures output buffers are cleared by the error handler.
- * - Verifies cleanup behavior across configured memory thresholds.
- * - Verifies garbage collection runs under expected load scenarios.
- * - Verifies unlimited memory settings map to PHP_INT_MAX.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see ApplicationProvider} for test case data providers.
  */
 #[Group('http')]
 final class ApplicationMemoryTest extends TestCase

@@ -13,6 +13,7 @@ use yii2\extensions\psrbridge\exception\Message;
 use function implode;
 use function in_array;
 use function is_array;
+use function is_object;
 use function is_string;
 use function strpos;
 use function strtoupper;
@@ -24,8 +25,12 @@ use function unserialize;
  *
  * {@see ServerRequestInterface} PSR-7 server request contract.
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Usage example:
+ * ```php
+ * $adapter = new \yii2\extensions\psrbridge\adapter\ServerRequestAdapter($psrRequest, $parsers);
+ * $method = $adapter->getMethod();
+ * $body = $adapter->getBodyParams('_method');
+ * ```
  */
 final class ServerRequestAdapter
 {
@@ -49,7 +54,7 @@ final class ServerRequestAdapter
      *
      * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
      *
-     * @phpstan-param array<string, class-string|array{class?: class-string, __class?: class-string, ...}|callable(): object> $parsers
+     * @phpstan-param array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
      */
     public function __construct(ServerRequestInterface $psrRequest, array $parsers = [])
     {
@@ -202,7 +207,11 @@ final class ServerRequestAdapter
             $overrideHeader = $this->psrRequest->getHeaderLine('X-Http-Method-Override');
 
             if ($overrideHeader !== '') {
-                return $overrideHeader;
+                $methodOverride = strtoupper($overrideHeader);
+
+                if (in_array($methodOverride, ['GET', 'HEAD', 'OPTIONS'], true) === false) {
+                    return $methodOverride;
+                }
             }
         }
 
@@ -473,7 +482,7 @@ final class ServerRequestAdapter
      *
      * @return ServerRequestInterface Request with parsed body set if parsing was performed, or unchanged.
      *
-     * @phpstan-param array<string, class-string|array{class?: class-string, __class?: class-string, ...}|callable(): object> $parsers
+     * @phpstan-param array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
      */
     private function parseBody(ServerRequestInterface $request, array $parsers): ServerRequestInterface
     {
@@ -510,6 +519,10 @@ final class ServerRequestAdapter
             $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
         }
 
-        return $request->withParsedBody($parsedParams);
+        if ($parsedParams === null || is_array($parsedParams) || is_object($parsedParams)) {
+            return $request->withParsedBody($parsedParams);
+        }
+
+        return $request;
     }
 }

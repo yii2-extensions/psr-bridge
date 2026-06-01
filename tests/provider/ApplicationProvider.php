@@ -17,9 +17,6 @@ use const PHP_INT_SIZE;
  *
  * Provides representative input/output pairs for stateless application authentication, cookies, errors, memory, and
  * server parameter handling.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ApplicationProvider
 {
@@ -200,7 +197,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{bool, string, string, int, string, string}>
+     * @phpstan-return array<string, array{bool|int, string, string, int, string, string}>
      */
     public static function errorViewLogic(): array
     {
@@ -242,6 +239,25 @@ final class ApplicationProvider
                 HTML,
                 "Response body should contain 'Custom error page from errorAction' when UserException is triggered "
                 . "and YII_DEBUG mode is disabled with 'errorAction' configured.",
+            ],
+            'debug zero with Exception' => [
+                0,
+                'site/trigger-exception',
+                'site/error',
+                500,
+                <<<HTML
+                <div id="custom-error-action">
+                Custom error page from errorAction.
+                <span class="exception-type">
+                yii\base\Exception
+                </span>
+                <span class="exception-message">
+                Exception error message.
+                </span>
+                </div>
+                HTML,
+                "Response body should contain 'Custom error page from errorAction' when Exception is triggered and "
+                . "YII_DEBUG is a falsy non-boolean value with 'errorAction' configured.",
             ],
             'debug true with UserException' => [
                 true,

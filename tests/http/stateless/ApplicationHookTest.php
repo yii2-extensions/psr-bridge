@@ -8,27 +8,68 @@ use PHPUnit\Framework\Attributes\Group;
 use yii\base\{Action, InvalidConfigException};
 use yii2\extensions\psrbridge\http\UploadedFile;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\stub\ThrowingBootstrap;
 
 /**
  * Unit tests for the lifecycle hook overrides in {@see \yii2\extensions\psrbridge\tests\support\stub\ApplicationRest}.
- *
- * Test coverage.
- * - Verifies that `handle()` invokes in the correct sequence the overridden `reinitializeApplication()`,
- *   `resetUploadedFilesState()`, `resetRequestState()`, `prepareErrorHandler()`, `attachPsrRequest()`,
- *   `syncCookieValidationState()`, `openSessionFromRequestCookies()`, `finalizeSessionState()`, and `terminate()`
- *   hooks.
- * - Verifies that `prepareForRequest()` invokes the overridden `resetRequestState()` hook.
- * - Verifies that `prepareForRequest()` invokes the overridden `resetUploadedFilesState()` hook.
- * - Verifies that disabling `resetUploadedFiles` skips the uploaded-file reset hook.
- * - Verifies that disabling `syncCookieValidation` skips the cookie-sync hook.
- * - Verifies that disabling `useSession` skips session open/finalize hooks.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationHookTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testHandleAlwaysResetsUploadedFilesStateEvenWhenFlagIsDisabled(): void
+    {
+        $app = ApplicationFactory::rest(['resetUploadedFiles' => false]);
+
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        $this->assertSiteIndexJsonResponse(
+            $response,
+        );
+        self::assertTrue(
+            $app->resetUploadedFilesStateCalled,
+            "'resetUploadedFilesState()' should always be invoked for request isolation.",
+        );
+        self::assertSame(
+            [
+                'reinitializeApplication',
+                'resetUploadedFilesState',
+                'resetRequestState',
+                'prepareErrorHandler',
+                'attachPsrRequest',
+                'syncCookieValidationState',
+                'openSessionFromRequestCookies',
+                'bootstrap',
+                'finalizeSessionState',
+                'terminate',
+            ],
+            $app->hookCallLog,
+            'Lifecycle hooks must still fire in order when resetUploadedFiles is set to false.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testHandleFinalizesSessionStateWhenBootstrapThrows(): void
+    {
+        $app = ApplicationFactory::rest(['bootstrap' => [ThrowingBootstrap::class]]);
+
+        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Status must be '500'.",
+        );
+        self::assertTrue(
+            $app->finalizeSessionStateCalled,
+            'Session must be finalized.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
@@ -51,6 +92,7 @@ final class ApplicationHookTest extends TestCase
                 'attachPsrRequest',
                 'syncCookieValidationState',
                 'openSessionFromRequestCookies',
+                'bootstrap',
                 'finalizeSessionState',
                 'terminate',
             ],
@@ -98,38 +140,6 @@ final class ApplicationHookTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testHandleSkipsResetUploadedFilesHookWhenResetUploadedFilesIsDisabled(): void
-    {
-        $app = ApplicationFactory::rest(['resetUploadedFiles' => false]);
-
-        $response = $app->handle(HelperFactory::createRequest('GET', 'site/index'));
-
-        $this->assertSiteIndexJsonResponse(
-            $response,
-        );
-        self::assertFalse(
-            $app->resetUploadedFilesStateCalled,
-            "'resetUploadedFilesState()' should not be invoked when 'resetUploadedFiles' is disabled.",
-        );
-        self::assertSame(
-            [
-                'reinitializeApplication',
-                'resetRequestState',
-                'prepareErrorHandler',
-                'attachPsrRequest',
-                'syncCookieValidationState',
-                'openSessionFromRequestCookies',
-                'finalizeSessionState',
-                'terminate',
-            ],
-            $app->hookCallLog,
-            'Remaining lifecycle hooks must still fire in order when resetUploadedFiles is disabled.',
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testHandleSkipsSessionHooksWhenUseSessionIsDisabled(): void
     {
         $app = ApplicationFactory::rest(['useSession' => false]);
@@ -155,6 +165,7 @@ final class ApplicationHookTest extends TestCase
                 'prepareErrorHandler',
                 'attachPsrRequest',
                 'syncCookieValidationState',
+                'bootstrap',
                 'terminate',
             ],
             $app->hookCallLog,
@@ -186,6 +197,7 @@ final class ApplicationHookTest extends TestCase
                 'prepareErrorHandler',
                 'attachPsrRequest',
                 'openSessionFromRequestCookies',
+                'bootstrap',
                 'finalizeSessionState',
                 'terminate',
             ],

@@ -10,14 +10,6 @@ use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 /**
  * Unit tests for {@see Request} header handling with the PSR-7 adapter.
- *
- * Test coverage.
- * - Ensures CSRF token retrieval handles custom, case-insensitive, missing, and empty headers.
- * - Ensures PSR-7 Content-Type takes precedence over $_SERVER['CONTENT_TYPE'].
- * - Verifies secure headers are filtered for untrusted hosts.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
 final class HeadersPsr7Test extends TestCase

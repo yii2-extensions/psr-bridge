@@ -9,9 +9,6 @@ namespace yii2\extensions\psrbridge\tests\provider;
  *
  * Provides representative input/output pairs for request parsing, header handling, proxy resolution, and security
  * detection behaviors.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class RequestProvider
 {
@@ -96,6 +93,11 @@ final class RequestProvider
                     'foo' => 'bar',
                     'baz' => 1,
                 ],
+            ],
+            'json scalar' => [
+                'application/json',
+                'false',
+                [],
             ],
         ];
     }

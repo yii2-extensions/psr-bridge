@@ -12,9 +12,6 @@ use RuntimeException;
  *
  * Used to drive failure paths in {@see \yii2\extensions\psrbridge\adapter\ResponseAdapter} where the PSR-17 stream
  * factory cannot create the response body stream.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ThrowingStreamFactory implements StreamFactoryInterface
 {

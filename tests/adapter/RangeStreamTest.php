@@ -22,9 +22,6 @@ use const SEEK_END;
 
 /**
  * Unit tests for the {@see RangeStream} PSR-7 range-bounded stream wrapper.
- *
- * @copyright Copyright (C) 2026 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('adapter')]
 final class RangeStreamTest extends TestCase
@@ -124,19 +121,64 @@ final class RangeStreamTest extends TestCase
         );
     }
 
-    public function testDetachReturnsUnderlyingResource(): void
+    public function testDetachReturnsNullAndClosesUnderlyingResource(): void
     {
-        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
-
-        $resource = $rangeStream->detach();
+        $resource = fopen('php://memory', 'r+');
 
         self::assertIsResource(
             $resource,
-            'Detach must return the underlying resource.',
+            'Setup: memory resource must be valid.',
+        );
+
+        fwrite($resource, 'test');
+        fseek($resource, 0);
+
+        $stream = HelperFactory::createStreamFactory()->createStreamFromResource($resource);
+        $rangeStream = new RangeStream($stream, 0, 3);
+
+        $detached = $rangeStream->detach();
+
+        self::assertNull(
+            $detached,
+            'Detach must not expose the underlying resource.',
+        );
+        self::assertFalse(
+            is_resource($resource),
+            "Underlying resource must be closed by 'detach()'.",
         );
         self::assertNull(
             $rangeStream->getSize(),
             "Size must be 'null' after detach.",
+        );
+    }
+
+    public function testDetachReturnsNullForPartialRangeWithoutExposingUnderlyingResource(): void
+    {
+        $resource = fopen('php://memory', 'r+');
+
+        self::assertIsResource(
+            $resource,
+            'Setup: memory resource must be valid.',
+        );
+
+        fwrite($resource, '0123456789SECRET_AFTER_RANGE');
+        fseek($resource, 0);
+
+        $stream = HelperFactory::createStreamFactory()->createStreamFromResource($resource);
+        $rangeStream = new RangeStream($stream, 2, 5);
+
+        self::assertSame(
+            '23',
+            $rangeStream->read(2),
+            'Setup: range stream must read from the requested partial range.',
+        );
+        self::assertNull(
+            $rangeStream->detach(),
+            'Detach must not expose the unbounded underlying resource.',
+        );
+        self::assertFalse(
+            is_resource($resource),
+            "Underlying resource must be closed by 'detach()'.",
         );
     }
 
@@ -218,6 +260,59 @@ final class RangeStreamTest extends TestCase
         );
     }
 
+    public function testGetMetadataDoesNotExposeUnderlyingFileUri(): void
+    {
+        $tempFile = $this->createTempFileWithContent('0123456789SECRET_AFTER_RANGE');
+        $resource = fopen($tempFile, 'rb');
+
+        self::assertIsResource(
+            $resource,
+            'Setup: temporary file resource must be valid.',
+        );
+
+        $stream = HelperFactory::createStreamFactory()->createStreamFromResource($resource);
+        $rangeStream = new RangeStream($stream, 2, 5);
+        $metadata = $rangeStream->getMetadata();
+
+        self::assertIsArray(
+            $metadata,
+            "Metadata must be an 'array'.",
+        );
+
+        self::assertNull(
+            $rangeStream->getMetadata('uri'),
+            "Metadata key 'uri' must not expose the underlying file path.",
+        );
+        self::assertArrayNotHasKey(
+            'uri',
+            $metadata,
+            "Metadata array must not contain the underlying file path under 'uri'.",
+        );
+
+        $rangeStream->close();
+    }
+
+    public function testGetMetadataDoesNotExposeUri(): void
+    {
+        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+        $metadata = $rangeStream->getMetadata();
+
+        self::assertIsArray(
+            $metadata,
+            "Metadata must be an 'array'.",
+        );
+
+        self::assertNull(
+            $rangeStream->getMetadata('uri'),
+            "Metadata key 'uri' must not be exposed.",
+        );
+        self::assertArrayNotHasKey(
+            'uri',
+            $metadata,
+            "Metadata array must not contain the 'uri' key.",
+        );
+    }
+
     public function testGetMetadataReturnsArrayWhenStreamIsOpen(): void
     {
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
@@ -241,6 +336,25 @@ final class RangeStreamTest extends TestCase
         );
     }
 
+    /**
+     * @throws Exception if the mock object cannot be created.
+     */
+    public function testGetMetadataReturnsEmptyArrayWhenUnderlyingMetadataIsNotArray(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+
+        $stream->method('isSeekable')->willReturn(false);
+        $stream->method('getMetadata')->willReturn('invalid-metadata');
+
+        $rangeStream = new RangeStream($stream, 0, 3);
+
+        self::assertSame(
+            [],
+            $rangeStream->getMetadata(),
+            "Metadata must be an empty 'array' when the underlying metadata is invalid.",
+        );
+    }
+
     public function testGetMetadataReturnsNullForKeyWhenClosed(): void
     {
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
@@ -250,6 +364,24 @@ final class RangeStreamTest extends TestCase
         self::assertNull(
             $rangeStream->getMetadata('uri'),
             'Metadata key must yield `null` after close.',
+        );
+    }
+
+    /**
+     * @throws Exception if the mock object cannot be created.
+     */
+    public function testGetMetadataReturnsNullForKeyWhenUnderlyingMetadataIsNotArray(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+
+        $stream->method('isSeekable')->willReturn(false);
+        $stream->method('getMetadata')->willReturn('invalid-metadata');
+
+        $rangeStream = new RangeStream($stream, 0, 3);
+
+        self::assertNull(
+            $rangeStream->getMetadata('uri'),
+            "Metadata key must yield 'null' when the underlying metadata is invalid.",
         );
     }
 

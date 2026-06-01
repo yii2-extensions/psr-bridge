@@ -26,16 +26,7 @@ use function str_contains;
 /**
  * Unit tests for {@see Application} error handling in stateless mode.
  *
- * Test coverage.
- * - Ensures EVENT_AFTER_REQUEST is triggered during exception handling.
- * - Ensures fallback responses mask sensitive server variable values.
- * - Verifies error view selection for debug and non-debug configurations.
- * - Verifies exception rendering across response formats and error-action configurations.
- * - Verifies exceptions are logged when request handling fails.
- * - Verifies invalid routes and strict parsing produce expected not found responses.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see ApplicationProvider} for test case data providers.
  */
 #[Group('http')]
 final class ApplicationErrorHandlerTest extends TestCase
@@ -46,7 +37,7 @@ final class ApplicationErrorHandlerTest extends TestCase
     #[DataProviderExternal(ApplicationProvider::class, 'errorViewLogic')]
     #[RequiresPhpExtension('runkit7')]
     public function testErrorViewLogic(
-        bool $debug,
+        bool|int $debug,
         string $route,
         string $action,
         int $expectedStatusCode,
@@ -55,33 +46,35 @@ final class ApplicationErrorHandlerTest extends TestCase
     ): void {
         @\runkit_constant_redefine('YII_DEBUG', $debug);
 
-        $app = ApplicationFactory::stateless(
-            [
-                'components' => [
-                    'errorHandler' => ['errorAction' => $action],
+        try {
+            $app = ApplicationFactory::stateless(
+                [
+                    'components' => [
+                        'errorHandler' => ['errorAction' => $action],
+                    ],
                 ],
-            ],
-        );
+            );
 
-        $response = $app->handle(HelperFactory::createRequest('GET', $route));
+            $response = $app->handle(HelperFactory::createRequest('GET', $route));
 
-        self::assertSame(
-            $expectedStatusCode,
-            $response->getStatusCode(),
-            "Expected HTTP '{$expectedStatusCode}' for route '{$route}'.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'text/html; charset=UTF-8' for route '{$route}'.",
-        );
-        self::assertSame(
-            LineEndingNormalizer::normalize($expectedErrorViewContent),
-            LineEndingNormalizer::normalize($response->getBody()->getContents()),
-            $expectedAssertMessage,
-        );
-
-        @\runkit_constant_redefine('YII_DEBUG', true);
+            self::assertSame(
+                $expectedStatusCode,
+                $response->getStatusCode(),
+                "Expected HTTP '{$expectedStatusCode}' for route '{$route}'.",
+            );
+            self::assertSame(
+                'text/html; charset=UTF-8',
+                $response->getHeaderLine('Content-Type'),
+                "Expected Content-Type 'text/html; charset=UTF-8' for route '{$route}'.",
+            );
+            self::assertSame(
+                LineEndingNormalizer::normalize($expectedErrorViewContent),
+                LineEndingNormalizer::normalize($response->getBody()->getContents()),
+                $expectedAssertMessage,
+            );
+        } finally {
+            @\runkit_constant_redefine('YII_DEBUG', true);
+        }
     }
 
     /**

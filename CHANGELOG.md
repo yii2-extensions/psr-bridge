@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix!(security): stream PSR-7 response bodies by default in `SapiEmitter` to avoid memory exhaustion.
 - fix(security): bound Yii file response bodies to the declared byte range via `RangeStream` wrapper, streaming lazily without buffering in memory or disk-backed temporary storage.
 - fix(ci): reduce linter workflow to `contents: read` and stop passing a write-capable token to the reusable super-linter workflow.
+- docs: Standardize PHPDoc across the project and add missing documentation.
+- fix(security): prevent `RangeStream` bypass via `detach()` and metadata `uri` exposure.
+- fix(security): always reset uploaded-file state during request preparation to preserve worker request isolation, even when `resetUploadedFiles` is set to `false`.
+- fix(security): open the session before `bootstrap()` so worker bootstrap components observe the current request session, and finalize the session via `try`/`finally` to prevent lock leaks when bootstrap throws.
+- fix(security): ignore scalar request-parser results so scalar JSON bodies no longer break PSR-7 request handling.
+- fix(docs): harden file upload and `YII_DEBUG` examples against path traversal and incorrect boolean parsing of string environment values.
+- fix(docs): keep CSRF and cookie validation enabled in the basic configuration example to avoid insecure copypaste deployments.
+- fix(docs): align `README.md` RoadRunner `YII_DEBUG` example with `docs/examples.md`.
+- fix(security): clear cached query params when replacing the PSR-7 request to prevent cross-request leakage in reused `Request` instances.
+- refactor: consolidate package metadata in `composer.json` (`authors`) and `LICENSE`; drop redundant per-file `@copyright`/`@license` headers.
+- fix(security): hide exception details in `FORMAT_RAW` error responses when `YII_DEBUG` is disabled to prevent stack trace and file path disclosure.
+- fix(security): treat falsy non-boolean `YII_DEBUG` values (e.g. `0`) as debug-disabled in `ErrorHandler` to avoid leaking the debug exception page.
+- fix(security): bound `ErrorHandler::clearOutput()` buffer loop to prevent worker hangs when an output buffer cannot be removed.
+- fix(security): reject safe-method (`GET`/`HEAD`/`OPTIONS`) `X-Http-Method-Override` overrides and normalize to uppercase to prevent CSRF method-downgrade.
+- fix(security): skip stream access for failed uploads in `UploadedFileCreator` and `Request::getUploadedFiles()` to prevent unauthenticated request DoS.
+- fix(http): finalize the Yii `after-send` lifecycle and worker cleanup in new `Application::finalize()`, called after the runtime emits the response.
+- docs: document the two-step worker request lifecycle contract (`handle()`, emit, `finalize()`) in `Application`, `examples.md`, and `README.md`.
 
 ## 0.3.0 February 28, 2026
 

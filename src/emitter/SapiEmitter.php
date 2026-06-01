@@ -19,8 +19,11 @@ use function ucwords;
 /**
  * Emits PSR-7 responses through PHP SAPI.
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Usage example:
+ * ```php
+ * $emitter = new \yii2\extensions\psrbridge\emitter\SapiEmitter();
+ * $emitter->emit($psr7Response);
+ * ```
  */
 final class SapiEmitter
 {

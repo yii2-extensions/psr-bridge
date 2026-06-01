@@ -31,9 +31,6 @@ use function parse_str;
 
 /**
  * Creates PSR-7 and PSR-17 objects used by tests.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class HelperFactory
 {
@@ -105,17 +102,15 @@ final class HelperFactory
         string $protocol = '1.1',
         string $reasonPhrase = '',
     ): ResponseInterface {
-        $response = new Response($statusCode, $headers, $body, $protocol, $reasonPhrase);
-
-        if ($body instanceof StreamInterface) {
-            return $response->withBody($body);
-        }
-
         if (is_string($body)) {
+            $response = new Response($statusCode, $headers, null, $protocol, $reasonPhrase);
+
             $response->getBody()->write($body);
+
+            return $response;
         }
 
-        return $response;
+        return new Response($statusCode, $headers, $body, $protocol, $reasonPhrase);
     }
 
     /**

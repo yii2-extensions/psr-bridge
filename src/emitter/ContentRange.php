@@ -13,10 +13,16 @@ use function preg_match;
  *
  * {@see ContentRangeUnit} Supported range units.
  *
- * @link https://datatracker.ietf.org/doc/html/rfc7233#section-4.2 RFC 7233 section 4.2.
+ * Usage example:
+ * ```php
+ * $range = \yii2\extensions\psrbridge\emitter\ContentRange::fromHeader('bytes 0-499/1234');
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * if ($range !== null) {
+ *     echo (string) $range; // 'bytes 0-499/1234'
+ * }
+ * ```
+ *
+ * @link https://datatracker.ietf.org/doc/html/rfc7233#section-4.2 RFC 7233 section 4.2.
  */
 final class ContentRange implements Stringable
 {
@@ -36,7 +42,12 @@ final class ContentRange implements Stringable
     ) {}
 
     /**
-     * Convert the Content-Range to its string representation.
+     * Converts the Content-Range to its string representation.
+     *
+     * Usage example:
+     * ```php
+     * echo (string) $contentRange; // 'bytes 0-499/1234'
+     * ```
      *
      * @return string String representation in format '<unit> <first>-<last>/<length>'.
      */

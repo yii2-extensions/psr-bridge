@@ -10,15 +10,6 @@ use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, 
 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} routing in stateless mode.
- *
- * Test coverage.
- * - Ensures POST bodies are parsed and returned as JSON.
- * - Verifies combined route and query parameters are resolved correctly.
- * - Verifies query parameters are parsed from the request URI.
- * - Verifies route parameters are extracted from path segments.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ApplicationRoutingTest extends TestCase

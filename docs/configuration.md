@@ -28,8 +28,9 @@ return [
     'components' => [
         'request' => [
             'class' => Request::class,
-            'enableCookieValidation' => false,
-            'enableCsrfValidation' => false,
+            // Keep validation enabled in production.
+            'enableCookieValidation' => true,
+            'enableCsrfValidation' => true,
             'parsers' => [
                 'application/json' => JsonParser::class,
             ],
@@ -43,6 +44,21 @@ return [
     ],
 ];
 ```
+
+> [!WARNING]
+> Keep `enableCookieValidation` and `enableCsrfValidation` enabled. They are Yii's secure defaults: CSRF validation
+> protects browser users from cross-site state-changing requests, and cookie validation guarantees the integrity of
+> incoming and outgoing cookies (the bridge propagates the request setting to `Response` so cookies are signed by
+> `ResponseAdapter`).
+>
+> Provide your own `cookieValidationKey` (a long, random secret). It is **required** whenever `enableCookieValidation`
+> is `true`: when it is missing, the bridge throws `InvalidConfigException` instead of accepting unsigned cookies, so a
+> misconfiguration fails fast rather than degrading security silently. Keep the key out of version control and protect
+> it like any other credential. Because Yii stores the CSRF token in a signed cookie (`enableCsrfCookie`), cookie
+> validation must stay enabled alongside CSRF.
+>
+> Disable CSRF only for a purely stateless, token-authenticated API that never relies on browser cookies or sessions,
+> and do so as a deliberate, documented decision, never by default.
 
 ### Request body parsing
 
@@ -218,7 +234,7 @@ $app->persistentComponents = ['db', 'cache'];
 
 - `useSession`: keep `true` unless the application is strictly stateless. Setting it to `false` skips bridge session open/finalize hooks; custom code may still open sessions.
 - `syncCookieValidation`: keep `true` in most cases. Setting it to `false` disables request-to-response synchronization of cookie validation settings and can break login/identity flows.
-- `resetUploadedFiles`: keep `true` in long-running workers. Setting it to `false` is advanced and can leak static uploaded-file state between requests.
+- `resetUploadedFiles`: keep `true` in long-running workers to preserve per-request upload isolation.
 - `persistentComponents`: list of components to keep alive between requests (default: `['db', 'cache']`). Only include components proven to be request-safe.
 - Never include request-scoped components in `persistentComponents` (`request`, `response`, `errorHandler`, `session`, `user`).
 

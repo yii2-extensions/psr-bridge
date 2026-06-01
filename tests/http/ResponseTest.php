@@ -21,18 +21,49 @@ use function urlencode;
 
 /**
  * Unit tests for {@see Response} PSR-7 conversion behavior.
- *
- * Test coverage.
- * - Ensures PSR-7 conversion preserves status, body, headers, and response event behavior.
- * - Ensures session cookie handling works for active, inactive, missing, and default session configurations.
- * - Verifies `prepare()` runs during PSR-7 conversion for formatted response payloads.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 #[Group('http')]
 final class ResponseTest extends TestCase
 {
+    public function testCompleteSendTriggersAfterSendAndMarksResponseSent(): void
+    {
+        $eventsAfter = [];
+
+        $response = new Response();
+
+        $response->on(
+            Response::EVENT_AFTER_SEND,
+            static function () use (&$eventsAfter): void {
+                $eventsAfter[] = 'EVENT_AFTER_SEND';
+            },
+        );
+
+        self::assertFalse(
+            $response->isSent,
+            'Fresh response must not be marked as sent.',
+        );
+
+        $response->completeSend();
+
+        self::assertContains(
+            'EVENT_AFTER_SEND',
+            $eventsAfter,
+            "'EVENT_AFTER_SEND' must fire on finalization.",
+        );
+        self::assertTrue(
+            $response->isSent,
+            'Response must be marked as sent after finalization.',
+        );
+
+        $response->completeSend();
+
+        self::assertCount(
+            1,
+            $eventsAfter,
+            'Repeated finalization must be a no-op.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.

@@ -17,8 +17,12 @@ use function ini_set;
 /**
  * Handles exceptions with Yii error rendering and PSR-7 bridge support.
  *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Usage example:
+ * ```php
+ * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
+ * $handler->setResponse(new \yii2\extensions\psrbridge\http\Response());
+ * $response = $handler->handleException($exception);
+ * ```
  */
 class ErrorHandler extends \yii\web\ErrorHandler
 {
@@ -65,18 +69,14 @@ class ErrorHandler extends \yii\web\ErrorHandler
      */
     public function clearOutput(): void
     {
-        $currentLevel = ob_get_level();
-
         $minLevel = YII_ENV_TEST ? 1 : 0;
 
-        while ($currentLevel > $minLevel) {
+        for ($level = ob_get_level(); $level > $minLevel; --$level) {
             if (@ob_end_clean() === false) {
                 // @codeCoverageIgnoreStart
                 ob_clean();
                 // @codeCoverageIgnoreEnd
             }
-
-            $currentLevel = ob_get_level();
         }
     }
 
@@ -201,7 +201,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
         $response->setStatusCodeByException($exception);
 
         $useErrorView = $response->format === Response::FORMAT_HTML
-            && (YII_DEBUG === false || $exception instanceof UserException);
+            && (!YII_DEBUG || $exception instanceof UserException);
 
         if ($useErrorView && $this->errorAction !== null) {
             $result = Yii::$app->runAction($this->errorAction);
@@ -224,12 +224,32 @@ class ErrorHandler extends \yii\web\ErrorHandler
                 $response->data = $this->renderFile($file, ['exception' => $exception]);
             }
         } elseif ($response->format === Response::FORMAT_RAW) {
-            $response->data = self::convertExceptionToString($exception);
+            $response->data = $this->convertExceptionToRawString($exception);
         } else {
             $response->data = $this->convertExceptionToArray($exception);
         }
 
         return $response;
+    }
+
+    /**
+     * Converts an exception to a RAW response string without exposing sensitive details in production.
+     *
+     * @param Throwable $exception Exception to convert.
+     *
+     * @return string Safe RAW response body.
+     */
+    private function convertExceptionToRawString(Throwable $exception): string
+    {
+        if (YII_DEBUG) {
+            return self::convertExceptionToString($exception);
+        }
+
+        if ($exception instanceof UserException) {
+            return $exception->getMessage();
+        }
+
+        return 'An internal server error occurred.';
     }
 
     /**

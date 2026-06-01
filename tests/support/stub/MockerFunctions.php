@@ -13,9 +13,6 @@ use function strtolower;
  * Stateful stub for internal HTTP-related functions used by tests.
  *
  * Provides deterministic replacements for function calls for headers, response codes, time values, and stream handling.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class MockerFunctions
 {
