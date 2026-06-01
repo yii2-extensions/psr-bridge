@@ -28,7 +28,7 @@ use function strncasecmp;
  *
  * {@see ServerRequestAdapter} PSR-7 to Yii request adapter.
  *
- * @phpstan-property array<string, class-string|array{class: class-string, ...}|callable(): object> $parsers
+ * @phpstan-property array<string, class-string|array{class?: class-string, __class?: class-string, ...}|callable(): object> $parsers
  *
  * @copyright Copyright (C) 2025 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: avoid buffering entire file responses in memory.
 - fix!(security): stream PSR-7 response bodies by default in `SapiEmitter` to avoid memory exhaustion.
 - fix(security): bound Yii file response bodies to the declared byte range via `RangeStream` wrapper, streaming lazily without buffering in memory or disk-backed temporary storage.
+- fix(ci): reduce linter workflow to `contents: read` and stop passing a write-capable token to the reusable super-linter workflow.
 
 ## 0.3.0 February 28, 2026
 
