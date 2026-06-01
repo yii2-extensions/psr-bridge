@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: avoid buffering entire file responses in memory.
 - fix!(security): stream PSR-7 response bodies by default in `SapiEmitter` to avoid memory exhaustion.
 - fix(security): bound Yii file response bodies to the declared byte range via `RangeStream` wrapper, streaming lazily without buffering in memory or disk-backed temporary storage.
-- docs: Standardize PHPDoc across the project and add missing documentation.
+- docs: standardize PHPDoc across the project and add missing documentation.
 - fix(security): prevent `RangeStream` bypass via `detach()` and metadata `uri` exposure.
 - fix(security): always reset uploaded-file state during request preparation to preserve worker request isolation, even when `resetUploadedFiles` is set to `false`.
 - fix(security): open the session before `bootstrap()` so worker bootstrap components observe the current request session, and finalize the session via `try`/`finally` to prevent lock leaks when bootstrap throws.
@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(http): finalize the Yii `after-send` lifecycle and worker cleanup in new `Application::finalize()`, called after the runtime emits the response.
 - docs: document the two-step worker request lifecycle contract (`handle()`, emit, `finalize()`) in `Application`, `examples.md`, and `README.md`.
 - fix(ci): reduce linter workflow to `contents: read` and stop passing a write-capable token to the reusable super-linter workflow.
+- docs: update Yii version badge in `README.md` to use dynamic versioning.
 
 ## 0.3.0 February 28, 2026
 
