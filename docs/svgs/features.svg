@@ -1,72 +1,47 @@
-<svg fill="none" viewBox="0 0 1200 340" width="100%" height="340" xmlns="http://www.w3.org/2000/svg">
-    <foreignObject width="100%" height="100%">
-        <div xmlns="http://www.w3.org/1999/xhtml">
-            <style>
-                .container {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 20px;
-                    padding: 20px;
-                }
-                .alert-box {
-                    border-left: 4px solid #1f883d;
-                    padding: 12px;
-                    margin-bottom: 16px;
-                    border-radius: 6px;
-                    background: rgba(31, 136, 61, 0.1);
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                .alert-title {
-                    margin: 0 0 8px 0;
-                    font-weight: 600;
-                }
-                .alert-content {
-                    margin: 0;
-                    line-height: 1.5;
-                }
+<svg viewBox="0 0 1200 320" width="100%" height="320" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .box-bg { fill: #e6f4ea; stroke: #a7cdb3; stroke-width: 1; }
+        .title { font-weight: 700; font-size: 16px; fill: #1a202c; }
+        .content { font-size: 13px; fill: #4a5568; }
+    </style>
 
-                /* Light mode */
-                    @media (prefers-color-scheme: light) {
-                    .alert-title { color: #000000; }
-                    .alert-content { color: #333333; }
-                    .alert-box { background: rgba(31, 136, 61, 0.1); }
-                }
+    <g>
+        <rect class="box-bg" x="20" y="20" width="570" height="80" rx="6"/>
+        <rect x="20" y="20" width="4" height="80" fill="#1f883d"/>
+        <text class="title" x="40" y="54">Advanced Error Handling</text>
+        <text class="content" x="40" y="80">Custom views &#8226; Debug mode &#8226; PSR-7 compatible responses</text>
+    </g>
+    <g>
+        <rect class="box-bg" x="610" y="20" width="570" height="80" rx="6"/>
+        <rect x="610" y="20" width="4" height="80" fill="#1f883d"/>
+        <text class="title" x="630" y="54">Cookie &amp; Session Management</text>
+        <text class="content" x="630" y="80">Encrypted cookies &#8226; SameSite support &#8226; Session isolation</text>
+    </g>
 
-                /* Dark mode */
-                @media (prefers-color-scheme: dark) {
-                    .alert-title { color: #ffffff; }
-                    .alert-content { color: #ffffff; }
-                    .alert-box { background: rgba(31, 136, 61, 0.2); }
-                }
-            </style>
-            <div class="container">
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Advanced Error Handling</strong></p>
-                    <p class="alert-content">Custom views • Debug mode • PSR-7 compatible responses</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Cookie &amp; Session Management</strong></p>
-                    <p class="alert-content">Encrypted cookies • SameSite support • Session isolation</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>PSR-7 Request/Response Bridge</strong></p>
-                    <p class="alert-content">Auto-conversion • Content-Range • Type safe responses</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Smart File Upload Processing</strong></p>
-                    <p class="alert-content">Memory efficient • Multiple files • PSR-7 UploadedFileInterface</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Stateless Application Support</strong></p>
-                    <p class="alert-content">Memory cleanup • Event tracking • Request-scoped lifecycle</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Worker Mode Compatibility</strong></p>
-                    <p class="alert-content">RoadRunner • FrankenPHP • Zero state contamination</p>
-                </div>
-            </div>
-        </div>
-    </foreignObject>
+    <g>
+        <rect class="box-bg" x="20" y="120" width="570" height="80" rx="6"/>
+        <rect x="20" y="120" width="4" height="80" fill="#1f883d"/>
+        <text class="title" x="40" y="154">PSR-7 Request/Response Bridge</text>
+        <text class="content" x="40" y="180">Auto-conversion &#8226; Content-Range &#8226; Type safe responses</text>
+    </g>
+    <g>
+        <rect class="box-bg" x="610" y="120" width="570" height="80" rx="6"/>
+        <rect x="610" y="120" width="4" height="80" fill="#1f883d"/>
+        <text class="title" x="630" y="154">Smart File Upload Processing</text>
+        <text class="content" x="630" y="180">Memory efficient &#8226; Multiple files &#8226; PSR-7 UploadedFileInterface</text>
+    </g>
+
+    <g>
+        <rect class="box-bg" x="20" y="220" width="570" height="80" rx="6"/>
+        <rect x="20" y="220" width="4" height="80" fill="#1f883d"/>
+        <text class="title" x="40" y="254">Stateless Application Support</text>
+        <text class="content" x="40" y="280">Memory cleanup &#8226; Event tracking &#8226; Request-scoped lifecycle</text>
+    </g>
+    <g>
+        <rect class="box-bg" x="610" y="220" width="570" height="80" rx="6"/>
+        <rect x="610" y="220" width="4" height="80" fill="#1f883d"/>
+        <text class="title" x="630" y="254">Worker Mode Compatibility</text>
+        <text class="content" x="630" y="280">RoadRunner &#8226; FrankenPHP &#8226; Zero state contamination</text>
+    </g>
 </svg>
