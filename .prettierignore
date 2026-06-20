@@ -1,6 +1,5 @@
 # Generated coverage output, runtime state, caches, and dependencies.
 .phpunit.cache/**
-code_coverage/**
 runtime/**
 vendor/**
 

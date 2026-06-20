@@ -15,9 +15,7 @@ jobs:
       contents: read
     with:
       codespell-config: .github/linters/.codespellrc
-      codespell-skip: ./.git,.phpunit.cache/*,composer.lock,runtime/*,vendor/*
       editorconfig-checker-config: .github/linters/.editorconfig-checker.json
-      editorconfig-checker-exclude: ^\.phpunit\.cache/|^runtime/|^vendor/
       markdownlint-config: .github/linters/.markdown-lint.yml
       prettier-config: .prettierrc.json
       prettier-ignore-path: .prettierignore
