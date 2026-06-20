@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs: document the two-step worker request lifecycle contract (`handle()`, emit, `finalize()`) in `Application`, `examples.md`, and `README.md`.
 - fix(ci): reduce linter workflow to `contents: read` and stop passing a write-capable token to the reusable super-linter workflow.
 - docs: update Yii version badge in `README.md` to use dynamic versioning.
+- ci: migrate GitHub workflows to pinned `yii2-framework/actions` reusable workflows with repository-specific quality and security exceptions.
 
 ## 0.3.0 February 28, 2026
 
