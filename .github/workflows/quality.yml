@@ -3,7 +3,7 @@ on:
   - pull_request
   - push
 
-name: linter
+name: quality
 
 permissions:
   contents: read
