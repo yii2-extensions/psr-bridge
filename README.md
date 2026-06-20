@@ -20,6 +20,9 @@
     <a href="https://github.com/yii2-extensions/psr-bridge/actions/workflows/static.yml" target="_blank">
         <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/psr-bridge/static.yml?style=for-the-badge&label=PHPStan&logo=github" alt="PHPStan">
     </a>
+    <a href="https://github.com/yii2-extensions/psr-bridge/actions/workflows/security.yml" target="_blank">
+        <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/psr-bridge/security.yml?style=for-the-badge&label=Security&logo=github" alt="Security">
+    </a>
 </p>
 
 <p align="center">
@@ -187,7 +190,6 @@ For detailed configuration options and advanced usage.
 [![Codecov](https://img.shields.io/codecov/c/github/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=codecov&logoColor=white&label=Coverage)](https://codecov.io/github/yii2-extensions/psr-bridge)
 [![PHPStan Level Max](https://img.shields.io/badge/PHPStan-Level%20Max-4F5D95.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yii2-extensions/psr-bridge/actions/workflows/static.yml)
 [![Quality](https://img.shields.io/github/actions/workflow/status/yii2-extensions/psr-bridge/quality.yml?style=for-the-badge&label=Quality&logo=github)](https://github.com/yii2-extensions/psr-bridge/actions/workflows/quality.yml)
-[![Security](https://img.shields.io/github/actions/workflow/status/yii2-extensions/psr-bridge/security.yml?style=for-the-badge&label=Security&logo=github)](https://github.com/yii2-extensions/psr-bridge/actions/workflows/security.yml)
 [![StyleCI](https://img.shields.io/badge/StyleCI-Passed-44CC11.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.styleci.io/repos/1019044094?branch=main)
 
 ## Our social networks
