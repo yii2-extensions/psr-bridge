@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\support\stub;
 
+use yii\web\UrlManager;
+
 /**
  * UrlManager stub that counts {@see parseRequest()} calls for testing purposes.
  */
-final class UrlManagerSpy extends \yii\web\UrlManager
+final class UrlManagerSpy extends UrlManager
 {
     /**
      * Number of times {@see parseRequest()} was called.

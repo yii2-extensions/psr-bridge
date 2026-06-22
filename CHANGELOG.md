@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs: update Yii version badge in `README.md` to use dynamic versioning.
 - ci: migrate GitHub workflows to pinned `yii2-framework/actions` reusable workflows with repository-specific quality and security exceptions.
 - ci: rename workflow from `linter` to `quality` for clarity.
+- chore: update configuration files and improve coding standards for better maintainability.
 
 ## 0.3.0 February 28, 2026
 
