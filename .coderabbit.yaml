@@ -1,9 +1,10 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Repo-specific config for yii2-extensions/psr-bridge
 language: en-US
-tone_instructions: ""
+tone_instructions: "Be concise and direct. Lead with the issue and the fix. Skip praise and filler; focus on bugs, PSR conformance, worker-mode state isolation, security defaults, and backward compatibility."
 early_access: true
 enable_free_tier: true
-inheritance: true
+inheritance: false
 reviews:
   profile: assertive
   request_changes_workflow: true
@@ -25,15 +26,106 @@ reviews:
   related_issues: true
   related_prs: true
   suggested_labels: true
-  labeling_instructions: []
+  labeling_instructions:
+    - label: "bug"
+      instructions: "Apply when the PR fixes incorrect behavior, an exception, or a regression."
+    - label: "enhancement"
+      instructions: "Apply when the PR adds a new feature, capability, or public API."
+    - label: "documentation"
+      instructions: "Apply when the PR only changes docs/, README, or PHPDoc."
+    - label: "dependencies"
+      instructions: "Apply when composer.json or composer.lock changes."
+    - label: "github_actions"
+      instructions: "Apply when files under .github/workflows/ change."
+    - label: "php"
+      instructions: "Apply when the PR changes PHP source files (src/, tests/, or any *.php)."
+    - label: "question"
+      instructions: "Triage label — do not apply automatically; reserved for maintainers."
+    - label: "duplicate"
+      instructions: "Triage label — do not apply automatically; reserved for maintainers."
+    - label: "invalid"
+      instructions: "Triage label — do not apply automatically; reserved for maintainers."
+    - label: "wontfix"
+      instructions: "Triage label — do not apply automatically; reserved for maintainers."
+    - label: "good first issue"
+      instructions: "Issue-triage label — do not apply to pull requests automatically."
+    - label: "help wanted"
+      instructions: "Issue-triage label — do not apply to pull requests automatically."
+    - label: "aardvark"
+      instructions: "Tool/bot-managed label — do not apply automatically."
+    - label: "codex"
+      instructions: "Tool/bot-managed label (AI agent) — do not apply automatically."
   auto_apply_labels: true
   suggested_reviewers: true
   auto_assign_reviewers: false
   in_progress_fortune: true
   poem: true
   enable_prompt_for_ai_agents: true
-  path_filters: []
-  path_instructions: []
+  path_filters:
+    - "!vendor/**"
+    - "!.phpunit.cache/**"
+    - "!build/**"
+    - "!coverage/**"
+    - "!**/*.lock"
+  path_instructions:
+    - path: "src/**/*.php"
+      instructions: |
+        PSR Bridge core (namespace yii2\extensions\psrbridge\, PSR-4 -> src/).
+        Target PHP >= 8.1. Enforce declare(strict_types=1) and full type
+        declarations. Respect the repo's existing toolchain: php-forge/coding-standard
+        (phpcs) and phpstan strict-rules. Do NOT suggest changes that conflict with
+        phpstan.neon, the phpcs ruleset, or rector.php.
+        Public API: this library is consumed by the franken-php and roadrunner
+        adapters. Flag changes to public/protected signatures, defaults, or return
+        types and call out backward-incompatible changes explicitly (pre-1.0, so they
+        land in minor releases, but must be intentional and documented).
+        PSR-7 is psr/http-message ^2.0 — messages are immutable: withX() returns a
+        clone and never mutates $this. Honor PSR-17 factory interfaces and the
+        PSR-15 request-handler contract exactly.
+    - path: "src/http/**/*.php"
+      instructions: |
+        Worker-mode HTTP layer (Application, Request, Response, ErrorHandler,
+        UploadedFile). This runs inside long-lived RoadRunner/FrankenPHP workers, so
+        per-request state isolation is the top concern:
+        - No request/user data may survive into the next request via static or
+          singleton state. Request-scoped components (request, response, errorHandler,
+          session, user) must NEVER be added to Application::persistentComponents
+          (default ['db','cache']).
+        - Respect lifecycle flags: useSession, syncCookieValidation, resetUploadedFiles
+          (all default true) and flushLogger. Flag any change that weakens per-request
+          reset or request-to-response cookie/CSRF synchronization.
+        - Security defaults stay ON: enableCookieValidation and enableCsrfValidation
+          true; cookieValidationKey is required when cookie validation is on and its
+          absence must fail fast (InvalidConfigException), never silently degrade. Do
+          not suggest disabling CSRF/cookie validation except for an explicitly
+          stateless, token-authenticated API.
+        - setPsr7Request()/getPsr7Request()/getPsr7Response() conversions must keep
+          header, cookie, stream, and parsed-body handling correct. Watch memory growth
+          and the clean() restart threshold.
+        - Body parsers receive the full body as a string in workers; flag permissive
+          multipart or '*' wildcard parsing without enforced size limits.
+    - path: "src/emitter/**/*.php"
+      instructions: |
+        PSR-7 response emitters (e.g. SapiEmitter). Verify headers are sent before the
+        body, nothing is emitted prematurely, status line and header casing follow the
+        HTTP spec, and streamed bodies are read in chunks without buffering the whole
+        payload in memory.
+    - path: "tests/**/*.php"
+      instructions: |
+        PHPUnit 10.5 tests; the repo also runs Infection (mutation testing) and
+        xepozz/internal-mocker. Cover new public behavior plus failure paths. Assert
+        PSR-7 message immutability and, for worker scenarios, state isolation across
+        consecutive requests on the same Application instance. No real network/DB; use
+        meaningful, mutation-test-friendly assertions (no empty test bodies).
+    - path: "composer.json"
+      instructions: |
+        Library manifest. Keep require/require-dev accurate (the repo runs
+        composer-require-checker): no unused or undeclared dependencies. Respect the
+        supported ranges php >=8.1 and yiisoft/yii2 ^2.0.54|^22.
+    - path: "docs/**/*.md"
+      instructions: |
+        Documentation. Ensure code samples match the current public API and that any
+        public-API or worker-lifecycle change in the PR is reflected here.
   abort_on_close: true
   disable_cache: false
   auto_review:
@@ -65,14 +157,18 @@ reviews:
       mode: warning
     custom_checks: []
   tools:
+    # --- Core for this PHP library ---
     ast-grep:
       rule_dirs: []
       util_dirs: []
       essential_rules: true
       packages: []
-    shellcheck:
+    phpstan:
       enabled: true
-    ruff:
+    phpcs:
+      enabled: true
+    # --- CI / docs / security (relevant to this repo) ---
+    shellcheck:
       enabled: true
     markdownlint:
       enabled: true
@@ -87,91 +183,90 @@ reviews:
       disabled_categories: []
       enabled_only: false
       level: default
-    biome:
-      enabled: true
-    hadolint:
-      enabled: true
-    swiftlint:
-      enabled: true
-    phpstan:
-      enabled: true
-      level: default
-    phpmd:
-      enabled: true
-    phpcs:
-      enabled: true
-    golangci-lint:
-      enabled: true
     yamllint:
+      enabled: true
+    actionlint:
       enabled: true
     gitleaks:
       enabled: true
     trufflehog:
       enabled: true
-    checkov:
-      enabled: true
-    tflint:
-      enabled: true
-    detekt:
-      enabled: true
-    eslint:
-      enabled: true
-    flake8:
-      enabled: true
-    fortitudeLint:
-      enabled: true
-    rubocop:
-      enabled: true
-    buf:
-      enabled: true
-    regal:
-      enabled: true
-    actionlint:
-      enabled: true
-    pmd:
-      enabled: true
-    clang:
-      enabled: true
-    cppcheck:
-      enabled: true
-    opengrep:
+    osvScanner:
       enabled: true
     semgrep:
       enabled: true
-    circleci:
+    opengrep:
       enabled: true
-    clippy:
-      enabled: true
-    sqlfluff:
-      enabled: true
-    trivy:
-      enabled: true
-    prismaLint:
-      enabled: true
-    pylint:
-      enabled: true
+    # --- Disabled: redundant with this repo's toolchain (phpcs + phpstan strict) ---
+    phpmd:
+      enabled: false
+    # --- Disabled: no Docker / JS / CSS / other languages in this repo ---
+    hadolint:
+      enabled: false
+    biome:
+      enabled: false
+    eslint:
+      enabled: false
     oxc:
-      enabled: true
-    shopifyThemeCheck:
-      enabled: true
-    luacheck:
-      enabled: true
-    brakeman:
-      enabled: true
-    dotenvLint:
-      enabled: true
-    htmlhint:
-      enabled: true
+      enabled: false
     stylelint:
-      enabled: true
-    checkmake:
-      enabled: true
-    osvScanner:
-      enabled: true
-    blinter:
-      enabled: true
+      enabled: false
+    htmlhint:
+      enabled: false
+    flake8:
+      enabled: false
+    ruff:
+      enabled: false
+    pylint:
+      enabled: false
+    swiftlint:
+      enabled: false
+    golangci-lint:
+      enabled: false
+    detekt:
+      enabled: false
+    fortitudeLint:
+      enabled: false
+    rubocop:
+      enabled: false
+    brakeman:
+      enabled: false
+    buf:
+      enabled: false
+    regal:
+      enabled: false
+    pmd:
+      enabled: false
+    clang:
+      enabled: false
+    cppcheck:
+      enabled: false
+    clippy:
+      enabled: false
+    sqlfluff:
+      enabled: false
+    prismaLint:
+      enabled: false
+    shopifyThemeCheck:
+      enabled: false
+    luacheck:
+      enabled: false
     psscriptanalyzer:
-      enabled: true
+      enabled: false
+    blinter:
+      enabled: false
+    checkmake:
+      enabled: false
+    dotenvLint:
+      enabled: false
+    circleci:
+      enabled: false
+    checkov:
+      enabled: false
+    tflint:
+      enabled: false
+    trivy:
+      enabled: false
 chat:
   art: true
   auto_reply: true
@@ -186,9 +281,15 @@ knowledge_base:
     enabled: true
   code_guidelines:
     enabled: true
-    filePatterns: []
+    filePatterns:
+      - "**/CONTRIBUTING.md"
+      - "**/.github/CONTRIBUTING.md"
+      - "**/phpcs.xml*"
+      - "**/phpstan.neon*"
+      - "**/rector.php"
+      - "**/docs/testing.md"
   learnings:
-    scope: global
+    scope: auto
   issues:
     scope: auto
   jira:
@@ -206,9 +307,21 @@ knowledge_base:
 code_generation:
   docstrings:
     language: en-US
-    path_instructions: []
+    path_instructions:
+      - path: "src/**/*.php"
+        instructions: |
+          Write PHPDoc in English. Document @param/@return/@throws with concrete types
+          matching the PHP type hints. Use phpstan array-shape syntax for arrays/iterables
+          (e.g. array<string, mixed>). Note immutability on PSR-7 withX() methods.
   unit_tests:
-    path_instructions: []
+    path_instructions:
+      - path: "tests/**/*.php"
+        instructions: |
+          Generate PHPUnit 10.5 tests using the project's existing base TestCase and
+          conventions. Cover happy path plus edge/failure cases. Assert PSR-7 message
+          immutability and, for worker scenarios, state isolation between consecutive
+          requests. No real network or DB; use fixtures/mocks. Write assertions strong
+          enough to survive Infection mutation testing.
 issue_enrichment:
   auto_enrich:
     enabled: true
@@ -218,5 +331,27 @@ issue_enrichment:
       enabled: true
       labels: []
   labeling:
-    labeling_instructions: []
+    labeling_instructions:
+      - label: "bug"
+        instructions: "Apply when the issue reports incorrect behavior, an error, or a regression."
+      - label: "enhancement"
+        instructions: "Apply when the issue requests a new feature or capability."
+      - label: "documentation"
+        instructions: "Apply when the issue is about docs, README, or guides."
+      - label: "question"
+        instructions: "Apply when the issue is a usage question or asks for clarification rather than reporting a defect."
+      - label: "duplicate"
+        instructions: "Triage label — do not apply automatically; reserved for maintainers."
+      - label: "invalid"
+        instructions: "Triage label — do not apply automatically; reserved for maintainers."
+      - label: "wontfix"
+        instructions: "Triage label — do not apply automatically; reserved for maintainers."
+      - label: "good first issue"
+        instructions: "Difficulty label — do not apply automatically; reserved for maintainers."
+      - label: "help wanted"
+        instructions: "Triage label — do not apply automatically; reserved for maintainers."
+      - label: "aardvark"
+        instructions: "Tool/bot-managed label — do not apply automatically."
+      - label: "codex"
+        instructions: "Tool/bot-managed label (AI agent) — do not apply automatically."
     auto_apply_labels: true

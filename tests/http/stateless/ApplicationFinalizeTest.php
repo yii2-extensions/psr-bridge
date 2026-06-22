@@ -28,7 +28,7 @@ final class ApplicationFinalizeTest extends TestCase
         Event::on(
             Response::class,
             Response::EVENT_AFTER_SEND,
-            static function (): void {
+            static function (): never {
                 throw new RuntimeException('after-send failure');
             },
         );
