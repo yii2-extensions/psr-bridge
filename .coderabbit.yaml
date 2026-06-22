@@ -9,11 +9,9 @@ reviews:
   profile: assertive
   request_changes_workflow: true
   high_level_summary: true
-  high_level_summary_instructions: ""
   high_level_summary_placeholder: "@coderabbitai summary"
   high_level_summary_in_walkthrough: true
   auto_title_placeholder: "@coderabbitai"
-  auto_title_instructions: ""
   review_status: true
   review_details: true
   commit_status: true
@@ -110,42 +108,29 @@ reviews:
         Documentation. Ensure code samples match the current public API and that any
         public-API or worker-lifecycle change in the PR is reflected here.
   abort_on_close: true
-  disable_cache: false
   auto_review:
     enabled: true
-    description_keyword: ""
     auto_incremental_review: true
     auto_pause_after_reviewed_commits: 5
-    ignore_title_keywords: []
-    labels: []
-    drafts: false
-    base_branches: []
-    ignore_usernames: []
   finishing_touches:
     docstrings:
       enabled: true
     unit_tests:
       enabled: true
-    custom: []
   pre_merge_checks:
     docstrings:
       mode: warning
       threshold: 80
     title:
       mode: warning
-      requirements: ""
     description:
       mode: warning
     issue_assessment:
       mode: warning
-    custom_checks: []
   tools:
     # --- Core for this PHP library ---
     ast-grep:
-      rule_dirs: []
-      util_dirs: []
       essential_rules: true
-      packages: []
     phpstan:
       enabled: true
     phpcs:
@@ -160,12 +145,6 @@ reviews:
       timeout_ms: 90000
     languagetool:
       enabled: true
-      enabled_rules: []
-      disabled_rules: []
-      enabled_categories: []
-      disabled_categories: []
-      enabled_only: false
-      level: default
     yamllint:
       enabled: true
     actionlint:
@@ -259,7 +238,6 @@ chat:
     linear:
       usage: auto
 knowledge_base:
-  opt_out: false
   web_search:
     enabled: true
   code_guidelines:
@@ -277,16 +255,12 @@ knowledge_base:
     scope: auto
   jira:
     usage: auto
-    project_keys: []
   linear:
     usage: auto
-    team_keys: []
   pull_requests:
     scope: auto
   mcp:
     usage: auto
-    disabled_servers: []
-  linked_repositories: []
 code_generation:
   docstrings:
     language: en-US
@@ -313,7 +287,6 @@ issue_enrichment:
     enabled: true
     auto_planning:
       enabled: true
-      labels: []
   labeling:
     labeling_instructions:
       - label: "bug"
