@@ -39,22 +39,6 @@ reviews:
       instructions: "Apply when files under .github/workflows/ change."
     - label: "php"
       instructions: "Apply when the PR changes PHP source files (src/, tests/, or any *.php)."
-    - label: "question"
-      instructions: "Triage label — do not apply automatically; reserved for maintainers."
-    - label: "duplicate"
-      instructions: "Triage label — do not apply automatically; reserved for maintainers."
-    - label: "invalid"
-      instructions: "Triage label — do not apply automatically; reserved for maintainers."
-    - label: "wontfix"
-      instructions: "Triage label — do not apply automatically; reserved for maintainers."
-    - label: "good first issue"
-      instructions: "Issue-triage label — do not apply to pull requests automatically."
-    - label: "help wanted"
-      instructions: "Issue-triage label — do not apply to pull requests automatically."
-    - label: "aardvark"
-      instructions: "Tool/bot-managed label — do not apply automatically."
-    - label: "codex"
-      instructions: "Tool/bot-managed label (AI agent) — do not apply automatically."
   auto_apply_labels: true
   suggested_reviewers: true
   auto_assign_reviewers: false
@@ -66,7 +50,6 @@ reviews:
     - "!.phpunit.cache/**"
     - "!build/**"
     - "!coverage/**"
-    - "!**/*.lock"
   path_instructions:
     - path: "src/**/*.php"
       instructions: |
@@ -311,8 +294,9 @@ code_generation:
       - path: "src/**/*.php"
         instructions: |
           Write PHPDoc in English. Document @param/@return/@throws with concrete types
-          matching the PHP type hints. Use phpstan array-shape syntax for arrays/iterables
-          (e.g. array<string, mixed>). Note immutability on PSR-7 withX() methods.
+          matching the PHP type hints. Use precise phpstan collection/shape syntax for arrays
+          (e.g. array<string, mixed> for maps, array{foo: string, bar?: int} for shapes).
+          Note immutability on PSR-7 withX() methods.
   unit_tests:
     path_instructions:
       - path: "tests/**/*.php"
@@ -340,18 +324,4 @@ issue_enrichment:
         instructions: "Apply when the issue is about docs, README, or guides."
       - label: "question"
         instructions: "Apply when the issue is a usage question or asks for clarification rather than reporting a defect."
-      - label: "duplicate"
-        instructions: "Triage label — do not apply automatically; reserved for maintainers."
-      - label: "invalid"
-        instructions: "Triage label — do not apply automatically; reserved for maintainers."
-      - label: "wontfix"
-        instructions: "Triage label — do not apply automatically; reserved for maintainers."
-      - label: "good first issue"
-        instructions: "Difficulty label — do not apply automatically; reserved for maintainers."
-      - label: "help wanted"
-        instructions: "Triage label — do not apply automatically; reserved for maintainers."
-      - label: "aardvark"
-        instructions: "Tool/bot-managed label — do not apply automatically."
-      - label: "codex"
-        instructions: "Tool/bot-managed label (AI agent) — do not apply automatically."
     auto_apply_labels: true
