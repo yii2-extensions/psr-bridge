@@ -4,5 +4,18 @@
         "YII_BEGIN_TIME",
         "YII_DEBUG",
         "YII_ENV_TEST"
-    ]
+    ],
+    "php-core-extensions": [
+        "Core",
+        "date",
+        "json",
+        "hash",
+        "pcre",
+        "Phar",
+        "Reflection",
+        "SPL",
+        "random",
+        "standard"
+    ],
+    "scan-files": []
 }
