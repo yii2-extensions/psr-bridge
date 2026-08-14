@@ -100,12 +100,14 @@ final class ServerRequestCreator
             ->withParsedBody($_POST)
             ->withQueryParams($_GET);
 
-        /** @phpstan-var FilesArray $_FILES */
         if ($_FILES !== []) {
+            /** @var non-empty-array<UploadedFileInterface|UnknownFileInput> $files */
+            $files = $_FILES;
+
             $uploadedFileCreator = new UploadedFileCreator($this->uploadedFileFactory, $this->streamFactory);
 
-            /** @phpstan-var array<array<mixed>|UploadedFileInterface> $uploadedFileFromGlobals */
-            $uploadedFileFromGlobals = $uploadedFileCreator->createFromGlobals($_FILES);
+            /** @var array<array<mixed>|UploadedFileInterface> $uploadedFileFromGlobals */
+            $uploadedFileFromGlobals = $uploadedFileCreator->createFromGlobals($files);
             $request = $request->withUploadedFiles($uploadedFileFromGlobals);
         }
 

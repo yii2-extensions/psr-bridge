@@ -449,7 +449,7 @@ final class ApplicationEventTest extends TestCase
             $eventName,
             static function (Event $event) use (&$invocations, &$sequence, &$sender): void {
                 $invocations++;
-                $sender = $event->sender ?? null;
+                $sender = $event->sender;
                 $sequence[] = $event->name;
             },
         );
