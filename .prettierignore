@@ -1,5 +1,9 @@
-# Generated coverage output, runtime state, caches, and dependencies.
+# Local agent, editor, coverage output, runtime state, caches, and dependencies.
+.claude/**
+.codex/**
+.vscode/**
 .phpunit.cache/**
+code_coverage/**
 runtime/**
 vendor/**
 

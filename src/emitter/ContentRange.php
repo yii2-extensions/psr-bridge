@@ -22,7 +22,7 @@ use function preg_match;
  * }
  * ```
  *
- * @link https://datatracker.ietf.org/doc/html/rfc7233#section-4.2 RFC 7233 section 4.2.
+ * @see https://datatracker.ietf.org/doc/html/rfc7233#section-4.2 RFC 7233 section 4.2.
  */
 final class ContentRange implements Stringable
 {

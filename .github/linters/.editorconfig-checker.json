@@ -1,6 +1,11 @@
 {
     "Exclude": [
+        "^\\.claude/",
+        "^\\.codex/",
+        "^\\.vscode/",
         "^\\.phpunit\\.cache/",
+        "^code_coverage/",
+        "^composer\\.lock$",
         "^runtime/",
         "^vendor/"
     ]
