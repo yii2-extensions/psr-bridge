@@ -587,9 +587,8 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
      * @param array<string, mixed> $expected
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(RequestProvider::class, 'getBodyParams')]
     public function testGetBodyParams(string $contentType, string $rawBody, array $expected): void
@@ -632,7 +631,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @param array<int, array{array<string, string>|array<string, mixed>}> $server
+     * @param array<int, array{array<string, mixed>|array<string, string>}> $server
      * @param array<array{string|null, string|null}> $expected
      */
     #[DataProviderExternal(RequestProvider::class, 'getHostInfo')]
@@ -879,9 +878,8 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
      * @param array<mixed>|null $expected
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[TestWith(['{"foo":"bar"}', ['foo' => 'bar']])]
     #[TestWith(['false', null])]

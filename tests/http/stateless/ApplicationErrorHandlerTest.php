@@ -415,9 +415,8 @@ final class ApplicationErrorHandlerTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
      * @param string[] $expectedContent
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(ApplicationProvider::class, 'exceptionRenderingFormats')]
     public function testRenderExceptionWithDifferentFormats(

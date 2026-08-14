@@ -479,9 +479,8 @@ final class ApplicationEventTest extends TestCase
     /**
      * Asserts that the internal {@see Application::registeredEvents} list is empty.
      *
-     * @throws ReflectionException if the property does not exist or is inaccessible.
-     *
      * @param Application<IdentityInterface> $app
+     * @throws ReflectionException if the property does not exist or is inaccessible.
      */
     private function assertEmptyRegisteredEvents(Application $app, string $message): void
     {

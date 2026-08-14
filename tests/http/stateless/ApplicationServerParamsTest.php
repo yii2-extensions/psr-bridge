@@ -47,9 +47,8 @@ final class ApplicationServerParamsTest extends TestCase
     }
 
     /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
      * @param array<string, string> $headers
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
     #[DataProviderExternal(ApplicationProvider::class, 'serverPortHeaders')]
     public function testGetServerPortHandlesValidAndInvalidServerPortFromHeaders(

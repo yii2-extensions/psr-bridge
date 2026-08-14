@@ -403,7 +403,7 @@ class UploadedFile extends \yii\web\UploadedFile
      */
     private static function loadPsr7Files(): void
     {
-        /** @var array<string, UploadedFileInterface|mixed[]> */
+        /** @var array<string, mixed[]|UploadedFileInterface> */
         $uploadedFiles = self::$psr7Adapter?->getUploadedFiles() ?? [];
 
         foreach ($uploadedFiles as $name => $file) {

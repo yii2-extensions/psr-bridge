@@ -203,7 +203,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Signs the given cookie parameters using Yii's Security component and the defined cookie validation key.
      *
-     * @param array<string, string|object> $cookieParams
+     * @param array<string, object|string> $cookieParams
      *
      * @return array<string, string>
      */
