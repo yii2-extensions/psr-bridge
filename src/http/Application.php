@@ -98,7 +98,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Stores the event handler used for global lifecycle tracking.
      *
-     * @phpstan-var callable(Event $event): void
+     * @var callable(Event): void
      */
     private $eventHandler;
 
@@ -115,7 +115,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Stores events registered during request handling.
      *
-     * @phpstan-var array<Event>
+     * @var array<Event>
      */
     private array $registeredEvents = [];
 
@@ -127,9 +127,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Initializes a new application instance.
      *
-     * @param array $config Application configuration.
+     * @param array<mixed> $config Application configuration.
      *
-     * @phpstan-param mixed[] $config
      * @phpstan-ignore constructor.missingParentCall
      */
     public function __construct(private readonly array $config = [])
@@ -169,8 +168,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * $components = $app->coreComponents();
      * ```
      *
-     * @return array Core component definitions.
-     * @phpstan-return array<mixed, mixed>
+     * @return array<mixed> Core component definitions.
      */
     public function coreComponents(): array
     {
@@ -272,7 +270,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
 
             $this->state = self::STATE_HANDLING_REQUEST;
 
-            /** @phpstan-var Response $response */
+            /** @var Response $response */
             $response = $this->handleRequest($this->request);
 
             $this->state = self::STATE_AFTER_REQUEST;
@@ -489,8 +487,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * Reconfigures only request-scoped components after the first request and avoids reconfiguring
      * the global Yii container after worker initialization.
      *
-     * @return array Reinitialization configuration for {@see parent::__construct()}.
-     * @phpstan-return array<mixed, mixed>
+     * @return array<mixed> Reinitialization configuration for {@see parent::__construct()}.
      */
     private function buildReinitializationConfig(): array
     {

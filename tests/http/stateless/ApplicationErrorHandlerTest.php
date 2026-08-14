@@ -415,9 +415,8 @@ final class ApplicationErrorHandlerTest extends TestCase
     }
 
     /**
+     * @param string[] $expectedContent
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
-     * @phpstan-param string[] $expectedContent
      */
     #[DataProviderExternal(ApplicationProvider::class, 'exceptionRenderingFormats')]
     public function testRenderExceptionWithDifferentFormats(

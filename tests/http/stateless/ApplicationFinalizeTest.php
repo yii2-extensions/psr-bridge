@@ -274,7 +274,7 @@ final class ApplicationFinalizeTest extends TestCase
 
         $response = $app->handle(HelperFactory::createRequest('GET', 'site/fresh-response'));
 
-        /** @phpstan-var Response $emitted */
+        /** @var Response $emitted */
         $emitted = ReflectionHelper::inaccessibleProperty($app, 'lastResponse');
 
         $component = $app->response;

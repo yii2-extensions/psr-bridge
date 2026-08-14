@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ci: rename workflow from `linter` to `quality` for clarity.
 - chore: update configuration files and improve coding standards for better maintainability.
 - chore: add php-core-extensions to `composer-require-checker.json` for improved dependency management.
+- docs: remove PHPStan prefixes from parameter, return, variable, and property annotations across source and tests.
 
 ## 0.3.0 February 28, 2026
 

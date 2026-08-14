@@ -32,7 +32,7 @@ final class ApplicationRest extends Application
      *
      * Each entry is a string representing the name of the lifecycle hook that was called.
      *
-     * @phpstan-var list<string>
+     * @var list<string>
      */
     public array $hookCallLog = [];
 

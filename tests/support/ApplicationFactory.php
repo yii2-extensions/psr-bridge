@@ -31,14 +31,11 @@ final class ApplicationFactory
      * ApplicationFactory::rest(['id' => 'rest-test-app']);
      * ```
      *
-     * @param array $override Application configuration overrides.
+     * @param array<string, mixed> $override Application configuration overrides.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return Application Configured REST test application instance.
-     *
-     * @phpstan-param array<string, mixed> $override
-     * @phpstan-return ApplicationRest<IdentityInterface>
+     * @return ApplicationRest<IdentityInterface> Configured REST test application instance.
      */
     public static function rest(array $override = []): ApplicationRest
     {
@@ -58,14 +55,11 @@ final class ApplicationFactory
      * ApplicationFactory::stateless(['id' => 'stateless-test-app']);
      * ```
      *
-     * @param array $override Application configuration overrides.
+     * @param array<string, mixed> $override Application configuration overrides.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return Application Configured stateless test application instance.
-     *
-     * @phpstan-param array<string, mixed> $override
-     * @phpstan-return Application<IdentityInterface>
+     * @return Application<IdentityInterface> Configured stateless test application instance.
      */
     public static function stateless(array $override = []): Application
     {
@@ -106,15 +100,13 @@ final class ApplicationFactory
      * ApplicationFactory::web(['id' => 'web-test-app']);
      * ```
      *
-     * @param array $override Application configuration overrides.
+     * @param array<string, mixed> $override Application configuration overrides.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
-     * @phpstan-param array<string, mixed> $override
      */
     public static function web(array $override = []): void
     {
-        /** @phpstan-var array<string, mixed> $config */
+        /** @var array<string, mixed> $config */
         $config = ArrayHelper::merge(
             self::commonBase(),
             [
@@ -139,7 +131,7 @@ final class ApplicationFactory
     /**
      * Common base configuration for all application types.
      *
-     * @phpstan-return array<string, mixed>
+     * @return array<string, mixed>
      */
     private static function commonBase(): array
     {

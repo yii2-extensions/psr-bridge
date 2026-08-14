@@ -40,21 +40,17 @@ final class ServerRequestAdapter
     public readonly ServerRequestInterface $psrRequest;
 
     /**
-     * Creates a new instance of the {@see ServerRequestAdapter} class.
+     * Adapts a PSR-7 request and parses its body when a matching parser is configured.
      *
-     * If the PSR-7 request does not already have a parsed body, and a matching parser is configured for the request's
-     * Content-Type, the body will be parsed and set on the request.
+     * Requests that already contain a parsed body are left unchanged.
      *
-     * This approach centralizes all PSR-7 request adaptation logic within the adapter, avoiding double parsing when the
-     * body was already parsed by a PSR-7 server (RoadRunner, FrankenPHP, etc.).
-     *
-     * @param ServerRequestInterface $psrRequest PSR-7 ServerRequestInterface instance to adapt.
-     * @param array $parsers Optional array of Content-Type to parser class mappings. If provided, and the request has
-     * no parsed body, the adapter will attempt to parse the body using the configured parsers.
+     * @param ServerRequestInterface $psrRequest Request to adapt.
+     * @param array<
+     *   string,
+     *   class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object
+     * > $parsers Content-Type parser definitions.
      *
      * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
-     *
-     * @phpstan-param array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
      */
     public function __construct(ServerRequestInterface $psrRequest, array $parsers = [])
     {
@@ -84,9 +80,7 @@ final class ServerRequestAdapter
      *
      * @param string $methodParam Name of the HTTP method override parameter to exclude (for example, `_method`).
      *
-     * @return array|object Request body parameters with the method override parameter removed if present.
-     *
-     * @phpstan-return array<mixed, mixed>|object
+     * @return array<mixed>|object Request body parameters with the method override parameter removed if present.
      */
     public function getBodyParams(string $methodParam): array|object
     {
@@ -124,9 +118,7 @@ final class ServerRequestAdapter
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return array Array of {@see Cookie} objects extracted from the PSR-7 ServerRequestInterface.
-     *
-     * @phpstan-return array<Cookie>
+     * @return array<Cookie> Cookies extracted from the request.
      */
     public function getCookies(bool $enableValidation, string $validationKey = ''): array
     {
@@ -230,9 +222,7 @@ final class ServerRequestAdapter
      * $body = $adapter->getParsedBody();
      * ```
      *
-     * @return array|object|null Parsed body parameters as `array`, `object`, or `null` if not present.
-     *
-     * @phpstan-return array<mixed, mixed>|object|null
+     * @return array<mixed>|object|null Parsed body parameters, or `null` if not present.
      */
     public function getParsedBody(): array|object|null
     {
@@ -254,9 +244,7 @@ final class ServerRequestAdapter
      * $queryParams = $adapter->getQueryParams();
      * ```
      *
-     * @return array Query parameters as an associative array.
-     *
-     * @phpstan-return array<array-key, mixed>
+     * @return array<mixed> Query parameters.
      */
     public function getQueryParams(): array
     {
@@ -321,9 +309,7 @@ final class ServerRequestAdapter
      * $params = $adapter->getServerParams();
      * ```
      *
-     * @return array Server parameters from the PSR-7 ServerRequestInterface.
-     *
-     * @phpstan-return array<array-key, mixed>
+     * @return array<mixed> Server parameters.
      */
     public function getServerParams(): array
     {
@@ -342,9 +328,7 @@ final class ServerRequestAdapter
      * $files = $adapter->getUploadedFiles();
      * ```
      *
-     * @return array Uploaded files from the PSR-7 ServerRequestInterface.
-     *
-     * @phpstan-return array<array-key, mixed>
+     * @return array<mixed> Uploaded files.
      */
     public function getUploadedFiles(): array
     {
@@ -393,9 +377,7 @@ final class ServerRequestAdapter
      *
      * It is intended for use in cases where cookie integrity is not enforced by a validation key.
      *
-     * @return array Array of {@see Cookie} objects extracted from the PSR-7 ServerRequestInterface.
-     *
-     * @phpstan-return array<Cookie>
+     * @return array<Cookie> Cookies extracted from the request.
      */
     private function getSimpleCookies(): array
     {
@@ -428,9 +410,7 @@ final class ServerRequestAdapter
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return array Array of {@see Cookie} objects with validated names and values.
-     *
-     * @phpstan-return array<Cookie>
+     * @return array<Cookie> Cookies with validated names and values.
      */
     private function getValidatedCookies(string $validationKey): array
     {
@@ -475,14 +455,15 @@ final class ServerRequestAdapter
      * This approach avoids double parsing when the body was already parsed by a PSR-7 server (RoadRunner, FrankenPHP,
      * etc.).
      *
-     * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to potentially parse.
-     * @param array $parsers Array of Content-Type to parser class mappings.
+     * @param ServerRequestInterface $request Request to parse.
+     * @param array<
+     *   string,
+     *   class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object
+     * > $parsers Content-Type parser definitions.
      *
      * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
      *
      * @return ServerRequestInterface Request with parsed body set if parsing was performed, or unchanged.
-     *
-     * @phpstan-param array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
      */
     private function parseBody(ServerRequestInterface $request, array $parsers): ServerRequestInterface
     {

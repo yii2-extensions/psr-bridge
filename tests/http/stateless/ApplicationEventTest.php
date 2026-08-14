@@ -34,12 +34,12 @@ final class ApplicationEventTest extends TestCase
 
         $mockComponent1 = new class ($offSequence) {
             /**
-             * @phpstan-var mixed[]
+             * @var mixed[]
              */
             public array $offCalls = [];
 
             /**
-             * @phpstan-var array<int,string>
+             * @var array<int,string>
              */
             public array $seq = [];
 
@@ -65,12 +65,12 @@ final class ApplicationEventTest extends TestCase
 
         $mockComponent2 = new class ($offSequence) {
             /**
-             * @phpstan-var mixed[]
+             * @var mixed[]
              */
             public array $offCalls = [];
 
             /**
-             * @phpstan-var array<int,string>
+             * @var array<int,string>
              */
             public array $seq = [];
 
@@ -94,7 +94,7 @@ final class ApplicationEventTest extends TestCase
             }
         };
 
-        /** @phpstan-var Event[] $registeredEvents */
+        /** @var Event[] $registeredEvents */
         $registeredEvents = ReflectionHelper::inaccessibleProperty($app, 'registeredEvents');
 
         $event1 = new Event(['name' => 'test.event1', 'sender' => $mockComponent1]);
@@ -479,9 +479,8 @@ final class ApplicationEventTest extends TestCase
     /**
      * Asserts that the internal {@see Application::registeredEvents} list is empty.
      *
+     * @param Application<IdentityInterface> $app
      * @throws ReflectionException if the property does not exist or is inaccessible.
-     *
-     * @phpstan-param Application<IdentityInterface> $app
      */
     private function assertEmptyRegisteredEvents(Application $app, string $message): void
     {

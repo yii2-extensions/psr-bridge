@@ -122,13 +122,9 @@ final class ServerRequestCreator
      * Each header is normalized to standard HTTP header format using {@see normalizeHeaderName()} and added to the
      * result array.
      *
-     * @param array $server Input server array, typically $_SERVER globals.
+     * @param array<mixed> $server Input server array, typically $_SERVER globals.
      *
-     * @return array Array of normalized HTTP headers extracted from the server array.
-     *
-     * @phpstan-param array<mixed, mixed> $server
-     *
-     * @phpstan-return array<string, string>
+     * @return array<string, string> Array of normalized HTTP headers extracted from the server array.
      */
     private function extractHeaders(array $server): array
     {

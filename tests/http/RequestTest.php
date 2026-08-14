@@ -28,7 +28,7 @@ use function str_starts_with;
 final class RequestTest extends TestCase
 {
     /**
-     * @phpstan-param string[] $trustedHosts
+     * @param string[] $trustedHosts
      */
     #[DataProviderExternal(RequestProvider::class, 'alreadyResolvedIp')]
     public function testAlreadyResolvedIp(
@@ -587,9 +587,8 @@ final class RequestTest extends TestCase
     }
 
     /**
+     * @param array<string, mixed> $expected
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
-     * @phpstan-param array<string, mixed> $expected
      */
     #[DataProviderExternal(RequestProvider::class, 'getBodyParams')]
     public function testGetBodyParams(string $contentType, string $rawBody, array $expected): void
@@ -632,8 +631,8 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<int, array{array<string, string>|array<string, mixed>}> $server
-     * @phpstan-param array<array{string|null, string|null}> $expected
+     * @param array<string, mixed> $server
+     * @param array{string|null, string|null} $expected
      */
     #[DataProviderExternal(RequestProvider::class, 'getHostInfo')]
     public function testGetHostInfo(array $server, array $expected): void
@@ -656,13 +655,13 @@ final class RequestTest extends TestCase
         );
 
         self::assertSame(
-            $expected[0] ?? null,
+            $expected[0],
             $request->getHostInfo(),
             "'getHostInfo()' should return the expected value for the given 'secureHeaders' and 'trustedHosts' "
             . 'configuration.',
         );
         self::assertSame(
-            $expected[1] ?? null,
+            $expected[1],
             $request->getHostName(),
             "'getHostName()' should return the expected value for the given 'secureHeaders' and 'trustedHosts' "
             . 'configuration.',
@@ -686,12 +685,12 @@ final class RequestTest extends TestCase
         );
 
         self::assertSame(
-            $expected[0] ?? null,
+            $expected[0],
             $request->getHostInfo(),
             "'getHostInfo()' should return the expected value when 'trustedHosts' is an associative array.",
         );
         self::assertSame(
-            $expected[1] ?? null,
+            $expected[1],
             $request->getHostName(),
             "'getHostName()' should return the expected value when 'trustedHosts' is an associative array.",
         );
@@ -700,7 +699,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<string, string> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getIsAjax')]
     public function testGetIsAjax(array $server, bool $expected): void
@@ -720,7 +719,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<string, string> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getIsPjax')]
     public function testGetIsPjax(array $server, bool $expected): void
@@ -740,7 +739,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<string, int|string> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'isSecureServer')]
     public function testGetIsSecureConnection(array $server, bool $expected): void
@@ -802,7 +801,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<string, string> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'isSecureServerWithoutTrustedHost')]
     public function testGetIsSecureConnectionWithoutTrustedHost(array $server, bool $expected): void
@@ -840,8 +839,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
-     * @phpstan-param string $expected
+     * @param array<string, string> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getMethod')]
     public function testGetMethod(array $server, string $expected): void
@@ -880,9 +878,8 @@ final class RequestTest extends TestCase
     }
 
     /**
+     * @param array<mixed>|null $expected
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
-     * @phpstan-param array<array-key, mixed>|null $expected
      */
     #[TestWith(['{"foo":"bar"}', ['foo' => 'bar']])]
     #[TestWith(['false', null])]
@@ -952,9 +949,6 @@ final class RequestTest extends TestCase
         );
     }
 
-    /**
-     * @phpstan-param string $expectedString
-     */
     #[DataProviderExternal(RequestProvider::class, 'getQueryString')]
     public function testGetQueryStringWithVariousParams(string $queryString, string $expectedString): void
     {
@@ -1079,8 +1073,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
-     * @phpstan-param string $expected
+     * @param array<string, string> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getUserIP')]
     public function testGetUserIP(array $server, string $expected): void
@@ -1136,7 +1129,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<string, string> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getUserIPWithoutTrustedHost')]
     public function testGetUserIPWithoutTrustedHost(array $server, string $expected): void
@@ -1231,7 +1224,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{false|string|null, string|null}> $expected
+     * @param array{string|null, string|null} $expected
      */
     #[DataProviderExternal(RequestProvider::class, 'httpAuthorizationHeaders')]
     public function testHttpAuthCredentialsFromHttpAuthorizationHeader(string $secret, array $expected): void
@@ -1246,12 +1239,12 @@ final class RequestTest extends TestCase
             "'getAuthCredentials()' should return the expected credentials from 'HTTP_AUTHORIZATION'.",
         );
         self::assertSame(
-            $expected[0] ?? null,
+            $expected[0],
             $request->getAuthUser(),
             "'getAuthUser()' should return the expected username from 'HTTP_AUTHORIZATION'.",
         );
         self::assertSame(
-            $expected[1] ?? null,
+            $expected[1],
             $request->getAuthPassword(),
             "'getAuthPassword()' should return the expected password from 'HTTP_AUTHORIZATION'.",
         );
@@ -1266,12 +1259,12 @@ final class RequestTest extends TestCase
             "'getAuthCredentials()' should return the expected credentials from 'REDIRECT_HTTP_AUTHORIZATION'.",
         );
         self::assertSame(
-            $expected[0] ?? null,
+            $expected[0],
             $request->getAuthUser(),
             "'getAuthUser()' should return the expected username from 'REDIRECT_HTTP_AUTHORIZATION'.",
         );
         self::assertSame(
-            $expected[1] ?? null,
+            $expected[1],
             $request->getAuthPassword(),
             "'getAuthPassword()' should return the expected password from 'REDIRECT_HTTP_AUTHORIZATION'.",
         );
@@ -2009,8 +2002,8 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array-key, string>|null $ipHeaders
-     * @phpstan-param array<array-key, string> $trustedHosts
+     * @param array<string>|null $ipHeaders
+     * @param array<string> $trustedHosts
      */
     #[DataProviderExternal(RequestProvider::class, 'trustedHostAndInjectedXForwardedFor')]
     public function testTrustedHostAndInjectedXForwardedFor(
@@ -2041,7 +2034,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array-key, string>|null $trustedHosts
+     * @param array<string>|null $trustedHosts
      */
     #[DataProviderExternal(RequestProvider::class, 'trustedHostAndXForwardedPort')]
     public function testTrustedHostAndXForwardedPort(

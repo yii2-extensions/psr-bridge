@@ -612,10 +612,9 @@ final class SapiEmitterTest extends TestCase
     }
 
     /**
+     * @param string[] $expected
      * @throws HeadersAlreadySentException if HTTP headers have already been sent to the client.
      * @throws OutputAlreadySentException if response output has already been emitted.
-     *
-     * @phpstan-param string[] $expected
      */
     #[DataProviderExternal(EmitterProvider::class, 'body')]
     public function testEmitResponseWithVariousBodyContents(

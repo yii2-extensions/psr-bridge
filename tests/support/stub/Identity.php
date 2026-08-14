@@ -23,7 +23,7 @@ final class Identity extends BaseObject implements IdentityInterface
     public string $username = '';
 
     /**
-     * @phpstan-var array<
+     * @var array<
      *   array-key,
      *   array{id: string, username: string, password: string, authKey: string, accessToken: string},
      * >

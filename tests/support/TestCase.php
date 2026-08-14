@@ -33,14 +33,14 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Original $_SERVER superglobal values before tests modify them, to ensure proper restoration after each test.
      *
-     * @phpstan-var array<mixed, mixed>
+     * @var array<mixed>
      */
     private array $originalServer = [];
 
     /**
      * Temporary file resources used during tests.
      *
-     * @phpstan-var array<resource>
+     * @var array<resource>
      */
     private array $tmpFiles = [];
 
@@ -203,9 +203,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * Signs the given cookie parameters using Yii's Security component and the defined cookie validation key.
      *
-     * @phpstan-param array<string, string|object> $cookieParams
+     * @param array<string, object|string> $cookieParams
      *
-     * @phpstan-return array<string, string>
+     * @return array<string, string>
      */
     protected function signCookies(array $cookieParams): array
     {

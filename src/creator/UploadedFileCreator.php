@@ -90,13 +90,9 @@ final class UploadedFileCreator
      * $uploadedFile = $creator->createFromArray($file);
      * ```
      *
-     * @param array $file File specification array containing required keys ('tmp_name', 'size', 'error') and optional
-     * keys ('name', 'type').
+     * @param FileSpec $file File specification with required upload fields and optional name and type.
      *
-     * @return UploadedFileInterface PSR-7 UploadedFileInterface instance created from the file specification
-     * array.
-     *
-     * @phpstan-param FileSpec $file
+     * @return UploadedFileInterface Created uploaded file.
      */
     public function createFromArray(array $file): UploadedFileInterface
     {
@@ -127,14 +123,9 @@ final class UploadedFileCreator
      * $files = $creator->createFromGlobals($_FILES);
      * ```
      *
-     * @param array $files Array of uploaded file specifications or PSR-7 UploadedFileInterface instances.
+     * @param FilesArray $files Uploaded file specifications or PSR-7 uploaded files.
      *
-     * @return array Array of processed uploaded files as PSR-7 UploadedFileInterface instances or nested file trees as
-     * appropriate.
-     *
-     * @phpstan-param FilesArray $files
-     *
-     * @phpstan-return FilesArray
+     * @return FilesArray Processed uploaded files, preserving nested file trees.
      */
     public function createFromGlobals(array $files = []): array
     {
@@ -154,23 +145,15 @@ final class UploadedFileCreator
      * when handling both single and multiple file uploads. For array values, it recurses into subtrees; for scalar
      * values, it creates a single uploaded file instance using {@see createSingleFileFromArrays}.
      *
-     * @param array $tmpNames Array of temporary file names or nested arrays for uploaded files.
-     * @param array $sizes Array of file sizes or nested arrays matching the structure of $tmpNames.
-     * @param array $errors Array of error codes or nested arrays matching the structure of $tmpNames.
-     * @param array $names Array of file names or nested arrays matching the structure of $tmpNames.
-     * @param array $types Array of file types or nested arrays matching the structure of $tmpNames.
+     * @param TmpName $tmpNames Array of temporary file names or nested arrays for uploaded files.
+     * @param TmpSize $sizes Array of file sizes or nested arrays matching the structure of $tmpNames.
+     * @param TmpError $errors Array of error codes or nested arrays matching the structure of $tmpNames.
+     * @param Name $names Array of file names or nested arrays matching the structure of $tmpNames.
+     * @param Type $types Array of file types or nested arrays matching the structure of $tmpNames.
      *
      * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
      *
-     * @return array Nested array of PSR-7 UploadedFileInterface instances or file trees.
-     *
-     * @phpstan-param TmpName $tmpNames
-     * @phpstan-param TmpSize $sizes
-     * @phpstan-param TmpError $errors
-     * @phpstan-param Name $names
-     * @phpstan-param Type $types
-     *
-     * @phpstan-return FilesArray
+     * @return FilesArray Nested array of PSR-7 UploadedFileInterface instances or file trees.
      */
     private function buildFileTree(
         array $tmpNames,
@@ -202,15 +185,15 @@ final class UploadedFileCreator
                     );
                 }
 
-                /** @phpstan-var TmpName $subTmpNames */
+                /** @var TmpName $subTmpNames */
                 $subTmpNames = $tmpName;
-                /** @phpstan-var TmpSize $subSizes */
+                /** @var TmpSize $subSizes */
                 $subSizes = $sizes[$key];
-                /** @phpstan-var TmpError $subErrors */
+                /** @var TmpError $subErrors */
                 $subErrors = $errors[$key];
-                /** @phpstan-var Name $subNames */
+                /** @var Name $subNames */
                 $subNames = array_key_exists($key, $names) && is_array($names[$key]) ? $names[$key] : [];
-                /** @phpstan-var Type $subTypes */
+                /** @var Type $subTypes */
                 $subTypes = array_key_exists($key, $types) && is_array($types[$key]) ? $types[$key] : [];
 
                 $tree[$key] = $this->buildFileTree(
@@ -256,14 +239,9 @@ final class UploadedFileCreator
      * This method is used to process PHP file arrays containing nested structures for multiple uploaded files,
      * returning a tree of PSR-7 UploadedFileInterface instances or nested arrays as appropriate.
      *
-     * @param array $files Multi-file specification array containing 'tmp_name', 'size', 'error', and optional 'name',
-     * 'type' keys.
+     * @param MultiFileSpec $files Multiple-file specification.
      *
-     * @return array Nested array of PSR-7 UploadedFileInterface instances or file trees.
-     *
-     * @phpstan-param MultiFileSpec $files
-     *
-     * @phpstan-return FilesArray
+     * @return FilesArray Nested uploaded-file tree.
      *
      * Usage example:
      * ```php
@@ -347,11 +325,9 @@ final class UploadedFileCreator
      *
      * Iterates over the required keys ('tmp_name', 'size', 'error') and checks for their presence in the input array.
      *
-     * @param array $file File specification array to validate for required keys.
+     * @param UnknownFileInput $file File specification array to validate for required keys.
      *
      * @return bool `true` if all required keys are present; `false` otherwise.
-     *
-     * @phpstan-param UnknownFileInput $file
      */
     private function hasRequiredKeys(array $file): bool
     {
@@ -370,11 +346,9 @@ final class UploadedFileCreator
      * Checks if the 'tmp_name' key exists and its value is an array, indicating a multiple file upload structure as
      * produced by PHP for input fields with the 'multiple' attribute.
      *
-     * @param array $file File specification array to check for multiple file upload structure.
+     * @param UnknownFileInput $file File specification array to check for multiple file upload structure.
      *
      * @return bool `true` if the file specification represents a multiple file upload; `false` otherwise.
-     *
-     * @phpstan-param UnknownFileInput $file
      */
     private function isMultipleFileUpload(array $file): bool
     {
@@ -390,14 +364,9 @@ final class UploadedFileCreator
      * - For multiple file uploads, the input is converted to a nested array of uploaded files. For single file
      *   specifications, a PSR-7 UploadedFileInterface instance is created.
      *
-     * @param array|UploadedFileInterface $file File input to process, which may be a file specification array or an
-     * uploaded file instance.
+     * @param UnknownFileInput|UploadedFileInterface $file File input to process.
      *
-     * @return array|UploadedFileInterface PSR-7 UploadedFileInterface instance or nested array of uploaded files.
-     *
-     * @phpstan-param UnknownFileInput|UploadedFileInterface $file
-     *
-     * @phpstan-return array<mixed>|UploadedFileInterface
+     * @return array<mixed>|UploadedFileInterface Uploaded file or nested uploaded-file array.
      */
     private function processFileInput(array|UploadedFileInterface $file): array|UploadedFileInterface
     {
@@ -426,11 +395,9 @@ final class UploadedFileCreator
      * 'size', 'error') and optional keys ('name', 'type') in the file specification array before processing it as an
      * uploaded file.
      *
-     * @param array $file File specification array to validate for required and optional keys.
+     * @param UnknownFileInput $file File specification array to validate for required and optional keys.
      *
      * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
-     *
-     * @phpstan-param UnknownFileInput $file
      */
     private function validateFileSpec(array $file): void
     {
@@ -480,11 +447,9 @@ final class UploadedFileCreator
      * are present and their values are arrays, as expected for multiple file uploads. Also checks that optional keys
      * ('name', 'type') are either arrays or null when present.
      *
-     * @param array $files Multiple file specification array to validate for required and optional keys.
+     * @param UnknownFileInput $files Multiple file specification array to validate for required and optional keys.
      *
      * @throws InvalidArgumentException if one or more arguments are invalid, missing, or of incorrect type or format.
-     *
-     * @phpstan-param UnknownFileInput $files
      */
     private function validateMultiFileSpec(array $files): void
     {

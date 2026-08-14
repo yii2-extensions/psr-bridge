@@ -383,7 +383,7 @@ final class UploadedFilesPsr7Test extends TestCase
     }
 
     /**
-     * @phpstan-param array{error: int, name: string, size: int, tempName: string, type: string} $expected
+     * @param array{error: int, name: string, size: int, tempName: string, type: string} $expected
      */
     private function assertUploadedFileProps(UploadedFile $uploadedFile, array $expected): void
     {

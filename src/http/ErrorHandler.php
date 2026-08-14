@@ -29,7 +29,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
     /**
      * Default configuration for creating fallback Response instances.
      *
-     * @phpstan-var array<string, mixed>
+     * @var array<string, mixed>
      */
     public array $defaultResponseConfig = [
         'charset' => 'UTF-8',

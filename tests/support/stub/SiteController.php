@@ -57,7 +57,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array{password: string|null, username: string|null}
+     * @return array{password: string|null, username: string|null}
      */
     public function actionAuth(): array
     {
@@ -70,7 +70,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return  array{isGuest: bool, identity: string|null}
+     * @return  array{isGuest: bool, identity: string|null}
      */
     public function actionCheckauth(): array
     {
@@ -86,7 +86,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array{csrf: string|null}
+     * @return array{csrf: string|null}
      */
     public function actionCsrf(): array
     {
@@ -209,7 +209,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return Cookie[]
+     * @return Cookie[]
      */
     public function actionGetcookies(): array
     {
@@ -219,7 +219,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array{flash: mixed[]}
+     * @return array{flash: mixed[]}
      */
     public function actionGetflash(): array
     {
@@ -229,7 +229,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array<string, mixed>
+     * @return array<string, mixed>
      */
     public function actionGetsession(): array
     {
@@ -239,7 +239,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array{data: mixed}
+     * @return array{data: mixed}
      */
     public function actionGetsessiondata(): array
     {
@@ -249,7 +249,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return string[]
+     * @return string[]
      */
     public function actionIndex(): array
     {
@@ -259,7 +259,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array{status: string, username?: string}
+     * @return array{status: string, username?: string}
      */
     public function actionLogin(): array
     {
@@ -328,7 +328,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array<array-key, mixed>
+     * @return array<mixed>
      */
     public function actionQuery(string $test): array
     {
@@ -436,7 +436,7 @@ final class SiteController extends Controller
     }
 
     /**
-     * @phpstan-return array<array-key, string|null>
+     * @return array<array-key, string|null>
      */
     public function actionUpdate(string|null $id = null): array
     {

@@ -91,7 +91,7 @@ final class ResponseAdapter
             $this->psrResponse->statusText,
         );
 
-        /** @phpstan-var array<string, string[]> $headers */
+        /** @var array<string, string[]> $headers */
         $headers = $this->psrResponse->getHeaders()->toArray();
 
         // add headers
@@ -121,7 +121,7 @@ final class ResponseAdapter
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @phpstan-return string[] Array of formatted cookie headers.
+     * @return string[] Array of formatted cookie headers.
      */
     private function buildCookieHeaders(): array
     {

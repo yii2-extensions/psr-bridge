@@ -22,9 +22,7 @@ final class EmitterProvider
      * Each test case includes the body content, the expected chunks after emission, the buffer size, the start offset,
      * and the end offset.
      *
-     * @return array test data with body content, expected chunks, buffer sizes, start offsets, and end offsets.
-     *
-     * @phpstan-return array<array{string, array<string>, int, int|null, int|null}>
+     * @return array<array{string, array<string>, int, int|null, int|null}>
      */
     public static function body(): array
     {
@@ -54,9 +52,7 @@ final class EmitterProvider
      *
      * Each test case consists of the status code integer value and its corresponding reason phrase.
      *
-     * @return array test data with status code integers and their reason phrases.
-     *
-     * @phpstan-return array<array{int, string}>
+     * @return array<array{int, string}>
      */
     public static function noBodyStatusCodes(): array
     {
@@ -85,9 +81,7 @@ final class EmitterProvider
      *
      * Each test case consists of the status code, the reason phrase, and the expected  formatted status line string.
      *
-     * @return array test data with status codes, reason phrases, and expected status line strings.
-     *
-     * @phpstan-return array<array{int, string, string}>
+     * @return array<array{int, string, string}>
      */
     public static function reasonPhrase(): array
     {
