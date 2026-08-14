@@ -46,7 +46,8 @@ final class ServerRequestAdapter
      *
      * @param ServerRequestInterface $psrRequest Request to adapt.
      * @param array<
-     *   string, class-string|array{class?: class-string, __class?: class-string, ...}|callable(): object
+     *   string,
+     *   class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object
      * > $parsers Content-Type parser definitions.
      *
      * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.
@@ -456,7 +457,8 @@ final class ServerRequestAdapter
      *
      * @param ServerRequestInterface $request Request to parse.
      * @param array<
-     *   string, class-string|array{class?: class-string, __class?: class-string, ...}|callable(): object
+     *   string,
+     *   class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object
      * > $parsers Content-Type parser definitions.
      *
      * @throws InvalidConfigException if a configured parser does not implement RequestParserInterface.

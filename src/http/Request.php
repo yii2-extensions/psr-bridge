@@ -40,7 +40,8 @@ use const UPLOAD_ERR_OK;
  * ```
  *
  * @property array<
- *   string, class-string|array{class?: class-string, __class?: class-string, ...}|callable(): object
+ *   string,
+ *   class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object
  * > $parsers Parser definitions keyed by Content-Type.
  */
 class Request extends \yii\web\Request

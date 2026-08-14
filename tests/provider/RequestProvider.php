@@ -107,7 +107,7 @@ final class RequestProvider
      * Each test case includes the server parameters and the expected host info array with the full host info string
      * and the host name.
      *
-     * @return array<int, array{array<string, mixed>|array<string, string>, array{string|null, string|null}}>
+     * @return array<array{array<string, mixed>, array{string|null, string|null}}>
      */
     public static function getHostInfo(): array
     {
@@ -547,7 +547,7 @@ final class RequestProvider
      *
      * Each test case consists of the base64-encoded credentials string and the expected username and password values.
      *
-     * @return array<array{string, array{false|string|null, string|null}}>
+     * @return array<array{string, array{string|null, string|null}}>
      */
     public static function httpAuthorizationHeaders(): array
     {
