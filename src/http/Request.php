@@ -39,7 +39,9 @@ use const UPLOAD_ERR_OK;
  * $params = $request->getBodyParams();
  * ```
  *
- * @phpstan-property array<string, class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object> $parsers
+ * @property array<
+ *   string, class-string|array{class?: class-string, __class?: class-string, ...}|callable(): object
+ * > $parsers Parser definitions keyed by Content-Type.
  */
 class Request extends \yii\web\Request
 {
@@ -67,11 +69,7 @@ class Request extends \yii\web\Request
      * [$username, $password] = $request->getAuthCredentials();
      * ```
      *
-     * @return array Contains exactly two elements.
-     *   - 0: username sent via HTTP authentication, `null` if the username is not given.
-     *   - 1: password sent via HTTP authentication, `null` if the password is not given.
-     *
-     * @phpstan-return array{0: string|null, 1: string|null}
+     * @return array{0: string|null, 1: string|null} Username and password.
      */
     public function getAuthCredentials(): array
     {
@@ -129,9 +127,7 @@ class Request extends \yii\web\Request
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @return array|object Request body parameters with the method override parameter removed if present.
-     *
-     * @phpstan-return array<array-key, mixed>|object
+     * @return array<mixed>|object Request body parameters with the method override parameter removed if present.
      */
     public function getBodyParams(): array|object
     {
@@ -268,7 +264,7 @@ class Request extends \yii\web\Request
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @phpstan-return array<array-key, mixed>|object|null
+     * @return array<mixed>|object|null Parsed body parameters for the current request, or `null` if not available.
      */
     public function getParsedBody(): array|object|null
     {
@@ -310,7 +306,7 @@ class Request extends \yii\web\Request
      * $queryParams = $request->getQueryParams();
      * ```
      *
-     * @phpstan-return array<array-key, mixed> Query parameters as an associative array.
+     * @return array<mixed> Query parameters as an associative array.
      */
     public function getQueryParams(): array
     {
@@ -493,9 +489,7 @@ class Request extends \yii\web\Request
      * $params = $request->getServerParams();
      * ```
      *
-     * @return array Server parameters for the current request.
-     *
-     * @phpstan-return array<array-key, mixed>
+     * @return array<mixed> Server parameters for the current request.
      */
     public function getServerParams(): array
     {
@@ -560,9 +554,7 @@ class Request extends \yii\web\Request
      * $files = $request->getUploadedFiles();
      * ```
      *
-     * @return array Array of uploaded files for the current request.
-     *
-     * @phpstan-return array<array<array-key, UploadedFile>, mixed>
+     * @return array<mixed> Array of uploaded files for the current request.
      */
     public function getUploadedFiles(): array
     {
@@ -611,14 +603,12 @@ class Request extends \yii\web\Request
      *
      * @throws NotFoundHttpException if the route is not found or undefined.
      *
-     * @return array An array containing the resolved route and parameters.
-     *
-     * @phpstan-return array<array-key, mixed>
+     * @return array<mixed> An array containing the resolved route and parameters.
      */
     public function resolve(): array
     {
         if ($this->adapter !== null) {
-            /** @phpstan-var array{0: string, 1: array<string, mixed>}|false $result*/
+            /** @var array{0: string, 1: array<string, mixed>}|false $result*/
             $result = Yii::$app->getUrlManager()->parseRequest($this);
 
             if ($result !== false) {
@@ -666,13 +656,9 @@ class Request extends \yii\web\Request
      * Iterates through the provided array of uploaded files, converting each {@see UploadedFileInterface} instance
      * to a Yii {@see UploadedFile} object.
      *
-     * @param array $uploadedFiles Array of uploaded files or nested arrays to convert.
+     * @param array<mixed> $uploadedFiles Array of uploaded files or nested arrays to convert.
      *
-     * @return array Converted array of Yii UploadedFile instances, preserving keys and nesting.
-     *
-     * @phpstan-param array<array-key, mixed> $uploadedFiles Array of uploaded files or nested arrays to convert.
-     *
-     * @phpstan-return array<array<array-key, UploadedFile>, mixed>
+     * @return array<mixed> Converted array of Yii UploadedFile instances, preserving keys and nesting.
      */
     private function convertPsr7ToUploadedFiles(array $uploadedFiles): array
     {
@@ -757,9 +743,7 @@ class Request extends \yii\web\Request
      *
      * @throws InvalidConfigException if a registered parser does not implement RequestParserInterface.
      *
-     * @return array|object|null Parsed body parameters, or `null` when the parser yields a scalar value.
-     *
-     * @phpstan-return array<array-key, mixed>|object|null
+     * @return array<mixed>|object|null Parsed body parameters, or `null` when the parser yields a scalar value.
      */
     private function normalizeParentBodyParams(): array|object|null
     {

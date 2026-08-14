@@ -234,7 +234,7 @@ final class ServerParamsPsr7Test extends TestCase
     }
 
     /**
-     * @phpstan-param array<string, mixed> $serverParams
+     * @param array<string, mixed> $serverParams
      */
     #[DataProviderExternal(ServerParamsPsr7Provider::class, 'serverParamCases')]
     #[Group('server-param')]
@@ -357,7 +357,7 @@ final class ServerParamsPsr7Test extends TestCase
     }
 
     /**
-     * @phpstan-param array<string, mixed> $serverParams
+     * @param array<string, mixed> $serverParams
      */
     #[DataProviderExternal(ServerParamsPsr7Provider::class, 'serverParamDefaultValueCases')]
     #[Group('server-param')]

@@ -28,7 +28,7 @@ use function str_starts_with;
 final class RequestTest extends TestCase
 {
     /**
-     * @phpstan-param string[] $trustedHosts
+     * @param string[] $trustedHosts
      */
     #[DataProviderExternal(RequestProvider::class, 'alreadyResolvedIp')]
     public function testAlreadyResolvedIp(
@@ -589,7 +589,7 @@ final class RequestTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @phpstan-param array<string, mixed> $expected
+     * @param array<string, mixed> $expected
      */
     #[DataProviderExternal(RequestProvider::class, 'getBodyParams')]
     public function testGetBodyParams(string $contentType, string $rawBody, array $expected): void
@@ -632,8 +632,8 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<int, array{array<string, string>|array<string, mixed>}> $server
-     * @phpstan-param array<array{string|null, string|null}> $expected
+     * @param array<int, array{array<string, string>|array<string, mixed>}> $server
+     * @param array<array{string|null, string|null}> $expected
      */
     #[DataProviderExternal(RequestProvider::class, 'getHostInfo')]
     public function testGetHostInfo(array $server, array $expected): void
@@ -700,7 +700,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<array{array<string, string>}> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getIsAjax')]
     public function testGetIsAjax(array $server, bool $expected): void
@@ -720,7 +720,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<array{array<string, string>}> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getIsPjax')]
     public function testGetIsPjax(array $server, bool $expected): void
@@ -740,7 +740,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<array{array<string, string>}> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'isSecureServer')]
     public function testGetIsSecureConnection(array $server, bool $expected): void
@@ -802,7 +802,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<array{array<string, string>}> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'isSecureServerWithoutTrustedHost')]
     public function testGetIsSecureConnectionWithoutTrustedHost(array $server, bool $expected): void
@@ -840,8 +840,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
-     * @phpstan-param string $expected
+     * @param array<array{array<string, string>}> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getMethod')]
     public function testGetMethod(array $server, string $expected): void
@@ -882,7 +881,7 @@ final class RequestTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @phpstan-param array<array-key, mixed>|null $expected
+     * @param array<mixed>|null $expected
      */
     #[TestWith(['{"foo":"bar"}', ['foo' => 'bar']])]
     #[TestWith(['false', null])]
@@ -952,9 +951,6 @@ final class RequestTest extends TestCase
         );
     }
 
-    /**
-     * @phpstan-param string $expectedString
-     */
     #[DataProviderExternal(RequestProvider::class, 'getQueryString')]
     public function testGetQueryStringWithVariousParams(string $queryString, string $expectedString): void
     {
@@ -1079,8 +1075,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
-     * @phpstan-param string $expected
+     * @param array<array{array<string, string>}> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getUserIP')]
     public function testGetUserIP(array $server, string $expected): void
@@ -1136,7 +1131,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{array<string, string>}> $server
+     * @param array<array{array<string, string>}> $server
      */
     #[DataProviderExternal(RequestProvider::class, 'getUserIPWithoutTrustedHost')]
     public function testGetUserIPWithoutTrustedHost(array $server, string $expected): void
@@ -1231,7 +1226,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array{false|string|null, string|null}> $expected
+     * @param array<array{false|string|null, string|null}> $expected
      */
     #[DataProviderExternal(RequestProvider::class, 'httpAuthorizationHeaders')]
     public function testHttpAuthCredentialsFromHttpAuthorizationHeader(string $secret, array $expected): void
@@ -2009,8 +2004,8 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array-key, string>|null $ipHeaders
-     * @phpstan-param array<array-key, string> $trustedHosts
+     * @param array<string>|null $ipHeaders
+     * @param array<string> $trustedHosts
      */
     #[DataProviderExternal(RequestProvider::class, 'trustedHostAndInjectedXForwardedFor')]
     public function testTrustedHostAndInjectedXForwardedFor(
@@ -2041,7 +2036,7 @@ final class RequestTest extends TestCase
     }
 
     /**
-     * @phpstan-param array<array-key, string>|null $trustedHosts
+     * @param array<string>|null $trustedHosts
      */
     #[DataProviderExternal(RequestProvider::class, 'trustedHostAndXForwardedPort')]
     public function testTrustedHostAndXForwardedPort(

@@ -1164,9 +1164,7 @@ final class UploadedFileCreatorTest extends TestCase
      * @param string $tmpPath Path to temporary file.
      * @param int $depth Desired nesting depth.
      *
-     * @return array Nested file structure.
-     *
-     * @phpstan-return array<array<mixed>|UploadedFileInterface>
+     * @return array<array<mixed>|UploadedFileInterface> Nested file structure.
      */
     private function createDeeplyNestedFileStructure(string $tmpPath, int $depth): array
     {
@@ -1181,9 +1179,7 @@ final class UploadedFileCreatorTest extends TestCase
      * @param string $tmpPath Path to temporary file.
      * @param int $depth Desired nesting depth.
      *
-     * @return array Nested file specification matching PHP $_FILES structure.
-     *
-     * @phpstan-return array<
+     * @return array<
      *   string,
      *   array<string, array<string, array<string, array<string, int|string>|int|string>|string>|int|string>|int|string
      * >
@@ -1216,12 +1212,10 @@ final class UploadedFileCreatorTest extends TestCase
     /**
      * Navigate to the deepest file in a nested structure.
      *
-     * @param array $result Processed file structure with a 'deep' key.
+     * @param array<array<mixed>|UploadedFileInterface> $result Processed file structure with a 'deep' key.
      * @param int $expectedDepth Expected depth to navigate.
      *
      * @return mixed Deepest file found.
-     *
-     * @phpstan-param array<array<mixed>|UploadedFileInterface> $result
      */
     private function navigateToDeepestFile(array $result, int $expectedDepth): mixed
     {

@@ -44,15 +44,11 @@ final class HelperFactory
      *
      * @param string $method Request method.
      * @param string $uri Request URI.
-     * @param array $headers Request headers.
-     * @param array|object|null $parsedBody Request parsed body.
-     * @param array $serverParams Request server parameters.
+     * @param array<string, array<int, string>|int|string> $headers Request headers.
+     * @param array<string, mixed>|object|null $parsedBody Request parsed body.
+     * @param array<string, mixed> $serverParams Request server parameters.
      *
      * @return ServerRequestInterface PSR-7 server request instance.
-     *
-     * @phpstan-param array<string, array<int, string>|int|string> $headers
-     * @phpstan-param array<string, mixed> $serverParams
-     * @phpstan-param array<string, mixed>|object|null $parsedBody
      */
     public static function createRequest(
         string $method = '',
@@ -86,14 +82,12 @@ final class HelperFactory
      * ```
      *
      * @param int $statusCode Response status code.
-     * @param array $headers Response headers.
+     * @param array<string, array<int, string>|int|string> $headers Response headers.
      * @param resource|StreamInterface|string|null $body Response body.
      * @param string $protocol Response protocol version.
      * @param string $reasonPhrase Response reason phrase.
      *
      * @return ResponseInterface PSR-7 response instance.
-     *
-     * @phpstan-param array<string, array<int, string>|int|string> $headers
      */
     public static function createResponse(
         int $statusCode = 200,

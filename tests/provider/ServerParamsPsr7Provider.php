@@ -21,9 +21,7 @@ final class ServerParamsPsr7Provider
      *
      * Each test case consists of the input value and the expected normalized remote host string or `null` result.
      *
-     * @return array test data with input remote host values and expected normalized results.
-     *
-     * @phpstan-return array<array-key, array{mixed, string|null}>
+     * @return array<array{mixed, string|null}>
      */
     public static function remoteHostCases(): array
     {
@@ -99,9 +97,7 @@ final class ServerParamsPsr7Provider
      *
      * Each test case consists of the input value and the expected normalized server name string or `null` result.
      *
-     * @return array test data with input server name values and expected normalized results.
-     *
-     * @phpstan-return array<array-key, array{mixed, string|null}>
+     * @return array<array{mixed, string|null}>
      */
     public static function serverNameCases(): array
     {
@@ -177,9 +173,7 @@ final class ServerParamsPsr7Provider
      *
      * Each test case consists of the parameter name, the server parameters array, and the expected extracted value.
      *
-     * @return array test data with parameter name, server parameters, and expected extracted value.
-     *
-     * @phpstan-return array<array-key, array{string, array<string, mixed>, mixed}>
+     * @return array<array{string, array<string, mixed>, mixed}>
      */
     public static function serverParamCases(): array
     {
@@ -264,9 +258,7 @@ final class ServerParamsPsr7Provider
      * Each test case includes the parameter name, the server parameters array, the default value, and the expected
      * result after applying default value logic.
      *
-     * @return array test data with parameter name, server parameters, default value, and expected result.
-     *
-     * @phpstan-return array<string, array{string, array<string, mixed>, mixed, mixed}>
+     * @return array<string, array{string, array<string, mixed>, mixed, mixed}>
      */
     public static function serverParamDefaultValueCases(): array
     {

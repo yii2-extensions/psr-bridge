@@ -71,7 +71,7 @@ final class ApplicationConfigTest extends TestCase
 
         $app->handle($request);
 
-        /** @phpstan-var array<string, mixed> $nextConfig */
+        /** @var array<string, mixed> $nextConfig */
         $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
 
         self::assertArrayHasKey(
@@ -106,7 +106,7 @@ final class ApplicationConfigTest extends TestCase
             ],
         );
 
-        /** @phpstan-var array<string, mixed> $nextConfig */
+        /** @var array<string, mixed> $nextConfig */
         $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
 
         self::assertSame(
@@ -126,7 +126,7 @@ final class ApplicationConfigTest extends TestCase
     {
         $app = new Application([]);
 
-        /** @phpstan-var array<mixed> $nextConfig */
+        /** @var array<mixed> $nextConfig */
         $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
 
         self::assertSame(
@@ -172,7 +172,7 @@ final class ApplicationConfigTest extends TestCase
         $app->get('redis3');
         $app->get('mailer');
 
-        /** @phpstan-var array<string, mixed> $nextConfig */
+        /** @var array<string, mixed> $nextConfig */
         $nextConfig = ReflectionHelper::invokeMethod($app, 'buildReinitializationConfig');
         $components = $nextConfig['components'] ?? null;
 

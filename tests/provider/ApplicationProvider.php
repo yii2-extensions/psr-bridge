@@ -21,7 +21,7 @@ use const PHP_INT_SIZE;
 final class ApplicationProvider
 {
     /**
-     * @phpstan-return array<string, array{string, string, string}>
+     * @return array<string, array{string, string, string}>
      */
     public static function authCredentials(): array
     {
@@ -113,7 +113,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{bool, bool, array<string, object|string>, string, string}>
+     * @return array<string, array{bool, bool, array<string, object|string>, string, string}>
      */
     public static function cookies(): array
     {
@@ -197,7 +197,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{bool|int, string, string, int, string, string}>
+     * @return array<string, array{bool|int, string, string, int, string, string}>
      */
     public static function errorViewLogic(): array
     {
@@ -282,7 +282,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{string, string, int, string, string[]}>
+     * @return array<string, array{string, string, int, string, string[]}>
      */
     public static function exceptionRenderingFormats(): array
     {
@@ -319,7 +319,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{string, int, bool, string}>
+     * @return array<string, array{string, int, bool, string}>
      */
     public static function garbageCollection(): array
     {
@@ -346,7 +346,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{int, string}>
+     * @return array<string, array{int, string}>
      */
     public static function memoryLimitPositive(): array
     {
@@ -382,7 +382,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{string, string}>
+     * @return array<string, array{string, string}>
      */
     public static function memoryThreshold(): array
     {
@@ -403,7 +403,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{string, int, string}>
+     * @return array<string, array{string, int, string}>
      */
     public static function parseMemoryLimit(): array
     {
@@ -507,7 +507,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<array{int|string, string|null, string}>
+     * @return array<array{int|string, string|null, string}>
      */
     public static function remoteIPAddresses(): array
     {
@@ -571,7 +571,7 @@ final class ApplicationProvider
     }
 
     /**
-     * @phpstan-return array<string, array{array<string, string>, int|null, string}>
+     * @return array<string, array{array<string, string>, int|null, string}>
      */
     public static function serverPortHeaders(): array
     {

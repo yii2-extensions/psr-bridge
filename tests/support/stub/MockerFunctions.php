@@ -29,7 +29,7 @@ final class MockerFunctions
     /**
      * Tracks the headers sent by the application.
      *
-     * @phpstan-var string[][]
+     * @var string[][]
      */
     private static array $headers = [];
 
@@ -96,7 +96,7 @@ final class MockerFunctions
     }
 
     /**
-     * @phpstan-return string[]
+     * @return string[]
      */
     public static function getHeader(string $header): array
     {
@@ -135,7 +135,7 @@ final class MockerFunctions
     }
 
     /**
-     * @phpstan-return string[]
+     * @return string[]
      */
     public static function headers_list(): array
     {

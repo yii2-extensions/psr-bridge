@@ -34,9 +34,9 @@ use function substr;
 class UploadedFile extends \yii\web\UploadedFile
 {
     /**
-     * @var array[] Uploaded files cache.
+     * Uploaded files cache.
      *
-     * @phpstan-var array<
+     * @var array<
      *   string,
      *   array{
      *     name: string,
@@ -126,10 +126,7 @@ class UploadedFile extends \yii\web\UploadedFile
      * @param Model $model Data model.
      * @param string $attribute Attribute name, which may contain array indexes (for example, '[1]file').
      *
-     * @return array Array of UploadedFile objects for the specified attribute. Returns an empty array if no
-     * files were uploaded.
-     *
-     * @phpstan-return UploadedFile[]
+     * @return UploadedFile[] Uploaded files for the attribute.
      */
     public static function getInstances($model, $attribute): array
     {
@@ -154,10 +151,7 @@ class UploadedFile extends \yii\web\UploadedFile
      *
      * @param string $name Name of the file input field or array of files.
      *
-     * @return array Array of UploadedFile objects for the specified input name. Returns an empty array if no files were
-     * uploaded.
-     *
-     * @phpstan-return UploadedFile[]
+     * @return UploadedFile[] Uploaded files for the input name.
      */
     public static function getInstancesByName($name): array
     {
@@ -238,9 +232,7 @@ class UploadedFile extends \yii\web\UploadedFile
      *
      * @param UploadedFileInterface $psr7File PSR-7 UploadedFileInterface to convert.
      *
-     * @return array Yii compatible file data array.
-     *
-     * @phpstan-return array{
+     * @return array{
      *   name: string,
      *   tempName: string,
      *   tempResource: resource|null,
@@ -286,9 +278,7 @@ class UploadedFile extends \yii\web\UploadedFile
      * Populates the internal file cache from either the PSR-7 adapter or the legacy $_FILES global, depending on the
      * current configuration and state.
      *
-     * @return array Internal uploaded files cache.
-     *
-     * @phpstan-return array<
+     * @return array<
      *   string,
      *   array{
      *     name: string,
@@ -374,7 +364,7 @@ class UploadedFile extends \yii\web\UploadedFile
     private static function loadLegacyFiles(): void
     {
         /**
-         * @phpstan-var array<
+         * @var array<
          *   string,
          *     array{
          *       name: string|string[],
@@ -413,7 +403,7 @@ class UploadedFile extends \yii\web\UploadedFile
      */
     private static function loadPsr7Files(): void
     {
-        /** @phpstan-var array<string, UploadedFileInterface|mixed[]> */
+        /** @var array<string, UploadedFileInterface|mixed[]> */
         $uploadedFiles = self::$psr7Adapter?->getUploadedFiles() ?? [];
 
         foreach ($uploadedFiles as $name => $file) {

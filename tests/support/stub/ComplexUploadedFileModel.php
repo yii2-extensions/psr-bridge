@@ -13,7 +13,7 @@ use yii2\extensions\psrbridge\http\UploadedFile;
 final class ComplexUploadedFileModel extends Model
 {
     /**
-     * @phpstan-var UploadedFile|UploadedFile[]|null
+     * @var UploadedFile|UploadedFile[]|null
      */
     public UploadedFile|array|null $file_attribute = null;
 

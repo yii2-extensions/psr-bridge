@@ -254,9 +254,7 @@ final class ApplicationCsrfTest extends TestCase
     /**
      * Stateless application configuration overrides enabling CSRF and cookie validation.
      *
-     * @return array Configuration overrides for {@see ApplicationFactory::stateless()}.
-     *
-     * @phpstan-return array<string, mixed>
+     * @return array<string, mixed> Configuration overrides for {@see ApplicationFactory::stateless()}.
      */
     private function csrfConfig(): array
     {

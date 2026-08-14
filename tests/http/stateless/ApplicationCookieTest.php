@@ -25,7 +25,7 @@ final class ApplicationCookieTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
-     * @phpstan-param array<string, string|object> $cookieParams
+     * @param array<string, string|object> $cookieParams
      */
     #[DataProviderExternal(ApplicationProvider::class, 'cookies')]
     public function testReturnCookiesForValidationAndSignature(

@@ -21,9 +21,7 @@ final class RequestProvider
      * Each test case includes the resolved IP, the 'X-Forwarded-For' header value, the scheme, trusted hosts, and
      * expected results for IP and secure connection.
      *
-     * @return array test data with resolved IP, 'X-Forwarded-For' header, scheme, trusted hosts, and expected checks.
-     *
-     * @phpstan-return array<string, array{string, string, string, array<string>, string, string, bool}>
+     * @return array<string, array{string, string, string, array<string>, string, string, bool}>
      */
     public static function alreadyResolvedIp(): array
     {
@@ -63,9 +61,7 @@ final class RequestProvider
      *
      * Each test case includes the content type, the raw body string, and the expected parsed result as an array.
      *
-     * @return array test data with content type, raw body, and expected parsed parameters.
-     *
-     * @phpstan-return array<string, array{string, string, array<string, int|string>}>
+     * @return array<string, array{string, string, array<string, int|string>}>
      */
     public static function getBodyParams(): array
     {
@@ -111,9 +107,7 @@ final class RequestProvider
      * Each test case includes the server parameters and the expected host info array with the full host info string
      * and the host name.
      *
-     * @return array test data with server parameters and expected host info results.
-     *
-     * @phpstan-return array<int, array{array<string, mixed>|array<string, string>, array{string|null, string|null}}>
+     * @return array<int, array{array<string, mixed>|array<string, string>, array{string|null, string|null}}>
      */
     public static function getHostInfo(): array
     {
@@ -231,9 +225,7 @@ final class RequestProvider
      * Each test case includes the server parameters and the expected boolean result indicating whether the request
      * should be recognized as AJAX.
      *
-     * @return array test data with server parameters and expected AJAX detection results.
-     *
-     * @phpstan-return array<array{array<string, string>, bool}>
+     * @return array<array{array<string, string>, bool}>
      */
     public static function getIsAjax(): array
     {
@@ -261,9 +253,7 @@ final class RequestProvider
      * Each test case includes the server parameters and the expected boolean result indicating whether the request
      * should be recognized as PJAX.
      *
-     * @return array test data with server parameters and expected PJAX detection results.
-     *
-     * @phpstan-return array<array{array<string, string>, bool}>
+     * @return array<array{array<string, string>, bool}>
      */
     public static function getIsPjax(): array
     {
@@ -290,9 +280,7 @@ final class RequestProvider
      *
      * Each test case includes the server parameters array and the expected HTTP method string result.
      *
-     * @return array test data with server parameters and expected HTTP method results.
-     *
-     * @phpstan-return array<array{array<string, string>, string}>
+     * @return array<array{array<string, string>, string}>
      */
     public static function getMethod(): array
     {
@@ -320,9 +308,7 @@ final class RequestProvider
      *
      * Each test case consists of the input query string and the expected normalized query string result.
      *
-     * @return array test data with input and expected normalized query strings.
-     *
-     * @phpstan-return array<string, array{string, string}>
+     * @return array<string, array{string, string}>
      */
     public static function getQueryString(): array
     {
@@ -362,9 +348,7 @@ final class RequestProvider
      *
      * Each test case consists of the input URL and the expected normalized URL result.
      *
-     * @return array test data with input and expected normalized URLs.
-     *
-     * @phpstan-return array<string, array{string, string}>
+     * @return array<string, array{string, string}>
      */
     public static function getUrl(): array
     {
@@ -393,9 +377,7 @@ final class RequestProvider
      *
      * Each test case consists of the server parameters and the expected resolved user IP address.
      *
-     * @return array test data with server parameters and expected user IP addresses.
-     *
-     * @phpstan-return array<array{array<string, string>, string}>
+     * @return array<array{array<string, string>, string}>
      */
     public static function getUserIP(): array
     {
@@ -541,9 +523,7 @@ final class RequestProvider
      *
      * Each test case consists of the server parameters and the expected resolved user IP address.
      *
-     * @return array test data with server parameters and expected user IP addresses.
-     *
-     * @phpstan-return array<array{array<string, string>, string}>
+     * @return array<array{array<string, string>, string}>
      */
     public static function getUserIPWithoutTrustedHost(): array
     {
@@ -567,9 +547,7 @@ final class RequestProvider
      *
      * Each test case consists of the base64-encoded credentials string and the expected username and password values.
      *
-     * @return array test data with base64-encoded credentials and expected username/password pairs.
-     *
-     * @phpstan-return array<array{string, array{false|string|null, string|null}}>
+     * @return array<array{string, array{false|string|null, string|null}}>
      */
     public static function httpAuthorizationHeaders(): array
     {
@@ -643,9 +621,7 @@ final class RequestProvider
      * Each test case consists of the server parameters array and the expected boolean indicating whether the connection
      * should be considered secure.
      *
-     * @return array test data with server parameters and expected secure connection boolean.
-     *
-     * @phpstan-return array<array{array<string, int|string>, bool}>
+     * @return array<array{array<string, int|string>, bool}>
      */
     public static function isSecureServer(): array
     {
@@ -812,9 +788,7 @@ final class RequestProvider
      * Each test case consists of the server parameters and the expected boolean indicating whether the connection
      * should be considered secure.
      *
-     * @return array test data with server parameters and expected secure connection boolean.
-     *
-     * @phpstan-return array<array{array<string, string>, bool}>
+     * @return array<array{array<string, string>, bool}>
      */
     public static function isSecureServerWithoutTrustedHost(): array
     {
@@ -839,9 +813,7 @@ final class RequestProvider
      * Each test case consists of the remote address, the Forwarded header string, the expected host info, and the
      * expected user IP after parsing.
      *
-     * @return array test data with remote address, Forwarded header, expected host info, and expected user IP.
-     *
-     * @phpstan-return array<array{string, string, string, string}>
+     * @return array<array{string, string, string, string}>
      */
     public static function parseForwardedHeader(): array
     {
@@ -901,12 +873,9 @@ final class RequestProvider
      * Each test case includes the remote address, the 'X-Forwarded-For' header value, optional IP headers, the list of
      * trusted hosts, and the expected resolved user IP address.
      *
-     * @return array test data with remote address, 'X-Forwarded-For', optional IP headers, trusted hosts, and expected
-     * user IP.
-     *
-     * @phpstan-return array<
+     * @return array<
      *     string,
-     *     array{string, string, array<array-key, string>|null, array<array-key, string>, string}
+     *     array{string, string, array<string>|null, array<string>, string}
      * >
      */
     public static function trustedHostAndInjectedXForwardedFor(): array
@@ -1041,9 +1010,7 @@ final class RequestProvider
      * Each test case includes the remote address, the server port, the 'X-Forwarded-Port' value, the list of trusted
      * hosts, and the expected resolved port.
      *
-     * @return array test data with remote address, server port, 'X-Forwarded-Port', trusted hosts, and expected port.
-     *
-     * @phpstan-return array<string, array{string, int, int|null, array<array-key, string>|null, int}>
+     * @return array<string, array{string, int, int|null, array<string>|null, int}>
      */
     public static function trustedHostAndXForwardedPort(): array
     {

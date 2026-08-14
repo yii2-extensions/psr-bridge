@@ -19,7 +19,7 @@ final class UrlManagerSpy extends UrlManager
     /**
      * Overrides the parent method to count calls without performing actual parsing.
      *
-     * @phpstan-return mixed[]|false
+     * @return mixed[]|false
      */
     public function parseRequest($request)
     {
