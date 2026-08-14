@@ -101,7 +101,7 @@ final class ServerRequestCreator
             ->withQueryParams($_GET);
 
         if ($_FILES !== []) {
-            /** @var non-empty-array<UploadedFileInterface|UnknownFileInput> $files */
+            /** @var non-empty-array<UnknownFileInput|UploadedFileInterface> $files */
             $files = $_FILES;
 
             $uploadedFileCreator = new UploadedFileCreator($this->uploadedFileFactory, $this->streamFactory);
