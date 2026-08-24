@@ -16,7 +16,6 @@ use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function array_filter;
-use function is_array;
 use function ob_get_level;
 use function ob_start;
 use function restore_error_handler;
@@ -297,14 +296,10 @@ final class ApplicationErrorHandlerTest extends TestCase
         $expectedCategory = Exception::class;
 
         foreach ($logMessages as $logMessage) {
-            if (
-                is_array($logMessage)
-                && isset($logMessage[0], $logMessage[1], $logMessage[2])
-                && $logMessage[1] === Logger::LEVEL_ERROR
+            if ($logMessage[1] === Logger::LEVEL_ERROR
                 && $logMessage[0] instanceof Exception
                 && $logMessage[2] === $expectedCategory
-                && str_contains($logMessage[0]->getMessage(), 'Exception error message.')
-            ) {
+                && str_contains($logMessage[0]->getMessage(), 'Exception error message.')) {
                 $exceptionLogFound = true;
 
                 break;
