@@ -295,10 +295,22 @@ final class ApplicationMemoryTest extends TestCase
 
         $app->setMemoryLimit($memoryLimit);
 
-        self::assertSame($memoryLimit, $app->getMemoryLimit(), $assertionMessage);
+        $limitBeforeRequest = $app->getMemoryLimit();
+
+        self::assertSame(
+            $memoryLimit,
+            $limitBeforeRequest,
+            $assertionMessage,
+        );
 
         $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 
-        self::assertSame($memoryLimit, $app->getMemoryLimit(), $assertionMessage);
+        $limitAfterRequest = $app->getMemoryLimit();
+
+        self::assertSame(
+            $memoryLimit,
+            $limitAfterRequest,
+            'Explicit limit must survive request handling.',
+        );
     }
 }
