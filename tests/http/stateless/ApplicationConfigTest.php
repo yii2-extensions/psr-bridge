@@ -28,7 +28,7 @@ final class ApplicationConfigTest extends TestCase
      */
     public function testBootstrapContainerAppliesDefinitionsBeforeFirstRequest(): void
     {
-        $app = ApplicationFactory::stateless(
+        ApplicationFactory::stateless(
             [
                 'container' => [
                     'definitions' => [

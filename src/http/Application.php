@@ -17,8 +17,10 @@ use function fnmatch;
 use function gc_collect_cycles;
 use function ini_get;
 use function is_array;
+use function is_string;
 use function memory_get_usage;
 use function method_exists;
+use function preg_match;
 use function sscanf;
 use function strtoupper;
 
@@ -84,9 +86,12 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public bool $syncCookieValidation = true;
 
     /**
-     * Controls whether session lifecycle hooks run for each request.
+     * Controls whether the session is opened before bootstrap and closed after it for each request.
      *
-     * Set to `false` to skip bridge session open/finalize hooks for each request.
+     * The bridge always isolates PHP session state between requests through {@see syncSessionIdFromRequestCookies()}:
+     * it closes a session left active and applies the session `ID` from the request cookie (or an empty `ID` when the
+     * cookie is missing or malformed), so a lazily opened session belongs to the current visitor. Set to `false` to
+     * skip only the eager {@see openSessionFromRequestCookies()} and {@see finalizeSessionState()} hooks.
      */
     public bool $useSession = true;
 
@@ -347,17 +352,13 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Opens the session using the session ID from request cookies.
+     * Opens the session before bootstrap when {@see useSession} is `true`.
+     *
+     * Runs after {@see syncSessionIdFromRequestCookies()}, so the session resumes the `ID` from the request cookie or
+     * starts with a new one.
      */
     protected function openSessionFromRequestCookies(): void
     {
-        // @codeCoverageIgnoreStart
-        $this->session->close();
-        // @codeCoverageIgnoreEnd
-
-        $sessionId = $this->request->getCookies()->get($this->session->getName())->value ?? '';
-        $this->session->setId($sessionId);
-
         // @codeCoverageIgnoreStart
         $this->session->open();
         // @codeCoverageIgnoreEnd
@@ -394,6 +395,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         }
 
         try {
+            $this->syncSessionIdFromRequestCookies();
+
             if ($this->useSession) {
                 $this->openSessionFromRequestCookies();
             }
@@ -447,6 +450,33 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     {
         $this->response->cookieValidationKey = $this->request->cookieValidationKey;
         $this->response->enableCookieValidation = $this->request->enableCookieValidation;
+    }
+
+    /**
+     * Isolates PHP session state for the current request without opening the session.
+     *
+     * Runs for every request, regardless of {@see useSession}: closes a session left active by a previous request and
+     * applies the session `ID` from the request cookie, or an empty `ID` when the request carries no session cookie, so
+     * a later `session_start()` resumes the current visitor's session or creates a new one. Request cookies are read
+     * only when the session cookie is present. A malformed cookie value (not a `string`, or not accepted by PHP as a
+     * session `ID`) is discarded and an empty `ID` is applied instead, so the session starts with a new `ID`.
+     */
+    protected function syncSessionIdFromRequestCookies(): void
+    {
+        $this->session->close();
+
+        $sessionName = $this->session->getName();
+        $sessionId = '';
+
+        if (isset($this->request->getPsr7Request()->getCookieParams()[$sessionName])) {
+            $cookieValue = $this->request->getCookies()->get($sessionName)->value ?? '';
+
+            if ($this->isValidSessionId($cookieValue)) {
+                $sessionId = $cookieValue;
+            }
+        }
+
+        $this->session->setId($sessionId);
     }
 
     /**
@@ -583,6 +613,19 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         }
 
         return false;
+    }
+
+    /**
+     * Checks whether a value is a session `ID` that PHP accepts: 1 to 256 characters from `A-Z`, `a-z`, `0-9`, `,` and
+     * `-`, independent of `session.sid_length` and `session.sid_bits_per_character`.
+     *
+     * @param mixed $id Value to check.
+     *
+     * @return bool Whether the value can be passed to `session_id()` without `session_start()` rejecting it.
+     */
+    private function isValidSessionId(mixed $id): bool
+    {
+        return is_string($id) && preg_match('/^[A-Za-z0-9,-]{1,256}$/D', $id) === 1;
     }
 
     /**

@@ -207,7 +207,10 @@ $app->resetUploadedFiles = true;
 
 Use non-default values only for advanced scenarios:
 
-- `useSession=false` skips bridge session hooks only.
+- `useSession=false` skips only the eager session open/close hooks around bootstrap. Session IDs are still
+  synchronized from the request cookie on every request and stale session state is closed, so lazily opened
+  sessions remain per visitor. Session cookie values that PHP rejects as a session ID are discarded and a new ID is
+  generated; to also replace well-formed but unknown IDs, set `useStrictMode => true` on the `session` component.
 - `syncCookieValidation=false` skips cookie validation synchronization between request and response.
 - Keep `resetUploadedFiles=true` to preserve per-request uploaded-file isolation in worker deployments.
 

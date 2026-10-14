@@ -40,6 +40,7 @@ final class ApplicationHookTest extends TestCase
                 'prepareErrorHandler',
                 'attachPsrRequest',
                 'syncCookieValidationState',
+                'syncSessionIdFromRequestCookies',
                 'openSessionFromRequestCookies',
                 'bootstrap',
                 'finalizeSessionState',
@@ -91,6 +92,7 @@ final class ApplicationHookTest extends TestCase
                 'prepareErrorHandler',
                 'attachPsrRequest',
                 'syncCookieValidationState',
+                'syncSessionIdFromRequestCookies',
                 'openSessionFromRequestCookies',
                 'bootstrap',
                 'finalizeSessionState',
@@ -122,6 +124,10 @@ final class ApplicationHookTest extends TestCase
         self::assertTrue(
             $app->syncCookieValidationStateCalled,
             "Overridden 'syncCookieValidationState()' hook should be invoked by 'prepareForRequest()'.",
+        );
+        self::assertTrue(
+            $app->syncSessionIdFromRequestCookiesCalled,
+            "Overridden 'syncSessionIdFromRequestCookies()' hook should be invoked by 'prepareForRequest()'.",
         );
         self::assertTrue(
             $app->openSessionFromRequestCookiesCalled,
@@ -157,6 +163,10 @@ final class ApplicationHookTest extends TestCase
             $app->finalizeSessionStateCalled,
             "'finalizeSessionState()' should not be invoked when 'useSession' is disabled.",
         );
+        self::assertTrue(
+            $app->syncSessionIdFromRequestCookiesCalled,
+            'Session state must be isolated regardless of the flag.',
+        );
         self::assertSame(
             [
                 'reinitializeApplication',
@@ -165,6 +175,7 @@ final class ApplicationHookTest extends TestCase
                 'prepareErrorHandler',
                 'attachPsrRequest',
                 'syncCookieValidationState',
+                'syncSessionIdFromRequestCookies',
                 'bootstrap',
                 'terminate',
             ],
@@ -196,6 +207,7 @@ final class ApplicationHookTest extends TestCase
                 'resetRequestState',
                 'prepareErrorHandler',
                 'attachPsrRequest',
+                'syncSessionIdFromRequestCookies',
                 'openSessionFromRequestCookies',
                 'bootstrap',
                 'finalizeSessionState',
