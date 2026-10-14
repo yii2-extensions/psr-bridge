@@ -67,6 +67,11 @@ final class ApplicationRest extends Application
     public bool $syncCookieValidationStateCalled = false;
 
     /**
+     * Indicates whether `syncSessionIdFromRequestCookies()` was invoked.
+     */
+    public bool $syncSessionIdFromRequestCookiesCalled = false;
+
+    /**
      * Indicates whether `terminate()` was invoked.
      */
     public bool $terminateCalled = false;
@@ -153,6 +158,14 @@ final class ApplicationRest extends Application
         $this->syncCookieValidationStateCalled = true;
 
         parent::syncCookieValidationState();
+    }
+
+    protected function syncSessionIdFromRequestCookies(): void
+    {
+        $this->hookCallLog[] = 'syncSessionIdFromRequestCookies';
+        $this->syncSessionIdFromRequestCookiesCalled = true;
+
+        parent::syncSessionIdFromRequestCookies();
     }
 
     protected function terminate(Response $response): ResponseInterface

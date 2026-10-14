@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPUnit\Framework\Attributes\Group;
+use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
@@ -12,9 +13,12 @@ use yii2\extensions\psrbridge\tests\support\stub\SessionBootstrap;
 
 use function array_filter;
 use function array_key_exists;
+use function explode;
 use function preg_quote;
 use function session_name;
 use function str_starts_with;
+use function strlen;
+use function substr;
 use function uniqid;
 
 /**
@@ -688,5 +692,289 @@ final class ApplicationSessionTest extends TestCase
             $response->getBody()->getContents(),
             "Response 'body' should indicate 'guest' status and 'null' identity for a new session.",
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testUseSessionDisabledAppliesRequestCookieSessionIdWithoutStartingSession(): void
+    {
+        SessionBootstrap::$active = false;
+        SessionBootstrap::$id = '';
+
+        $sessionName = $this->sessionName();
+
+        $app = ApplicationFactory::stateless(
+            [
+                'bootstrap' => [SessionBootstrap::class],
+                'useSession' => false,
+            ],
+        );
+
+        $response = $app->handle($this->createRequest('site/index', [$sessionName => 'cookie-only-session']));
+
+        $this->assertSiteIndexJsonResponse($response);
+        self::assertFalse(
+            SessionBootstrap::$active,
+            'Session must stay closed during bootstrap.',
+        );
+        self::assertSame(
+            'cookie-only-session',
+            SessionBootstrap::$id,
+            'Session `ID` must come from the request cookie.',
+        );
+        self::assertSame(
+            '',
+            self::extractSessionId($response, $sessionName),
+            'No session cookie must be emitted.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testUseSessionDisabledClosesSessionLeftActiveByPreviousRequest(): void
+    {
+        $sessionName = $this->sessionName();
+
+        $app = ApplicationFactory::stateless(['useSession' => false]);
+
+        $first = $app->handle($this->createRequest('site/setsession'));
+
+        $firstId = self::extractSessionId($first, $sessionName);
+
+        // a session opened after the response was converted (for example, by an after-send handler) stays active.
+        $app->session->open();
+
+        self::assertTrue(
+            $app->session->getIsActive(),
+            'Precondition: session must be active between requests.',
+        );
+
+        $second = $app->handle($this->createRequest('site/getsession'));
+
+        self::assertSame(
+            200,
+            $second->getStatusCode(),
+            "Expected HTTP '200' for route 'site/getsession'.",
+        );
+        self::assertNotSame(
+            $firstId,
+            self::extractSessionId($second, $sessionName),
+            'Session `ID` of the previous visitor must not be reused.',
+        );
+        self::assertSame(
+            ['testValue' => null],
+            Json::decode($second->getBody()->getContents()),
+            'Session data of the previous visitor must not be visible.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testUseSessionDisabledDoesNotRequireCookieValidationKeyWithoutSessionCookie(): void
+    {
+        // stateless REST setup documented in the README: request cookie validation keeps Yii's default (`true`).
+        $app = ApplicationFactory::stateless(
+            [
+                'components' => [
+                    'request' => [
+                        'cookieValidationKey' => '',
+                        'enableCookieValidation' => true,
+                    ],
+                ],
+                'syncCookieValidation' => false,
+                'useSession' => false,
+            ],
+        );
+
+        $this->assertSiteIndexJsonResponse($app->handle($this->createRequest('site/index')));
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testUseSessionDisabledDoesNotStartSessionWithoutSessionConsumer(): void
+    {
+        $sessionName = $this->sessionName();
+
+        $app = ApplicationFactory::stateless(
+            [
+                'bootstrap' => [SessionBootstrap::class],
+                'useSession' => false,
+            ],
+        );
+
+        // a previous visitor leaves a session `ID` behind in PHP's session module.
+        $first = $app->handle($this->createRequest('site/setsession'));
+
+        self::assertNotSame(
+            '',
+            self::extractSessionId($first, $sessionName),
+            'Precondition: previous visitor must receive a session.',
+        );
+
+        SessionBootstrap::$active = true;
+        SessionBootstrap::$id = 'not-observed';
+
+        $second = $app->handle($this->createRequest('site/index'));
+
+        $this->assertSiteIndexJsonResponse($second);
+        self::assertFalse(
+            SessionBootstrap::$active,
+            'Session must stay closed during bootstrap.',
+        );
+        self::assertSame(
+            '',
+            SessionBootstrap::$id,
+            'Session `ID` of the previous visitor must be cleared.',
+        );
+        self::assertFalse(
+            $app->session->getIsActive(),
+            'Session must stay closed after the request.',
+        );
+        self::assertSame(
+            '',
+            self::extractSessionId($second, $sessionName),
+            'No session cookie must be emitted.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testUseSessionDisabledIsolatesLazySessionsBetweenRequestsWithoutCookie(): void
+    {
+        $sessionName = $this->sessionName();
+
+        $app = ApplicationFactory::stateless(['useSession' => false]);
+
+        $first = $app->handle($this->createRequest('site/setsession'));
+
+        $firstId = self::extractSessionId($first, $sessionName);
+
+        self::assertNotSame(
+            '',
+            $firstId,
+            'First visitor must receive a session cookie.',
+        );
+
+        $second = $app->handle($this->createRequest('site/getsession'));
+
+        $secondId = self::extractSessionId($second, $sessionName);
+
+        self::assertNotSame(
+            '',
+            $secondId,
+            'Second visitor must receive a session cookie.',
+        );
+        self::assertNotSame(
+            $firstId,
+            $secondId,
+            'Second visitor must receive a new session `ID`.',
+        );
+        self::assertSame(
+            ['testValue' => null],
+            Json::decode($second->getBody()->getContents()),
+            'Session data of the first visitor must not be visible.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testUseSessionDisabledResumesLazySessionFromRequestCookie(): void
+    {
+        $sessionName = $this->sessionName();
+
+        $sessionId = 'lazy-session-' . uniqid();
+
+        $app = ApplicationFactory::stateless(['useSession' => false]);
+
+        $first = $app->handle($this->createRequest('site/setsession', [$sessionName => $sessionId]));
+
+        self::assertSame(
+            $sessionId,
+            self::extractSessionId($first, $sessionName),
+            'Lazy session must use the `ID` from the request cookie.',
+        );
+
+        // an unrelated visitor without a cookie in between must not affect the first visitor.
+        $other = $app->handle($this->createRequest('site/getsession'));
+
+        self::assertNotSame(
+            $sessionId,
+            self::extractSessionId($other, $sessionName),
+            'Visitor without a cookie must not reuse the `ID`.',
+        );
+
+        $returning = $app->handle($this->createRequest('site/getsession', [$sessionName => $sessionId]));
+
+        self::assertSame(
+            $sessionId,
+            self::extractSessionId($returning, $sessionName),
+            'Returning visitor must keep the session `ID`.',
+        );
+        self::assertSame(
+            ['testValue' => 'test-value'],
+            Json::decode($returning->getBody()->getContents()),
+            'Returning visitor must see the stored session data.',
+        );
+    }
+
+    /**
+     * Builds a `GET` request for the route, carrying cookies only in the PSR-7 request (`$_COOKIE` stays empty, as
+     * under RoadRunner), so PHP's native session cookie handling cannot supply the session `ID`.
+     *
+     * @param string $route Route to request.
+     * @param array<string, string> $cookies Request cookies.
+     *
+     * @return ServerRequestInterface PSR-7 server request instance.
+     */
+    private function createRequest(string $route, array $cookies = []): ServerRequestInterface
+    {
+        $_COOKIE = [];
+        $_SERVER = [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => $route,
+        ];
+
+        return HelperFactory::createServerRequestCreator()->createFromGlobals()->withCookieParams($cookies);
+    }
+
+    /**
+     * Returns the session `ID` emitted in the `Set-Cookie` header, or an empty string when none is emitted.
+     *
+     * @param ResponseInterface $response PSR-7 response to inspect.
+     * @param string $sessionName Session cookie name.
+     *
+     * @return string Session `ID` from the session cookie.
+     */
+    private static function extractSessionId(ResponseInterface $response, string $sessionName): string
+    {
+        foreach ($response->getHeader('Set-Cookie') as $cookie) {
+            if (str_starts_with($cookie, "{$sessionName}=")) {
+                return explode(';', substr($cookie, strlen($sessionName) + 1))[0];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns the session name used by PHP's session module.
+     */
+    private function sessionName(): string
+    {
+        $sessionName = session_name();
+
+        if ($sessionName === false) {
+            self::fail(
+                "Failed to retrieve session name using 'session_name()'.",
+            );
+        }
+
+        return $sessionName;
     }
 }

@@ -151,11 +151,15 @@ In long-running workers, keep `Application` lifecycle defaults unless you have a
 
 Define lifecycle flags before `run()` (via config or property setters).
 
+`useSession=false` skips only the eager session open/close hooks around bootstrap. On every request the bridge still
+closes a session left active by the previous request and applies the session ID from the request cookie, so sessions
+opened lazily (`user`, flash messages, `Yii::$app->session`) stay per visitor.
+
 ```php
 $config = [
     'class' => Application::class,
-    // disable session and cookie validation sync for stateless REST APIs.
-    // keep resetUploadedFiles=true (default) for request isolation.
+    // skip eager session open/close and cookie validation sync for stateless REST APIs.
+    // session state is still isolated per request; keep resetUploadedFiles=true (default) for request isolation.
     'useSession' => false,
     'syncCookieValidation' => false,
     'resetUploadedFiles' => true,

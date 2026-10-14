@@ -232,7 +232,10 @@ $app->resetUploadedFiles = true;
 $app->persistentComponents = ['db', 'cache'];
 ```
 
-- `useSession`: keep `true` unless the application is strictly stateless. Setting it to `false` skips bridge session open/finalize hooks; custom code may still open sessions.
+- `useSession`: keep `true` unless the application is strictly stateless. Setting it to `false` skips only the eager
+  session open/close hooks around bootstrap. The bridge still closes a session left active by the previous request
+  and applies the session ID from the request cookie on every request, so a session opened lazily by your code
+  (`user`, flash messages, `Yii::$app->session`) stays per visitor and never resumes another visitor's session.
 - `syncCookieValidation`: keep `true` in most cases. Setting it to `false` disables request-to-response synchronization of cookie validation settings and can break login/identity flows.
 - `resetUploadedFiles`: keep `true` in long-running workers to preserve per-request upload isolation.
 - `persistentComponents`: list of components to keep alive between requests (default: `['db', 'cache']`). Only include components proven to be request-safe.
