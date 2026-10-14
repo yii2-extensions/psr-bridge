@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{Group, TestWith};
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use yii\base\InvalidConfigException;
 use yii\helpers\Json;
@@ -16,6 +16,7 @@ use function array_key_exists;
 use function explode;
 use function preg_quote;
 use function session_name;
+use function str_repeat;
 use function str_starts_with;
 use function strlen;
 use function substr;
@@ -27,6 +28,33 @@ use function uniqid;
 #[Group('http')]
 final class ApplicationSessionTest extends TestCase
 {
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith(['short', true])]
+    #[TestWith(['short', false])]
+    #[TestWith(['0123456789abcdefABCDEF-ghijklmno', true])]
+    #[TestWith(['0123456789abcdefABCDEF-ghijklmno', false])]
+    public function testAppliesWellFormedSessionIdFromRequestCookie(string $sessionId, bool $useSession): void
+    {
+        $sessionName = $this->sessionName();
+
+        $app = ApplicationFactory::stateless(['useSession' => $useSession]);
+
+        $response = $app->handle($this->createRequest('site/setsession', [$sessionName => $sessionId]));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/setsession'.",
+        );
+        self::assertSame(
+            $sessionId,
+            self::extractSessionId($response, $sessionName),
+            'Session `ID` must come from the request cookie.',
+        );
+    }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
@@ -226,6 +254,38 @@ final class ApplicationSessionTest extends TestCase
             $imageContent,
             "Captcha image content should start with PNG header for '{$url}'.",
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith(['../../etc/passwd', true])]
+    #[TestWith(['../../etc/passwd', false])]
+    #[TestWith(['abc$%^', true])]
+    #[TestWith(['abc$%^', false])]
+    public function testDiscardsMalformedSessionIdFromRequestCookie(string $sessionId, bool $useSession): void
+    {
+        $this->assertCookieSessionIdIsDiscarded($sessionId, $useSession);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith([true])]
+    #[TestWith([false])]
+    public function testDiscardsNonStringSessionIdFromRequestCookie(bool $useSession): void
+    {
+        $this->assertCookieSessionIdIsDiscarded(['injected'], $useSession);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith([true])]
+    #[TestWith([false])]
+    public function testDiscardsSessionIdLongerThanPhpLimitFromRequestCookie(bool $useSession): void
+    {
+        $this->assertCookieSessionIdIsDiscarded(str_repeat('a', 257), $useSession);
     }
 
     /**
@@ -733,6 +793,38 @@ final class ApplicationSessionTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testUseSessionDisabledAppliesSessionIdOfPhpMaximumLengthWithoutStartingSession(): void
+    {
+        SessionBootstrap::$active = true;
+        SessionBootstrap::$id = '';
+
+        // 256 characters from PHP's whole alphabet; the `files` handler cannot store such an `ID`, so it stays closed.
+        $sessionId = str_repeat('Az09,-', 42) . 'abcd';
+
+        $app = ApplicationFactory::stateless(
+            [
+                'bootstrap' => [SessionBootstrap::class],
+                'useSession' => false,
+            ],
+        );
+
+        $response = $app->handle($this->createRequest('site/index', [$this->sessionName() => $sessionId]));
+
+        $this->assertSiteIndexJsonResponse($response);
+        self::assertFalse(
+            SessionBootstrap::$active,
+            'Session must stay closed during bootstrap.',
+        );
+        self::assertSame(
+            $sessionId,
+            SessionBootstrap::$id,
+            'Session `ID` must come from the request cookie.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testUseSessionDisabledClosesSessionLeftActiveByPreviousRequest(): void
     {
         $sessionName = $this->sessionName();
@@ -767,6 +859,38 @@ final class ApplicationSessionTest extends TestCase
             ['testValue' => null],
             Json::decode($second->getBody()->getContents()),
             'Session data of the previous visitor must not be visible.',
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    #[TestWith(['../../etc/passwd'])]
+    #[TestWith(['abc$%^'])]
+    #[TestWith(["trailing-newline\n"])]
+    public function testUseSessionDisabledDiscardsMalformedSessionIdBeforeBootstrap(string $sessionId): void
+    {
+        SessionBootstrap::$active = true;
+        SessionBootstrap::$id = 'not-observed';
+
+        $app = ApplicationFactory::stateless(
+            [
+                'bootstrap' => [SessionBootstrap::class],
+                'useSession' => false,
+            ],
+        );
+
+        $response = $app->handle($this->createRequest('site/index', [$this->sessionName() => $sessionId]));
+
+        $this->assertSiteIndexJsonResponse($response);
+        self::assertFalse(
+            SessionBootstrap::$active,
+            'Session must stay closed during bootstrap.',
+        );
+        self::assertSame(
+            '',
+            SessionBootstrap::$id,
+            'Empty session `ID` must be applied instead.',
         );
     }
 
@@ -924,11 +1048,47 @@ final class ApplicationSessionTest extends TestCase
     }
 
     /**
+     * Asserts that a request carrying the session cookie value receives a new, well-formed session `ID` instead.
+     *
+     * @param mixed $sessionId Session cookie value sent with the request.
+     * @param bool $useSession Whether the bridge opens the session before bootstrap.
+     *
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    private function assertCookieSessionIdIsDiscarded(mixed $sessionId, bool $useSession): void
+    {
+        $sessionName = $this->sessionName();
+
+        $app = ApplicationFactory::stateless(['useSession' => $useSession]);
+
+        $response = $app->handle($this->createRequest('site/setsession', [$sessionName => $sessionId]));
+
+        self::assertSame(
+            200,
+            $response->getStatusCode(),
+            "Expected HTTP '200' for route 'site/setsession'.",
+        );
+
+        $emittedId = self::extractSessionId($response, $sessionName);
+
+        self::assertNotSame(
+            $sessionId,
+            $emittedId,
+            'Cookie value must not be used as the session `ID`.',
+        );
+        self::assertMatchesRegularExpression(
+            '/^[A-Za-z0-9,-]+$/',
+            $emittedId,
+            'A new, well-formed session `ID` must be emitted.',
+        );
+    }
+
+    /**
      * Builds a `GET` request for the route, carrying cookies only in the PSR-7 request (`$_COOKIE` stays empty, as
      * under RoadRunner), so PHP's native session cookie handling cannot supply the session `ID`.
      *
      * @param string $route Route to request.
-     * @param array<string, string> $cookies Request cookies.
+     * @param array<string, mixed> $cookies Request cookies.
      *
      * @return ServerRequestInterface PSR-7 server request instance.
      */

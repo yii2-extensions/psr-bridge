@@ -236,6 +236,13 @@ $app->persistentComponents = ['db', 'cache'];
   session open/close hooks around bootstrap. The bridge still closes a session left active by the previous request
   and applies the session ID from the request cookie on every request, so a session opened lazily by your code
   (`user`, flash messages, `Yii::$app->session`) stays per visitor and never resumes another visitor's session.
+  A session cookie value that PHP rejects as a session ID (characters outside `A-Z`, `a-z`, `0-9`, `,` and `-`, or
+  more than 256 characters) is discarded and a new session ID is generated, regardless of `useSession`.
+- Session fixation: the bridge applies any well-formed session ID from the request cookie, even an unknown one. Set
+  `useStrictMode => true` on the `session` component to replace unknown IDs with new ones (`yii\web\Session` relies
+  on PHP's `session.use_strict_mode`, `yii\web\DbSession` and `yii\web\CacheSession` check their storage), keep
+  cookie validation enabled so the session cookie is signed, and let `yii\web\User` regenerate the session ID on
+  login, which it does whenever `enableSession` is `true` (default).
 - `syncCookieValidation`: keep `true` in most cases. Setting it to `false` disables request-to-response synchronization of cookie validation settings and can break login/identity flows.
 - `resetUploadedFiles`: keep `true` in long-running workers to preserve per-request upload isolation.
 - `persistentComponents`: list of components to keep alive between requests (default: `['db', 'cache']`). Only include components proven to be request-safe.

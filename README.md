@@ -155,6 +155,14 @@ Define lifecycle flags before `run()` (via config or property setters).
 closes a session left active by the previous request and applies the session ID from the request cookie, so sessions
 opened lazily (`user`, flash messages, `Yii::$app->session`) stay per visitor.
 
+> [!NOTE]
+> The bridge discards a session cookie value that PHP rejects as a session ID (characters outside `A-Z`, `a-z`, `0-9`,
+> `,` and `-`, or more than 256 characters) and starts a new session instead. A well-formed but unknown ID is still
+> applied: set `useStrictMode => true` on the `session` component to replace it with a new one (`yii\web\Session`
+> relies on PHP's `session.use_strict_mode`, `yii\web\DbSession` and `yii\web\CacheSession` check their storage).
+> Keep cookie validation enabled so the session cookie is signed, and let `yii\web\User` regenerate the session ID on
+> login, which it does whenever `enableSession` is `true` (default).
+
 ```php
 $config = [
     'class' => Application::class,
