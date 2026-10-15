@@ -51,12 +51,16 @@ Long-running PHP workers for higher throughput and lower latency.
 
 ### Installation
 
-Requires PHP 8.1+, `filter`, `mbstring`, and Yii `2.0.55+` or `22.x` as allowed by `composer.json`. Install a PSR-7/PSR-17
-implementation alongside the bridge; the example uses HttpSoft:
+Requires PHP 8.3+, `filter`, `mbstring`, and Yii `2.0.55+` or `22.x` as allowed by `composer.json`. Install a PSR-7/PSR-17
+implementation alongside the bridge; the example uses HttpSoft. This example requires the unreleased 0.4
+`finalize()` lifecycle, so select `dev-main` explicitly:
 
 ```bash
-composer require yii2-extensions/psr-bridge httpsoft/http-message
+composer require yii2-extensions/psr-bridge:dev-main httpsoft/http-message
 ```
+
+`dev-main` is a moving development branch, not a stable 0.4 release. Review and retain the resolved commit in
+`composer.lock`; the stable 0.3 release does not provide `Application::finalize()`. See [installation](docs/installation.md).
 
 ### Quick start
 
@@ -141,7 +145,7 @@ If the hosted sources are unavailable, use the repository guides and locally ava
 
 ## Package information
 
-[![PHP](https://img.shields.io/badge/%3E%3D8.1-777BB4.svg?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/releases/8.1/en.php)
+[![PHP](https://img.shields.io/badge/%3E%3D8.3-777BB4.svg?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/releases/8.3/en.php)
 [![Yii 2.0.55+](https://img.shields.io/badge/%3E%3D2.0.55-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/releases/tag/2.0.55)
 [![Yii 22.0.x](https://img.shields.io/badge/22.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/tree/22.0)
 [![Latest Stable Version](https://img.shields.io/packagist/v/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Stable)](https://packagist.org/packages/yii2-extensions/psr-bridge)

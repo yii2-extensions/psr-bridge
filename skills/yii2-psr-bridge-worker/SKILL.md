@@ -3,12 +3,12 @@ name: yii2-psr-bridge-worker
 description: Integrate yii2-extensions/psr-bridge in a Yii application or worker, including PSR-7 request binding, lazy session isolation, uploads, streaming responses, and post-emission finalization.
 license: BSD-3-Clause
 metadata:
-  guide: https://yii2-framework.github.io/docs/extensions/psr-bridge/
+    guide: https://yii2-framework.github.io/docs/extensions/psr-bridge/
 ---
 
 # Integrate the Yii PSR bridge
 
-Use `yii2\extensions\psrbridge` and match the installed revision. The bridge requires PHP 8.1+ and Yii
+Use `yii2\extensions\psrbridge` and match the installed revision. The bridge requires PHP 8.3+ and Yii
 `~2.0.55 || ^22.0@dev`; the selected framework may require a newer PHP version. Preserve Composer advisory
 blocking and audit the resolved dependencies. The default branch includes unreleased 0.4 changes, including
 session isolation correction #288; do not assume a stable install has them.

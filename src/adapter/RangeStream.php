@@ -242,9 +242,9 @@ final class RangeStream implements StreamInterface
      *
      * @param int $length Maximum number of bytes to read.
      *
-     * @throws RuntimeException when the length is negative, the stream is closed, or an underlying operation fails.
+     * @throws RuntimeException when the length is negative or an underlying operation fails.
      *
-     * @return string Bytes read, or empty `string` at the end of the range or when `$length` is `0`.
+     * @return string Bytes read, or empty `string` at EOF, when closed or detached, or when `$length` is `0`.
      */
     public function read(int $length): string
     {

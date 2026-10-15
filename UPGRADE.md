@@ -5,6 +5,21 @@
 Match this guide to the installed package revision. The session isolation correction was merged in
 `6e9b723` (#288); these main-branch changes do not imply that a stable `0.4.0` is already published.
 
+### Minimum PHP version
+
+Before: the package accepted PHP `>=8.1`.
+After: it requires PHP `>=8.3`; PHP 8.1 and 8.2 are no longer supported. Update the web, CLI, and worker runtimes,
+then resolve dependencies and verify the actual platform:
+
+```bash
+php --version
+composer update --with-all-dependencies
+composer check-platform-reqs
+composer audit
+```
+
+Run the application and package tests on PHP 8.3 or later. The Yii constraint remains `~2.0.55 || ^22.0@dev`.
+
 ### Minimum Yii version
 
 Before: `yiisoft/yii2` accepted `2.0.*@dev || ^22.0@dev`.

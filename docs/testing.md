@@ -12,8 +12,8 @@ composer check-dependencies
 `composer ecs` applies fixes; use the direct ECS check above for a read-only style check. PHPStan analyzes source
 and tests at the configured maximum level. PHPUnit fails on risky tests and warnings.
 
-CI runs the suite separately with Yii `2.0.55` (the minimum supported release) and `22.0.x-dev`. To repeat either
-resolution locally, use separate disposable checkouts so their dependencies and lock files cannot affect each other:
+CI runs PHP 8.3, 8.4, and 8.5 separately with Yii `2.0.55` (the minimum supported release) and `22.0.x-dev`. To repeat
+either resolution locally, use separate disposable checkouts so their dependencies and lock files cannot affect each other:
 
 ```bash
 composer update --with yiisoft/yii2:2.0.55 --with-all-dependencies
