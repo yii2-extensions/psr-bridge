@@ -50,10 +50,8 @@ handles the two aliases; the installer needs only its `.agents/skills/` installa
 
 1. **Installation:** the directory and frontmatter exist in the chosen client path.
 2. **Discovery:** open a fresh client session at the application root and check its skill list or picker.
-3. **Activation:** invoke the skill and verify the client loaded its body. Automatic selection is model-dependent;
-   reading `SKILL.md` manually is separate evidence.
-4. **Selective consultation:** use the relevant local guide, or the skill's direct published Markdown links, rather
-   than loading the entire documentation index.
+3. **Activation:** invoke the skill and verify the client loaded its body. Automatic selection is model-dependent; reading `SKILL.md` manually is separate evidence.
+4. **Selective consultation:** use the relevant local guide, or the skill's direct published Markdown links, rather than loading the entire documentation index.
 5. **Functional result:** test sequential visitors, missing/malformed cookies, upload reset, and successful/failed emission.
 
 `--list` verifies the installer's discovery only; it does not run Claude, Codex, or OpenCode. Application instructions
