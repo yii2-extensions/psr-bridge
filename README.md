@@ -30,6 +30,9 @@
     <em>Supporting traditional SAPI, RoadRunner, FrankenPHP, and worker-based architectures</em>
 </p>
 
+Run a Yii application with PSR-7 requests and responses, including long-running workers. The bridge provides a
+PSR-15 request handler, Yii request/response adapters, upload conversion, and a streaming SAPI emitter.
+
 ## Available deployment options
 
 ### High-Performance Worker Mode
@@ -48,151 +51,98 @@ Long-running PHP workers for higher throughput and lower latency.
 
 ### Installation
 
+Requires PHP 8.1+, `filter`, `mbstring`, and Yii `2.0.55+` or `22.x` as allowed by `composer.json`. Install a PSR-7/PSR-17
+implementation alongside the bridge; the example uses HttpSoft:
+
 ```bash
-composer require yii2-extensions/psr-bridge:^0.3
+composer require yii2-extensions/psr-bridge httpsoft/http-message
 ```
 
 ### Quick start
 
-#### Worker mode (FrankenPHP)
+In an existing Yii application, use this entry script in place of the usual `Application::run()`. The example
+assumes `web/index.php`, Composer dependencies, and the application's `config/web.php` with its routes and secret
+`request.cookieValidationKey` already configured.
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-// disable PHP automatic session cookie handling
+use HttpSoft\Message\{ResponseFactory, ServerRequestFactory, StreamFactory, UploadedFileFactory};
+use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
+use yii2\extensions\psrbridge\creator\ServerRequestCreator;
+use yii2\extensions\psrbridge\emitter\SapiEmitter;
+use yii2\extensions\psrbridge\http\Application;
+
 ini_set('session.use_cookies', '0');
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+require dirname(__DIR__) . '/vendor/autoload.php';
+require dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php';
 
-use yii2\extensions\frankenphp\FrankenPHP;
-use yii2\extensions\psrbridge\http\Application;
+$config = require dirname(__DIR__) . '/config/web.php';
 
-// Load environment variables from .env file
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
-$dotenv->safeLoad();
-
-// production default (change to 'true' for development)
-define('YII_DEBUG', filter_var($_ENV['YII_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));
-// production default (change to 'dev' for development)
-define('YII_ENV', $_ENV['YII_ENV'] ?? 'prod');
-
-require_once dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php';
-
-$config = require_once dirname(__DIR__) . '/config/web/app.php';
+$config['container']['definitions'][ResponseFactoryInterface::class] = ResponseFactory::class;
+$config['container']['definitions'][StreamFactoryInterface::class] = StreamFactory::class;
 
 $app = new Application($config);
-$runner = new FrankenPHP($app);
+$creator = new ServerRequestCreator(new ServerRequestFactory(), new StreamFactory(), new UploadedFileFactory());
 
-$runner->run();
+$request = $creator->createFromGlobals();
+$response = $app->handle($request);
+
+$emitted = false;
+
+try {
+    (new SapiEmitter())->emit($response, $request->getMethod() !== 'HEAD');
+    $emitted = true;
+} finally {
+    $app->finalize($emitted);
+}
 ```
 
-#### Worker mode (RoadRunner)
-
-```php
-<?php
-
-declare(strict_types=1);
-
-require __DIR__ . '/../vendor/autoload.php';
-
-use yii2\extensions\psrbridge\http\Application;
-use yii2\extensions\roadrunner\RoadRunner;
-
-define('YII_DEBUG', filter_var(getenv('YII_DEBUG'), FILTER_VALIDATE_BOOLEAN));
-define('YII_ENV', getenv('YII_ENV') ?? 'prod');
-
-require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
-
-$config = require dirname(__DIR__) . '/config/web/app.php';
-
-$app = new Application($config);
-$runner = new RoadRunner($app);
-
-$runner->run();
-```
-
-#### PSR-7 Conversion
-
-```php
-// Convert Yii2 request to PSR-7
-$request = Yii::$app->request;
-$psr7Request = $request->getPsr7Request();
-
-// Convert Yii2 response to PSR-7
-$response = Yii::$app->response;
-$psr7Response = $response->getPsr7Response();
-
-// Emit PSR-7 response
-$emitter = new yii2\extensions\psrbridge\emitter\SapiEmitter();
-$emitter->emit($psr7Response);
-```
-
-> [!NOTE]
-> This shows the low-level conversion API. Serving a full request in a long-running worker goes through the
-> `handle() → emit → finalize()` cycle (or a runner). See
-> [Response lifecycle finalization](docs/examples.md#response-lifecycle-finalization).
+`Application` supplies the bridge request, response, and error handler by default. For a worker, create the
+application once and repeat `handle()`, runtime emission, then `finalize()` for each request. Keep file streams
+open until emission completes. A PSR-15 host must arrange this extra finalization step.
 
 ### Worker lifecycle defaults
 
-In long-running workers, keep `Application` lifecycle defaults unless you have a specific requirement:
-
-- `useSession=true`
-- `syncCookieValidation=true`
-- `resetUploadedFiles=true`
-
-> [!WARNING]
-> Keep request-scoped components (`request`, `response`, `errorHandler`, `session`, `user`) out of
-> `Application::$persistentComponents`.
->
-> Components listed in `Application::$persistentComponents` (defaults to `db` and `cache`) keep loaded instances across
-> requests.
-
-Define lifecycle flags before `run()` (via config or property setters).
-
-`useSession=false` skips only the eager session open/close hooks around bootstrap. On every request the bridge still
-closes a session left active by the previous request and applies the session ID from the request cookie, so sessions
-opened lazily (`user`, flash messages, `Yii::$app->session`) stay per visitor.
-
-> [!NOTE]
-> The bridge discards a session cookie value that PHP rejects as a session ID (characters outside `A-Z`, `a-z`, `0-9`,
-> `,` and `-`, or more than 256 characters) and starts a new session instead. A well-formed but unknown ID is still
-> applied: set `useStrictMode => true` on the `session` component to replace it with a new one (`yii\web\Session`
-> relies on PHP's `session.use_strict_mode`, `yii\web\DbSession` and `yii\web\CacheSession` check their storage).
-> Keep cookie validation enabled so the session cookie is signed, and let `yii\web\User` regenerate the session ID on
-> login, which it does whenever `enableSession` is `true` (default).
-
-```php
-$config = [
-    'class' => Application::class,
-    // skip eager session open/close and cookie validation sync for stateless REST APIs.
-    // session state is still isolated per request; keep resetUploadedFiles=true (default) for request isolation.
-    'useSession' => false,
-    'syncCookieValidation' => false,
-    'resetUploadedFiles' => true,
-];
-```
+`useSession=false` skips eager session opening around bootstrap; session IDs are still isolated on every request.
+Keep request-scoped components out of `persistentComponents`.
 
 ### Smart Body Parsing
 
-The bridge automatically parses incoming PSR-7 request bodies based on the `Content-Type` header and your configured
-parsers (for example, `application/json`), ensuring `Yii::$app->request->post()` works seamlessly in worker mode without
-extra boilerplate.
+See the configuration guide before changing lifecycle settings or handling JSON bodies created from SAPI globals.
 
 ## Documentation
 
-For detailed configuration options and advanced usage.
+- 📚 [Installation and runtime choices](docs/installation.md)
+- ⚙️ [Configuration and request isolation](docs/configuration.md)
+- 💡 [Worker lifecycle, JSON, uploads, and downloads](docs/examples.md)
+- 🔄 [Upgrade guide](UPGRADE.md) and [migration checks](docs/migration.md)
+- 🧪 [Testing](docs/testing.md)
+- 📖 [Generated API reference](https://yii2-framework.github.io/docs/extensions/psr-bridge/reference/)
 
-- 📚 [Installation Guide](docs/installation.md)
-- ⚙️ [Configuration Reference](docs/configuration.md)
-- 💡 [Usage Examples](docs/examples.md)
-- 🧪 [Testing Guide](docs/testing.md)
+The package guides and PHPDocs are the source for the documentation site. Publish these changes before relying on
+the corresponding hosted pages.
+
+## AI assistance
+
+AI agents: read <https://yii2-framework.github.io/docs/llms.txt>, the index of the documentation site, and fetch the
+Markdown version of a page by appending `index.md` to its URL, for example
+<https://yii2-framework.github.io/docs/extensions/psr-bridge/installation/index.md>. For the Yii conventions this
+package builds on, install the
+[`yii2-framework` agent skill](https://github.com/yii2-framework/docs/blob/main/skills/yii2-framework/SKILL.md) with
+`npx skills add yii2-framework/docs --skill yii2-framework`.
+
+- 🤖 [yii2-psr-bridge-worker skill](docs/agents.md): installation for Claude Code, Codex, and OpenCode.
+
+If the hosted sources are unavailable, use the repository guides and locally available skills.
 
 ## Package information
 
 [![PHP](https://img.shields.io/badge/%3E%3D8.1-777BB4.svg?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/releases/8.1/en.php)
-[![Yii 2.0.x](https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&logo=yii&logoColor=white&color=0073AA&label=&url=https%3A%2F%2Frepo.packagist.org%2Fp2%2Fyiisoft%2Fyii2.json&query=%24.packages%5B%27yiisoft%2Fyii2%27%5D%5B0%5D.version)](https://packagist.org/packages/yiisoft/yii2)
+[![Yii 2.0.55+](https://img.shields.io/badge/%3E%3D2.0.55-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/releases/tag/2.0.55)
 [![Yii 22.0.x](https://img.shields.io/badge/22.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/tree/22.0)
 [![Latest Stable Version](https://img.shields.io/packagist/v/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Stable)](https://packagist.org/packages/yii2-extensions/psr-bridge)
 [![Total Downloads](https://img.shields.io/packagist/dt/yii2-extensions/psr-bridge.svg?style=for-the-badge&logo=composer&logoColor=white&label=Downloads)](https://packagist.org/packages/yii2-extensions/psr-bridge)

@@ -31,14 +31,6 @@ use const UPLOAD_ERR_OK;
  *
  * {@see ServerRequestAdapter} PSR-7 to Yii request adapter.
  *
- * Usage example:
- * ```php
- * $request = new \yii2\extensions\psrbridge\http\Request();
- * $request->setPsr7Request($psr7Request);
- * $method = $request->getMethod();
- * $params = $request->getBodyParams();
- * ```
- *
  * @property array<
  *   string,
  *   class-string<object>|array{class?: class-string<object>, __class?: class-string<object>, ...}|callable(): object
@@ -59,16 +51,10 @@ class Request extends \yii\web\Request
     private ServerRequestAdapter|null $adapter = null;
 
     /**
-     * Retrieves HTTP Basic authentication credentials from the current request.
+     * Returns Basic credentials from the current Authorization header or current server parameters.
      *
-     * Returns an array containing the username and password sent via HTTP authentication, supporting both standard PHP
-     * SAPI variables and the Authorization header for environments where credentials are not passed directly.
-     *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * [$username, $password] = $request->getAuthCredentials();
-     * ```
+     * When a PSR request is attached, fallback uses its `PHP_AUTH_USER` and `PHP_AUTH_PW` only, not worker globals.
+     * Malformed Basic encoding or invalid UTF-8 yields `[null, null]`.
      *
      * @return array{0: string|null, 1: string|null} Username and password.
      */
@@ -115,20 +101,11 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves the request body parameters, excluding the HTTP method override parameter if present.
+     * Returns parsed body parameters with the configured method override removed from array bodies.
      *
-     * Returns the parsed body parameters from the PSR-7 ServerRequestInterface, removing the specified method override
-     * parameter (such as `_method`) if it exists.
+     * @throws InvalidConfigException when a fallback Yii parser definition is invalid.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $params = $request->getBodyParams();
-     * ```
-     *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
-     * @return array<mixed>|object Request body parameters with the method override parameter removed if present.
+     * @return array<mixed>|object Body parameters; absent or discarded scalar bodies become `[]`.
      */
     public function getBodyParams(): array|object
     {
@@ -140,15 +117,9 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves the Content-Type header value for the current request.
+     * Returns the current Content-Type header, falling back to Yii when no PSR request is attached.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $contentType = $request->getContentType();
-     * ```
-     *
-     * @return string 'Content-Type' header value, or an empty string if not present.
+     * @return string Header value, or an empty `string` when absent.
      */
     public function getContentType(): string
     {
@@ -160,21 +131,13 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves cookies from the current request, supporting PSR-7 and Yii validation.
+     * Returns a read-only collection of current PSR cookies, or Yii's cookies without an attached request.
      *
-     * Returns a {@see CookieCollection} containing cookies extracted from the PSR-7 ServerRequestInterface if the
-     * adapter is set, applying Yii style validation when enabled.
+     * Validated PSR cookies must contain a valid Yii signature and matching encoded cookie name.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $cookies = $request->getCookies();
-     * $value = $cookies->getValue('session_id');
-     * ```
+     * @throws InvalidConfigException when cookie validation is enabled without a key.
      *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
-     * @return CookieCollection Collection of cookies for the current request.
+     * @return CookieCollection Current request cookies.
      */
     public function getCookies(): CookieCollection
     {
@@ -191,13 +154,7 @@ class Request extends \yii\web\Request
      * Retrieves the CSRF token from the request headers.
      *
      * This method uses {@see getHeaders()} to access the header collection and retrieves the value for
-     * {@see self::csrfHeader}.
-     *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $token = $request->getCsrfTokenFromHeader();
-     * ```
+     * `csrfHeader`.
      *
      * @return string|null CSRF token value from the request header, or `null` if not present.
      */
@@ -211,13 +168,6 @@ class Request extends \yii\web\Request
      *
      * Returns a {@see HeaderCollection} containing all HTTP headers extracted from the PSR-7 ServerRequestInterface if
      * the adapter is set.
-     *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $headers = $request->getHeaders();
-     * $authorization = $headers->get('Authorization');
-     * ```
      *
      * @return HeaderCollection Collection of HTTP headers for the current request.
      */
@@ -237,12 +187,6 @@ class Request extends \yii\web\Request
     /**
      * Retrieves the HTTP method for the current request, supporting PSR-7 and Yii fallback.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $method = $request->getMethod();
-     * ```
-     *
      * @return string Resolved HTTP method for the current request.
      */
     public function getMethod(): string
@@ -255,17 +199,11 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves the parsed body parameters from the current request.
+     * Returns the PSR parsed body, or normalized Yii body parameters without an attached request.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $bodyParams = $request->getParsedBody();
-     * ```
+     * @throws InvalidConfigException when a fallback Yii parser definition is invalid.
      *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
-     * @return array<mixed>|object|null Parsed body parameters for the current request, or `null` if not available.
+     * @return array<mixed>|object|null Parsed body; absent or discarded scalar bodies yield `null`.
      */
     public function getParsedBody(): array|object|null
     {
@@ -277,17 +215,13 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves the underlying PSR-7 ServerRequestInterface instance from the adapter.
+     * Returns the attached PSR request, including any body parsing performed during binding.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $psr7Request = $request->getPsr7Request();
-     * ```
+     * Call {@see setPsr7Request()} first; this method does not create a request from Yii globals.
      *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws InvalidConfigException when no PSR request has been attached.
      *
-     * @return ServerRequestInterface PSR-7 ServerRequestInterface instance from the adapter.
+     * @return ServerRequestInterface Attached request.
      */
     public function getPsr7Request(): ServerRequestInterface
     {
@@ -299,15 +233,11 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves query parameters from the current request, supporting PSR-7 and Yii fallback.
+     * Returns resolved Yii query parameters when non-empty, otherwise the attached PSR query parameters.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $queryParams = $request->getQueryParams();
-     * ```
+     * Without an attached request, delegates to Yii. Binding a replacement request clears resolved parameters.
      *
-     * @return array<mixed> Query parameters as an associative array.
+     * @return array<mixed> Current query parameters.
      */
     public function getQueryParams(): array
     {
@@ -327,12 +257,6 @@ class Request extends \yii\web\Request
     /**
      * Retrieves the query string from the current request, supporting PSR-7 and Yii fallback.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $queryString = $request->getQueryString();
-     * ```
-     *
      * @return string Query string for the current request.
      */
     public function getQueryString(): string
@@ -347,12 +271,6 @@ class Request extends \yii\web\Request
     /**
      * Retrieves the raw body content from the current request, supporting PSR-7 and Yii fallback.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $rawBody = $request->getRawBody();
-     * ```
-     *
      * @return string Raw body content for the current request.
      */
     public function getRawBody(): string
@@ -366,12 +284,6 @@ class Request extends \yii\web\Request
 
     /**
      * Retrieves the remote host name for the current request, supporting PSR-7 and Yii fallback.
-     *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $host = $request->getRemoteHost();
-     * ```
      *
      * @return string|null Remote host name for the current request, or `null` if not available.
      */
@@ -388,12 +300,6 @@ class Request extends \yii\web\Request
 
     /**
      * Retrieves the remote IP address for the current request, supporting PSR-7 and Yii fallback.
-     *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $ip = $request->getRemoteIP();
-     * ```
      *
      * @return string|null Remote IP address for the current request, or `null` if not available or invalid.
      */
@@ -419,12 +325,6 @@ class Request extends \yii\web\Request
     /**
      * Returns the request script URL.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $scriptUrl = $request->getScriptUrl();
-     * ```
-     *
      * @throws InvalidConfigException if unable to determine the entry script URL.
      *
      * @return string Script URL for the current request.
@@ -440,12 +340,6 @@ class Request extends \yii\web\Request
 
     /**
      * Retrieves the server name for the current request, supporting PSR-7 and Yii fallback.
-     *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $serverName = $request->getServerName();
-     * ```
      *
      * @return string|null Server name for the current request, or `null` if not available.
      */
@@ -463,12 +357,6 @@ class Request extends \yii\web\Request
     /**
      * Retrieves a server parameter by name from the current request, supporting PSR-7 and Yii fallback.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $param = $request->getServerParam('REMOTE_ADDR', '127.0.0.1');
-     * ```
-     *
      * @param string $name Name of the server parameter to retrieve.
      * @param mixed $default Default value to return if the parameter is not set.
      *
@@ -484,12 +372,6 @@ class Request extends \yii\web\Request
     /**
      * Retrieves server parameters from the current request, supporting PSR-7 and Yii fallback.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $params = $request->getServerParams();
-     * ```
-     *
      * @return array<mixed> Server parameters for the current request.
      */
     public function getServerParams(): array
@@ -504,12 +386,6 @@ class Request extends \yii\web\Request
 
     /**
      * Retrieves the server port number for the current request, supporting PSR-7 and Yii fallback.
-     *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $port = $request->getServerPort();
-     * ```
      *
      * @return int|null Server port number, or `null` if unavailable.
      */
@@ -547,15 +423,12 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Retrieves uploaded files from the current request, supporting PSR-7 and Yii fallback.
+     * Converts attached PSR upload trees to bridge uploaded-file objects, preserving keys and nesting.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $files = $request->getUploadedFiles();
-     * ```
+     * Successful conversion detaches each PSR upload stream for Yii resource access. Failed uploads retain their
+     * error without accessing a stream. Returns `[]` when no PSR request is attached; it does not read `$_FILES`.
      *
-     * @return array<mixed> Array of uploaded files for the current request.
+     * @return array<mixed> Nested bridge uploaded files.
      */
     public function getUploadedFiles(): array
     {
@@ -568,12 +441,6 @@ class Request extends \yii\web\Request
 
     /**
      * Retrieves the URL of the current request, supporting PSR-7 and Yii fallback.
-     *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * $url = $request->getUrl();
-     * ```
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
@@ -589,22 +456,13 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Resolves the current request into a route and parameters, supporting PSR-7 and Yii fallback.
+     * Resolves the route with Yii's URL manager and merges route parameters over PSR query parameters.
      *
-     * Parses the request using the Yii UrlManager and merges parameters with those from the PSR-7 adapter if present.
-     * - If the PSR-7 adapter is set, this method delegates parsing to the UrlManager, merges the resulting parameters
-     *   with the query parameters from the adapter, and updates the request's query parameters accordingly.
-     * - If no adapter is present, it falls back to the parent implementation.
+     * Without an attached request, delegates to Yii's route resolution.
      *
-     * Usage example:
-     * ```php
-     * $request = new \yii2\extensions\psrbridge\http\Request();
-     * [$route, $params] = $request->resolve();
-     * ```
+     * @throws NotFoundHttpException when the URL manager cannot resolve the request.
      *
-     * @throws NotFoundHttpException if the route is not found or undefined.
-     *
-     * @return array<mixed> An array containing the resolved route and parameters.
+     * @return array<mixed> Route and merged parameters as a two-element array.
      */
     public function resolve(): array
     {
@@ -629,15 +487,14 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Sets and bridges a PSR-7 ServerRequestInterface instance for the current request.
+     * Binds a PSR request, resets resolved query parameters, and registers its upload adapter.
      *
-     * Usage example:
-     * ```php
-     * $psr7Request = new \GuzzleHttp\Psr7\ServerRequest('GET', '/api/resource');
-     * $request->setPsr7Request($psr7Request);
-     * ```
+     * Parses the body only when its parsed body is `null` and a matching configured parser exists. Scalar parser
+     * results are discarded. Existing non-`null` parsed bodies, including `[]`, are preserved.
      *
-     * @param ServerRequestInterface $request PSR-7 ServerRequestInterface instance to bridge.
+     * @param ServerRequestInterface $request Request to bind.
+     *
+     * @throws InvalidConfigException when a configured parser does not implement Yii's request parser contract.
      */
     public function setPsr7Request(ServerRequestInterface $request): void
     {

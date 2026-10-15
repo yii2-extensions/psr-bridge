@@ -18,21 +18,15 @@ use function ucwords;
 
 /**
  * Emits PSR-7 responses through PHP SAPI.
- *
- * Usage example:
- * ```php
- * $emitter = new \yii2\extensions\psrbridge\emitter\SapiEmitter();
- * $emitter->emit($psr7Response);
- * ```
  */
 final class SapiEmitter
 {
     /**
-     * Creates a new instance of the {@see SapiEmitter} class.
+     * Configures the maximum bytes read in each body-emission chunk.
      *
-     * @param int $bufferLength Length of the buffer to use when emitting the response body (default: `8192`).
+     * @param int $bufferLength Positive chunk size in bytes; defaults to 8192.
      *
-     * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
+     * @throws InvalidArgumentException when the buffer length is less than 1.
      */
     public function __construct(private readonly int $bufferLength = 8192)
     {
@@ -44,18 +38,18 @@ final class SapiEmitter
     }
 
     /**
-     * Emits a response to the PHP output buffer.
+     * Emits status, headers, and optionally a readable body through PHP SAPI.
      *
-     * Usage example:
-     * ```php
-     * $emitter = new \yii2\extensions\psrbridge\emitter\SapiEmitter();
-     * $emitter->emit($response);
-     * ```
+     * Suppresses the body for statuses recognized by {@see HttpNoBodyStatus}. The caller must pass `false` for
+     * HEAD because this method has no originating request. Reads are bounded by the configured chunk size;
+     * after-send lifecycle processing remains the caller's responsibility.
      *
-     * @param ResponseInterface $response PSR-7 response to emit.
-     * @param bool $body Whether to emit the response body when allowed by status code.
-     * @throws HeadersAlreadySentException When headers are already sent.
-     * @throws OutputAlreadySentException When output is already emitted.
+     * @param ResponseInterface $response Response to emit.
+     * @param bool $body Whether to emit the body when allowed by status code.
+     *
+     * @throws HeadersAlreadySentException when PHP has already sent headers.
+     * @throws OutputAlreadySentException when the current output buffer contains bytes.
+     * @throws \RuntimeException when reading or positioning the body stream fails.
      */
     public function emit(ResponseInterface $response, bool $body = true): void
     {
@@ -73,12 +67,9 @@ final class SapiEmitter
     }
 
     /**
-     * Emit the response body.
+     * Reads the body in bounded chunks, honoring a supported Content-Range header.
      *
-     * Handles the emission of the response body, supporting both buffered and unbuffered output, also supports content
-     * range responses for partial content delivery.
-     *
-     * @param ResponseInterface $response PSR-7 ResponseInterface instance.
+     * @param ResponseInterface $response Response whose body is emitted.
      */
     private function emitBody(ResponseInterface $response): void
     {

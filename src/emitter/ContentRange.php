@@ -13,15 +13,6 @@ use function preg_match;
  *
  * {@see ContentRangeUnit} Supported range units.
  *
- * Usage example:
- * ```php
- * $range = \yii2\extensions\psrbridge\emitter\ContentRange::fromHeader('bytes 0-499/1234');
- *
- * if ($range !== null) {
- *     echo (string) $range; // 'bytes 0-499/1234'
- * }
- * ```
- *
  * @see https://datatracker.ietf.org/doc/html/rfc7233#section-4.2 RFC 7233 section 4.2.
  */
 final class ContentRange implements Stringable
@@ -44,11 +35,6 @@ final class ContentRange implements Stringable
     /**
      * Converts the Content-Range to its string representation.
      *
-     * Usage example:
-     * ```php
-     * echo (string) $contentRange; // 'bytes 0-499/1234'
-     * ```
-     *
      * @return string String representation in format '<unit> <first>-<last>/<length>'.
      */
     public function __toString(): string
@@ -62,17 +48,8 @@ final class ContentRange implements Stringable
      * Parses a Content-Range header value in the format '<unit> <first>-<last>/<length>' (for example,
      * "bytes 0-1233/1234" or "bytes 42-1233/*").
      *
-     * This method validates the header structure, ensures the unit is supported, and checks that the first byte is not
-     * greater than the last byte.
-     *
-     * Usage example:
-     * ```php
-     * $range = ContentRange::fromHeader('bytes 0-499/1234');
-     *
-     * if ($range !== null) {
-     *     // your code here
-     * }
-     * ```
+     * Accepts a matching byte-range expression and checks that the first byte does not exceed the last.
+     * It does not verify that the total length exceeds the last byte or reject surrounding header text.
      *
      * @param string $header Content-Range header value to parse.
      *

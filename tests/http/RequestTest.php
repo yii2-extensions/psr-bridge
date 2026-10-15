@@ -1789,7 +1789,13 @@ final class RequestTest extends TestCase
             $request->resolve();
 
             self::fail("'resolve()' should throw NotFoundHttpException when route parsing fails.");
-        } catch (NotFoundHttpException) {
+        } catch (NotFoundHttpException $exception) {
+            self::assertSame(
+                Yii::t('yii', Message::PAGE_NOT_FOUND->getMessage()),
+                $exception->getMessage(),
+                'The unresolved route must preserve the translated package message.',
+            );
+
             self::assertSame(
                 1,
                 UrlManagerSpy::$parseRequestCalls,
@@ -1952,7 +1958,9 @@ final class RequestTest extends TestCase
         $request = new Request();
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage(Message::PSR7_REQUEST_ADAPTER_NOT_SET->getMessage());
+        $this->expectExceptionMessage(
+            Message::PSR7_REQUEST_ADAPTER_NOT_SET->getMessage(),
+        );
 
         $request->getPsr7Request();
     }
@@ -1964,7 +1972,9 @@ final class RequestTest extends TestCase
         $request = new Request();
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Unable to determine the request URI.');
+        $this->expectExceptionMessage(
+            'Unable to determine the request URI.',
+        );
 
         $request->getUrl();
     }
@@ -1974,7 +1984,9 @@ final class RequestTest extends TestCase
         $request = new Request();
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Unable to determine the entry script file path.');
+        $this->expectExceptionMessage(
+            'Unable to determine the entry script file path.',
+        );
 
         $request->getScriptFile();
     }
@@ -1984,7 +1996,9 @@ final class RequestTest extends TestCase
         $request = new Request();
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Unable to determine the entry script file path.');
+        $this->expectExceptionMessage(
+            'Unable to determine the entry script file path.',
+        );
 
         $request->getScriptUrl();
     }
@@ -1996,7 +2010,9 @@ final class RequestTest extends TestCase
         $request = new Request();
 
         $this->expectException(TypeError::class);
-        $this->expectExceptionMessageMatches('/getRemoteHost\(\): Return value must be of type \?string/');
+        $this->expectExceptionMessageMatches(
+            '/getRemoteHost\(\): Return value must be of type \?string/',
+        );
 
         $request->getRemoteHost();
     }

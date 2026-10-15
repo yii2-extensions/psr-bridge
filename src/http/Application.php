@@ -27,30 +27,13 @@ use function strtoupper;
 /**
  * Handles PSR-7 requests with a stateless Yii application lifecycle.
  *
- * {@see RequestHandlerInterface} PSR-7 request handler contract.
+ * `RequestHandlerInterface` PSR-7 request handler contract.
  *
- * This is a Yii-to-PSR bridge for long-running worker runtimes, not a generic PSR-15 handler. The request lifecycle
+ * This handler requires post-emission finalization when used by a PSR-15 host. The request lifecycle
  * spans two calls: {@see handle()} runs the request and returns the PSR-7 response (pre-send), then the runtime emits
  * it and MUST call {@see finalize()} to complete Yii's after-send lifecycle and release per-request worker state.
  *
  * Calling {@see handle()} without {@see finalize()} leaves event tracking attached across requests in workers.
- *
- * Usage example:
- * ```php
- * $app = new \yii2\extensions\psrbridge\http\Application($config);
- *
- * $psr7Response = $app->handle($psr7Request);
- *
- * try {
- *     (new \yii2\extensions\psrbridge\emitter\SapiEmitter())->emit($psr7Response);
- *
- *     $app->finalize();
- * } catch (\Throwable $e) {
- *     $app->finalize(false);
- *
- *     throw $e;
- * }
- * ```
  *
  * @template TUserIdentity of IdentityInterface
  * @extends \yii\web\Application<TUserIdentity>
@@ -72,9 +55,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     public array $persistentComponents = ['db', 'cache'];
 
     /**
-     * Controls whether uploaded file static state is reset for each request.
+     * Retained for configuration compatibility; request preparation always resets uploaded file state.
      *
-     * This remains enabled for request isolation and is not intended to be disabled in workers.
+     * Setting this property to `false` does not disable the reset.
      */
     public bool $resetUploadedFiles = true;
 
@@ -143,16 +126,11 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Runs garbage collection and checks whether memory usage reached '90%' of the current limit.
+     * Runs garbage collection and reports whether allocated memory reached 90% of the configured limit.
      *
-     * Usage example:
-     * ```php
-     * if ($app->clean()) {
-     *     // recycle worker
-     * }
-     * ```
+     * The runtime decides whether to recycle the worker. An unlimited PHP memory setting maps to `PHP_INT_MAX`.
      *
-     * @return bool Returns `true` when memory usage is at least '90%' of the configured limit.
+     * @return bool Whether allocated memory is at least 90% of the limit.
      */
     public function clean(): bool
     {
@@ -166,12 +144,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Returns the core Yii component configuration with PSR bridge overrides.
-     *
-     * Usage example:
-     * ```php
-     * $components = $app->coreComponents();
-     * ```
+     * Returns Yii core components with bridge request, response, and error handler definitions.
      *
      * @return array<mixed> Core component definitions.
      */
@@ -194,24 +167,18 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Finalizes the request lifecycle after the runtime emits the PSR-7 response.
+     * Completes after-send processing and worker cleanup following the runtime's emission attempt.
      *
-     * On success, completes the converted Yii response through {@see Response::completeSend()} (triggers
-     * `EVENT_AFTER_SEND` and marks it sent). Detaches request-scoped event handlers and flushes the logger so
-     * long-running workers stay isolated across requests, even when an after-send handler throws (the exception is
-     * rethrown after cleanup runs).
+     * On success, calls {@see Response::completeSend()} on the response returned by {@see handle()}. Pass `false`
+     * when emission failed to skip after-send. Tracked event cleanup runs even if an after-send handler throws;
+     * logger flushing runs when enabled and a converted response is available.
      *
-     * Pass `false` when emission failed: after-send finalization is skipped because the response was not delivered,
-     * while worker cleanup still runs.
+     * Call exactly once per emission attempt. Keep this call outside an emitter catch block so an after-send
+     * exception is not treated as an emission failure and does not cause a second call. See the class example.
      *
-     * Usage example:
-     * ```php
-     * $psr7Response = $app->handle($psr7Request);
-     * (new \yii2\extensions\psrbridge\emitter\SapiEmitter())->emit($psr7Response);
-     * $app->finalize();
-     * ```
+     * @param bool $success Whether emission completed successfully.
      *
-     * @param bool $success Whether the runtime emitted the response successfully.
+     * @throws Throwable when an after-send handler, event cleanup, or logger flush fails.
      */
     public function finalize(bool $success = true): void
     {
@@ -231,14 +198,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Returns the memory limit in bytes.
+     * Returns the cached memory limit, parsing PHP's setting when needed.
      *
-     * Usage example:
-     * ```php
-     * $limit = $app->getMemoryLimit();
-     * ```
-     *
-     * @return int Parsed memory limit in bytes.
+     * @return int Limit in bytes, or `PHP_INT_MAX` for an unlimited PHP setting.
      */
     public function getMemoryLimit(): int
     {
@@ -252,17 +214,16 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Handles one PSR-7 request and returns a PSR-7 response.
+     * Handles a PSR-7 request and returns the prepared response before emission.
      *
-     * Usage example:
-     * ```php
-     * $psrResponse = $app->handle($psrRequest);
-     * ```
+     * The runtime must emit this response and call {@see finalize()}. Application and request state are
+     * reinitialized before handling; bootstrap observes the current request's session state.
      *
      * @param ServerRequestInterface $request Request to process.
-     * @throws InvalidConfigException When application configuration is invalid.
-     * @throws Throwable When handling fails before the Yii error handler is initialized.
-     * @return ResponseInterface Response produced by the Yii request lifecycle.
+     *
+     * @throws Throwable When initialization, error handling, or response conversion cannot produce a response.
+     *
+     * @return ResponseInterface Prepared response; after-send processing remains deferred.
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
@@ -297,12 +258,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Sets the application state to `STATE_INIT`.
-     *
-     * Usage example:
-     * ```php
-     * $app->init();
-     * ```
+     * Sets the per-request state to `STATE_INIT`; bootstrap runs after the PSR request is attached.
      */
     public function init(): void
     {
@@ -310,15 +266,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Sets the memory limit in bytes.
+     * Overrides the cached worker memory threshold or requests recalculation from PHP's setting.
      *
-     * Usage example:
-     * ```php
-     * $app->setMemoryLimit(134217728);
-     * $app->setMemoryLimit(0); // recalculate from system setting
-     * ```
-     *
-     * @param int $limit Memory limit in bytes, or a value less than or equal to `0` to recalculate.
+     * @param int $limit Limit in bytes; a non-positive value recalculates on the next {@see getMemoryLimit()} call.
      */
     public function setMemoryLimit(int $limit): void
     {
@@ -377,7 +327,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * Prepares the application state for a new PSR-7 request.
      *
      * @param ServerRequestInterface $request Request to bind to the Yii adapter.
-     * @throws InvalidConfigException When application configuration is invalid.
+     *
+     * @throws InvalidConfigException when application configuration is invalid.
      */
     protected function prepareForRequest(ServerRequestInterface $request): void
     {
@@ -412,7 +363,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     /**
      * Reinitializes the application instance for the current request.
      *
-     * @throws InvalidConfigException When application configuration is invalid.
+     * @throws InvalidConfigException when application configuration is invalid.
      */
     protected function reinitializeApplication(): void
     {
@@ -487,8 +438,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      *
      * @param Response $response Yii response to convert.
      *
-     * @throws InvalidConfigException When configuration is invalid.
-     * @throws NotInstantiableException When a service cannot be instantiated.
+     * @throws InvalidConfigException when configuration is invalid.
+     * @throws NotInstantiableException when a service cannot be instantiated.
      *
      * @return ResponseInterface PSR-7 response produced by the conversion.
      */
@@ -616,12 +567,12 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Checks whether a value is a session `ID` that PHP accepts: 1 to 256 characters from `A-Z`, `a-z`, `0-9`, `,` and
-     * `-`, independent of `session.sid_length` and `session.sid_bits_per_character`.
+     * Checks the bridge's session ID syntax: 1 to 256 letters, digits, commas, or hyphens.
      *
-     * @param mixed $id Value to check.
+     * This does not establish that the ID exists in session storage; strict-mode handling happens when opened.
      *
-     * @return bool Whether the value can be passed to `session_id()` without `session_start()` rejecting it.
+     * @param mixed $id Cookie value after optional Yii signature validation.
+     * @return bool Whether the value is a `string` matching the accepted syntax.
      */
     private function isValidSessionId(mixed $id): bool
     {

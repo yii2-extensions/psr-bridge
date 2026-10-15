@@ -28,18 +28,7 @@ use function urlencode;
 /**
  * Adapts Yii responses to PSR-7 responses.
  *
- * {@see ResponseInterface} PSR-7 response contract.
- *
- * Usage example:
- * ```php
- * $adapter = new \yii2\extensions\psrbridge\adapter\ResponseAdapter(
- *     $yiiResponse,
- *     $responseFactory,
- *     $streamFactory,
- *     $security,
- * );
- * $psr7Response = $adapter->toPsr7();
- * ```
+ * `ResponseInterface` PSR-7 response contract.
  */
 final class ResponseAdapter
 {
@@ -49,7 +38,7 @@ final class ResponseAdapter
      * @param Response $psrResponse Yii Response instance to adapt.
      * @param ResponseFactoryInterface $responseFactory PSR-7 ResponseFactoryInterface instance for response creation.
      * @param StreamFactoryInterface $streamFactory PSR-7 StreamFactoryInterface instance for body stream creation.
-     * @param Security $security Optional Security component for cookie validation.
+     * @param Security $security Security component used to sign outgoing cookie values.
      */
     public function __construct(
         private readonly Response $psrResponse,
@@ -67,17 +56,6 @@ final class ResponseAdapter
      * - Cookies are formatted and added as separate 'Set-Cookie' headers.
      * - File streaming is supported with HTTP range handling for efficient large file downloads.
      * - Response body is created from the Yii Response content or stream using the PSR-7 StreamFactoryInterface.
-     *
-     * Usage example:
-     * ```php
-     * $adapter = new \yii2\extensions\psrbridge\adapter\ResponseAdapter(
-     *     $response,
-     *     $responseFactory,
-     *     $streamFactory,
-     *     $security,
-     * );
-     * $psr7Response = $adapter->toPsr7();
-     * ```
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
@@ -111,17 +89,11 @@ final class ResponseAdapter
     }
 
     /**
-     * Builds and returns formatted cookie headers from the Yii Response component.
+     * Formats non-`null` cookie values as separate Set-Cookie headers, including empty or expired values.
      *
-     * Iterates over all cookies in the Yii Response component and generates an array of formatted cookie header strings
-     * suitable for use as Set-Cookie headers in a PSR-7 ResponseInterface.
-     * - Each cookie is formatted using {@see formatCookieHeader()}.
-     * - If cookie validation is enabled, each cookie value is validated using the configured validation key.
-     * - Only non-empty cookie values are included in the result.
+     * @throws InvalidConfigException when cookie signing is enabled without a key.
      *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     *
-     * @return string[] Array of formatted cookie headers.
+     * @return list<string> Formatted cookie headers.
      */
     private function buildCookieHeaders(): array
     {
@@ -231,8 +203,6 @@ final class ResponseAdapter
      * - All attributes are appended in compliance with RFC 6265 for interoperability with HTTP clients.
      *
      * @param Cookie $cookie Cookie instance to format.
-     *
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
      * @return string Formatted 'Set-Cookie' header string.
      */

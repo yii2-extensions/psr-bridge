@@ -7,6 +7,7 @@ namespace yii2\extensions\psrbridge\adapter;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Throwable;
+use yii2\extensions\psrbridge\exception\Message;
 
 use function is_array;
 use function max;
@@ -19,22 +20,14 @@ use const SEEK_SET;
 /**
  * Read-only PSR-7 stream limited to a byte range of an underlying stream.
  *
- * Wraps any {@see StreamInterface} and exposes only bytes in the inclusive range `[$begin, $end]`, enforcing the upper
- * bound so consumers cannot read past `$end` even when calling {@see StreamInterface::getContents()} or repeated
- * {@see StreamInterface::read()} calls. Reads proxy to the underlying stream chunk by chunk without buffering the range
+ * Wraps any `StreamInterface` and exposes only bytes in the inclusive range `[$begin, $end]`, enforcing the upper
+ * bound so consumers cannot read past `$end` even when calling `StreamInterface::getContents()` or repeated
+ * `StreamInterface::read()` calls. Reads proxy to the underlying stream chunk by chunk without buffering the range
  * into memory or temporary storage.
  *
  * This is a bounded view, not a transparent decorator for the wrapped stream. The wrapped stream resource and its
  * original URI can represent bytes outside the declared range, so they are not exposed through {@see detach()} or
  * `getMetadata('uri')`.
- *
- * Usage example:
- * ```php
- * $handle = fopen('/path/to/file.bin', 'rb');
- * fseek($handle, $begin);
- * $body = $streamFactory->createStreamFromResource($handle);
- * $rangeStream = new \yii2\extensions\psrbridge\adapter\RangeStream($body, $begin, $end);
- * ```
  */
 final class RangeStream implements StreamInterface
 {
@@ -63,12 +56,14 @@ final class RangeStream implements StreamInterface
      * @param int $begin Inclusive byte offset where the range starts (`0`-based, absolute in the underlying stream).
      * @param int $end Inclusive byte offset where the range ends (absolute in the underlying stream).
      *
-     * @throws RuntimeException if `$begin` is negative or `$end` is less than `$begin`.
+     * @throws RuntimeException when the range is invalid or initial positioning fails.
      */
     public function __construct(StreamInterface $stream, private readonly int $begin, int $end)
     {
         if ($begin < 0 || $end < $begin) {
-            throw new RuntimeException('Invalid stream range.');
+            throw new RuntimeException(
+                Message::RANGE_STREAM_INVALID->getMessage(),
+            );
         }
 
         $this->length = $end - $begin + 1;
@@ -80,12 +75,9 @@ final class RangeStream implements StreamInterface
     }
 
     /**
-     * Rewinds and reads the entire range as a string, returning an empty `string` on failure.
+     * Returns range contents as a `string`, rewinding seekable streams and returning an empty `string` on failure.
      *
-     * Usage example:
-     * ```php
-     * echo (string) $rangeStream;
-     * ```
+     * On non-seekable streams, only the remaining range bytes can be returned.
      *
      * @return string Bytes within the range, or empty `string` when any error occurs.
      */
@@ -104,11 +96,6 @@ final class RangeStream implements StreamInterface
 
     /**
      * Closes the underlying stream and releases the internal reference.
-     *
-     * Usage example:
-     * ```php
-     * $rangeStream->close();
-     * ```
      */
     public function close(): void
     {
@@ -124,12 +111,7 @@ final class RangeStream implements StreamInterface
      * resource would allow consumers to bypass the range limit. Consumers that need the body contents must read through
      * {@see read()} or {@see getContents()}.
      *
-     * Usage example:
-     * ```php
-     * $rangeStream->detach();
-     * ```
-     *
-     * @return resource|null Always returns `null` because no safe detachable resource represents this bounded view.
+     * @return resource|null Always `null`; no detachable resource can safely represent the bounded view.
      */
     public function detach()
     {
@@ -142,13 +124,6 @@ final class RangeStream implements StreamInterface
 
     /**
      * Indicates whether the read cursor has reached the end of the range or the underlying stream.
-     *
-     * Usage example:
-     * ```php
-     * while (!$rangeStream->eof()) {
-     *     // read from the stream until the end of the range or underlying stream is reached.
-     * }
-     * ```
      *
      * @return bool `true` when no more bytes can be read within the range; `false` otherwise.
      */
@@ -164,13 +139,8 @@ final class RangeStream implements StreamInterface
     /**
      * Reads every remaining byte within the range and returns them as a single `string`.
      *
-     * Iterates {@see read()} in chunks of {@see READ_BUFFER_LENGTH} bytes until the range or the underlying stream
+     * Iterates {@see read()} in chunks of `READ_BUFFER_LENGTH` bytes until the range or the underlying stream
      * reaches EOF; no intermediate copy of the full range is held by the underlying stream.
-     *
-     * Usage example:
-     * ```php
-     * $contents = $rangeStream->getContents();
-     * ```
      *
      * @return string Concatenation of every chunk read until the end of the range or underlying stream EOF.
      */
@@ -196,11 +166,6 @@ final class RangeStream implements StreamInterface
      *
      * Resource locator metadata such as `uri` is omitted because the underlying URI identifies the unbounded wrapped
      * stream, not this range-limited view.
-     *
-     * Usage example:
-     * ```php
-     * $meta = $rangeStream->getMetadata('uri');
-     * ```
      *
      * @param string|null $key Specific metadata key, or `null` to return the full metadata array.
      *
@@ -231,11 +196,6 @@ final class RangeStream implements StreamInterface
     /**
      * Returns the size of the range, not the size of the underlying stream.
      *
-     * Usage example:
-     * ```php
-     * $size = $rangeStream->getSize();
-     * ```
-     *
      * @return int|null Length of the range in bytes, or `null` after the underlying stream has been detached or closed.
      */
     public function getSize(): int|null
@@ -250,13 +210,6 @@ final class RangeStream implements StreamInterface
     /**
      * Indicates whether the underlying stream reports as readable.
      *
-     * Usage example:
-     * ```php
-     * if ($rangeStream->isReadable()) {
-     *     // underlying stream is readable, so we can read from the range stream.
-     * }
-     * ```
-     *
      * @return bool `true` when the underlying stream is readable; `false` otherwise or when no stream is available.
      */
     public function isReadable(): bool
@@ -266,13 +219,6 @@ final class RangeStream implements StreamInterface
 
     /**
      * Indicates whether seeking within the range is supported.
-     *
-     * Usage example:
-     * ```php
-     * if ($rangeStream->isSeekable()) {
-     *     // underlying stream is seekable, so we can seek within the range stream.
-     * }
-     * ```
      *
      * @return bool `true` when the underlying stream is seekable; `false` otherwise or when no stream is available.
      */
@@ -284,13 +230,6 @@ final class RangeStream implements StreamInterface
     /**
      * Indicates that the stream is read-only.
      *
-     * Usage example:
-     * ```php
-     * if (!$rangeStream->isWritable()) {
-     *     // range stream is not writable, so we cannot write to it.
-     * }
-     * ```
-     *
      * @return bool Always `false`; range streams reject all writes.
      */
     public function isWritable(): bool
@@ -301,21 +240,18 @@ final class RangeStream implements StreamInterface
     /**
      * Reads up to `$length` bytes from the current position, capped at the bytes remaining in the range.
      *
-     * Usage example:
-     * ```php
-     * $data = $rangeStream->read(1024); // read up to '1024' bytes from the range stream.
-     * ```
-     *
      * @param int $length Maximum number of bytes to read.
      *
-     * @throws RuntimeException if `$length` is negative.
+     * @throws RuntimeException when the length is negative, the stream is closed, or an underlying operation fails.
      *
      * @return string Bytes read, or empty `string` at the end of the range or when `$length` is `0`.
      */
     public function read(int $length): string
     {
         if ($length < 0) {
-            throw new RuntimeException('Cannot read a negative length from a stream.');
+            throw new RuntimeException(
+                Message::RANGE_STREAM_READ_LENGTH_INVALID->getMessage(),
+            );
         }
 
         if ($length === 0 || $this->eof()) {
@@ -328,12 +264,7 @@ final class RangeStream implements StreamInterface
     /**
      * Rewinds the read cursor to the start of the range.
      *
-     * Usage example:
-     * ```php
-     * $rangeStream->rewind(); // move the read cursor back to the start of the range stream.
-     * ```
-     *
-     * @throws RuntimeException if the underlying stream is not seekable.
+     * @throws RuntimeException when the stream is closed or seeking fails.
      */
     public function rewind(): void
     {
@@ -343,17 +274,10 @@ final class RangeStream implements StreamInterface
     /**
      * Seeks to an offset relative to the range, clamped to `[0, $length]`.
      *
-     * Usage example:
-     * ```php
-     * $rangeStream->seek(100); // move the read cursor to byte offset '100'.
-     * $rangeStream->seek(-50, SEEK_CUR); // move the read cursor back by '50' bytes from the current position.
-     * $rangeStream->seek(-10, SEEK_END); // move the read cursor to '10' bytes before the end of the range.
-     * ```
-     *
      * @param int $offset Byte offset to seek to, interpreted according to `$whence`.
      * @param int $whence One of `SEEK_SET` (absolute), `SEEK_CUR` (relative to current), `SEEK_END` (relative to end).
      *
-     * @throws RuntimeException if `$whence` is invalid or the resulting target is negative.
+     * @throws RuntimeException when the target/mode is invalid, the stream is closed, or seeking fails.
      */
     public function seek(int $offset, int $whence = SEEK_SET): void
     {
@@ -361,11 +285,15 @@ final class RangeStream implements StreamInterface
             SEEK_SET => $offset,
             SEEK_CUR => $this->tell() + $offset,
             SEEK_END => $this->length + $offset,
-            default => throw new RuntimeException('Invalid seek mode.'),
+            default => throw new RuntimeException(
+                Message::RANGE_STREAM_SEEK_MODE_INVALID->getMessage(),
+            ),
         };
 
         if ($target < 0) {
-            throw new RuntimeException('Cannot seek before the beginning of the stream range.');
+            throw new RuntimeException(
+                Message::RANGE_STREAM_SEEK_POSITION_INVALID->getMessage(),
+            );
         }
 
         $this->stream()->seek($this->begin + min($target, $this->length));
@@ -374,10 +302,7 @@ final class RangeStream implements StreamInterface
     /**
      * Returns the current read position relative to the start of the range.
      *
-     * Usage example:
-     * ```php
-     * $position = $rangeStream->tell(); // get the current read position within the range stream.
-     * ```
+     * @throws RuntimeException when the stream is closed or its position is unavailable.
      *
      * @return int Position in bytes within `[0, $length]`.
      */
@@ -389,24 +314,15 @@ final class RangeStream implements StreamInterface
     /**
      * Rejects every write attempt because the stream is read-only.
      *
-     * Usage example:
-     * ```php
-     * try {
-     *     $rangeStream->write('data'); // attempt to write to the range stream.
-     * } catch (RuntimeException $e) {
-     *     // handle the error when trying to write to a read-only stream.
-     * }
-     * ```
-     *
      * @param string $string Bytes the caller attempted to write (ignored).
      *
-     * @throws RuntimeException Always.
+     * @throws RuntimeException always.
      *
-     * @return int Never returns; included to satisfy the {@see StreamInterface} contract.
+     * @return int Never returns; included to satisfy the `StreamInterface` contract.
      */
     public function write(string $string): int
     {
-        throw new RuntimeException('Range streams are not writable.');
+        throw new RuntimeException(Message::RANGE_STREAM_NOT_WRITABLE->getMessage());
     }
 
     /**
@@ -414,12 +330,14 @@ final class RangeStream implements StreamInterface
      *
      * @throws RuntimeException when no stream is available.
      *
-     * @return StreamInterface Wrapped stream guaranteed to be non-`null`.
+     * @return StreamInterface wrapped stream guaranteed to be non-`null`.
      */
     private function stream(): StreamInterface
     {
         if ($this->stream === null) {
-            throw new RuntimeException('No stream available.');
+            throw new RuntimeException(
+                Message::RANGE_STREAM_UNAVAILABLE->getMessage(),
+            );
         }
 
         return $this->stream;

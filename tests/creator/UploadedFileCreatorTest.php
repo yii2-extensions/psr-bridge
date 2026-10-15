@@ -764,7 +764,7 @@ final class UploadedFileCreatorTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            Message::SIZE_MUST_BE_INTEGER->getMessage('subcategory'),
+            Message::SIZE_MUST_BE_INTEGER->getMessage(),
         );
 
         $creator->createFromGlobals($files);
@@ -842,7 +842,9 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::ERROR_MUST_BE_INTEGER->getMessage('error'));
+        $this->expectExceptionMessage(
+            Message::ERROR_MUST_BE_INTEGER->getMessage(),
+        );
 
         // @phpstan-ignore-next-line
         $creator->createFromArray($fileSpec);
@@ -938,7 +940,9 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::NAME_MUST_BE_STRING_OR_NULL->getMessage('name'));
+        $this->expectExceptionMessage(
+            Message::NAME_MUST_BE_STRING_OR_NULL->getMessage(),
+        );
 
         // @phpstan-ignore-next-line
         $creator->createFromArray($fileSpec);
@@ -954,7 +958,9 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Maximum nesting depth exceeded for file uploads');
+        $this->expectExceptionMessage(
+            Message::MAXIMUM_NESTING_DEPTH_EXCEEDED->getMessage(11),
+        );
 
         $creator->createFromGlobals($deeplyNestedFiles);
     }
@@ -973,7 +979,9 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::SIZE_MUST_BE_INTEGER->getMessage('size'));
+        $this->expectExceptionMessage(
+            Message::SIZE_MUST_BE_INTEGER->getMessage(),
+        );
 
         // @phpstan-ignore-next-line
         $creator->createFromArray($fileSpec);
@@ -997,7 +1005,9 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::FAILED_CREATE_STREAM_FROM_TMP_FILE->getMessage($nonExistentPath));
+        $this->expectExceptionMessage(
+            Message::FAILED_CREATE_STREAM_FROM_TMP_FILE->getMessage($nonExistentPath),
+        );
 
         $creator->createFromArray($fileSpec);
     }
@@ -1016,7 +1026,9 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::TMP_NAME_MUST_BE_STRING->getMessage('tmp_name'));
+        $this->expectExceptionMessage(
+            Message::TMP_NAME_MUST_BE_STRING->getMessage(),
+        );
 
         // @phpstan-ignore-next-line
         $creator->createFromArray($fileSpec);
@@ -1037,7 +1049,9 @@ final class UploadedFileCreatorTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::TYPE_MUST_BE_STRING_OR_NULL->getMessage('type'));
+        $this->expectExceptionMessage(
+            Message::TYPE_MUST_BE_STRING_OR_NULL->getMessage(),
+        );
 
         // @phpstan-ignore-next-line
         $creator->createFromArray($fileSpec);
@@ -1065,7 +1079,9 @@ final class UploadedFileCreatorTest extends TestCase
         $creator = new UploadedFileCreator($uploadedFileFactory, $streamFactory);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::ERROR_MUST_BE_INTEGER->getMessage('error'));
+        $this->expectExceptionMessage(
+            Message::ERROR_MUST_BE_INTEGER->getMessage(),
+        );
 
         $creator->createFromGlobals($files);
     }
@@ -1092,7 +1108,9 @@ final class UploadedFileCreatorTest extends TestCase
         $creator = new UploadedFileCreator($uploadedFileFactory, $streamFactory);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::SIZE_MUST_BE_INTEGER->getMessage('size'));
+        $this->expectExceptionMessage(
+            Message::SIZE_MUST_BE_INTEGER->getMessage(),
+        );
 
         $creator->createFromGlobals($files);
     }

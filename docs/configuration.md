@@ -1,258 +1,94 @@
-# Configuration reference
+# Configuration
 
-## Overview
+`http\Application` installs the bridge request, response, and error handler as core components. Keep the application's
+other Yii settings, routes, access filters, and CSRF policy. The following fragment extends an existing web config;
+it is not a complete application.
 
-This guide covers all configuration options for the PSR Bridge extension, from
-basic setup to advanced HTTP message handling, worker mode integration, and
-application configuration.
+## Factories
 
-## Basic configuration
-
-### Core components setup
-
-Replace the default Yii2 Request and Response components with PSR Bridge
-enhanced versions.
-
-To enable automatic body parsing (for example, for JSON APIs), configure
-the `parsers` property.
+Response conversion resolves two factories from `Yii::$container`:
 
 ```php
-<?php
+use HttpSoft\Message\{ResponseFactory, StreamFactory};
+use Psr\Http\Message\{ResponseFactoryInterface, StreamFactoryInterface};
 
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\{ErrorHandler, Request, Response};
-use yii\web\JsonParser;
-
-return [
-    'components' => [
-        'request' => [
-            'class' => Request::class,
-            // Keep validation enabled in production.
-            'enableCookieValidation' => true,
-            'enableCsrfValidation' => true,
-            'parsers' => [
-                'application/json' => JsonParser::class,
-            ],
-        ],
-        'response' => [
-            'class' => Response::class,
-        ],
-        'errorHandler' => [
-            'class' => ErrorHandler::class,
-        ],
-    ],
-];
+$config['container']['definitions'][ResponseFactoryInterface::class] = ResponseFactory::class;
+$config['container']['definitions'][StreamFactoryInterface::class] = StreamFactory::class;
 ```
 
-> [!WARNING]
-> Keep `enableCookieValidation` and `enableCsrfValidation` enabled. They are Yii's secure defaults: CSRF validation
-> protects browser users from cross-site state-changing requests, and cookie validation guarantees the integrity of
-> incoming and outgoing cookies (the bridge propagates the request setting to `Response` so cookies are signed by
-> `ResponseAdapter`).
->
-> Provide your own `cookieValidationKey` (a long, random secret). It is **required** whenever `enableCookieValidation`
-> is `true`: when it is missing, the bridge throws `InvalidConfigException` instead of accepting unsigned cookies, so a
-> misconfiguration fails fast rather than degrading security silently. Keep the key out of version control and protect
-> it like any other credential. Because Yii stores the CSRF token in a signed cookie (`enableCsrfCookie`), cookie
-> validation must stay enabled alongside CSRF.
->
-> Disable CSRF only for a purely stateless, token-authenticated API that never relies on browser cookies or sessions,
-> and do so as a deliberate, documented decision, never by default.
+`ServerRequestCreator` receives server-request, stream, and uploaded-file factories directly. Container configuration
+is applied once at bridge construction; application bootstrap runs for each request.
 
-### Request body parsing
+## Browser cookies and lazy sessions
 
-The `Request` component includes built-in logic to handle PSR-7 body parsing automatically.
-
-When `setPsr7Request()` is called (typically by the worker runner), the bridge will:
-
-1. Detect the `Content-Type` of the incoming PSR-7 request.
-2. Check the `parsers` configuration for a matching parser.
-3. Parse the body content with the configured parser.
-4. Update the PSR-7 Request instance using `withParsedBody()`.
-
-This ensures that `Yii::$app->request->post()` and `Yii::$app->request->bodyParams` are correctly
-populated immediately after the request is handled.
-
-> [!WARNING]
-> In worker runtimes (for example RoadRunner or FrankenPHP), configured body parsers receive the full request body as a
-> string. Avoid enabling automatic parsing for `multipart/form-data` unless strict upload/body size limits are enforced
-> at the server and application levels. Uploaded files are already available via the PSR-7 uploaded-file interfaces.
-
-#### Wildcard parsing
-
-You can also configure a fallback parser using the `*` wildcard for small trusted payloads (for example JSON-only APIs).
-Avoid permissive wildcard parsing for untrusted large body types in worker deployments.
+Load `COOKIE_VALIDATION_KEY` through the application's secret configuration. Fail on a missing value rather than
+falling back to a fixed key:
 
 ```php
-'request' => [
-    'class' => Request::class,
-    'parsers' => [
-        'application/json' => JsonParser::class,
-        // Use JSON parser for any content type not explicitly defined above
-        '*' => JsonParser::class,
-    ],
-],
-```
+$key = getenv('COOKIE_VALIDATION_KEY');
 
-## Error handling configuration
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\ErrorHandler;
-
-'errorHandler' => [
-    'class' => ErrorHandler::class,
-    'errorAction' => 'site/error',
-    'discardExistingOutput' => true,
-],
-```
-
-### Custom error views and formats
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\ErrorHandler;
-
-'errorHandler' => [
-    'class' => ErrorHandler::class,
-    'errorView' => '@app/views/error.php',
-    'exceptionView' => '@app/views/exception.php',
-    'callStackItemView' => '@app/views/callStackItem.php',
-    'displayVars' => ['_GET', '_POST', '_FILES', '_COOKIE'],
-],
-```
-
-### Memory management configuration
-
-Configure memory limits and garbage collection behavior.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\Application;
-
-$app = new Application($config);
-
-// Enable logger flushing (default: true)
-$app->flushLogger = true;
-
-// Memory management example
-if ($app->clean()) {
-    // Memory usage exceeded 90% of limit
-    // Trigger worker restart or cleanup
-    exit(0);
+if (!is_string($key) || $key === '') {
+    throw new RuntimeException('COOKIE_VALIDATION_KEY must be configured.');
 }
+
+$config['components']['request']['cookieValidationKey'] = $key;
+$config['components']['request']['enableCookieValidation'] = true;
+$config['components']['session']['useCookies'] = false;
+$config['components']['session']['useStrictMode'] = true;
 ```
 
-### PSR-7 factory dependencies
+Disable PHP's automatic session cookie handling before sessions start (`session.use_cookies=0`, or the Yii session
+setting above). The bridge writes session cookies into the PSR response when a session is active during conversion.
+Preserve request cookie validation and its response synchronization so those cookies are signed. An empty key fails
+when validated cookies are accessed or a response with validation enabled is converted.
 
-Configure PSR-7 HTTP message factories for request/response conversion.
+`useSession=true` opens the session before bootstrap and closes it afterward, including when bootstrap throws.
+Set `useSession=false` when eager opening is unnecessary, including an application that opens its session lazily.
+This flag does not disable sessions or make an application stateless. With either value, request preparation closes
+a previously active session and applies the current session cookie ID, or clears the ID if the cookie is absent,
+fails signature validation, or has an invalid value. It does not open the session itself in the lazy case.
+
+The bridge accepts IDs of 1 to 256 characters from `A-Z`, `a-z`, `0-9`, `,`, and `-`. Syntax validation is distinct
+from storage validation: a well-formed unknown ID is applied. `useStrictMode=true` asks the session handler to
+replace unknown IDs; keep Yii's normal login-time ID regeneration. Do not bypass cookie validation to pass a raw
+session ID from the client.
+
+## Worker state
+
+Configure lifecycle settings in the constructor config or before handling requests:
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-use HttpSoft\Message\{ResponseFactory, ServerRequestFactory, StreamFactory, UploadedFileFactory};
-use Psr\Http\Message\{
-    ResponseFactoryInterface,
-    ServerRequestFactoryInterface,
-    StreamFactoryInterface,
-    UploadedFileFactoryInterface,
-};
-
-'container' => [
-    'definitions' => [
-        ResponseFactoryInterface::class => ResponseFactory::class,
-        ServerRequestFactoryInterface::class => ServerRequestFactory::class,
-        StreamFactoryInterface::class => StreamFactory::class,
-        UploadedFileFactoryInterface::class => UploadedFileFactory::class,
-    ],
-],
+$config['useSession'] = false;
+$config['syncCookieValidation'] = true;
+$config['persistentComponents'] = ['db', 'cache'];
 ```
 
-### Application configuration
+Only components whose loaded instances are safe to reuse belong in `persistentComponents`; its entries support
+shell wildcard patterns as well as exact IDs. Exclude `request`, `response`, `errorHandler`, `session`, and `user`.
+Defaults retain `db` and `cache`. Reinitialization uses the original constructor config for other components.
 
-For worker-based environments (FrankenPHP, RoadRunner).
+`resetUploadedFiles` remains a public compatibility property, but upload state is reset unconditionally during
+request preparation even when it is `false`. Do not use it as a switch to retain files across requests.
+`syncCookieValidation=false` skips copying both the request validation key and its enable flag to the response;
+it does not disable request cookie access. `flushLogger` controls the logger flush during finalization.
+
+## Request bodies
+
+Configure a parser for the payloads the application accepts:
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\{Application, Request, Response};
-
-$config = [
-    'id' => 'app',
-    'basePath' => dirname(__DIR__),
-    'controllerNamespace' => 'app\\controllers',
-    'components' => [
-        'request' => [
-            'class' => Request::class,
-        ],
-        'response' => [
-            'class' => Response::class,
-        ],
-        // ... other components
-    ],
-];
-
-$app = new Application($config);
+$config['components']['request']['parsers']['application/json'] = \yii\web\JsonParser::class;
 ```
 
-### Worker lifecycle flags
+When the PSR request's parsed body is `null`, binding it selects an exact Content-Type parser (ignoring parameters
+after `;`) or the `*` fallback. Parsers receive the full raw body as a string. Existing non-`null` parsed bodies,
+including `[]`, are preserved. Scalar parser results are discarded; body parameters remain an array or object.
 
-`yii2\extensions\psrbridge\http\Application` exposes runtime flags for
-per-request state isolation in long-running workers.
+`ServerRequestCreator::createFromGlobals()` attaches `$_POST`, which can be `[]` for JSON. For such SAPI JSON requests,
+set the PSR parsed body to `null` before `handle()` to enable the configured parser; see the
+[JSON example](examples.md#json-from-sapi). Avoid automatic multipart parsing in workers without enforced body/upload
+size limits; PSR uploaded files already carry upload data.
 
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\Application;
-
-$app = new Application($config);
-
-// Safe defaults for worker mode
-$app->useSession = true;
-$app->syncCookieValidation = true;
-$app->resetUploadedFiles = true;
-
-// Reuse only explicitly safe components
-$app->persistentComponents = ['db', 'cache'];
-```
-
-- `useSession`: keep `true` unless the application is strictly stateless. Setting it to `false` skips only the eager
-  session open/close hooks around bootstrap. The bridge still closes a session left active by the previous request
-  and applies the session ID from the request cookie on every request, so a session opened lazily by your code
-  (`user`, flash messages, `Yii::$app->session`) stays per visitor and never resumes another visitor's session.
-  A session cookie value that PHP rejects as a session ID (characters outside `A-Z`, `a-z`, `0-9`, `,` and `-`, or
-  more than 256 characters) is discarded and a new session ID is generated, regardless of `useSession`.
-- Session fixation: the bridge applies any well-formed session ID from the request cookie, even an unknown one. Set
-  `useStrictMode => true` on the `session` component to replace unknown IDs with new ones (`yii\web\Session` relies
-  on PHP's `session.use_strict_mode`, `yii\web\DbSession` and `yii\web\CacheSession` check their storage), keep
-  cookie validation enabled so the session cookie is signed, and let `yii\web\User` regenerate the session ID on
-  login, which it does whenever `enableSession` is `true` (default).
-- `syncCookieValidation`: keep `true` in most cases. Setting it to `false` disables request-to-response synchronization of cookie validation settings and can break login/identity flows.
-- `resetUploadedFiles`: keep `true` in long-running workers to preserve per-request upload isolation.
-- `persistentComponents`: list of components to keep alive between requests (default: `['db', 'cache']`). Only include components proven to be request-safe.
-- Never include request-scoped components in `persistentComponents` (`request`, `response`, `errorHandler`, `session`, `user`).
-
-Do not disable request cookie or uploaded-file access globally.
-`Request::getCookies()` and `Request::getUploadedFiles()` are input adapters
-and should remain available in PSR-7 mode.
-
-## Next steps
-
-- 💡 [Usage Examples](examples.md)
-- 🧪 [Testing Guide](testing.md)
+For exact signatures and exceptions, consult the
+[generated API](https://yii2-framework.github.io/docs/extensions/psr-bridge/reference/). Continue with
+[worker and file examples](examples.md) and [migration checks](migration.md).

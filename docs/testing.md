@@ -1,89 +1,46 @@
 # Testing
 
-This package provides a consistent set of [Composer](https://getcomposer.org/) scripts for local validation.
-
-Tool references:
-
-- [Composer Require Checker](https://github.com/maglnet/ComposerRequireChecker) for dependency definition checks.
-- [Easy Coding Standard (ECS)](https://github.com/easy-coding-standard/easy-coding-standard) for coding standards.
-- [Infection](https://infection.github.io/) for mutation testing.
-- [PHPStan](https://phpstan.org/) for static analysis.
-- [PHPUnit](https://phpunit.de/) for unit tests.
-- [Rector](https://github.com/rectorphp/rector) for automated refactoring.
-
-## Automated refactoring (Rector)
-
-Run Rector to apply automated code refactoring.
+Install development dependencies from the chosen package revision, then run these checks from the package root:
 
 ```bash
-composer rector
-```
-
-## Coding standards (ECS)
-
-Run Easy Coding Standard (ECS) and apply fixes.
-
-```bash
-composer ecs
-```
-
-## Dependency definition check
-
-Verify that runtime dependencies are correctly declared in `composer.json`.
-
-```bash
+composer tests
+composer static
+vendor/bin/ecs check
 composer check-dependencies
 ```
 
-## Mutation testing (Infection)
+`composer ecs` applies fixes; use the direct ECS check above for a read-only style check. PHPStan analyzes source
+and tests at the configured maximum level. PHPUnit fails on risky tests and warnings.
 
-Run mutation testing.
+CI runs the suite separately with Yii `2.0.55` (the minimum supported release) and `22.0.x-dev`. To repeat either
+resolution locally, use separate disposable checkouts so their dependencies and lock files cannot affect each other:
+
+```bash
+composer update --with yiisoft/yii2:2.0.55 --with-all-dependencies
+composer tests
+composer audit
+```
+
+Repeat in the other checkout with `--with yiisoft/yii2:22.0.x-dev`. Keep advisory blocking enabled for both runs.
+
+To focus on worker session and response lifecycle regressions:
+
+```bash
+vendor/bin/phpunit tests/http/stateless/ApplicationSessionTest.php
+vendor/bin/phpunit tests/http/stateless/ApplicationFinalizeTest.php
+```
+
+Validate the application's actual worker integration too: alternate two visitors, omit cookies on the next request,
+send malformed session cookie values, exercise an upload followed by no upload, and force emission failure. Confirm
+after-send runs only after successful emission. Repeat with `useSession=false` when using lazy sessions.
+
+Mutation testing is a separate, slower check that needs a supported coverage driver:
 
 ```bash
 composer mutation
 ```
 
-Run mutation testing with static analysis enabled.
+`composer rector` modifies source; do not run it as a read-only validation command. Report the PHP version, resolved
+dependencies, passed checks, and unavailable coverage/runtime tests rather than treating a skipped check as passed.
 
-```bash
-composer mutation-static
-```
-
-## Static analysis (PHPStan)
-
-Run static analysis.
-
-```bash
-composer static
-```
-
-## Unit tests (PHPUnit)
-
-Run the full test suite.
-
-```bash
-composer tests
-```
-
-## Passing extra arguments
-
-Composer scripts support forwarding additional arguments using `--`.
-
-Run PHPUnit with code coverage report generation.
-
-```bash
-composer tests -- --coverage-html code_coverage
-```
-
-Run PHPStan with a different memory limit.
-
-```bash
-composer static -- --memory-limit=512M
-```
-
-## Next steps
-
-- 📚 [Installation Guide](installation.md)
-- ⚙️ [Configuration Reference](configuration.md)
-- 💡 [Usage Examples](examples.md)
-- 📖 [Readme](../README.md)
+See [agent validation stages](agents.md#verify-each-stage) for skill installation and native discovery checks.

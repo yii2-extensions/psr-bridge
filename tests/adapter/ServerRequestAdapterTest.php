@@ -6,8 +6,10 @@ namespace yii2\extensions\psrbridge\tests\adapter;
 
 use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
 use Psr\Http\Message\ServerRequestInterface;
+use stdClass;
 use yii\base\InvalidConfigException;
-use yii\web\JsonParser;
+use yii\web\{JsonParser, RequestParserInterface};
+use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\Request;
 use yii2\extensions\psrbridge\tests\provider\RequestProvider;
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
@@ -828,6 +830,36 @@ final class ServerRequestAdapterTest extends TestCase
             [],
             $request->getBodyParams(),
             'Body parameters should fallback to an empty array when parser returns a scalar value.',
+        );
+    }
+
+    public function testThrowInvalidConfigExceptionWhenContentTypeParserIsInvalid(): void
+    {
+        $request = new Request();
+        $request->parsers = ['application/json' => stdClass::class];
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            Message::INVALID_REQUEST_PARSER->getMessage('application/json', RequestParserInterface::class),
+        );
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest('POST', '/api/items', ['Content-Type' => 'application/json; charset=UTF-8']),
+        );
+    }
+
+    public function testThrowInvalidConfigExceptionWhenFallbackParserIsInvalid(): void
+    {
+        $request = new Request();
+        $request->parsers = ['*' => stdClass::class];
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage(
+            Message::INVALID_FALLBACK_REQUEST_PARSER->getMessage(RequestParserInterface::class),
+        );
+
+        $request->setPsr7Request(
+            HelperFactory::createRequest('POST', '/api/items', ['Content-Type' => 'application/json']),
         );
     }
 }

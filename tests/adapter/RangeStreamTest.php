@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\adapter;
 
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{Group, TestWith};
 use PHPUnit\Framework\MockObject\Exception;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use yii2\extensions\psrbridge\adapter\RangeStream;
+use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\tests\support\{HelperFactory, TestCase};
 
 use function fopen;
@@ -19,6 +20,7 @@ use function str_repeat;
 
 use const SEEK_CUR;
 use const SEEK_END;
+use const SEEK_SET;
 
 /**
  * Unit tests for the {@see RangeStream} PSR-7 range-bounded stream wrapper.
@@ -565,7 +567,7 @@ final class RangeStreamTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'Invalid seek mode.',
+            Message::RANGE_STREAM_SEEK_MODE_INVALID->getMessage(),
         );
 
         $rangeStream->seek(0, 99);
@@ -577,7 +579,7 @@ final class RangeStreamTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'Cannot read a negative length from a stream.',
+            Message::RANGE_STREAM_READ_LENGTH_INVALID->getMessage(),
         );
 
         $rangeStream->read(-1);
@@ -591,7 +593,7 @@ final class RangeStreamTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'No stream available.',
+            Message::RANGE_STREAM_UNAVAILABLE->getMessage(),
         );
 
         $rangeStream->tell();
@@ -601,7 +603,7 @@ final class RangeStreamTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'Invalid stream range.',
+            Message::RANGE_STREAM_INVALID->getMessage(),
         );
 
         new RangeStream($this->stream('test'), -1, 5);
@@ -611,10 +613,54 @@ final class RangeStreamTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'Invalid stream range.',
+            Message::RANGE_STREAM_INVALID->getMessage(),
         );
 
         new RangeStream($this->stream('test'), 5, 3);
+    }
+
+    #[TestWith([false])]
+    #[TestWith([true])]
+    public function testThrowRuntimeExceptionWhenRewindingUnavailableStream(bool $detach): void
+    {
+        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+
+        if ($detach) {
+            $rangeStream->detach();
+        } else {
+            $rangeStream->close();
+        }
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            Message::RANGE_STREAM_UNAVAILABLE->getMessage(),
+        );
+
+        $rangeStream->rewind();
+    }
+
+    #[TestWith([false, SEEK_SET])]
+    #[TestWith([false, SEEK_CUR])]
+    #[TestWith([false, SEEK_END])]
+    #[TestWith([true, SEEK_SET])]
+    #[TestWith([true, SEEK_CUR])]
+    #[TestWith([true, SEEK_END])]
+    public function testThrowRuntimeExceptionWhenSeekingUnavailableStream(bool $detach, int $whence): void
+    {
+        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+
+        if ($detach) {
+            $rangeStream->detach();
+        } else {
+            $rangeStream->close();
+        }
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            Message::RANGE_STREAM_UNAVAILABLE->getMessage(),
+        );
+
+        $rangeStream->seek(0, $whence);
     }
 
     public function testThrowRuntimeExceptionWhenSeekTargetIsNegative(): void
@@ -623,10 +669,24 @@ final class RangeStreamTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'Cannot seek before the beginning of the stream range.',
+            Message::RANGE_STREAM_SEEK_POSITION_INVALID->getMessage(),
         );
 
         $rangeStream->seek(-5);
+    }
+
+    public function testThrowRuntimeExceptionWhenTellingDetachedStreamPosition(): void
+    {
+        $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+
+        $rangeStream->detach();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            Message::RANGE_STREAM_UNAVAILABLE->getMessage(),
+        );
+
+        $rangeStream->tell();
     }
 
     public function testThrowRuntimeExceptionWhenWritingToRangeStream(): void
@@ -635,7 +695,7 @@ final class RangeStreamTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'Range streams are not writable.',
+            Message::RANGE_STREAM_NOT_WRITABLE->getMessage(),
         );
 
         $rangeStream->write('x');

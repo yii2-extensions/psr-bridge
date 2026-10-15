@@ -15,13 +15,6 @@ use yii2\extensions\psrbridge\adapter\ResponseAdapter;
  * Extends Yii response handling with PSR-7 response conversion.
  *
  * {@see ResponseAdapter} Yii response to PSR-7 response adapter.
- *
- * Usage example:
- * ```php
- * $response = new \yii2\extensions\psrbridge\http\Response();
- * $response->data = ['ok' => true];
- * $psr7Response = $response->getPsr7Response();
- * ```
  */
 class Response extends \yii\web\Response
 {
@@ -33,7 +26,7 @@ class Response extends \yii\web\Response
     public string $cookieValidationKey = '';
 
     /**
-     * @var bool Whether to validate cookies with {@see cookieValidationKey}.
+     * Whether to sign outgoing cookie values with {@see cookieValidationKey}.
      */
     public bool $enableCookieValidation = false;
 
@@ -50,14 +43,6 @@ class Response extends \yii\web\Response
      *
      * Call this after the PSR-7 response has been emitted so lazy body streams (such as {@see sendFile()} or
      * {@see sendStreamAsFile()}) are consumed before after-send handlers run.
-     *
-     * Usage example:
-     * ```php
-     * $response = new \yii2\extensions\psrbridge\http\Response();
-     * $psr7Response = $response->getPsr7Response();
-     * // emit $psr7Response through the runtime, then finalize the Yii lifecycle:
-     * $response->completeSend();
-     * ```
      */
     public function completeSend(): void
     {
@@ -73,14 +58,10 @@ class Response extends \yii\web\Response
     /**
      * Converts the Yii Response component to a PSR-7 ResponseInterface instance.
      *
-     * Delegates the conversion process to a {@see ResponseAdapter}, triggering Yii Response lifecycle events and
-     * ensuring session cookies are attached when a session is active.
-     *
-     * Usage example:
-     * ```php
-     * $response = new \yii2\extensions\psrbridge\http\Response();
-     * $psrResponse = $response->getPsr7Response();
-     * ```
+     * Triggers before-send and after-prepare, closes an active session after queuing its cookie, and delegates
+     * conversion to {@see ResponseAdapter}. Does not emit bytes, trigger after-send, or mark the response sent.
+     * Use {@see Application::finalize()} after emission for application-managed responses; for standalone use,
+     * call {@see completeSend()} after successful emission.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.

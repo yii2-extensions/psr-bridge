@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs: remove PHPStan prefixes from parameter, return, variable, and property annotations across source and tests.
 - test: update error handler test assertions for PHPStan `2.0` compatibility.
 - fix(security): sync PHP session IDs from request cookies to isolate workers and apply cookies before lazy session opening.
+- build(deps)!: require Yii `2.0.55+` (`2.0`), retain Yii `22.0`; add setup/worker guides, session migration checks (#288), PHPDoc, and AI-agent skill.
 
 ## 0.3.0 February 28, 2026
 
