@@ -20,15 +20,6 @@ use const UPLOAD_ERR_OK;
 /**
  * Creates PSR-7 uploaded files from PHP file specifications.
  *
- * Usage example:
- * ```php
- * $creator = new \yii2\extensions\psrbridge\creator\UploadedFileCreator(
- *     $uploadedFileFactory,
- *     $streamFactory,
- * );
- * $uploadedFiles = $creator->createFromGlobals($_FILES);
- * ```
- *
  * @phpstan-type TmpName array<array<mixed>|string>
  * @phpstan-type TmpSize array<array<mixed>|int>
  * @phpstan-type TmpError array<array<mixed>|int>
@@ -74,25 +65,11 @@ final class UploadedFileCreator
      * Validates the input file specification and delegates stream and uploaded file creation to the configured PSR-7
      * factories.
      *
-     * Usage example:
-     * ```php
-     * $creator = new \yii2\extensions\psrbridge\creator\UploadedFileCreator(
-     *     $uploadedFileFactory,
-     *     $streamFactory,
-     * );
-     * $file = [
-     *     'tmp_name' => '/path/to/temp/file',
-     *     'size' => 12345,
-     *     'error' => 0,
-     *     'name' => 'example.txt',
-     *     'type' => 'text/plain',
-     * ];
-     * $uploadedFile = $creator->createFromArray($file);
-     * ```
-     *
      * @param FileSpec $file File specification with required upload fields and optional name and type.
      *
-     * @return UploadedFileInterface Created uploaded file.
+     * @throws InvalidArgumentException when the specification is invalid or a successful upload cannot be opened.
+     *
+     * @return UploadedFileInterface Created uploaded file; failed uploads receive an empty stream.
      */
     public function createFromArray(array $file): UploadedFileInterface
     {
@@ -112,18 +89,12 @@ final class UploadedFileCreator
     /**
      * Creates UploadedFileInterface instances from PHP global files array.
      *
-     * Iterates over the provided files array and processes each entry using {@see processFileInput}.
-     *
-     * Usage example:
-     * ```php
-     * $creator = new \yii2\extensions\psrbridge\creator\UploadedFileCreator(
-     *     $uploadedFileFactory,
-     *     $streamFactory,
-     * );
-     * $files = $creator->createFromGlobals($_FILES);
-     * ```
+     * Iterates over the provided files array and processes each entry using `processFileInput`.
      *
      * @param FilesArray $files Uploaded file specifications or PSR-7 uploaded files.
+     *
+     * @throws InvalidArgumentException when specifications are invalid, nesting exceeds 10, or a successful upload
+     * cannot be opened.
      *
      * @return FilesArray Processed uploaded files, preserving nested file trees.
      */
@@ -150,6 +121,7 @@ final class UploadedFileCreator
      * @param TmpError $errors Array of error codes or nested arrays matching the structure of $tmpNames.
      * @param Name $names Array of file names or nested arrays matching the structure of $tmpNames.
      * @param Type $types Array of file types or nested arrays matching the structure of $tmpNames.
+     * @param int $depth Current recursion depth; values greater than 10 are rejected.
      *
      * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
      *
@@ -242,11 +214,6 @@ final class UploadedFileCreator
      * @param MultiFileSpec $files Multiple-file specification.
      *
      * @return FilesArray Nested uploaded-file tree.
-     *
-     * Usage example:
-     * ```php
-     * $tree = $creator->createMultipleUploadedFiles($files);
-     * ```
      */
     private function createMultipleUploadedFiles(array $files): array
     {

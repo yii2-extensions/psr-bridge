@@ -1,57 +1,36 @@
-# Installation guide
+# Installation
 
-## System requirements
+## Dependencies
 
-- [`PHP`](https://www.php.net/downloads) 8.1 or higher
-- [`Composer`](https://getcomposer.org/download/) for dependency management
-- [`Yii2`](https://github.com/yiisoft/yii2) 2.0.53+ or 22.x
+The package requires PHP 8.3+, the `filter` and `mbstring` extensions, PSR HTTP interfaces, and Yii
+`~2.0.55 || ^22.0@dev`: Yii 2.0.55 or later within the 2.0 line, or Yii 22. Older Yii 2.0 releases are no longer
+supported. The selected framework release may require a newer PHP version; check its resolved requirements.
+Keep Composer's security advisory blocking enabled and run `composer audit` after resolving dependencies.
 
-### PSR-7/PSR-17 HTTP Message Factories
-
-Install exactly one of the following PSR-7/PSR-17 HTTP message implementations.
-
-- [`guzzlehttp/psr7`](https://github.com/guzzle/psr7)
-- [`httpsoft/http-message`](https://github.com/httpsoft/http-message)
-- [`laminas/laminas-diactoros`](https://github.com/laminas/laminas-diactoros)
-- [`nyholm/psr7`](https://github.com/Nyholm/psr7)
-
-### Worker mode implementation (optional)
-
-- [`yii2-extensions/franken-php`](https://github.com/yii2-extensions/franken-php)
-- [`yii2-extensions/road-runner`](https://github.com/yii2-extensions/road-runner)
-
-## Installation
-
-### Method 1: Using [Composer](https://getcomposer.org/download/) (recommended)
-
-Install the extension.
+The examples use the unreleased 0.4 `Application::finalize()` lifecycle. Select its development branch explicitly:
 
 ```bash
-composer require yii2-extensions/psr-bridge:^0.3
+composer require yii2-extensions/psr-bridge:dev-main httpsoft/http-message
 ```
 
-### Method 2: Manual installation
+HttpSoft is the implementation used in these examples and in package tests. An existing compatible PSR-7/PSR-17
+implementation can be reused. Register its factories as described in [configuration](configuration.md#factories).
+The bridge depends on interfaces and does not select a production message implementation for you.
 
-Add to your `composer.json`.
+`dev-main` is a moving development branch with the `0.4.x-dev` alias, not a stable `0.4.0` release. Review and retain
+the resolved commit in `composer.lock`, and compare `composer show yii2-extensions/psr-bridge` with [UPGRADE](../UPGRADE.md).
+An unpinned install resolves an available stable release; stable `0.3` has no `Application::finalize()`. Applications
+remaining on stable `0.3` must use that version's documentation instead of these lifecycle examples.
 
-```json
-{
-    "require": {
-        "yii2-extensions/psr-bridge": "^0.3"
-    }
-}
-```
+## Choose the runtime
 
-Then run.
+For a SAPI entry script, start with the [README example](../README.md#quick-start). For long-running runtimes,
+the companion packages [FrankenPHP](https://github.com/yii2-extensions/franken-php) and
+[RoadRunner](https://github.com/yii2-extensions/road-runner) supply the server integration. Install and configure the
+chosen runner separately and check its lifecycle implementation against the bridge version in use.
 
-```bash
-composer update
-```
+A custom runtime supplies a PSR-7 server request, emits the returned response, and calls `Application::finalize()`.
+The bridge does not start an HTTP server or implement the PSR-15 middleware pipeline itself.
 
-## Next steps
-
-Once the installation is complete.
-
-- ⚙️ [Configuration Reference](configuration.md)
-- 💡 [Usage Examples](examples.md)
-- 🧪 [Testing Guide](testing.md)
+Continue with [configuration](configuration.md), [practical examples](examples.md), or the
+[agent skill installation](agents.md).

@@ -656,7 +656,9 @@ final class SapiEmitterTest extends TestCase
     public function testThrowExceptionWhenBufferLengthIsNegative(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::BUFFER_LENGTH_INVALID->getMessage(SapiEmitter::class, -1));
+        $this->expectExceptionMessage(
+            Message::BUFFER_LENGTH_INVALID->getMessage(SapiEmitter::class, -1),
+        );
 
         new SapiEmitter(-1);
     }
@@ -664,7 +666,9 @@ final class SapiEmitterTest extends TestCase
     public function testThrowExceptionWhenBufferLengthIsZero(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(Message::BUFFER_LENGTH_INVALID->getMessage(SapiEmitter::class, 0));
+        $this->expectExceptionMessage(
+            Message::BUFFER_LENGTH_INVALID->getMessage(SapiEmitter::class, 0),
+        );
 
         new SapiEmitter(0);
     }
@@ -677,7 +681,9 @@ final class SapiEmitterTest extends TestCase
         MockerFunctions::set_headers_sent(true, 'file', 123);
 
         $this->expectException(HeadersAlreadySentException::class);
-        $this->expectExceptionMessage(Message::UNABLE_TO_EMIT_RESPONSE_HEADERS_ALREADY_SENT->getMessage());
+        $this->expectExceptionMessage(
+            Message::UNABLE_TO_EMIT_RESPONSE_HEADERS_ALREADY_SENT->getMessage(),
+        );
 
         (new SapiEmitter())->emit(HelperFactory::createResponse());
     }
@@ -695,7 +701,9 @@ final class SapiEmitterTest extends TestCase
 
         $this->expectOutputString('Contents');
         $this->expectException(OutputAlreadySentException::class);
-        $this->expectExceptionMessage(Message::UNABLE_TO_EMIT_OUTPUT_HAS_BEEN_EMITTED->getMessage());
+        $this->expectExceptionMessage(
+            Message::UNABLE_TO_EMIT_OUTPUT_HAS_BEEN_EMITTED->getMessage(),
+        );
 
         (new SapiEmitter())->emit($response);
     }
@@ -708,9 +716,21 @@ final class SapiEmitterTest extends TestCase
         ob_start();
         echo 'buffer content';
 
-        self::assertSame(2, ob_get_level());
-        self::assertGreaterThan(0, ob_get_length());
+        self::assertSame(
+            2,
+            ob_get_level(),
+            'Output buffer nesting level must be `2`.',
+        );
+        self::assertGreaterThan(
+            0,
+            ob_get_length(),
+            'Output buffer must contain data.',
+        );
+
         $this->expectException(OutputAlreadySentException::class);
+        $this->expectExceptionMessage(
+            Message::UNABLE_TO_EMIT_OUTPUT_HAS_BEEN_EMITTED->getMessage(),
+        );
 
         $emitter = new SapiEmitter();
         $response = HelperFactory::createResponse();

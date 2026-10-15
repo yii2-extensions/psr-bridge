@@ -1,266 +1,111 @@
-# Usage examples
+# Practical examples
 
-This document provides comprehensive examples of how to use the PSR Bridge
-extension in real-world Yii2 applications, from basic HTTP message handling to
-advanced worker mode integration.
+These recipes extend the [README entry script](../README.md#quick-start) and the application's existing Yii
+configuration. Keep application authorization, verb filters, and input validation in place.
 
-## Basic PSR-7 conversion
+## Custom worker lifecycle
 
-### Converting Yii2 Request to PSR-7
+Construct the bridge application once outside the worker loop. This function handles one request using the
+runtime's emission callback:
 
 ```php
-<?php
+use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
+use yii2\extensions\psrbridge\http\Application;
 
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\Request;
-
-// In your controller
-public function actionApi()
+/**
+ * @param callable(ResponseInterface): void $emit
+ */
+function serve(Application $app, ServerRequestInterface $request, callable $emit): void
 {
-    /** @var Request $request */
-    $request = Yii::$app->request;
+    $response = $app->handle($request);
+    $emitted = false;
 
-    // Get PSR-7 ServerRequestInterface
-    $psr7Request = $request->getPsr7Request();
-
-    // Access PSR-7 methods
-    $method = $psr7Request->getMethod();
-    $uri = $psr7Request->getUri();
-    $headers = $psr7Request->getHeaders();
-    $body = $psr7Request->getBody()->getContents();
-
-    return [
-        'method' => $method,
-        'path' => $uri->getPath(),
-        'headers' => $headers,
-        'body' => $body,
-    ];
-}
-```
-
-### Converting Yii2 Response to PSR-7
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\emitter\SapiEmitter;
-use yii2\extensions\psrbridge\http\Response;
-
-public function actionDownload()
-{
-    /** @var Response $response */
-    $response = Yii::$app->response;
-
-    // Set response data
-    $response->setStatusCode(200);
-    $response->headers->set('Content-Type', 'application/json');
-    $response->content = json_encode(['message' => 'Hello World']);
-
-    // Convert to PSR-7 ResponseInterface
-    $psr7Response = $response->getPsr7Response();
-
-    // Use with PSR-7 compatible tools
-    $emitter = new SapiEmitter();
-    $emitter->emit($psr7Response);
-}
-```
-
-> [!NOTE]
-> This demonstrates the conversion primitive. A full worker request cycle is `handle() → emit → finalize()`.
-> See [Response lifecycle finalization](#response-lifecycle-finalization).
-
-### Development & Debugging
-
-For enhanced debugging capabilities and proper time display in RoadRunner,
-install the worker debug extension.
-
-```bash
-composer require --dev yii2-extensions/worker-debug:^0.1
-```
-
-Add the following to your development configuration (`config/web.php`):
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\debug\WorkerDebugModule;
-
-if (YII_ENV_DEV) {
-    // configuration adjustments for 'dev' environment
-    $config['bootstrap'][] = 'debug';
-    $config['modules']['debug'] = [
-        'class' => WorkerDebugModule::class,
-        // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
-    ];
-}
-```
-
-### File Upload Handling
-
-For enhanced file upload support in worker environments, use the PSR-7 bridge
-UploadedFile class instead of the standard Yii2 implementation.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\{Response, UploadedFile};
-
-final class FileController extends \yii\web\Controller
-{
-    public function actionUpload(): Response
-    {
-        $file = UploadedFile::getInstanceByName('avatar');
-
-        if ($file !== null && $file->error === UPLOAD_ERR_OK) {
-            $safeName = sprintf('%s_%s', Yii::$app->security->generateRandomString(8), basename((string) $file->name));
-            $file->saveAs('@webroot/uploads/' . $safeName);
-        }
-
-        return $this->asJson(['status' => 'uploaded']);
+    try {
+        $emit($response);
+        $emitted = true;
+    } finally {
+        $app->finalize($emitted);
     }
 }
 ```
 
-## Worker mode integration
+Successful finalization triggers `EVENT_AFTER_SEND` and marks the Yii response sent, then cleans up tracked events
+and optionally flushes the logger. On emission failure, `finalize(false)` skips after-send and still performs
+cleanup. Keep finalization outside the emitter's catch path: an after-send exception must not cause a second
+finalize call or be misreported as an emission failure.
 
-### FrankenPHP
+`handle()` prepares the response and triggers before-send/after-prepare; it does not emit bytes or trigger after-send.
+Do not call `run()` or `Response::send()` in this worker cycle. A `clean()` result of `true` indicates memory usage
+has reached 90% of the configured limit and lets the runtime decide to recycle the worker.
+
+## JSON from SAPI
+
+After creating `$request` with `ServerRequestCreator`, clear the empty SAPI parsed body for JSON before binding:
 
 ```php
-<?php
+$contentType = $_SERVER['CONTENT_TYPE'] ?? $request->getHeaderLine('Content-Type');
 
-declare(strict_types=1);
+if (is_string($contentType) && $contentType !== '') {
+    $request = $request->withHeader('Content-Type', $contentType);
+}
 
-// disable PHP automatic session cookie handling
-ini_set('session.use_cookies', '0');
+$contentType = strtolower(trim(explode(';', $request->getHeaderLine('Content-Type'), 2)[0]));
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+if ($contentType === 'application/json') {
+    $request = $request->withParsedBody(null);
+}
 
-use yii2\extensions\frankenphp\FrankenPHP;
-use yii2\extensions\psrbridge\http\Application;
-
-// Load environment variables from .env file
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
-$dotenv->safeLoad();
-
-// production default (change to 'true' for development)
-define('YII_DEBUG', filter_var($_ENV['YII_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));
-// production default (change to 'dev' for development)
-define('YII_ENV', $_ENV['YII_ENV'] ?? 'prod');
-
-require_once dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php';
-
-$config = require_once dirname(__DIR__) . '/config/web/app.php';
-
-$runner = new FrankenPHP(new Application($config));
-
-$runner->run();
+$response = $app->handle($request);
 ```
 
-### RoadRunner
+The creator copies `HTTP_*` headers; standard SAPI `CONTENT_TYPE` is attached explicitly above.
+Use the emission/finalization block from the README afterward. The request parser must be configured before
+`handle()`. The PSR request passed by a worker may already contain parsed data and need no such adjustment.
+
+## Uploads
+
+Use `yii2\extensions\psrbridge\http\UploadedFile` with the application's existing model validator:
 
 ```php
-<?php
+use yii2\extensions\psrbridge\http\UploadedFile;
 
-declare(strict_types=1);
+$model->avatar = UploadedFile::getInstance($model, 'avatar');
 
-require __DIR__ . '/../vendor/autoload.php';
+if ($model->validate() && $model->avatar !== null) {
+    $path = Yii::getAlias('@runtime/uploads/') . Yii::$app->security->generateRandomString() . '.png';
 
-use yii2\extensions\psrbridge\http\Application;
-use yii2\extensions\roadrunner\RoadRunner;
-
-define('YII_DEBUG', filter_var(getenv('YII_DEBUG'), FILTER_VALIDATE_BOOLEAN));
-define('YII_ENV', getenv('YII_ENV') ?? 'prod');
-
-require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
-
-$config = require dirname(__DIR__) . '/config/web/app.php';
-
-$runner = new RoadRunner(new Application($config));
-
-$runner->run();
-```
-
-### Lifecycle flags for long-running workers
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\http\Application;
-
-$app = new Application($config);
-
-// Keep defaults unless you have a specific need.
-$app->useSession = true;
-$app->syncCookieValidation = true;
-$app->resetUploadedFiles = true;
-```
-
-Use non-default values only for advanced scenarios:
-
-- `useSession=false` skips only the eager session open/close hooks around bootstrap. Session IDs are still
-  synchronized from the request cookie on every request and stale session state is closed, so lazily opened
-  sessions remain per visitor. Session cookie values that PHP rejects as a session ID are discarded and a new ID is
-  generated; to also replace well-formed but unknown IDs, set `useStrictMode => true` on the `session` component.
-- `syncCookieValidation=false` skips cookie validation synchronization between request and response.
-- Keep `resetUploadedFiles=true` to preserve per-request uploaded-file isolation in worker deployments.
-
-## Response lifecycle finalization
-
-This bridge models the request lifecycle as a **mandatory two-step contract** (`handle()` then `finalize()`), not a
-single PSR-15 `handle()` call (mirroring Symfony's `HttpKernelInterface::handle()` plus
-`TerminableInterface::terminate()`). A worker runtime must perform both; `handle()` alone is not a complete request.
-
-`Application::handle()` runs the request and returns a PSR-7 response, but it intentionally stops at the **pre-send**
-phase: it triggers `EVENT_BEFORE_SEND`, prepares the body, and triggers `EVENT_AFTER_PREPARE`. It does **not** trigger
-`EVENT_AFTER_SEND` or mark the Yii response as sent, because the runtime emits the body afterward and lazy file streams
-(`sendFile()`, `sendStreamAsFile()`) must still be readable at that point.
-
-After the response has been emitted, call `Application::finalize()` to run the **post-send** phase: it triggers
-`EVENT_AFTER_SEND`, marks the response sent, and cleans up per-request event handlers so long-running workers stay
-isolated across requests. Pass `false` when emission failed so after-send is skipped (the response was not delivered)
-while worker cleanup still runs.
-
-The official runners (FrankenPHP, RoadRunner) call this for you. When you drive the bridge yourself, you **must** call
-it after emitting; otherwise after-send handlers (temporary file cleanup, audit/metrics logging, per-request state
-reset) never run and worker state leaks across requests.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use yii2\extensions\psrbridge\emitter\SapiEmitter;
-use yii2\extensions\psrbridge\http\Application;
-
-$app = new Application($config);
-
-$psr7Response = $app->handle($psr7Request);
-
-try {
-    (new SapiEmitter())->emit($psr7Response);
-
-    // finalize: triggers EVENT_AFTER_SEND, marks the response sent, cleans up worker event state
-    $app->finalize();
-} catch (\Throwable $e) {
-    // emission failed: skip after-send, but still clean up worker state
-    $app->finalize(false);
-
-    throw $e;
+    if (!$model->avatar->saveAs($path)) {
+        throw new RuntimeException('Unable to store the validated upload.');
+    }
 }
 ```
 
-## Next steps
+This fragment assumes the model requires and verifies PNG content and the target directory exists. Choose the
+extension from the validated content policy; do not trust the client filename or MIME type. Store private uploads
+outside the web root. Failed PSR uploads retain their PHP error code without opening their stream. Successful
+conversion detaches the PSR stream resource for Yii's upload handling; do not read that PSR upload afterward.
 
-- 📚 [Installation Guide](installation.md)
-- ⚙️ [Configuration Guide](configuration.md)
-- 🧪 [Testing Guide](testing.md)
+## Downloads and ranges
+
+In an existing controller action, return the bridge response from `sendFile()` or `sendStreamAsFile()`:
+
+```php
+return Yii::$app->response->sendFile($authorizedAbsolutePath, 'report.pdf');
+```
+
+Emit the returned PSR response before finalization or temporary-file cleanup. Ranged bodies use a bounded,
+read-only `RangeStream`; its offsets are relative to the selected range, `detach()` returns `null`, and metadata
+omits the underlying URI. Read through that stream instead of reopening its source. Avoid casting large bodies
+to strings: `getContents()` and a cast still allocate the returned content even though transport uses chunked reads.
+
+`SapiEmitter` reads at most its positive buffer length per chunk (8192 bytes by default). For HEAD, pass `false`
+as its second argument; it sees a response rather than the originating request. It also suppresses bodies for its
+listed no-body status codes. Any output before emission can cause `HeadersAlreadySentException` or
+`OutputAlreadySentException`.
+
+## Low-level conversion
+
+Use `Request::setPsr7Request()` before `getPsr7Request()`. The getter returns the attached request; it does not
+construct one from Yii globals. `Response::getPsr7Response()` performs pre-send conversion and needs configured
+response/stream factories. For a standalone response outside `Application`, call `completeSend()` after successful
+emission. For an application-managed response, call `Application::finalize()` so worker cleanup runs as well.

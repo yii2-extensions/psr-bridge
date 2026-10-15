@@ -26,16 +26,6 @@ use function substr;
 /**
  * Creates PSR-7 server requests from PHP globals.
  *
- * Usage example:
- * ```php
- * $creator = new \yii2\extensions\psrbridge\creator\ServerRequestCreator(
- *     $serverRequestFactory,
- *     $streamFactory,
- *     $uploadedFileFactory,
- * );
- * $request = $creator->createFromGlobals();
- * ```
- *
  * @phpstan-type UnknownFileInput array<mixed>
  * @phpstan-type FilesArray array<UploadedFileInterface|UnknownFileInput>
  */
@@ -55,26 +45,13 @@ final class ServerRequestCreator
     ) {}
 
     /**
-     * Creates a {@see ServerRequestInterface} instance from PHP global variables.
+     * Builds a PSR request from the current SAPI globals and attaches a `php://input` body when available.
      *
-     * Provides a factory method for building a PSR-7 server request using the current SAPI or worker environment
-     * globals.
+     * Copies `HTTP_*` headers, server parameters, cookies, query parameters, `$_POST`, and nested uploads.
+     * An empty `$_POST` is still a non-`null` parsed body; clear it explicitly for JSON when a downstream bridge
+     * parser should parse the raw body. Input stream failures leave the factory's original body unchanged.
      *
-     * This method extracts the HTTP method and URI from $_SERVER, attaches cookies, parsed body, and query parameters,
-     * and automatically handles uploaded files when present. The request body stream is attached from `php://input` for
-     * compatibility with raw payloads.
-     *
-     * Usage example:
-     * ```php
-     * $creator = new \yii2\extensions\psrbridge\creator\ServerRequestCreator(
-     *     $serverRequestFactory,
-     *     $streamFactory,
-     *     $uploadedFileFactory,
-     * );
-     * $request = $creator->createFromGlobals();
-     * ```
-     *
-     * @return ServerRequestInterface PSR-7 ServerRequestInterface created from PHP globals.
+     * @return ServerRequestInterface Request created from the current globals.
      */
     public function createFromGlobals(): ServerRequestInterface
     {

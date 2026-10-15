@@ -16,13 +16,6 @@ use function ini_set;
 
 /**
  * Handles exceptions with Yii error rendering and PSR-7 bridge support.
- *
- * Usage example:
- * ```php
- * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
- * $handler->setResponse(new \yii2\extensions\psrbridge\http\Response());
- * $response = $handler->handleException($exception);
- * ```
  */
 class ErrorHandler extends \yii\web\ErrorHandler
 {
@@ -44,28 +37,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
     private Response|null $response = null;
 
     /**
-     * Clears all output buffers above the minimum required level.
-     *
-     * Iterates through all active output buffers and cleans them, ensuring that only the minimum buffer level remains.
-     *
-     * This method is used to discard any existing output before rendering an error Response, maintaining a clean output
-     * state while preserving compatibility with the testing framework.
-     *
-     * Usage example:
-     * ```php
-     * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
-     * $handler->clearOutput();
-     * ```
-     *
-     * **PHPUnit Compatibility.**
-     *
-     * PHPUnit manages its own output buffer (typically at level '1') to capture and verify test output. Clearing this
-     * buffer causes PHPUnit to mark tests as "risky" because it detects unexpected manipulation of the output buffering
-     * system.
-     *
-     * By preserving level '1' in test environments, we ensure compatibility with PHPUnit testing infrastructure.
-     *
-     * @see https://github.com/sebastianbergmann/phpunit/issues/risky-tests PHPUnit risky test detection
+     * Discards active output buffers, retaining level 1 when `YII_ENV_TEST` is `true`.
      */
     public function clearOutput(): void
     {
@@ -81,20 +53,13 @@ class ErrorHandler extends \yii\web\ErrorHandler
     }
 
     /**
-     * Handles exceptions and produces a PSR-7 ResponseInterface object.
+     * Logs an exception and renders a bridge Yii response without sending it.
      *
-     * Overrides the default Yii exception handling to generate a PSR-7 ResponseInterface instance, supporting custom
-     * error views, fallback rendering, and integration with Yii error actions.
+     * Unregisters the current error handler while rendering. If logging or rendering fails, returns a fallback
+     * response. PSR conversion remains the caller's responsibility.
      *
-     * Usage example:
-     * ```php
-     * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
-     * $handler->handleException($exception);
-     * ```
-     *
-     * @param Throwable $exception Exception to handle and convert to a PSR-7 ResponseInterface object.
-     *
-     * @return Response PSR-7 ResponseInterface representing the handled exception.
+     * @param Throwable $exception Exception to render.
+     * @return Response Yii response containing the rendered error.
      */
     public function handleException($exception): Response
     {
@@ -124,12 +89,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
      *
      * The provided Response will be used for error responses, preserving configuration such as format, charset, and
      * formatters. The Response will be cleared of any existing data before use.
-     *
-     * Usage example:
-     * ```php
-     * $handler = new \yii2\extensions\psrbridge\http\ErrorHandler();
-     * $handler->setResponse($response);
-     * ```
      *
      * @param Response $response Response instance with desired configuration.
      */

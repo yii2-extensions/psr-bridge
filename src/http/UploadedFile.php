@@ -20,16 +20,9 @@ use function substr;
 /**
  * Extends Yii uploaded file handling with PSR-7 uploaded files.
  *
- * {@see ServerRequestAdapter} PSR-7 request adapter used for uploaded files.
- *
- * Usage example:
- * ```php
- * $file = \yii2\extensions\psrbridge\http\UploadedFile::getInstance($model, 'avatar');
- *
- * if ($file !== null) {
- *     $file->saveAs('/uploads/avatar.png');
- * }
- * ```
+ * Successful upload conversion detaches the PSR stream resource for Yii file handling. Failed uploads preserve
+ * their error without accessing the stream. {@see reset()} closes retained resources and clears both bridge and
+ * parent Yii caches; the bridge application invokes it before attaching each request.
  */
 class UploadedFile extends \yii\web\UploadedFile
 {
@@ -63,15 +56,6 @@ class UploadedFile extends \yii\web\UploadedFile
      * such as '[1]file' for tabular uploads or 'file[1]' for file arrays. The method resolves the input name using
      * {@see Html::getInputName()} and delegates to {@see getInstanceByName()} for file lookup.
      *
-     * Usage example:
-     * ```php
-     * $file = UploadedFile::getInstance($model, 'file');
-     *
-     * if ($file !== null) {
-     *     // process the uploaded file
-     * }
-     * ```
-     *
      * @param Model $model Data model.
      * @param string $attribute Attribute name, which may contain array indexes (for example, '[1]file', 'file[1]').
      *
@@ -86,15 +70,6 @@ class UploadedFile extends \yii\web\UploadedFile
 
     /**
      * Returns the instance of the uploaded file for the specified input name.
-     *
-     * Usage example:
-     * ```php
-     * $file = UploadedFile::getInstanceByName('file');
-     *
-     * if ($file !== null) {
-     *     // process the uploaded file
-     * }
-     * ```
      *
      * @param string $name Name of the file input field.
      *
@@ -114,19 +89,10 @@ class UploadedFile extends \yii\web\UploadedFile
      * {@see getInstancesByName()} for file lookup. Supports array-indexed attribute names for tabular file uploading,
      * such as '[1]file'.
      *
-     * Usage example:
-     * ```php
-     * $files = UploadedFile::getInstances($model, 'file');
-     *
-     * foreach ($files as $file) {
-     *     // process each uploaded file
-     * }
-     * ```
-     *
      * @param Model $model Data model.
      * @param string $attribute Attribute name, which may contain array indexes (for example, '[1]file').
      *
-     * @return UploadedFile[] Uploaded files for the attribute.
+     * @return list<UploadedFile> Uploaded files for the attribute.
      */
     public static function getInstances($model, $attribute): array
     {
@@ -141,17 +107,9 @@ class UploadedFile extends \yii\web\UploadedFile
      * Iterates over the internal file cache and collects all uploaded files whose keys match the given input name or
      * are prefixed with the input name followed by an opening bracket (for array-style file inputs).
      *
-     * Usage example:
-     * ```php
-     * $files = UploadedFile::getInstancesByName('file');
-     * foreach ($files as $file) {
-     *     // process each uploaded file
-     * }
-     * ```
-     *
      * @param string $name Name of the file input field or array of files.
      *
-     * @return UploadedFile[] Uploaded files for the input name.
+     * @return list<UploadedFile> Uploaded files for the input name.
      */
     public static function getInstancesByName($name): array
     {
@@ -178,11 +136,6 @@ class UploadedFile extends \yii\web\UploadedFile
 
     /**
      * Resets the internal uploaded files cache, PSR-7 adapter state, and closes any open tempResource handles.
-     *
-     * Usage example:
-     * ```php
-     * UploadedFile::reset();
-     * ```
      */
     public static function reset(): void
     {
@@ -196,11 +149,6 @@ class UploadedFile extends \yii\web\UploadedFile
 
     /**
      * Sets the PSR-7 ServerRequestAdapter for file handling.
-     *
-     * Usage example:
-     * ```php
-     * UploadedFile::setPsr7Adapter($serverRequestAdapter);
-     * ```
      *
      * @param ServerRequestAdapter $adapter PSR-7 adapter containing UploadedFileInterface instances.
      */
