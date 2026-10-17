@@ -55,7 +55,7 @@ Requires the `filter` and `mbstring` PHP extensions. Install a PSR-7/PSR-17
 implementation alongside the bridge; the example uses HttpSoft:
 
 ```bash
-composer require "yii2-extensions/psr-bridge:^0.4" httpsoft/http-message
+composer require yii2-extensions/psr-bridge:^0.4 httpsoft/http-message
 ```
 
 See [installation](docs/installation.md).

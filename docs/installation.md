@@ -8,7 +8,7 @@ supported. The selected framework release may require a newer PHP version; check
 Keep Composer's security advisory blocking enabled and run `composer audit` after resolving dependencies.
 
 ```bash
-composer require "yii2-extensions/psr-bridge:^0.4" httpsoft/http-message
+composer require yii2-extensions/psr-bridge:^0.4 httpsoft/http-message
 ```
 
 HttpSoft is the implementation used in these examples and in package tests. An existing compatible PSR-7/PSR-17
