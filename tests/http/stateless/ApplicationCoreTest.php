@@ -13,8 +13,8 @@ use Yii;
 use yii\base\{InvalidConfigException, Security};
 use yii\i18n\{Formatter, I18N};
 use yii\log\{Dispatcher, FileTarget};
-use yii\web\{AssetManager, JsonParser, RequestParserInterface, Session, UrlManager, User, View};
-use yii2\extensions\psrbridge\http\{Application, ErrorHandler, Request, Response};
+use yii\web\{AssetManager, JsonParser, RequestParserInterface, UrlManager, User, View};
+use yii2\extensions\psrbridge\http\{Application, ErrorHandler, Request, Response, Session};
 use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
 
 use function dirname;

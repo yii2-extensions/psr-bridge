@@ -51,7 +51,7 @@ Long-running PHP workers for higher throughput and lower latency.
 
 ### Installation
 
-Requires PHP 8.3+, `filter`, `mbstring`, and Yii `2.0.55+` or `22.x` as allowed by `composer.json`. Install a PSR-7/PSR-17
+Requires the `filter` and `mbstring` PHP extensions. Install a PSR-7/PSR-17
 implementation alongside the bridge; the example uses HttpSoft. This example requires the unreleased 0.4
 `finalize()` lifecycle, so select `dev-main` explicitly:
 
@@ -120,24 +120,22 @@ See the configuration guide before changing lifecycle settings or handling JSON 
 
 ## Documentation
 
-- 📚 [Installation and runtime choices](docs/installation.md)
-- ⚙️ [Configuration and request isolation](docs/configuration.md)
-- 💡 [Worker lifecycle, JSON, uploads, and downloads](docs/examples.md)
-- 🔄 [Upgrade guide](UPGRADE.md) and [migration checks](docs/migration.md)
-- 🧪 [Testing](docs/testing.md)
-- 📖 [Generated API reference](https://yii2-framework.github.io/docs/extensions/psr-bridge/reference/)
+Practical guides and complete examples for PSR-7 integration and the worker
+lifecycle.
 
-The package guides and PHPDocs are the source for the documentation site. Publish these changes before relying on
-the corresponding hosted pages.
+- 📚 [Installation and Runtime Choices](docs/installation.md)
+- ⚙️ [Configuration and Request Isolation](docs/configuration.md)
+- 💡 [Worker Lifecycle, JSON, Uploads, and Downloads](docs/examples.md)
+- 🔄 [Upgrade Guide](UPGRADE.md) and [Migration Checks](docs/migration.md)
+- 🧪 [Testing Guide](docs/testing.md)
 
 ## AI assistance
 
-AI agents: read <https://yii2-framework.github.io/docs/llms.txt>, the index of the documentation site, and fetch the
-Markdown version of a page by appending `index.md` to its URL, for example
-<https://yii2-framework.github.io/docs/extensions/psr-bridge/installation/index.md>. For the Yii conventions this
-package builds on, install the
-[`yii2-framework` agent skill](https://github.com/yii2-framework/docs/blob/main/skills/yii2-framework/SKILL.md) with
-`npx skills add yii2-framework/docs --skill yii2-framework`.
+AI agents: use the repository guides and source for the installed revision.
+For a [documentation deployment](https://yii2-framework.github.io/docs/) with
+`llms.txt`, read that index first. When Markdown export is enabled, append
+`index.md` to a page URL. For Yii conventions, use the `yii2-framework` skill
+from a local framework documentation checkout.
 
 - 🤖 [yii2-psr-bridge-worker skill](docs/agents.md): installation for Claude Code, Codex, and OpenCode.
 

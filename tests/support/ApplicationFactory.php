@@ -19,17 +19,12 @@ use yii2\extensions\psrbridge\tests\support\stub\{ApplicationRest, Identity};
  */
 final class ApplicationFactory
 {
-    private const BASE_PATH = __DIR__ . '/../../..';
+    private const BASE_PATH = __DIR__ . '/../..';
 
     private const COOKIE_VALIDATION_KEY = 'test-cookie-validation-key';
 
     /**
      * Creates a REST-focused test {@see Application} instance.
-     *
-     * Usage example:
-     * ```php
-     * ApplicationFactory::rest(['id' => 'rest-test-app']);
-     * ```
      *
      * @param array<string, mixed> $override Application configuration overrides.
      *
@@ -49,11 +44,6 @@ final class ApplicationFactory
 
     /**
      * Creates a stateless test {@see Application} instance.
-     *
-     * Usage example:
-     * ```php
-     * ApplicationFactory::stateless(['id' => 'stateless-test-app']);
-     * ```
      *
      * @param array<string, mixed> $override Application configuration overrides.
      *
@@ -94,11 +84,6 @@ final class ApplicationFactory
 
     /**
      * Boots a Yii web application for test scenarios.
-     *
-     * Usage example:
-     * ```php
-     * ApplicationFactory::web(['id' => 'web-test-app']);
-     * ```
      *
      * @param array<string, mixed> $override Application configuration overrides.
      *

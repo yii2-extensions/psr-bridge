@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\emitter;
 
-use Psr\Http\Message\{ResponseInterface, StreamInterface};
+use Psr\Http\Message\ResponseInterface;
 use yii\base\InvalidArgumentException;
 use yii2\extensions\psrbridge\exception\{HeadersAlreadySentException, Message, OutputAlreadySentException};
 
@@ -12,7 +12,6 @@ use function array_map;
 use function implode;
 use function sprintf;
 use function str_replace;
-use function strlen;
 use function strtolower;
 use function ucwords;
 
@@ -67,7 +66,7 @@ final class SapiEmitter
     }
 
     /**
-     * Reads the body in bounded chunks, honoring a supported Content-Range header.
+     * Reads the prepared PSR-7 body in bounded chunks without applying Content-Range offsets again.
      *
      * @param ResponseInterface $response Response whose body is emitted.
      */
@@ -75,53 +74,12 @@ final class SapiEmitter
     {
         flush();
         $body = $response->getBody();
-        $range = ContentRange::fromHeader($response->getHeaderLine('Content-Range'));
-
-        if ($range?->unit === ContentRangeUnit::BYTES) {
-            $this->emitBodyRange($body, $range->first, $range->last);
-
-            return;
-        }
-
         if ($body->isSeekable() === true) {
             $body->rewind();
         }
 
         while ($body->eof() === false) {
             echo $body->read($this->bufferLength);
-        }
-    }
-
-    /**
-     * Emit a range of the response body.
-     *
-     * Used for partial content responses, this method emits only the requested range of the response body.
-     *
-     * @param StreamInterface $body Response body stream.
-     * @param int $first Starting byte position.
-     * @param int $last Ending byte position.
-     */
-    private function emitBodyRange(StreamInterface $body, int $first, int $last): void
-    {
-        $length = $last - $first + 1;
-
-        if ($body->isSeekable() === true) {
-            $body->seek($first);
-        }
-
-        while ($body->eof() === false) {
-            $readLength = min($this->bufferLength, $length);
-
-            if ($readLength <= 0) {
-                return;
-            }
-
-            $contents = $body->read($readLength);
-            $contentLength = strlen($contents);
-
-            $length -= $contentLength;
-
-            echo $contents;
         }
     }
 

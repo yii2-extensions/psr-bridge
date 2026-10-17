@@ -13,17 +13,23 @@ use yii2\extensions\psrbridge\exception\Message;
 use yii2\extensions\psrbridge\http\{Request, Response};
 
 use function count;
+use function filter_var;
 use function gmdate;
 use function is_array;
 use function is_int;
 use function is_numeric;
 use function is_resource;
 use function is_string;
+use function ltrim;
 use function max;
+use function preg_match;
 use function serialize;
 use function strtotime;
 use function time;
 use function urlencode;
+
+use const FILTER_VALIDATE_INT;
+use const PHP_INT_MAX;
 
 /**
  * Adapts Yii responses to PSR-7 responses.
@@ -140,9 +146,11 @@ final class ResponseAdapter
     /**
      * Creates a PSR-7 stream bounded to the byte range defined in the Yii Response component.
      *
-     * Seeks the file handle to the start offset and wraps it in a {@see RangeStream} so consumers cannot read past the
+     * Positions seekable handles at the start offset and wraps them in a {@see RangeStream} so consumers cannot read past the
      * declared `$end`, preserving the PSR-7 body contract for partial-content responses without buffering bytes into
-     * memory or temporary storage.
+     * memory or temporary storage. Yii may supply decimal-string offsets from an HTTP Range header; they are
+     * normalized to integers before positioning, with overflow rejected for offsets and range length. Empty downloads
+     * return an empty body; non-seekable handles are accepted only at offset zero.
      *
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      *
@@ -156,23 +164,38 @@ final class ResponseAdapter
             is_array($stream) === false
             || count($stream) !== 3
             || isset($stream[0]) === false
-            || isset($stream[1]) === false || is_int($stream[1]) === false
-            || isset($stream[2]) === false || is_int($stream[2]) === false
+            || isset($stream[1]) === false
+            || isset($stream[2]) === false
         ) {
             throw new InvalidConfigException(Message::RESPONSE_STREAM_FORMAT_INVALID->getMessage());
         }
 
         [$handle, $begin, $end] = $stream;
 
+        $begin = $this->normalizeStreamOffset($begin);
+        $end = $this->normalizeStreamOffset($end);
+
+        if ($begin === 0 && $end === -1 && is_resource($handle)) {
+            fclose($handle);
+
+            return $this->streamFactory->createStream('');
+        }
+
         if ($begin < 0 || $end < $begin) {
             throw new InvalidConfigException(Message::RESPONSE_STREAM_RANGE_INVALID->getMessage($begin, $end));
+        }
+
+        if ($end - $begin === PHP_INT_MAX) {
+            throw new InvalidConfigException(Message::RESPONSE_STREAM_RANGE_OVERFLOW->getMessage());
         }
 
         if (is_resource($handle) === false) {
             throw new InvalidConfigException(Message::RESPONSE_STREAM_HANDLE_INVALID->getMessage());
         }
 
-        if (fseek($handle, $begin) !== 0) {
+        $seekable = stream_get_meta_data($handle)['seekable'];
+
+        if (($seekable && fseek($handle, $begin) !== 0) || (!$seekable && $begin !== 0)) {
             fclose($handle);
 
             throw new InvalidConfigException(Message::RESPONSE_STREAM_READ_ERROR->getMessage());
@@ -264,5 +287,34 @@ final class ResponseAdapter
         }
 
         return $header;
+    }
+
+    /**
+     * Normalizes native integers and digit-only decimal strings without allowing integer overflow.
+     *
+     * @param mixed $offset Byte offset supplied by the Yii response.
+     *
+     * @throws InvalidConfigException when the offset is not an integer or a representable decimal string.
+     *
+     * @return int Normalized offset; range ordering and non-negative bounds are checked by the caller.
+     */
+    private function normalizeStreamOffset(mixed $offset): int
+    {
+        if (is_int($offset)) {
+            return $offset;
+        }
+
+        if (is_string($offset) && preg_match('/\A[0-9]+\z/', $offset) === 1) {
+            $decimal = ltrim($offset, '0');
+            $normalized = filter_var($decimal === '' ? '0' : $decimal, FILTER_VALIDATE_INT);
+
+            if (is_int($normalized)) {
+                return $normalized;
+            }
+        }
+
+        throw new InvalidConfigException(
+            Message::RESPONSE_STREAM_FORMAT_INVALID->getMessage(),
+        );
     }
 }

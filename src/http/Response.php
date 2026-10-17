@@ -24,7 +24,6 @@ class Response extends \yii\web\Response
      * Set this property when {@see enableCookieValidation} is `true`.
      */
     public string $cookieValidationKey = '';
-
     /**
      * Whether to sign outgoing cookie values with {@see cookieValidationKey}.
      */
@@ -34,6 +33,62 @@ class Response extends \yii\web\Response
      * PSR-7 ResponseAdapter for bridging PSR-7 ResponseInterface with Yii Response component.
      */
     private ResponseAdapter|null $adapter = null;
+
+    /**
+     * Queues the current session ID, including rotation followed by an explicit close.
+     */
+    public function captureSessionCookie(): void
+    {
+        if (!Yii::$app->has('session', true)) {
+            return;
+        }
+
+        $session = Yii::$app->getSession();
+        $name = $session->getName();
+        $id = $session->getId();
+        $cookie = $this->cookies->get($name);
+
+        // Preserve an explicit expiration instead of reviving a deleted session cookie.
+        if ($cookie !== null && !$this->cookies->has($name)) {
+            return;
+        }
+
+        if (
+            $id === ''
+            || (!$session->getIsActive() && (
+                !Yii::$app instanceof Application
+                || Yii::$app->state !== Application::STATE_END
+                || ($cookie === null && $id === Yii::$app->request->getCookies()->getValue($name))
+            ))
+        ) {
+            return;
+        }
+
+        $cookieParams = $session->getCookieParams();
+        $cookieConfig = ['name' => $name, 'value' => $id];
+        $paramMapping = [
+            'domain' => 'domain',
+            'httponly' => 'httpOnly',
+            'path' => 'path',
+            'samesite' => 'sameSite',
+            'secure' => 'secure',
+        ];
+
+        foreach ($paramMapping as $sessionKey => $configKey) {
+            if (isset($cookieParams[$sessionKey])) {
+                $cookieConfig[$configKey] = $cookieParams[$sessionKey];
+            }
+        }
+
+        /** @var int|null $lifetime */
+        $lifetime = $cookieParams['lifetime'] ?? null;
+
+        if ($lifetime > 0) {
+            $cookieConfig['expire'] = time() + $lifetime;
+        }
+
+        $this->cookies->add(new Cookie($cookieConfig));
+    }
 
     /**
      * Completes the Yii response send lifecycle after the runtime emits the PSR-7 body.
@@ -74,30 +129,10 @@ class Response extends \yii\web\Response
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
 
-        if (Yii::$app->has('session') && ($session = Yii::$app->getSession())->getIsActive()) {
-            $cookieParams = $session->getCookieParams();
+        $this->captureSessionCookie();
 
-            $cookieConfig = [
-                'name' => $session->getName(),
-                'value' => $session->getId(),
-            ];
-
-            $paramMapping = [
-                'domain' => 'domain',
-                'httponly' => 'httpOnly',
-                'path' => 'path',
-                'samesite' => 'sameSite',
-                'secure' => 'secure',
-            ];
-
-            foreach ($paramMapping as $sessionKey => $configKey) {
-                if (isset($cookieParams[$sessionKey])) {
-                    $cookieConfig[$configKey] = $cookieParams[$sessionKey];
-                }
-            }
-
-            $this->cookies->add(new Cookie($cookieConfig));
-            $session->close();
+        if (Yii::$app->has('session', true)) {
+            Yii::$app->getSession()->close();
         }
 
         return $this->createAdapter()->toPsr7();

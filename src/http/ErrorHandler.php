@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\http;
 
 use Throwable;
+use WeakReference;
 use Yii;
 use yii\base\{Exception, InvalidRouteException, UserException};
 use yii\helpers\VarDumper;
@@ -27,7 +28,19 @@ class ErrorHandler extends \yii\web\ErrorHandler
     public array $defaultResponseConfig = [
         'charset' => 'UTF-8',
     ];
+    /**
+     * @var int Size of the memory reserve for handling fatal errors.
+     */
+    public $memoryReserveSize = 1024 * 1024; // 1 MB
 
+    /**
+     * Memory reserve for handling fatal errors.
+     */
+    private string|null $memoryReserve = null;
+    /**
+     * Indicates whether this handler has been registered.
+     */
+    private bool $registered = false;
     /**
      * Response instance for error handling.
      *
@@ -35,6 +48,18 @@ class ErrorHandler extends \yii\web\ErrorHandler
      * formatters, and other settings.
      */
     private Response|null $response = null;
+    /**
+     * @var WeakReference<self> Current handler without retaining completed request state.
+     */
+    private static WeakReference $shutdownHandler;
+    /**
+     * Indicates whether the shutdown handler has been registered.
+     */
+    private static bool $shutdownRegistered = false;
+    /**
+     * Current working directory before handling a fatal error.
+     */
+    private string|false|null $workingDirectory = null;
 
     /**
      * Discards active output buffers, retaining level 1 when `YII_ENV_TEST` is `true`.
@@ -45,9 +70,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
 
         for ($level = ob_get_level(); $level > $minLevel; --$level) {
             if (@ob_end_clean() === false) {
-                // @codeCoverageIgnoreStart
                 ob_clean();
-                // @codeCoverageIgnoreEnd
             }
         }
     }
@@ -85,6 +108,68 @@ class ErrorHandler extends \yii\web\ErrorHandler
     }
 
     /**
+     * Releases reserved memory before delegating fatal-error rendering to Yii.
+     */
+    // @phpstan-ignore missingType.return (Keep Yii's untyped extension point compatible with existing subclasses.)
+    public function handleFatalError()
+    {
+        if ($this->memoryReserve !== null) {
+            $this->memoryReserve = null;
+        }
+
+        if ($this->workingDirectory !== null && $this->workingDirectory !== false) {
+            chdir($this->workingDirectory);
+            $this->workingDirectory = null;
+        }
+
+        parent::handleFatalError();
+    }
+
+    /**
+     * Registers PHP handlers with one weak shutdown dispatcher per process.
+     */
+    // @phpstan-ignore missingType.return (Keep Yii's untyped extension point compatible with existing subclasses.)
+    public function register()
+    {
+        if ($this->registered) {
+            return;
+        }
+
+        ini_set('display_errors', '0');
+        set_exception_handler(
+            function (Throwable $exception): void {
+                $this->handleException($exception);
+            }
+        );
+        set_error_handler([$this, 'handleError']);
+
+        $this->memoryReserve = str_pad('', $this->memoryReserveSize, 'x');
+        $this->workingDirectory = PHP_SAPI !== 'cli' ? getcwd() : null;
+        self::$shutdownHandler = WeakReference::create($this);
+
+        if (!self::$shutdownRegistered) {
+            register_shutdown_function(
+                static function (): void {
+                    self::$shutdownHandler->get()?->handleFatalError();
+                }
+            );
+
+            self::$shutdownRegistered = true;
+        }
+
+        $this->registered = true;
+    }
+
+    /**
+     * Releases request references after emission and finalization.
+     */
+    public function releaseResponse(): void
+    {
+        $this->response = null;
+        $this->exception = null;
+    }
+
+    /**
      * Sets the Response for error handling.
      *
      * The provided Response will be used for error responses, preserving configuration such as format, charset, and
@@ -95,6 +180,25 @@ class ErrorHandler extends \yii\web\ErrorHandler
     public function setResponse(Response $response): void
     {
         $this->response = $response;
+    }
+
+    /**
+     * Restores PHP handlers and releases the current registration's reserve.
+     */
+    // @phpstan-ignore missingType.return (Keep Yii's untyped extension point compatible with existing subclasses.)
+    public function unregister()
+    {
+        if (!$this->registered) {
+            return;
+        }
+
+        $this->memoryReserve = null;
+        $this->workingDirectory = null;
+
+        restore_error_handler();
+        restore_exception_handler();
+
+        $this->registered = false;
     }
 
     /**
@@ -222,7 +326,38 @@ class ErrorHandler extends \yii\web\ErrorHandler
     {
         $response = $this->response ?? new Response($this->defaultResponseConfig);
 
-        $response->clear();
+        $response->isSent = false;
+        $response->stream = null;
+        $response->data = null;
+        $response->content = null;
+
+        $headers = [
+            'Content-Length',
+            'Content-Range',
+            'Content-Encoding',
+            'Content-Type',
+            'Content-Disposition',
+            'Accept-Ranges',
+            'ETag',
+            'Last-Modified',
+            'Expires',
+            'Pragma',
+            'Location',
+            'Refresh',
+            'X-Sendfile',
+            'X-Accel-Redirect',
+            'X-Accel-Buffering',
+            'X-Accel-Charset',
+            'X-Accel-Expires',
+            'X-Accel-Limit-Rate',
+            'X-Lighttpd-Send-File',
+        ];
+
+        foreach ($headers as $header) {
+            $response->headers->remove($header);
+        }
+
+        $response->headers->set('Cache-Control', 'no-store');
 
         return $response;
     }

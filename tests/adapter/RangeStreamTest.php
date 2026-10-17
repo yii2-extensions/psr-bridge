@@ -234,10 +234,19 @@ final class RangeStreamTest extends TestCase
     {
         $stream = $this->createMock(StreamInterface::class);
 
-        $stream->method('isSeekable')->willReturn(true);
-        $stream->method('eof')->willReturn(false);
-        $stream->method('tell')->willReturn(0);
-        $stream->method('read')->willReturn('');
+        $stream
+            ->method('isSeekable')
+            ->willReturn(true);
+        $stream
+            ->method('eof')
+            ->willReturn(false);
+        $stream
+            ->method('tell')
+            ->willReturn(0);
+        $stream
+            ->expects(self::once())
+            ->method('read')
+            ->willReturn('');
 
         $rangeStream = new RangeStream($stream, 0, 100);
 
@@ -265,6 +274,7 @@ final class RangeStreamTest extends TestCase
     public function testGetMetadataDoesNotExposeUnderlyingFileUri(): void
     {
         $tempFile = $this->createTempFileWithContent('0123456789SECRET_AFTER_RANGE');
+
         $resource = fopen($tempFile, 'rb');
 
         self::assertIsResource(
@@ -297,6 +307,7 @@ final class RangeStreamTest extends TestCase
     public function testGetMetadataDoesNotExposeUri(): void
     {
         $rangeStream = new RangeStream($this->stream('test'), 0, 3);
+
         $metadata = $rangeStream->getMetadata();
 
         self::assertIsArray(
@@ -345,8 +356,12 @@ final class RangeStreamTest extends TestCase
     {
         $stream = $this->createMock(StreamInterface::class);
 
-        $stream->method('isSeekable')->willReturn(false);
-        $stream->method('getMetadata')->willReturn('invalid-metadata');
+        $stream
+            ->method('isSeekable')
+            ->willReturn(false);
+        $stream
+            ->method('getMetadata')
+            ->willReturn('invalid-metadata');
 
         $rangeStream = new RangeStream($stream, 0, 3);
 
@@ -376,8 +391,12 @@ final class RangeStreamTest extends TestCase
     {
         $stream = $this->createMock(StreamInterface::class);
 
-        $stream->method('isSeekable')->willReturn(false);
-        $stream->method('getMetadata')->willReturn('invalid-metadata');
+        $stream
+            ->method('isSeekable')
+            ->willReturn(false);
+        $stream
+            ->method('getMetadata')
+            ->willReturn('invalid-metadata');
 
         $rangeStream = new RangeStream($stream, 0, 3);
 

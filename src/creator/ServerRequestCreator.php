@@ -47,9 +47,10 @@ final class ServerRequestCreator
     /**
      * Builds a PSR request from the current SAPI globals and attaches a `php://input` body when available.
      *
-     * Copies `HTTP_*` headers, server parameters, cookies, query parameters, `$_POST`, and nested uploads.
-     * An empty `$_POST` is still a non-`null` parsed body; clear it explicitly for JSON when a downstream bridge
-     * parser should parse the raw body. Input stream failures leave the factory's original body unchanged.
+     * Copies `HTTP_*` and CGI content headers, server parameters, cookies, query parameters, and nested uploads.
+     * Nonempty `$_POST`, and empty `$_POST` for POST form or multipart requests, become the parsed body. Other
+     * bodies stay `null` for configured parsers or the URL-encoded fallback. Input stream failures leave the
+     * factory's original body unchanged.
      *
      * @return ServerRequestInterface Request created from the current globals.
      */
@@ -72,9 +73,17 @@ final class ServerRequestCreator
             $request = $request->withHeader($name, $value);
         }
 
+        $contentType = $request->getHeaderLine('Content-Type');
+        $separator = strpos($contentType, ';');
+        $contentType = strtolower($separator === false ? $contentType : substr($contentType, 0, $separator));
+        $parsedBody = $_POST !== []
+            || (strtoupper($method) === 'POST' && in_array($contentType, ['application/x-www-form-urlencoded', 'multipart/form-data'], true))
+            ? $_POST
+            : null;
+
         $request = $request
             ->withCookieParams($_COOKIE)
-            ->withParsedBody($_POST)
+            ->withParsedBody($parsedBody)
             ->withQueryParams($_GET);
 
         if ($_FILES !== []) {
@@ -112,6 +121,12 @@ final class ServerRequestCreator
                 $headerName = $this->normalizeHeaderName(substr($key, 5));
 
                 $headers[$headerName] = $value;
+            }
+        }
+
+        foreach (['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'] as $key) {
+            if (isset($server[$key]) && is_string($server[$key])) {
+                $headers[$this->normalizeHeaderName($key)] = $server[$key];
             }
         }
 

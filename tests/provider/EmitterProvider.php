@@ -8,50 +8,33 @@ use yii2\extensions\psrbridge\emitter\HttpNoBodyStatus;
 
 /**
  * Data provider for {@see \yii2\extensions\psrbridge\tests\emitter\SapiEmitterTest} test cases.
- *
- * Provides representative input/output pairs for body chunking, no-body status handling, and reason phrase formatting.
  */
 final class EmitterProvider
 {
     /**
-     * Provides test data for response body chunking with various buffer sizes.
-     *
-     * This provider supplies test cases for validating the emission of response body content in different chunk sizes,
-     * buffer ranges, and offsets.
-     *
-     * Each test case includes the body content, the expected chunks after emission, the buffer size, the start offset,
-     * and the end offset.
-     *
      * @return array<array{string, array<string>, int, int|null, int|null}>
      */
     public static function body(): array
     {
         return [
             ['', [], 8192, null, null],
-            ['Contents', ['C', 'o', 'n', 't', 'e', 'n', 't', 's'], 1, 0, 8],
+            ['Contents', ['C', 'o', 'n', 't', 'e', 'n', 't', 's'], 1, 0, 7],
             ['Contents', ['C', 'o', 'n', 't', 'e', 'n', 't', 's'], 1, null, null],
             ['Contents', ['Co', 'nt', 'en', 'ts'], 2, null, null],
-            ['Contents', ['Co', 'nt'], 2, 0, 3],
+            ['Cont', ['Co', 'nt'], 2, 0, 3],
             ['Contents', ['Con', 'ten', 'ts'], 3, null, null],
-            ['Contents', ['Con'], 8192, 0, 2],
+            ['Con', ['Con'], 8192, 0, 2],
             ['Contents', ['Content', 's'], 7, 0, 7],
             ['Contents', ['Content', 's'], 7, null, null],
-            ['Contents', ['Contents'], 8192, 0, 8],
+            ['Contents', ['Contents'], 8192, 0, 7],
             ['Contents', ['Contents'], 8192, null, null],
             ['Contents', ['Contents'], 8192, null, null],
-            ['Contents', ['nte', 'nt'], 3, 2, 6],
-            ['Contents', ['ts'], 2, 6, 8],
+            ['ntent', ['nte', 'nt'], 3, 2, 6],
+            ['ts', ['ts'], 2, 6, 7],
         ];
     }
 
     /**
-     * Provides test data for HTTP status codes that must not include a response body.
-     *
-     * This provider supplies test cases for validating emission compliance with HTTP status codes that, according to
-     * the protocol, must not include a response body.
-     *
-     * Each test case consists of the status code integer value and its corresponding reason phrase.
-     *
      * @return array<array{int, string}>
      */
     public static function noBodyStatusCodes(): array
@@ -74,13 +57,6 @@ final class EmitterProvider
     }
 
     /**
-     * Provides test data for HTTP status line formatting with various reason phrases.
-     *
-     * This provider supplies test cases for validating the emission of HTTP status lines with custom, empty, standard,
-     * and whitespace reason phrases.
-     *
-     * Each test case consists of the status code, the reason phrase, and the expected  formatted status line string.
-     *
      * @return array<array{int, string, string}>
      */
     public static function reasonPhrase(): array

@@ -1,0 +1,36 @@
+<?php
+
+namespace yii\web;
+
+// Older Yii annotations omit scalar parser results and nullable body-cache resets.
+class Request extends \yii\base\Request
+{
+    /** @return mixed */
+    public function getBodyParams() {}
+
+    /**
+     * @param mixed $values
+     * @return void
+     */
+    public function setBodyParams($values) {}
+}
+
+interface RequestParserInterface
+{
+    /**
+     * @param string $rawBody
+     * @param string $contentType
+     * @return mixed
+     */
+    public function parse($rawBody, $contentType);
+}
+
+namespace yii\base;
+
+interface Configurable {}
+
+class BaseObject implements Configurable {}
+
+class Component extends BaseObject {}
+
+abstract class Request extends Component {}

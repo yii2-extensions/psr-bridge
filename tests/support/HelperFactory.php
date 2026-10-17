@@ -37,11 +37,6 @@ final class HelperFactory
     /**
      * Creates a PSR-7 {@see ServerRequestInterface} instance.
      *
-     * Usage example:
-     * ```php
-     * HelperFactory::createRequest($method, $uri, $headers, $parsedBody, $serverParams);
-     * ```
-     *
      * @param string $method Request method.
      * @param string $uri Request URI.
      * @param array<string, array<int, string>|int|string> $headers Request headers.
@@ -76,11 +71,6 @@ final class HelperFactory
     /**
      * Creates a PSR-7 {@see ResponseInterface} instance.
      *
-     * Usage example:
-     * ```php
-     * HelperFactory::createResponse($statusCode, $headers, $body, $protocol, $reasonPhrase);
-     * ```
-     *
      * @param int $statusCode Response status code.
      * @param array<string, array<int, string>|int|string> $headers Response headers.
      * @param resource|StreamInterface|string|null $body Response body.
@@ -110,11 +100,6 @@ final class HelperFactory
     /**
      * Creates a PSR-17 {@see ResponseFactoryInterface} instance.
      *
-     * Usage example:
-     * ```php
-     * HelperFactory::createResponseFactory();
-     * ```
-     *
      * @return ResponseFactoryInterface PSR-17 response factory instance.
      */
     public static function createResponseFactory(): ResponseFactoryInterface
@@ -124,11 +109,6 @@ final class HelperFactory
 
     /**
      * Creates a PSR-17 {@see ServerRequestCreator} instance.
-     *
-     * Usage example:
-     * ```php
-     * HelperFactory::createServerRequestCreator();
-     * ```
      *
      * @return ServerRequestCreator PSR-17 server request creator instance.
      */
@@ -144,11 +124,6 @@ final class HelperFactory
     /**
      * Creates a PSR-17 {@see ServerRequestFactory} instance.
      *
-     * Usage example:
-     * ```php
-     * HelperFactory::createServerRequestFactory();
-     * ```
-     *
      * @return ServerRequestFactory PSR-17 server request factory instance.
      */
     public static function createServerRequestFactory(): ServerRequestFactory
@@ -162,11 +137,6 @@ final class HelperFactory
      * @param string $stream Stream content.
      * @param string $mode Stream mode.
      *
-     * Usage example:
-     * ```php
-     * HelperFactory::createStream($stream, $mode);
-     * ```
-     *
      * @return StreamInterface PSR-7 stream instance.
      */
     public static function createStream(string $stream = 'php://temp', string $mode = 'wb+'): StreamInterface
@@ -177,11 +147,6 @@ final class HelperFactory
     /**
      * Creates a PSR-17 {@see StreamFactoryInterface} instance.
      *
-     * Usage example:
-     * ```php
-     * HelperFactory::createStreamFactory();
-     * ```
-     *
      * @return StreamFactoryInterface PSR-17 stream factory instance.
      */
     public static function createStreamFactory(): StreamFactoryInterface
@@ -191,11 +156,6 @@ final class HelperFactory
 
     /**
      * Creates a PSR-7 {@see UploadedFile} instance.
-     *
-     * Usage example:
-     * ```php
-     * HelperFactory::createUploadedFile($name, $type, $tmpName, $error, $size);
-     * ```
      *
      * @param string $name Client filename.
      * @param string $type Client media type.
@@ -218,11 +178,6 @@ final class HelperFactory
     /**
      * Creates a PSR-17 {@see UploadedFileFactoryInterface} instance.
      *
-     * Usage example:
-     * ```php
-     * HelperFactory::createUploadedFileFactory();
-     * ```
-     *
      * @return UploadedFileFactoryInterface PSR-17 uploaded file factory instance.
      */
     public static function createUploadedFileFactory(): UploadedFileFactoryInterface
@@ -232,11 +187,6 @@ final class HelperFactory
 
     /**
      * Creates a PSR-7 {@see UriInterface} instance.
-     *
-     * Usage example:
-     * ```php
-     * HelperFactory::createUri($uri);
-     * ```
      *
      * @param string $uri URI string.
      *

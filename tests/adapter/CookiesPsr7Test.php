@@ -42,7 +42,9 @@ final class CookiesPsr7Test extends TestCase
         $cookies = $request->getCookies();
 
         $this->expectException(InvalidCallException::class);
-        $this->expectExceptionMessage('The cookie collection is read only.');
+        $this->expectExceptionMessage(
+            'The cookie collection is read only.',
+        );
 
         $cookies->add(
             new Cookie(
@@ -68,7 +70,9 @@ final class CookiesPsr7Test extends TestCase
         $request->setPsr7Request($psr7Request);
 
         $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage(Message::COOKIE_VALIDATION_KEY_REQUIRED->getMessage());
+        $this->expectExceptionMessage(
+            Message::COOKIE_VALIDATION_KEY_REQUIRED->getMessage(),
+        );
 
         $request->getCookies();
     }

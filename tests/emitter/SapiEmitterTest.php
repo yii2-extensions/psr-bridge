@@ -66,7 +66,7 @@ final class SapiEmitterTest extends TestCase
      */
     public function testEmitResponseWithContentRangeAndSmallBuffer(): void
     {
-        $response = HelperFactory::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: 'Contents');
+        $response = HelperFactory::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: 'Cont');
 
         (new SapiEmitter(1))->emit($response);
 
@@ -340,18 +340,33 @@ final class SapiEmitterTest extends TestCase
         /** @var MockObject&StreamInterface $stream */
         $stream = $this->createMock(StreamInterface::class);
 
-        $stream->method('isSeekable')->willReturn(true);
-        $stream->method('eof')->willReturn(false, true);
-        $stream->method('read')->willReturn('');
-        $stream->method('isReadable')->willReturn(true);
-        $stream->expects(self::once())->method('seek')->with(0);
+        $stream
+            ->method('isSeekable')
+            ->willReturn(true);
+        $stream
+            ->method('eof')
+            ->willReturn(false, true);
+        $stream
+            ->method('read')
+            ->willReturn('');
+        $stream
+            ->method('isReadable')
+            ->willReturn(true);
+        $stream
+            ->expects(self::once())
+            ->method('rewind');
 
         $response = HelperFactory::createResponse(headers: ['Content-Range' => 'bytes 0-3/8'], body: $stream);
 
         (new SapiEmitter(8192))->emit($response);
 
         $this->expectOutputString('');
-        self::assertSame(1, MockerFunctions::getFlushTimes(), 'Stream should be flushed exactly once.');
+
+        self::assertSame(
+            1,
+            MockerFunctions::getFlushTimes(),
+            'Stream should be flushed exactly once.',
+        );
     }
 
     /**

@@ -78,7 +78,7 @@ final class ApplicationCookieTest extends TestCase
             'REQUEST_URI' => 'site/deletecookie',
         ];
 
-        $app = ApplicationFactory::stateless();
+        $app = ApplicationFactory::stateless(['useSession' => false]);
 
         $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
 

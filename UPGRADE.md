@@ -2,23 +2,9 @@
 
 ## 0.4.0 (under development)
 
-Match this guide to the installed package revision. The session isolation correction was merged in
-`6e9b723` (#288); these main-branch changes do not imply that a stable `0.4.0` is already published.
-
 ### Minimum PHP version
 
-Before: the package accepted PHP `>=8.1`.
-After: it requires PHP `>=8.3`; PHP 8.1 and 8.2 are no longer supported. Update the web, CLI, and worker runtimes,
-then resolve dependencies and verify the actual platform:
-
-```bash
-php --version
-composer update --with-all-dependencies
-composer check-platform-reqs
-composer audit
-```
-
-Run the application and package tests on PHP 8.3 or later. The Yii constraint remains `~2.0.55 || ^22.0@dev`.
+Upgrade web, CLI and worker runtimes to PHP 8.3 or later, then run `composer check-platform-reqs`.
 
 ### Minimum Yii version
 
@@ -51,6 +37,16 @@ strict session mode when unknown IDs must be replaced. See [configuration](docs/
 If a subclass overrides `openSessionFromRequestCookies()`, ID synchronization now happens in the separate
 `syncSessionIdFromRequestCookies()` hook first. If overriding request preparation, preserve its parent lifecycle.
 Overriding that new hook without equivalent isolation bypasses the correction.
+
+### Custom sessions and persistent event listeners
+
+Keep the default `yii2\extensions\psrbridge\http\Session` when using native session storage. Custom session
+classes remain configured explicitly; test their shutdown registration and eager close/reopen behavior, especially
+flash messages. Returning-user identity restoration now follows the validated PSR session cookie with native PHP
+cookies disabled; remove workarounds that force the session open before checking `user`.
+
+Declare worker-lifetime listeners in persistent component `on eventName` configuration. Avoid adding
+request-capturing closures to those components; cleanup observes triggered events rather than all registrations.
 
 ### Finish the response after emission
 
@@ -97,13 +93,17 @@ Change only affected integration points, then verify:
 4. Emission succeeds before after-send; emission failure skips after-send; either path finalizes exactly once.
 5. Partial downloads expose only the selected bytes and HEAD emits no body. Run package/application tests and static analysis; record any untested runtime integration.
 
-- `yii2\extensions\psrbridge\emitter\SapiEmitter::__construct()` no longer accepts `null` for `$bufferLength`.
-- The default buffer length is now `8192` bytes and response bodies are emitted with bounded chunked reads by default.
+### Direct `SapiEmitter` callers
+
+`SapiEmitter` emits the PSR-7 body as provided and no longer applies
+`Content-Range` offsets. Direct callers must provide a body already bounded to the
+declared range and consistent with `Content-Length` when present.
+`ResponseAdapter` already prepares bounded range bodies.
 
 ### Replace explicit `null` buffer configuration
 
 Before: `new SapiEmitter(null)` selected full-body string emission.
-After: remove that argument or pass a positive integer:
+After: remove that argument to use the default `8192`-byte chunks, or pass a positive integer:
 
 ```php
 use yii2\extensions\psrbridge\emitter\SapiEmitter;
@@ -172,5 +172,3 @@ If your application config sets `workerMode`, remove it:
     ],
 ],
 ```
-
-- Classes changed from `final` to non-final are extensibility improvements and do not require migration.

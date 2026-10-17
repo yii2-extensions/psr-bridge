@@ -42,7 +42,6 @@ final class UploadedFileCreator
      * Optional keys for file specification.
      */
     private const OPTIONAL_KEYS = ['name', 'type'];
-
     /**
      * Required keys for file specification.
      */

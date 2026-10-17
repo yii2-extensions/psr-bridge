@@ -7,6 +7,7 @@ namespace yii2\extensions\psrbridge\tests\http\stateless;
 use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\{Group, TestWith};
 use ReflectionException;
+use WeakReference;
 use yii\base\{Event, InvalidConfigException};
 use yii\web\IdentityInterface;
 use yii2\extensions\psrbridge\http\Application;
@@ -94,14 +95,16 @@ final class ApplicationEventTest extends TestCase
             }
         };
 
-        /** @var Event[] $registeredEvents */
-        $registeredEvents = ReflectionHelper::inaccessibleProperty($app, 'registeredEvents');
-
-        $event1 = new Event(['name' => 'test.event1', 'sender' => $mockComponent1]);
-        $event2 = new Event(['name' => 'test.event2', 'sender' => $mockComponent2]);
-
-        $registeredEvents[] = $event1;
-        $registeredEvents[] = $event2;
+        $registeredEvents = [
+            'first' => [
+                'sender' => WeakReference::create($mockComponent1),
+                'name' => 'test.event1',
+            ],
+            'second' => [
+                'sender' => WeakReference::create($mockComponent2),
+                'name' => 'test.event2',
+            ],
+        ];
 
         ReflectionHelper::setInaccessibleProperty($app, 'registeredEvents', $registeredEvents);
 

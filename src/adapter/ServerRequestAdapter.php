@@ -290,7 +290,9 @@ final class ServerRequestAdapter
     private function getValidatedCookies(string $validationKey): array
     {
         if ($validationKey === '') {
-            throw new InvalidConfigException(Message::COOKIE_VALIDATION_KEY_REQUIRED->getMessage());
+            throw new InvalidConfigException(
+                Message::COOKIE_VALIDATION_KEY_REQUIRED->getMessage(),
+            );
         }
 
         $cookies = [];
@@ -374,6 +376,9 @@ final class ServerRequestAdapter
             }
 
             $parsedParams = $parser->parse((string) $request->getBody(), $rawContentType);
+        } elseif (strcasecmp($contentType, 'application/x-www-form-urlencoded') === 0) {
+            $parsedParams = [];
+            mb_parse_str((string) $request->getBody(), $parsedParams);
         }
 
         if ($parsedParams === null || is_array($parsedParams) || is_object($parsedParams)) {
