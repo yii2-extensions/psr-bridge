@@ -113,7 +113,7 @@ class Request extends \yii\web\Request
     }
 
     /**
-     * Returns parsed body parameters with the configured method override removed from array bodies.
+     * Returns parsed body parameters with a non-`null` configured method override removed from array bodies.
      *
      * @throws InvalidConfigException when a fallback Yii parser definition is invalid.
      *
@@ -122,6 +122,14 @@ class Request extends \yii\web\Request
     public function getBodyParams(): array|object
     {
         if ($this->adapter !== null) {
+            if (is_array($this->bodyParams) && isset($this->bodyParams[$this->methodParam])) {
+                $bodyParams = $this->bodyParams;
+
+                unset($bodyParams[$this->methodParam]);
+
+                return $bodyParams;
+            }
+
             return $this->bodyParams ?? $this->adapter->getBodyParams($this->methodParam);
         }
 

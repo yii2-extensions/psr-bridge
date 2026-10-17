@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http;
 
 use HttpSoft\Message\ServerRequest;
-use PHPUnit\Framework\Attributes\TestWith;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, TestWith};
 use yii2\extensions\psrbridge\http\Request;
+use yii2\extensions\psrbridge\tests\provider\RequestBoundaryProvider;
 use yii2\extensions\psrbridge\tests\support\TestCase;
 
 /**
@@ -208,6 +209,80 @@ final class RequestBoundaryTest extends TestCase
         );
     }
 
+    /**
+     * @param array<string, mixed> $replacement
+     * @param array<string, mixed> $expected
+     */
+    #[DataProviderExternal(RequestBoundaryProvider::class, 'mutableBodyOverrides')]
+    public function testMutableArrayBodyOverridesHideOnlyTheConfiguredMethodParameter(
+        string $methodParam,
+        array $replacement,
+        array $expected,
+        string $expectedMethod,
+    ): void {
+        $request = new Request(['methodParam' => $methodParam]);
+
+        $initialBody = [$methodParam => 'PUT', 'title' => 'original'];
+
+        $psrRequest = new ServerRequest(
+            headers: ['X-Http-Method-Override' => 'DELETE'],
+            parsedBody: $initialBody,
+            method: 'POST',
+            uri: 'http://example.test/',
+        );
+
+        $request->setPsr7Request($psrRequest);
+        $request->setBodyParams($replacement);
+
+        self::assertSame(
+            $expectedMethod,
+            $request->getMethod(),
+            'The mutable body must retain its method precedence.',
+        );
+        self::assertSame(
+            $expected,
+            $request->getBodyParams(),
+            'Body parameters must exclude a non-null configured method override.',
+        );
+        self::assertSame(
+            $expected,
+            $request->post(),
+            'Controller body access must use the normalized parameters.',
+        );
+        self::assertNull(
+            $request->getBodyParam($methodParam),
+            'The transport method override must not be exposed as a body parameter.',
+        );
+        self::assertSame(
+            $expectedMethod,
+            $request->getMethod(),
+            'Reading body parameters must not discard the effective method override.',
+        );
+        self::assertSame(
+            $psrRequest,
+            $request->getPsr7Request(),
+            'Normalizing a mutable body must preserve the attached PSR request.',
+        );
+        self::assertSame(
+            $initialBody,
+            $request->getParsedBody(),
+            'Mutable body normalization must not change the original parsed PSR body.',
+        );
+
+        $request->setBodyParams(null);
+
+        self::assertSame(
+            ['title' => 'original'],
+            $request->getBodyParams(),
+            'Resetting the override must restore normalized PSR body parameters.',
+        );
+        self::assertSame(
+            'PUT',
+            $request->getMethod(),
+            'Resetting the override must restore the PSR body method.',
+        );
+    }
+
     public function testMutableBodyOverrideReplacesAnExistingParsedOverride(): void
     {
         $request = new Request();
@@ -248,6 +323,32 @@ final class RequestBoundaryTest extends TestCase
             'DELETE',
             $request->getMethod(),
             'Null body override must restore the parsed override.',
+        );
+    }
+
+    public function testMutableObjectBodyOverridePreservesItsIdentityAndMethodField(): void
+    {
+        $request = new Request();
+
+        $body = (object) ['_method' => 'PATCH', 'title' => 'object body'];
+
+        $request->setPsr7Request(new ServerRequest(method: 'POST'));
+        $request->setBodyParams($body);
+
+        self::assertSame(
+            $body,
+            $request->getBodyParams(),
+            'Object body overrides must retain their identity and properties.',
+        );
+        self::assertSame(
+            'object body',
+            $request->getBodyParam('title'),
+            'Object body fields must remain available to controllers.',
+        );
+        self::assertSame(
+            'POST',
+            $request->getMethod(),
+            'Object properties must not become array-based method overrides.',
         );
     }
 
