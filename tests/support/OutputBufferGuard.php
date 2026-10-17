@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\psrbridge\tests\support {
+namespace yii2\extensions\psrbridge\tests\support;
+
     use LogicException;
 
     /**
@@ -26,4 +27,3 @@ namespace yii2\extensions\psrbridge\tests\support {
             self::$attempts = 0;
         }
     }
-}
