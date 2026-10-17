@@ -70,9 +70,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
 
         for ($level = ob_get_level(); $level > $minLevel; --$level) {
             if (@ob_end_clean() === false) {
-                // @codeCoverageIgnoreStart
                 ob_clean();
-                // @codeCoverageIgnoreEnd
             }
         }
     }
@@ -344,6 +342,15 @@ class ErrorHandler extends \yii\web\ErrorHandler
             'Last-Modified',
             'Expires',
             'Pragma',
+            'Location',
+            'Refresh',
+            'X-Sendfile',
+            'X-Accel-Redirect',
+            'X-Accel-Buffering',
+            'X-Accel-Charset',
+            'X-Accel-Expires',
+            'X-Accel-Limit-Rate',
+            'X-Lighttpd-Send-File',
         ];
 
         foreach ($headers as $header) {

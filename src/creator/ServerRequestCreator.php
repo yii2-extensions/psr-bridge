@@ -47,9 +47,10 @@ final class ServerRequestCreator
     /**
      * Builds a PSR request from the current SAPI globals and attaches a `php://input` body when available.
      *
-     * Copies `HTTP_*` headers, server parameters, cookies, query parameters, `$_POST`, and nested uploads.
-     * An empty `$_POST` is still a non-`null` parsed body; clear it explicitly for JSON when a downstream bridge
-     * parser should parse the raw body. Input stream failures leave the factory's original body unchanged.
+     * Copies `HTTP_*` and CGI content headers, server parameters, cookies, query parameters, and nested uploads.
+     * Nonempty `$_POST`, and empty `$_POST` for POST form or multipart requests, become the parsed body. Other
+     * bodies stay `null` for configured parsers or the URL-encoded fallback. Input stream failures leave the
+     * factory's original body unchanged.
      *
      * @return ServerRequestInterface Request created from the current globals.
      */

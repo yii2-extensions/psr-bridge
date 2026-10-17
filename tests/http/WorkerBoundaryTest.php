@@ -9,6 +9,7 @@ use RuntimeException;
 use WeakReference;
 use Yii;
 use yii\base\Component;
+use yii\log\Logger;
 use yii\web\{Cookie, ForbiddenHttpException};
 use yii2\extensions\psrbridge\http\{Application, ErrorHandler, Response, Session};
 use yii2\extensions\psrbridge\tests\support\stub\Identity;
@@ -27,6 +28,58 @@ require_once __DIR__ . '/../support/WorkerScenarios.php';
 final class WorkerBoundaryTest extends TestCase
 {
     private string $directory = '';
+
+    public function testAlreadyActiveSessionAgesFlashOnlyOnceAcrossReopening(): void
+    {
+        $nativeSession = new \yii\web\Session(['useCookies' => false]);
+
+        $nativeSession->open();
+        $nativeSession->setFlash('message', 'already active');
+
+        $logger = Yii::getLogger();
+
+        $originalMessages = $logger->messages;
+        $messageOffset = count($originalMessages);
+
+        $session = new Session(['useCookies' => false]);
+
+        try {
+            $messages = array_slice($logger->messages, $messageOffset);
+            $warning = array_search('Session is already started', array_column($messages, 0), true);
+
+            self::assertIsInt(
+                $warning,
+                'Adopting an active session must report the existing session.',
+            );
+            self::assertSame(
+                Logger::LEVEL_WARNING,
+                $messages[$warning][1] ?? null,
+                'An already-active session must be logged as a warning.',
+            );
+            self::assertTrue($session->getIsActive(), 'Bridge session must adopt the active native session.');
+
+            $session->close();
+            $session->open();
+
+            self::assertSame(
+                'already active',
+                $session->getFlash('message'),
+                'Reopening must not age flash twice.',
+            );
+
+            $nextSession = new Session(['useCookies' => false]);
+
+            self::assertFalse(
+                $nextSession->hasFlash('message'),
+                'The next request must expire the aged flash.',
+            );
+        } finally {
+            $session->close();
+            $nativeSession->close();
+
+            $logger->messages = $originalMessages;
+        }
+    }
 
     public function testAnInactiveStandaloneSessionIsNotEmittedAfterAWebApplicationEnds(): void
     {
@@ -142,13 +195,19 @@ final class WorkerBoundaryTest extends TestCase
 
         $storage->setId('visitor-a');
         $storage->open();
+
+        $visitorA = $storage->getId();
+
         $storage->set('visitor', 'A');
         $storage->close();
         $storage->setId('visitor-b');
         $storage->open();
+
+        $visitorB = $storage->getId();
+
         $storage->set('visitor', 'B');
         $storage->close();
-        $storage->setId('visitor-a');
+        $storage->setId($visitorA);
 
         $custom = new class extends Session {
             public function init(): void
@@ -172,7 +231,7 @@ final class WorkerBoundaryTest extends TestCase
             ],
         );
 
-        $response = $app->handle(request(['PHPSESSID' => 'visitor-b']));
+        $response = $app->handle(request(['PHPSESSID' => $visitorB]));
 
         self::assertSame(
             'B',
@@ -714,7 +773,10 @@ final class WorkerBoundaryTest extends TestCase
 
         $jar = cookies($login);
 
-        $signed = $app->security->validateData($jar[$app->session->getName()] ?? throw new \RuntimeException('Missing session cookie.'), 'worker-regression-key');
+        $signed = $app->security->validateData(
+            $jar[$app->session->getName()] ?? throw new RuntimeException('Missing session cookie.'),
+            'worker-regression-key',
+        );
 
         self::assertIsString(
             $signed,
@@ -894,7 +956,8 @@ final class WorkerBoundaryTest extends TestCase
     {
         $app = application(static fn(): array => [], ['useSession' => false]);
 
-        $cookie = (new \yii\base\Security())->hashData(serialize(['PHPSESSID', 'valid-but-unused']), 'worker-regression-key');
+        $cookie = (new \yii\base\Security())
+            ->hashData(serialize(['PHPSESSID', 'valid-but-unused']), 'worker-regression-key');
         $response = $app->handle(request(['PHPSESSID' => $cookie]));
 
         self::assertArrayNotHasKey(

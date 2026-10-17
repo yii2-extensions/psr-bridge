@@ -87,6 +87,34 @@ final class RequestBoundaryTest extends TestCase
         );
     }
 
+    #[TestWith([true, 'http', false])]
+    #[TestWith([true, 'https', true])]
+    #[TestWith([true, 'HTTPS', true])]
+    #[TestWith([false, 'https', false])]
+    public function testForwardedProtoUsesOnlyTrustedProxyValues(bool $trusted, string $proto, bool $expected): void
+    {
+        $request = new Request(
+            [
+                'trustedHosts' => $trusted ? ['10.0.0.0/8'] : [],
+                'secureHeaders' => ['Forwarded'],
+            ],
+        );
+
+        $request->setPsr7Request(
+            new ServerRequest(
+                serverParams: ['REMOTE_ADDR' => '10.0.0.2'],
+                headers: ['Forwarded' => 'for=198.51.100.42;proto=' . $proto],
+                uri: 'http://example.test/',
+            ),
+        );
+
+        self::assertSame(
+            $expected,
+            $request->getIsSecureConnection(),
+            'Forwarded proto must obey proxy trust.',
+        );
+    }
+
     public function testMethodOverridesUseMutableHeadersAndBodyWithExistingPrecedence(): void
     {
         $request = new Request();
@@ -126,7 +154,7 @@ final class RequestBoundaryTest extends TestCase
         self::assertSame(
             'PUT',
             $request->getMethod(),
-            'Body override must take effect when no header override is present.',
+            'Body override must take precedence over the header override.',
         );
 
         $request->setBodyParams(['_method' => 'GET']);
@@ -134,7 +162,7 @@ final class RequestBoundaryTest extends TestCase
         self::assertSame(
             'PATCH',
             $request->getMethod(),
-            'Header override must take precedence over body override.',
+            'Rejected GET body override must fall back to the header override.',
         );
 
         $request->headers->set('X-Http-Method-Override', 'OPTIONS');

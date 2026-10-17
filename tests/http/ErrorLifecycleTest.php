@@ -28,7 +28,12 @@ final class ErrorLifecycleTest extends TestCase
             'The current working directory should be a string.',
         );
 
-        $directory = sys_get_temp_dir();
+        $directory = realpath(sys_get_temp_dir());
+
+        self::assertIsString(
+            $directory,
+            'The temporary directory must resolve to a real path.',
+        );
 
         try {
             $handler->register();
@@ -222,6 +227,7 @@ final class ErrorLifecycleTest extends TestCase
         try {
             ini_set('display_errors', '1');
 
+            $handler->register();
             $handler->register();
 
             self::assertSame(

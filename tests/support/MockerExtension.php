@@ -44,6 +44,21 @@ final class MockerExtension implements Extension
     {
         $mocks = [
             [
+                'namespace' => 'yii2\extensions\psrbridge\http',
+                'name' => 'ob_clean',
+                'function' => static fn(): bool => \ob_clean(),
+            ],
+            [
+                'namespace' => 'yii2\extensions\psrbridge\http',
+                'name' => 'ob_end_clean',
+                'function' => [OutputBufferGuard::class, 'endClean'],
+            ],
+            [
+                'namespace' => 'yii2\extensions\psrbridge\http',
+                'name' => 'ob_get_level',
+                'function' => static fn(): int => \ob_get_level(),
+            ],
+            [
                 'namespace' => 'yii2\extensions\psrbridge\emitter',
                 'name' => 'flush',
                 'function' => static fn() => MockerFunctions::flush(),

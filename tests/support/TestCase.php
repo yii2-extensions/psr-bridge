@@ -208,6 +208,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::setUp();
 
+        if (!function_exists('yii2\\extensions\\psrbridge\\http\\ob_end_clean')) {
+            MockerExtension::load();
+        }
+
         MockerFunctions::reset();
         OutputBufferGuard::reset();
 

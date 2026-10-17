@@ -27,12 +27,3 @@ namespace yii2\extensions\psrbridge\tests\support {
         }
     }
 }
-
-namespace yii2\extensions\psrbridge\http {
-    use yii2\extensions\psrbridge\tests\support\OutputBufferGuard;
-
-    function ob_end_clean(): bool
-    {
-        return OutputBufferGuard::endClean();
-    }
-}

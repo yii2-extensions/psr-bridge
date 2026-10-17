@@ -93,6 +93,13 @@ Change only affected integration points, then verify:
 4. Emission succeeds before after-send; emission failure skips after-send; either path finalizes exactly once.
 5. Partial downloads expose only the selected bytes and HEAD emits no body. Run package/application tests and static analysis; record any untested runtime integration.
 
+### Direct `SapiEmitter` callers
+
+`SapiEmitter` emits the PSR-7 body as provided and no longer applies
+`Content-Range` offsets. Direct callers must provide a body already bounded to the
+declared range and consistent with `Content-Length` when present.
+`ResponseAdapter` already prepares bounded range bodies.
+
 ### Replace explicit `null` buffer configuration
 
 Before: `new SapiEmitter(null)` selected full-body string emission.
