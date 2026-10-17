@@ -7,20 +7,16 @@ The package requires PHP 8.3+, the `filter` and `mbstring` extensions, PSR HTTP 
 supported. The selected framework release may require a newer PHP version; check its resolved requirements.
 Keep Composer's security advisory blocking enabled and run `composer audit` after resolving dependencies.
 
-The examples use the unreleased 0.4 `Application::finalize()` lifecycle. Select its development branch explicitly:
-
 ```bash
-composer require yii2-extensions/psr-bridge:dev-main httpsoft/http-message
+composer require "yii2-extensions/psr-bridge:^0.4" httpsoft/http-message
 ```
 
 HttpSoft is the implementation used in these examples and in package tests. An existing compatible PSR-7/PSR-17
 implementation can be reused. Register its factories as described in [configuration](configuration.md#factories).
 The bridge depends on interfaces and does not select a production message implementation for you.
 
-`dev-main` is a moving development branch with the `0.4.x-dev` alias, not a stable `0.4.0` release. Review and retain
-the resolved commit in `composer.lock`, and compare `composer show yii2-extensions/psr-bridge` with [UPGRADE](../UPGRADE.md).
-An unpinned install resolves an available stable release; stable `0.3` has no `Application::finalize()`. Applications
-remaining on stable `0.3` must use that version's documentation instead of these lifecycle examples.
+Check the installed version with `composer show yii2-extensions/psr-bridge` and follow [UPGRADE](../UPGRADE.md)
+when upgrading.
 
 ## Choose the runtime
 
