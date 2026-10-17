@@ -35,12 +35,14 @@ final class RangeStream implements StreamInterface
      * Default chunk size, in bytes, used by {@see getContents()} when reading the underlying stream.
      */
     private const READ_BUFFER_LENGTH = 8192;
-
     /**
      * Total number of bytes exposed by the range, derived from `$end - $begin + 1`.
      */
     private readonly int $length;
-
+    /**
+     * Counts bytes consumed when the underlying stream cannot report its position.
+     */
+    private int $position = 0;
     /**
      * Wrapped underlying stream, or `null` after {@see close()} or {@see detach()}.
      */
@@ -258,7 +260,13 @@ final class RangeStream implements StreamInterface
             return '';
         }
 
-        return $this->stream()->read(min($length, $this->length - $this->tell()));
+        $chunk = $this->stream()->read(min($length, $this->length - $this->tell()));
+
+        if (!$this->isSeekable()) {
+            $this->position += strlen($chunk);
+        }
+
+        return $chunk;
     }
 
     /**
@@ -308,7 +316,11 @@ final class RangeStream implements StreamInterface
      */
     public function tell(): int
     {
-        return max(0, min($this->stream()->tell() - $this->begin, $this->length));
+        $stream = $this->stream();
+
+        return $stream->isSeekable()
+            ? max(0, min($stream->tell() - $this->begin, $this->length))
+            : $this->position;
     }
 
     /**

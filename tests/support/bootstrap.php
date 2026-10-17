@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 error_reporting(-1);
 
+require_once __DIR__ . '/OutputBufferGuard.php';
+
 defined('YII_DEBUG') || define('YII_DEBUG', true);
 define('YII_ENV', 'test');
 

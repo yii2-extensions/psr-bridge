@@ -148,6 +148,11 @@ enum Message: string
         . "('begin' >= '0' and 'end' >= 'begin'). Received: (begin='%d', end='%d').";
 
     /**
+     * Error when the response byte range length cannot be represented as an integer.
+     */
+    case RESPONSE_STREAM_RANGE_OVERFLOW = 'Response stream range length exceeds the maximum integer size.';
+
+    /**
      * Error when unable to read from the response stream.
      */
     case RESPONSE_STREAM_READ_ERROR = 'Failed to read from response stream.';

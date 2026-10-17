@@ -13,7 +13,10 @@ use yii2\extensions\psrbridge\tests\support\stub\MockerFunctions;
 use function array_pop;
 use function fclose;
 use function fwrite;
+use function is_array;
 use function is_resource;
+use function restore_error_handler;
+use function set_error_handler;
 use function stream_get_meta_data;
 use function strlen;
 use function tmpfile;
@@ -107,6 +110,17 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             return;
         }
 
+        if (Yii::$app->has('errorHandler', true)) {
+            $handler = Yii::$app->getErrorHandler();
+            $active = set_error_handler(static fn(): bool => false);
+
+            restore_error_handler();
+
+            if (is_array($active) && $active[0] === $handler) {
+                $handler->unregister();
+            }
+        }
+
         if (Yii::$app->has('session')) {
             $session = Yii::$app->getSession();
 
@@ -118,6 +132,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
         // ensure the logger is flushed after closing the application
         $logger = Yii::getLogger();
+
         $logger->flush();
     }
 
@@ -194,6 +209,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         parent::setUp();
 
         MockerFunctions::reset();
+        OutputBufferGuard::reset();
 
         $this->originalServer = $_SERVER;
 

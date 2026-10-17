@@ -14,9 +14,6 @@ use const PHP_INT_SIZE;
 
 /**
  * Data provider for {@see \yii2\extensions\psrbridge\http\Application} test cases.
- *
- * Provides representative input/output pairs for stateless application authentication, cookies, errors, memory, and
- * server parameter handling.
  */
 final class ApplicationProvider
 {

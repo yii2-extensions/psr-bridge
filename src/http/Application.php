@@ -7,7 +7,8 @@ namespace yii2\extensions\psrbridge\http;
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
 use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
-use yii\base\{Event, InvalidConfigException};
+use WeakReference;
+use yii\base\{Component, Event, InvalidConfigException};
 use yii\di\NotInstantiableException;
 use yii\web\IdentityInterface;
 
@@ -44,7 +45,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * Flushes the logger during {@see finalize()} when set to `true`.
      */
     public bool $flushLogger = true;
-
     /**
      * Lists component IDs that should stay alive across requests in long-running workers.
      *
@@ -53,21 +53,18 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * @var array<int, string>
      */
     public array $persistentComponents = ['db', 'cache'];
-
     /**
      * Retained for configuration compatibility; request preparation always resets uploaded file state.
      *
      * Setting this property to `false` does not disable the reset.
      */
     public bool $resetUploadedFiles = true;
-
     /**
      * Controls whether cookie validation settings are synchronized between request and response.
      *
      * Set to `false` to skip request-to-response cookie validation key synchronization.
      */
     public bool $syncCookieValidation = true;
-
     /**
      * Controls whether the session is opened before bootstrap and closed after it for each request.
      *
@@ -77,7 +74,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * skip only the eager {@see openSessionFromRequestCookies()} and {@see finalizeSessionState()} hooks.
      */
     public bool $useSession = true;
-
     /**
      * Defines the application version string.
      */
@@ -89,24 +85,20 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * @var callable(Event): void
      */
     private $eventHandler;
-
     /**
      * Stores the converted Yii response awaiting after-send finalization.
      */
     private Response|null $lastResponse = null;
-
     /**
      * Caches the memory limit in bytes.
      */
     private int|null $memoryLimit = null;
-
     /**
-     * Stores events registered during request handling.
+     * Tracks event names without retaining their senders.
      *
-     * @var array<Event>
+     * @var array<string, array{sender: WeakReference<object>, name: string}>
      */
     private array $registeredEvents = [];
-
     /**
      * Indicates whether to recalculate the memory limit.
      */
@@ -144,7 +136,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     }
 
     /**
-     * Returns Yii core components with bridge request, response, and error handler definitions.
+     * Returns Yii core components with bridge request, response, session, and error handler definitions.
      *
      * @return array<mixed> Core component definitions.
      */
@@ -162,6 +154,9 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
                 'response' => [
                     'class' => Response::class,
                 ],
+                'session' => [
+                    'class' => Session::class,
+                ],
             ],
         );
     }
@@ -174,7 +169,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      * logger flushing runs when enabled and a converted response is available.
      *
      * Call exactly once per emission attempt. Keep this call outside an emitter catch block so an after-send
-     * exception is not treated as an emission failure and does not cause a second call. See the class example.
+     * exception is not treated as an emission failure and does not cause a second call.
      *
      * @param bool $success Whether emission completed successfully.
      *
@@ -194,6 +189,10 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
             }
 
             $this->lastResponse = null;
+
+            if ($this->has('errorHandler', true)) {
+                $this->errorHandler->releaseResponse();
+            }
         }
     }
 
@@ -296,6 +295,8 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function finalizeSessionState(): void
     {
+        $this->response->captureSessionCookie();
+
         // @codeCoverageIgnoreStart
         $this->session->close();
         // @codeCoverageIgnoreEnd
@@ -319,7 +320,6 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function prepareErrorHandler(): void
     {
-        // re-register error handler to reset its state
         $this->errorHandler->setResponse($this->response);
     }
 
@@ -367,6 +367,10 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function reinitializeApplication(): void
     {
+        if ($this->has('session', true) && $this->session->getIsActive()) {
+            $this->session->close();
+        }
+
         if ($this->has('errorHandler')) {
             $this->errorHandler->unregister();
         }
@@ -381,6 +385,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function resetRequestState(): void
     {
+        $this->controller = null;
         $this->requestedRoute = '';
         $this->requestedAction = null;
         $this->requestedParams = [];
@@ -428,6 +433,7 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         }
 
         $this->session->setId($sessionId);
+        $this->session->setHasSessionId($sessionId !== '');
     }
 
     /**
@@ -445,6 +451,22 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
      */
     protected function terminate(Response $response): ResponseInterface
     {
+        if ($response !== $this->response) {
+            if ($this->syncCookieValidation) {
+                $response->cookieValidationKey = $this->request->cookieValidationKey;
+                $response->enableCookieValidation = $this->request->enableCookieValidation;
+            }
+
+            if ($this->has('session', true)) {
+                $name = $this->session->getName();
+                $cookie = $this->response->cookies->get($name);
+
+                if ($cookie !== null && $response->cookies->get($name) === null) {
+                    $response->cookies->add($cookie);
+                }
+            }
+        }
+
         $this->lastResponse = $response;
 
         return $response->getPsr7Response();
@@ -499,8 +521,14 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         // @codeCoverageIgnoreEnd
 
         foreach (array_reverse($this->registeredEvents) as $event) {
-            if ($event->sender !== null && method_exists($event->sender, 'off')) {
-                $event->sender->off($event->name);
+            $sender = $event['sender']->get();
+
+            if ($sender !== null && method_exists($sender, 'off')) {
+                $sender->off($event['name']);
+
+                if ($sender instanceof Component) {
+                    $this->restorePersistentEventHandler($sender, $event['name']);
+                }
             }
         }
 
@@ -542,7 +570,17 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
     private function initEventTracking(): void
     {
         $this->eventHandler = function (Event $event): void {
-            $this->registeredEvents[] = $event;
+            if (is_object($event->sender)) {
+                $key = spl_object_id($event->sender) . ':' . $event->name;
+
+                if (($this->registeredEvents[$key]['sender'] ?? null)?->get() !== $event->sender) {
+                    unset($this->registeredEvents[$key]);
+                    $this->registeredEvents[$key] = [
+                        'sender' => WeakReference::create($event->sender),
+                        'name' => $event->name,
+                    ];
+                }
+            }
         };
     }
 
@@ -610,6 +648,29 @@ class Application extends \yii\web\Application implements RequestHandlerInterfac
         }
 
         return (int) $number;
+    }
+
+    /**
+     * Restores a configured worker handler after removing handlers added during the request.
+     */
+    private function restorePersistentEventHandler(Component $sender, string $name): void
+    {
+        $definitions = $this->config['components'] ?? [];
+
+        foreach ($this->getComponents(false) as $id => $component) {
+            if (is_string($id) && $component === $sender && $this->isPersistentComponent($id)) {
+                $definition = is_array($definitions) ? ($definitions[$id] ?? []) : [];
+                $key = 'on ' . $name;
+
+                if (is_array($definition) && isset($definition[$key])) {
+                    /** @var callable $handler */
+                    $handler = $definition[$key];
+                    $sender->on($name, $handler);
+                }
+
+                return;
+            }
+        }
     }
 
     /**

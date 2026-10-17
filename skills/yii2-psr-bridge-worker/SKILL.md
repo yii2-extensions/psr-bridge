@@ -10,13 +10,26 @@ metadata:
 
 Use `yii2\extensions\psrbridge` and match the installed revision. The bridge requires PHP 8.3+ and Yii
 `~2.0.55 || ^22.0@dev`; the selected framework may require a newer PHP version. Preserve Composer advisory
-blocking and audit the resolved dependencies. The default branch includes unreleased 0.4 changes, including
-session isolation correction #288; do not assume a stable install has them.
+blocking and audit the resolved dependencies. Verify the installed bridge's
+finalization and session-isolation contracts before applying the lifecycle
+guidance below.
 
 ## Consult the relevant contracts
 
-Prefer task-supplied local Markdown. In a package checkout, read `docs/` and `UPGRADE.md`. Otherwise use direct
-published Markdown, after confirming the relevant package changes have been published:
+In a root package checkout, use `composer show --self --format=json` for metadata. For installed dependencies,
+resolve the real path and read the configured vendor directory's `composer/installed.php` (`versions[<package>]`):
+`install_path`, `pretty_version` and Composer's selected `reference`. Do not blindly prefer `source.reference`
+over `dist.reference`. For any live package checkout, including a symlinked path install, inspect its current
+`HEAD` and files even when clean; report metadata mismatches and let the actual files govern. Uncommitted changes
+have no matching SHA. Otherwise use the selected reference or a verified matching tag only after establishing
+its source provenance. Compare `composer.lock`; it may differ from the inspected installation. Identify a
+lock-only state when no package files are installed, and resolve dependencies separately. Use hosted pages,
+catalogs or snapshots only when their source revision matches.
+
+Prefer matching task-supplied Markdown or checkout `docs/` and `UPGRADE.md`. Otherwise read these published pages
+after checking their revision, or the corresponding files at the resolved reference in
+<https://github.com/yii2-extensions/psr-bridge>. If guides are unavailable or offline, inspect local source/PHPDoc
+and the changelog, and report the documentation gap.
 
 - Factories, session/cookie configuration, parsing, and worker state:
   <https://yii2-framework.github.io/docs/extensions/psr-bridge/configuration/index.md>.
@@ -25,9 +38,8 @@ published Markdown, after confirming the relevant package changes have been publ
 - Consumer migration routing:
   <https://yii2-framework.github.io/docs/extensions/psr-bridge/migration/index.md>.
 
-For an exact signature, exception, or return type, read the relevant source PHPDoc or generated type page under
-<https://yii2-framework.github.io/docs/extensions/psr-bridge/reference/>. The machine-readable catalog is
-<https://yii2-framework.github.io/docs/reference/psr-bridge.json>. Read only the needed pages; use `llms.txt` when
+For an exact signature, exception, or return type, inspect the relevant type and its PHPDoc in the resolved
+package files. Read only the needed pages; use `llms.txt` when
 the relevant page is unknown. Do not substitute another PSR bridge's API or copy a full API catalog into context.
 
 ## Bind requests and preserve isolation

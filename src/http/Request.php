@@ -49,6 +49,18 @@ class Request extends \yii\web\Request
      * PSR-7 ServerRequestAdapter for bridging PSR-7 ServerRequestInterface with Yii Request component.
      */
     private ServerRequestAdapter|null $adapter = null;
+    /**
+     * @var array<mixed>|object|null Explicit body override for the attached request.
+     */
+    private array|object|null $bodyParams = null;
+    /**
+     * @var string|null Explicitly configured script URL.
+     */
+    private string|null $configuredScriptUrl = null;
+    /**
+     * @var HeaderCollection|null PSR-7 headers collection.
+     */
+    private HeaderCollection|null $psrHeaders = null;
 
     /**
      * Returns Basic credentials from the current Authorization header or current server parameters.
@@ -110,7 +122,7 @@ class Request extends \yii\web\Request
     public function getBodyParams(): array|object
     {
         if ($this->adapter !== null) {
-            return $this->adapter->getBodyParams($this->methodParam);
+            return $this->bodyParams ?? $this->adapter->getBodyParams($this->methodParam);
         }
 
         return $this->normalizeParentBodyParams() ?? [];
@@ -174,14 +186,57 @@ class Request extends \yii\web\Request
     public function getHeaders(): HeaderCollection
     {
         if ($this->adapter !== null) {
-            $headers = $this->adapter->getHeaders();
+            if ($this->psrHeaders === null) {
+                $this->psrHeaders = $this->adapter->getHeaders();
+                $this->filterHeaders($this->psrHeaders);
+            }
 
-            $this->filterHeaders($headers);
-
-            return $headers;
+            return $this->psrHeaders;
         }
 
         return parent::getHeaders();
+    }
+
+    /**
+     * Resolves direct transport and trusted proxy headers from the attached request.
+     *
+     * @return bool
+     */
+    public function getIsSecureConnection()
+    {
+        if ($this->adapter === null) {
+            return parent::getIsSecureConnection();
+        }
+
+        $https = $this->getServerParam('HTTPS');
+
+        if (
+            $this->getPsr7Request()->getUri()->getScheme() === 'https'
+            || $https === 1
+            || $https === '1'
+            || (is_string($https) && strcasecmp($https, 'on') === 0)
+        ) {
+            return true;
+        }
+
+        if (($proto = $this->getSecureForwardedHeaderTrustedPart('proto')) !== null) {
+            return strcasecmp($proto, 'https') === 0;
+        }
+
+        /** @var array<string, list<string>> $protocolHeaders */
+        $protocolHeaders = $this->secureProtocolHeaders;
+
+        foreach ($protocolHeaders as $header => $values) {
+            if (($value = $this->getHeaders()->get($header)) !== null) {
+                foreach ($values as $secureValue) {
+                    if (strcasecmp($value, $secureValue) === 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -192,7 +247,11 @@ class Request extends \yii\web\Request
     public function getMethod(): string
     {
         if ($this->adapter !== null) {
-            return $this->adapter->getMethod($this->methodParam);
+            $request = $this->getPsr7Request()
+                ->withParsedBody($this->bodyParams ?? $this->adapter->getParsedBody())
+                ->withHeader('X-Http-Method-Override', $this->getHeaders()->get('X-Http-Method-Override', ''));
+
+            return (new ServerRequestAdapter($request))->getMethod($this->methodParam);
         }
 
         return parent::getMethod();
@@ -332,7 +391,7 @@ class Request extends \yii\web\Request
     public function getScriptUrl(): string
     {
         if ($this->adapter !== null) {
-            return $this->getScriptName();
+            return $this->configuredScriptUrl ?? $this->getScriptName();
         }
 
         return parent::getScriptUrl();
@@ -480,16 +539,31 @@ class Request extends \yii\web\Request
                 return [$route, $mergedParams];
             }
 
-            throw new NotFoundHttpException(Yii::t('yii', Message::PAGE_NOT_FOUND->getMessage()));
+            throw new NotFoundHttpException(
+                Yii::t('yii', Message::PAGE_NOT_FOUND->getMessage()),
+            );
         }
 
         return parent::resolve();
     }
 
     /**
+     * Honors Yii body overrides without mutating the immutable PSR request.
+     *
+     * @param mixed $values Body override, or `null` to resume the attached request body.
+     */
+    public function setBodyParams($values)
+    {
+        parent::setBodyParams($values);
+
+        $this->bodyParams = $values === null || is_array($values) || is_object($values) ? $values : [];
+    }
+
+    /**
      * Binds a PSR request, resets resolved query parameters, and registers its upload adapter.
      *
-     * Parses the body only when its parsed body is `null` and a matching configured parser exists. Scalar parser
+     * Use a fresh Request for each HTTP request: inherited Yii proxy-resolution caches are not reset by rebinding.
+     * Parses unparsed bodies with configured parsers or the urlencoded fallback. Scalar parser
      * results are discarded. Existing non-`null` parsed bodies, including `[]`, are preserved.
      *
      * @param ServerRequestInterface $request Request to bind.
@@ -500,12 +574,27 @@ class Request extends \yii\web\Request
     {
         $this->setQueryParams([]);
 
+        $this->psrHeaders = null;
+        $this->bodyParams = null;
         $this->adapter = new ServerRequestAdapter(
             $request,
             $this->parsers,
         );
 
         UploadedFile::setPsr7Adapter($this->adapter);
+    }
+
+    /**
+     * Preserves an explicitly configured entry script URL when a PSR request is attached.
+     *
+     * @param string|null $value Script URL, or `null` to restore automatic resolution.
+     */
+    // @phpstan-ignore missingType.return (Keep Yii's untyped extension point compatible with existing subclasses.)
+    public function setScriptUrl($value)
+    {
+        // @phpstan-ignore argument.type (Yii accepts null to reset automatic script URL resolution.)
+        parent::setScriptUrl($value);
+        $this->configuredScriptUrl = $value === null ? null : parent::getScriptUrl();
     }
 
     /**

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yii2\extensions\psrbridge\tests\http;
 
-use PHPForge\Support\ReflectionHelper;
 use PHPUnit\Framework\Attributes\{Group, RequiresPhpExtension};
 use ReflectionException;
 use RuntimeException;
@@ -56,7 +55,10 @@ final class ErrorHandlerTest extends TestCase
                 "In non-test environment, 'clearOutput()' should clean all buffers to level '0', not level '1'.",
             );
         } finally {
-            // restore PHPUnit expected buffering state
+            // Restore PHPUnit buffering even when a mutation leaves extra buffers open.
+            while (ob_get_level() > $initialLevel) {
+                ob_end_clean();
+            }
             while (ob_get_level() < $initialLevel) {
                 ob_start();
             }
@@ -76,9 +78,12 @@ final class ErrorHandlerTest extends TestCase
         $response->data = 'Pre-existing data that should be cleared';
 
         $response->setStatusCode(201);
-        $response->getHeaders()->set('X-Another-Header', 'another-value');
-        $response->getHeaders()->set('X-Custom-Header', 'custom-value');
-
+        $response
+            ->getHeaders()
+            ->set('X-Another-Header', 'another-value');
+        $response
+            ->getHeaders()
+            ->set('X-Custom-Header', 'custom-value');
         $errorHandler->setResponse($response);
 
         $response = $errorHandler->handleException(new Exception('Test exception for response clearing'));
@@ -94,13 +99,15 @@ final class ErrorHandlerTest extends TestCase
             "Response data should not be 'Pre-existing data that should be cleared' when reusing existing response "
             . 'for error handling.',
         );
-        self::assertFalse(
-            $response->getHeaders()->has('X-Another-Header'),
-            'All custom headers should be cleared when reusing existing response for error handling.',
+        self::assertSame(
+            'another-value',
+            $response->getHeaders()->get('X-Another-Header'),
+            'Error rendering must preserve headers established by the current request.',
         );
-        self::assertFalse(
-            $response->getHeaders()->has('X-Custom-Header'),
-            'Custom headers should be cleared when reusing existing response for error handling.',
+        self::assertSame(
+            'custom-value',
+            $response->getHeaders()->get('X-Custom-Header'),
+            'Custom response headers must survive error rendering.',
         );
     }
 
@@ -116,6 +123,7 @@ final class ErrorHandlerTest extends TestCase
         echo 'This nested output should also be cleared';
 
         $levelBeforeHandling = ob_get_level();
+
         self::assertGreaterThan(
             0,
             $levelBeforeHandling,
@@ -151,11 +159,9 @@ final class ErrorHandlerTest extends TestCase
 
         $errorHandler->register();
 
-        $registered = ReflectionHelper::inaccessibleParentProperty(
-            $errorHandler,
-            \yii\base\ErrorHandler::class,
-            '_registered',
-        );
+        $registered = set_error_handler(static fn(): bool => false) === [$errorHandler, 'handleError'];
+
+        restore_error_handler();
 
         self::assertTrue(
             $registered,
@@ -166,11 +172,9 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $errorHandler->handleException($exception);
 
-        $registeredAfter = ReflectionHelper::inaccessibleParentProperty(
-            $errorHandler,
-            \yii\base\ErrorHandler::class,
-            '_registered',
-        );
+        $registeredAfter = set_error_handler(static fn(): bool => false) === [$errorHandler, 'handleError'];
+
+        restore_error_handler();
 
         self::assertFalse(
             $registeredAfter,

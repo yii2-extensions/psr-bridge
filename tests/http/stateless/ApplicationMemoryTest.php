@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace yii2\extensions\psrbridge\tests\http\stateless;
 
 use PHPForge\Support\ReflectionHelper;
-use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, TestWith};
+use PHPUnit\Framework\Attributes\{DataProviderExternal, Group, PreserveGlobalState, RunTestsInSeparateProcesses, TestWith};
 use ReflectionException;
 use stdClass;
 use yii\base\InvalidConfigException;
 use yii2\extensions\psrbridge\tests\provider\ApplicationProvider;
-use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, TestCase};
+use yii2\extensions\psrbridge\tests\support\{ApplicationFactory, HelperFactory, MockerExtension, TestCase};
 
 use function array_fill;
 use function end;
@@ -22,15 +22,21 @@ use function ini_set;
 use function memory_get_usage;
 use function ob_get_level;
 use function ob_start;
+use function restore_error_handler;
+use function set_error_handler;
 
 use const PHP_INT_MAX;
 
 /**
  * Unit tests for {@see \yii2\extensions\psrbridge\http\Application} memory handling in stateless mode.
  *
+ * Runs each case in a fresh process so suite coverage cannot affect PHP memory-limit changes.
+ *
  * {@see ApplicationProvider} for test case data providers.
  */
 #[Group('http')]
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 final class ApplicationMemoryTest extends TestCase
 {
     /**
@@ -108,6 +114,33 @@ final class ApplicationMemoryTest extends TestCase
         self::assertTrue(
             $closed,
             "Should close all local output buffers after calling 'clearOutput()'.",
+        );
+    }
+
+    #[TestWith([false])]
+    #[TestWith([true])]
+    public function testFixtureCleanupRestoresErrorHandler(bool $alreadyUnregistered): void
+    {
+        $before = set_error_handler(static fn(): bool => false);
+
+        restore_error_handler();
+
+        $app = ApplicationFactory::stateless();
+
+        $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
+
+        if ($alreadyUnregistered) {
+            $app->errorHandler->unregister();
+        }
+
+        $this->closeApplication();
+
+        $after = set_error_handler(static fn(): bool => false);
+        restore_error_handler();
+
+        self::assertTrue(
+            $before === $after,
+            'Fixture cleanup must restore the original error handler exactly once.',
         );
     }
 
@@ -312,5 +345,12 @@ final class ApplicationMemoryTest extends TestCase
             $limitAfterRequest,
             'Explicit limit must survive request handling.',
         );
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        MockerExtension::load();
     }
 }

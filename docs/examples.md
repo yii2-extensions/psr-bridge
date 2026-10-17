@@ -40,27 +40,19 @@ has reached 90% of the configured limit and lets the runtime decide to recycle t
 
 ## JSON from SAPI
 
-After creating `$request` with `ServerRequestCreator`, clear the empty SAPI parsed body for JSON before binding:
+Configure the JSON parser before creating and handling the request:
 
 ```php
-$contentType = $_SERVER['CONTENT_TYPE'] ?? $request->getHeaderLine('Content-Type');
+$config['components']['request']['parsers']['application/json'] = \yii\web\JsonParser::class;
 
-if (is_string($contentType) && $contentType !== '') {
-    $request = $request->withHeader('Content-Type', $contentType);
-}
-
-$contentType = strtolower(trim(explode(';', $request->getHeaderLine('Content-Type'), 2)[0]));
-
-if ($contentType === 'application/json') {
-    $request = $request->withParsedBody(null);
-}
-
+// Construct $app with $config and $creator with the factories shown in configuration.
+$request = $creator->createFromGlobals();
 $response = $app->handle($request);
 ```
 
-The creator copies `HTTP_*` headers; standard SAPI `CONTENT_TYPE` is attached explicitly above.
-Use the emission/finalization block from the README afterward. The request parser must be configured before
-`handle()`. The PSR request passed by a worker may already contain parsed data and need no such adjustment.
+The creator carries `CONTENT_TYPE` into the PSR headers and leaves unparsed JSON as `null`, enabling the configured
+parser without a manual adjustment. A worker's existing non-`null` parsed body is preserved. Use the
+emission/finalization block from the README afterward.
 
 ## Uploads
 

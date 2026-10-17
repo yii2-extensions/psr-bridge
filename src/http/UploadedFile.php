@@ -79,7 +79,8 @@ class UploadedFile extends \yii\web\UploadedFile
     {
         $files = self::loadFiles();
 
-        return isset($files[$name]) ? new self($files[$name]) : null;
+        // @phpstan-ignore new.static (Yii factories preserve late static binding.)
+        return isset($files[$name]) ? new static($files[$name]) : null;
     }
 
     /**
@@ -120,14 +121,16 @@ class UploadedFile extends \yii\web\UploadedFile
         }
 
         if (isset($files[$name])) {
-            return [new self($files[$name])];
+            // @phpstan-ignore new.static (Yii factories preserve late static binding.)
+            return [new static($files[$name])];
         }
 
         $results = [];
 
         foreach ($files as $key => $file) {
             if (str_starts_with($key, "{$name}[")) {
-                $results[] = new self($file);
+                // @phpstan-ignore new.static (Yii factories preserve late static binding.)
+                $results[] = new static($file);
             }
         }
 
@@ -243,7 +246,7 @@ class UploadedFile extends \yii\web\UploadedFile
     {
         if (self::$_files === []) {
             if (self::$psr7Adapter !== null) {
-                self::loadPsr7Files();
+                self::loadPsr7Files(self::$psr7Adapter);
             } elseif (self::$psr7Adapter === null) {
                 self::loadLegacyFiles();
             }
@@ -349,10 +352,10 @@ class UploadedFile extends \yii\web\UploadedFile
      * Handles both simple file uploads and complex nested file arrays, ensuring proper structure preservation for
      * form-based file uploads with array notation.
      */
-    private static function loadPsr7Files(): void
+    private static function loadPsr7Files(ServerRequestAdapter $adapter): void
     {
         /** @var array<string, mixed[]|UploadedFileInterface> */
-        $uploadedFiles = self::$psr7Adapter?->getUploadedFiles() ?? [];
+        $uploadedFiles = $adapter->getUploadedFiles();
 
         foreach ($uploadedFiles as $name => $file) {
             self::processPsr7File($name, $file);

@@ -6,21 +6,10 @@ namespace yii2\extensions\psrbridge\tests\provider;
 
 /**
  * Data provider for {@see \yii2\extensions\psrbridge\tests\http\RequestTest} test cases.
- *
- * Provides representative input/output pairs for request parsing, header handling, proxy resolution, and security
- * detection behaviors.
  */
 final class RequestProvider
 {
     /**
-     * Provides test data for already resolved IP address scenarios.
-     *
-     * This provider supplies test cases for validating the resolution of client IP addresses when the 'X-Forwarded-For'
-     * header is already resolved, covering both HTTP and HTTPS schemes.
-     *
-     * Each test case includes the resolved IP, the 'X-Forwarded-For' header value, the scheme, trusted hosts, and
-     * expected results for IP and secure connection.
-     *
      * @return array<string, array{string, string, string, array<string>, string, string, bool}>
      */
     public static function alreadyResolvedIp(): array
@@ -54,13 +43,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for HTTP request body parameter parsing.
-     *
-     * This provider supplies test cases for validating the extraction and parsing of body parameters from different
-     * content types, including URL-encoded forms, JSON, and JSONP payloads.
-     *
-     * Each test case includes the content type, the raw body string, and the expected parsed result as an array.
-     *
      * @return array<string, array{string, string, array<string, int|string>}>
      */
     public static function getBodyParams(): array
@@ -99,14 +81,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for HTTP host info extraction scenarios.
-     *
-     * This provider supplies test cases for validating the extraction of host information from various server parameter
-     * combinations, including standard headers, missing headers, and trusted/untrusted proxy scenarios.
-     *
-     * Each test case includes the server parameters and the expected host info array with the full host info string
-     * and the host name.
-     *
      * @return array<array{array<string, mixed>, array{string|null, string|null}}>
      */
     public static function getHostInfo(): array
@@ -217,14 +191,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for AJAX request detection logic.
-     *
-     * This provider supplies test cases for validating the detection of AJAX requests based on the
-     * 'HTTP_X_REQUESTED_WITH' server parameter, covering both standard and missing header scenarios.
-     *
-     * Each test case includes the server parameters and the expected boolean result indicating whether the request
-     * should be recognized as AJAX.
-     *
      * @return array<array{array<string, string>, bool}>
      */
     public static function getIsAjax(): array
@@ -244,15 +210,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for PJAX request detection logic.
-     *
-     * This provider supplies test cases for validating the detection of PJAX requests based on the
-     * 'HTTP_X_REQUESTED_WITH' and 'HTTP_X_PJAX' server parameters, covering both standard and missing header
-     * scenarios.
-     *
-     * Each test case includes the server parameters and the expected boolean result indicating whether the request
-     * should be recognized as PJAX.
-     *
      * @return array<array{array<string, string>, bool}>
      */
     public static function getIsPjax(): array
@@ -273,13 +230,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for HTTP method override logic.
-     *
-     * This provider supplies test cases for validating the extraction of the HTTP method from server parameters,
-     * including scenarios where the 'HTTP_X_HTTP_METHOD_OVERRIDE' header is present or absent.
-     *
-     * Each test case includes the server parameters array and the expected HTTP method string result.
-     *
      * @return array<array{array<string, string>, string}>
      */
     public static function getMethod(): array
@@ -300,14 +250,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for HTTP query string extraction and normalization.
-     *
-     * This provider supplies test cases for validating the handling and normalization of HTTP query strings, including
-     * scenarios with complex queries, empty values, encoded parameters, multiple parameters, parameters without values,
-     * and single parameters.
-     *
-     * Each test case consists of the input query string and the expected normalized query string result.
-     *
      * @return array<string, array{string, string}>
      */
     public static function getQueryString(): array
@@ -341,13 +283,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for HTTP URL extraction and normalization scenarios.
-     *
-     * This provider supplies test cases for validating the handling and normalization of HTTP URLs, including scenarios
-     * with complex query strings, root paths, and encoded parameters.
-     *
-     * Each test case consists of the input URL and the expected normalized URL result.
-     *
      * @return array<string, array{string, string}>
      */
     public static function getUrl(): array
@@ -369,14 +304,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for remote user IP address extraction.
-     *
-     * This provider supplies test cases for validating the extraction of the user's IP address from various server
-     * parameter scenarios, including trusted and untrusted proxies, RFC 7239 Forwarded headers, IPv4 and IPv6 formats,
-     * and optional port handling.
-     *
-     * Each test case consists of the server parameters and the expected resolved user IP address.
-     *
      * @return array<array{array<string, string>, string}>
      */
     public static function getUserIP(): array
@@ -516,13 +443,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for remote user IP extraction without trusted host configuration.
-     *
-     * This provider supplies test cases for validating the extraction of the user's IP address when trusted hosts are
-     * not enabled, including scenarios where RFC 7239 Forwarded headers are present but ignored.
-     *
-     * Each test case consists of the server parameters and the expected resolved user IP address.
-     *
      * @return array<array{array<string, string>, string}>
      */
     public static function getUserIPWithoutTrustedHost(): array
@@ -540,13 +460,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for HTTP Basic Authorization header parsing scenarios.
-     *
-     * This provider supplies test cases for validating the extraction of username and password credentials from HTTP
-     * Basic Authorization headers, including malformed, partial, and edge case encodings.
-     *
-     * Each test case consists of the base64-encoded credentials string and the expected username and password values.
-     *
      * @return array<array{string, array{string|null, string|null}}>
      */
     public static function httpAuthorizationHeaders(): array
@@ -612,15 +525,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for secure server connection detection logic.
-     *
-     * This provider supplies test cases for validating the detection of secure (HTTPS) connections based on various
-     * server parameters and proxy headers, including trusted and untrusted proxy scenarios, as well as direct HTTPS
-     * indicators.
-     *
-     * Each test case consists of the server parameters array and the expected boolean indicating whether the connection
-     * should be considered secure.
-     *
      * @return array<array{array<string, int|string>, bool}>
      */
     public static function isSecureServer(): array
@@ -780,14 +684,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for secure server connection detection without trusted host configuration.
-     *
-     * This provider supplies test cases for validating the detection of secure (HTTPS) connections when trusted hosts
-     * are not enabled, including scenarios where RFC 7239 Forwarded headers are present but ignored.
-     *
-     * Each test case consists of the server parameters and the expected boolean indicating whether the connection
-     * should be considered secure.
-     *
      * @return array<array{array<string, string>, bool}>
      */
     public static function isSecureServerWithoutTrustedHost(): array
@@ -805,14 +701,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for parsing RFC 7239 Forwarded headers.
-     *
-     * This provider supplies test cases for validating the extraction of protocol, host, and user IP information from
-     * various Forwarded header formats, including multiple proxies and mixed parameter orders.
-     *
-     * Each test case consists of the remote address, the Forwarded header string, the expected host info, and the
-     * expected user IP after parsing.
-     *
      * @return array<array{string, string, string, string}>
      */
     public static function parseForwardedHeader(): array
@@ -864,15 +752,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for trusted host and injected 'X-Forwarded-For' scenarios.
-     *
-     * This provider supplies test cases for validating the extraction and resolution of user IP addresses when trusted
-     * hosts and various 'X-Forwarded-For' header values are present, including invalid, empty, and CIDR-based
-     * configurations.
-     *
-     * Each test case includes the remote address, the 'X-Forwarded-For' header value, optional IP headers, the list of
-     * trusted hosts, and the expected resolved user IP address.
-     *
      * @return array<
      *     string,
      *     array{string, string, array<string>|null, array<string>, string}
@@ -1001,15 +880,6 @@ final class RequestProvider
     }
 
     /**
-     * Provides test data for trusted host and 'X-Forwarded-Port' scenarios.
-     *
-     * This provider supplies test cases for validating the extraction and resolution of server port values when trusted
-     * hosts and various 'X-Forwarded-Port' header values are present, including default, trusted, and untrusted
-     * configurations for both plain and SSL connections.
-     *
-     * Each test case includes the remote address, the server port, the 'X-Forwarded-Port' value, the list of trusted
-     * hosts, and the expected resolved port.
-     *
      * @return array<string, array{string, int, int|null, array<string>|null, int}>
      */
     public static function trustedHostAndXForwardedPort(): array

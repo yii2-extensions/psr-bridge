@@ -72,9 +72,17 @@ final class ServerRequestCreator
             $request = $request->withHeader($name, $value);
         }
 
+        $contentType = $request->getHeaderLine('Content-Type');
+        $separator = strpos($contentType, ';');
+        $contentType = strtolower($separator === false ? $contentType : substr($contentType, 0, $separator));
+        $parsedBody = $_POST !== []
+            || (strtoupper($method) === 'POST' && in_array($contentType, ['application/x-www-form-urlencoded', 'multipart/form-data'], true))
+            ? $_POST
+            : null;
+
         $request = $request
             ->withCookieParams($_COOKIE)
-            ->withParsedBody($_POST)
+            ->withParsedBody($parsedBody)
             ->withQueryParams($_GET);
 
         if ($_FILES !== []) {
@@ -112,6 +120,12 @@ final class ServerRequestCreator
                 $headerName = $this->normalizeHeaderName(substr($key, 5));
 
                 $headers[$headerName] = $value;
+            }
+        }
+
+        foreach (['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'] as $key) {
+            if (isset($server[$key]) && is_string($server[$key])) {
+                $headers[$this->normalizeHeaderName($key)] = $server[$key];
             }
         }
 
