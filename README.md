@@ -52,15 +52,13 @@ Long-running PHP workers for higher throughput and lower latency.
 ### Installation
 
 Requires the `filter` and `mbstring` PHP extensions. Install a PSR-7/PSR-17
-implementation alongside the bridge; the example uses HttpSoft. This example requires the unreleased 0.4
-`finalize()` lifecycle, so select `dev-main` explicitly:
+implementation alongside the bridge; the example uses HttpSoft:
 
 ```bash
-composer require yii2-extensions/psr-bridge:dev-main httpsoft/http-message
+composer require "yii2-extensions/psr-bridge:^0.4" httpsoft/http-message
 ```
 
-`dev-main` is a moving development branch, not a stable 0.4 release. Review and retain the resolved commit in
-`composer.lock`; the stable 0.3 release does not provide `Application::finalize()`. See [installation](docs/installation.md).
+See [installation](docs/installation.md).
 
 ### Quick start
 

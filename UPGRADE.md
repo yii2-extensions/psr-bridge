@@ -1,6 +1,6 @@
 # Upgrade Guide
 
-## 0.4.0 (under development)
+## 0.4.0
 
 ### Minimum PHP version
 
