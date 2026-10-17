@@ -86,7 +86,9 @@ final class ErrorLifecycleTest extends TestCase
 
         $handler = new class extends ErrorHandler {
             public Throwable|null $rendered = null;
+
             public function logException($exception): void {}
+
             protected function renderException($exception): Response
             {
                 $this->rendered = $exception;
@@ -209,6 +211,7 @@ final class ErrorLifecycleTest extends TestCase
         $display = ini_get('display_errors');
         $handler = new class extends ErrorHandler {
             public Throwable|null $seen = null;
+
             public function handleException($exception): Response
             {
                 $this->seen = $exception;

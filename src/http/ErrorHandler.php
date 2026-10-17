@@ -201,7 +201,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
         restore_exception_handler();
 
         $this->registered = false;
-
     }
 
     /**

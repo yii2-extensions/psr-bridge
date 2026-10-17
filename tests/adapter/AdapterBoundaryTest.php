@@ -113,6 +113,7 @@ final class AdapterBoundaryTest extends TestCase
 
         $security = new class extends Security {
             public int $calls = 0;
+
             public function validateData($data, $key, $rawHash = false)
             {
                 ++$this->calls;

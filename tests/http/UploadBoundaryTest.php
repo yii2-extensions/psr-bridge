@@ -166,6 +166,7 @@ final class UploadBoundaryTest extends TestCase
             }
         }
     }
+
     public function testNestedNativeMimeMetadataReachesThePsrFile(): void
     {
         $path = $this->createTempFileWithContent('value');

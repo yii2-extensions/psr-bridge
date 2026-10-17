@@ -59,6 +59,7 @@ final class ShutdownDispatchTest extends TestCase
         for ($i = 0; $i < 4; ++$i) {
             $handler = new class extends ErrorHandler {
                 public int $fatalCalls = 0;
+
                 public function handleFatalError(): void
                 {
                     ++$this->fatalCalls;
@@ -105,6 +106,7 @@ final class ShutdownDispatchTest extends TestCase
         for ($i = 0; $i < 4; ++$i) {
             $session = new class extends Session {
                 public int $closed = 0;
+
                 public function close(): void
                 {
                     ++$this->closed;

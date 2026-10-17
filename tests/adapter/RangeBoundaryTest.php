@@ -41,6 +41,7 @@ final class RangeBoundaryTest extends TestCase
             proc_close($process);
         }
     }
+
     public function testRepeatedPipeReadsAdvanceTheRelativePosition(): void
     {
         $process = proc_open([PHP_BINARY, '-r', 'echo "abcdefEXTRA";'], [1 => ['pipe', 'w']], $pipes);

@@ -93,7 +93,7 @@ final class WorkerBoundaryTest extends TestCase
         $first = $app->handle(request());
 
         self::assertFalse(
-            (self::decode((string) $first->getBody())['active'] ?? null),
+            self::decode((string) $first->getBody())['active'] ?? null,
             'Session must be inactive when handling starts.',
         );
 
@@ -113,7 +113,7 @@ final class WorkerBoundaryTest extends TestCase
             );
             self::assertSame(
                 '',
-                ($jar[$app->session->getName()] ?? throw new \RuntimeException('Missing session cookie.')),
+                $jar[$app->session->getName()] ?? throw new \RuntimeException('Missing session cookie.'),
                 'Expired cookie value must be empty.',
             );
         }
@@ -129,7 +129,7 @@ final class WorkerBoundaryTest extends TestCase
         );
         self::assertSame(
             $expire ? 1 : 2,
-            ($app->params['count'] ?? null),
+            $app->params['count'] ?? null,
             'Bootstrap counter must reflect session persistence.',
         );
 
@@ -176,7 +176,7 @@ final class WorkerBoundaryTest extends TestCase
 
         self::assertSame(
             'B',
-            (self::decode((string) $response->getBody())['visitor'] ?? null),
+            self::decode((string) $response->getBody())['visitor'] ?? null,
             'Session must match the incoming cookie.',
         );
 
@@ -197,6 +197,7 @@ final class WorkerBoundaryTest extends TestCase
              * @var array<string, int|null>
              */
             public array $params = [];
+
             /**
              * @return array<string, int|null>
              */
@@ -315,6 +316,7 @@ final class WorkerBoundaryTest extends TestCase
     {
         $app = new class (['container' => []]) extends Application {
             public int $configured = 0;
+
             /**
              * @param array<mixed> $config
              */
@@ -712,14 +714,14 @@ final class WorkerBoundaryTest extends TestCase
 
         $jar = cookies($login);
 
-        $signed = $app->security->validateData(($jar[$app->session->getName()] ?? throw new \RuntimeException('Missing session cookie.')), 'worker-regression-key');
+        $signed = $app->security->validateData($jar[$app->session->getName()] ?? throw new \RuntimeException('Missing session cookie.'), 'worker-regression-key');
 
         self::assertIsString(
             $signed,
             'Cookie signature must validate.',
         );
         self::assertSame(
-            [$app->session->getName(), ($data['id'] ?? null)],
+            [$app->session->getName(), $data['id'] ?? null],
             unserialize($signed, ['allowed_classes' => false]),
             'Cookie must carry the rotated session ID.',
         );
@@ -729,7 +731,7 @@ final class WorkerBoundaryTest extends TestCase
         $returning = $app->handle(request($jar));
 
         self::assertFalse(
-            (self::decode((string) $returning->getBody())['guest'] ?? null),
+            self::decode((string) $returning->getBody())['guest'] ?? null,
             'Identity must survive across requests.',
         );
 

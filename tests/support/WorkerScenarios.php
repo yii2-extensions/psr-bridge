@@ -200,7 +200,6 @@ function run(string $scenario): array
     }
 
     if ($scenario === 'memory') {
-
         $app = application(static fn(): string => str_repeat('a', 262144));
 
         $responses = $handlers = $sessions = [];
