@@ -30,3 +30,5 @@ The bridge does not start an HTTP server or implement the PSR-15 middleware pipe
 
 Continue with [configuration](configuration.md), [practical examples](examples.md), or the
 [agent skill installation](agents.md).
+
+[Back to documentation](../README.md#documentation)

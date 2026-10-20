@@ -7,3 +7,5 @@ buffers, and historical class renames. Do not maintain a separate migration chec
 Start with the installed version and the application's runner, then use [configuration](configuration.md) for session
 and cookie settings and [practical examples](examples.md) for the emission/finalization pattern. Report validation of
 each affected integration point and any server runtime that was not exercised.
+
+[Back to documentation](../README.md#documentation)

@@ -6,6 +6,23 @@ The documentation site consumes the package guides and skill; its published file
 
 ## Install in an application
 
+### Automatic Composer installation
+
+Complete the [one-time application setup](https://yii2-framework.github.io/docs/project/ai-agents/#composer-installation) to enable `llm/skills`
+and set `auto-sync` to `true` in `skills.json`. Approve `yii2-extensions/psr-bridge` explicitly in
+`dependencies.composer.trusted`.
+The installed package must include its skill bundle; its `extra.skills.source` declares the directory.
+
+```bash
+composer install
+composer skills:show
+```
+
+With `auto-sync` enabled, later dependency installs and updates synchronize the skill automatically; no per-skill
+installer is required. If `auto-sync` is `false`, run `composer skills:update` after dependency installation or updates.
+
+### Optional npx installation
+
 Run the pinned installer from the application's root, selecting the clients you use:
 
 ```bash
@@ -56,3 +73,5 @@ handles the two aliases; the installer needs only its `.agents/skills/` installa
 
 `--list` verifies the installer's discovery only; it does not run Claude, Codex, or OpenCode. Application instructions
 and permissions still apply when a skill is activated.
+
+[Back to documentation](../README.md#documentation)
