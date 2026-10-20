@@ -1,17 +1,24 @@
-# Local agent, editor, coverage output, runtime state, caches, and dependencies.
+# Local agent, editor, cache and generated runtime state.
 .claude/**
 .codex/**
-.vscode/**
 .phpunit.cache/**
-code_coverage/**
+.vscode/**
 runtime/**
+
+# Dependencies.
+node_modules/**
 vendor/**
 
-# Dependency lockfile ignored by git.
+# Dependency lockfiles.
 composer.lock
+foxy.lock
 
 # License texts ship verbatim.
 **/LICENSE*
+
+# Private maintainer files and coverage reports.
+code_coverage/**
+internal/**
 
 # Tool config maintained by hand to keep array order meaningful.
 composer-require-checker.json
