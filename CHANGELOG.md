@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.4.1 Under development
 
 - docs/ci: declare bundled skill source and sync trusted skills via Composer; pin workflows to `yii2-framework/actions` v2.0.1 release commit.
+- chore: standardize Composer scripts, linter configurations and testing guide with the template.
 
 ## 0.4.0 October 17, 2026
 
