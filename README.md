@@ -132,8 +132,9 @@ lifecycle.
 AI agents: use the repository guides and source for the installed revision.
 For a [documentation deployment](https://yii2-framework.github.io/docs/) with
 `llms.txt`, read that index first. When Markdown export is enabled, append
-`index.md` to a page URL. For Yii conventions, use the `yii2-framework` skill
-from a local framework documentation checkout.
+`index.md` to a page URL. For Yii conventions, install the `yii2-framework`
+skill from [`yii2-extensions/skill`](https://github.com/yii2-extensions/skill)
+through the [shared Composer setup](https://yii2-framework.github.io/docs/project/ai-agents/#composer-installation).
 
 - 🤖 [yii2-psr-bridge-worker skill](docs/agents.md): installation for Claude Code, Codex, and OpenCode.
 

@@ -101,3 +101,5 @@ Use `Request::setPsr7Request()` before `getPsr7Request()`. The getter returns th
 construct one from Yii globals. `Response::getPsr7Response()` performs pre-send conversion and needs configured
 response/stream factories. For a standalone response outside `Application`, call `completeSend()` after successful
 emission. For an application-managed response, call `Application::finalize()` so worker cleanup runs as well.
+
+[Back to documentation](../README.md#documentation)

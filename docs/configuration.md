@@ -102,3 +102,5 @@ enforced body/upload size limits; PSR uploaded files already carry upload data.
 For exact signatures and exceptions, consult the
 [generated API](https://yii2-framework.github.io/docs/extensions/psr-bridge/reference/). Continue with
 [worker and file examples](examples.md) and [migration checks](migration.md).
+
+[Back to documentation](../README.md#documentation)
