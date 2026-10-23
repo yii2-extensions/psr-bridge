@@ -1,8 +1,7 @@
 # Migration checks
 
-The package [UPGRADE guide](../UPGRADE.md) is the canonical consumer migration document. It contains the before/after
-changes for the 0.4 release, session isolation correction #288, response finalization, bounded emitter
-buffers, and historical class renames. Do not maintain a separate migration checklist here.
+The [upgrade guide](../UPGRADE.md) lists the required actions for each release, including the 0.4 runtime requirements,
+session isolation (#288), response finalization, range emission, emitter buffers and the 0.2 class renames.
 
 Start with the installed version and the application's runner, then use [configuration](configuration.md) for session
 and cookie settings and [practical examples](examples.md) for the emission/finalization pattern. Report validation of

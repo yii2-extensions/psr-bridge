@@ -5,8 +5,8 @@ configuration. Keep application authorization, verb filters, and input validatio
 
 ## Custom worker lifecycle
 
-Construct the bridge application once outside the worker loop. This function handles one request using the
-runtime's emission callback:
+Construct the bridge application once outside the worker loop. This function handles one request using the runtime's
+emission callback:
 
 ```php
 use Psr\Http\Message\{ResponseInterface, ServerRequestInterface};
@@ -29,14 +29,14 @@ function serve(Application $app, ServerRequestInterface $request, callable $emit
 }
 ```
 
-Successful finalization triggers `EVENT_AFTER_SEND` and marks the Yii response sent, then cleans up tracked events
-and optionally flushes the logger. On emission failure, `finalize(false)` skips after-send and still performs
-cleanup. Keep finalization outside the emitter's catch path: an after-send exception must not cause a second
-finalize call or be misreported as an emission failure.
+Successful finalization triggers `EVENT_AFTER_SEND` and marks the Yii response sent, then cleans up tracked events and
+optionally flushes the logger. On emission failure, `finalize(false)` skips after-send and still performs cleanup. Keep
+finalization outside the emitter's catch path: an after-send exception must not cause a second finalize call or be
+misreported as an emission failure.
 
 `handle()` prepares the response and triggers before-send/after-prepare; it does not emit bytes or trigger after-send.
-Do not call `run()` or `Response::send()` in this worker cycle. A `clean()` result of `true` indicates memory usage
-has reached 90% of the configured limit and lets the runtime decide to recycle the worker.
+Do not call `run()` or `Response::send()` in this worker cycle. A `clean()` result of `true` indicates memory usage has
+reached 90% of the configured limit and lets the runtime decide to recycle the worker.
 
 ## JSON from SAPI
 
@@ -72,10 +72,10 @@ if ($model->validate() && $model->avatar !== null) {
 }
 ```
 
-This fragment assumes the model requires and verifies PNG content and the target directory exists. Choose the
-extension from the validated content policy; do not trust the client filename or MIME type. Store private uploads
-outside the web root. Failed PSR uploads retain their PHP error code without opening their stream. Successful
-conversion detaches the PSR stream resource for Yii's upload handling; do not read that PSR upload afterward.
+This fragment assumes the model requires and verifies PNG content and the target directory exists. Choose the extension
+from the validated content policy; do not trust the client filename or MIME type. Store private uploads outside the web
+root. Failed PSR uploads retain their PHP error code without opening their stream. Successful conversion detaches the
+PSR stream resource for Yii's upload handling; do not read that PSR upload afterward.
 
 ## Downloads and ranges
 
@@ -85,14 +85,14 @@ In an existing controller action, return the bridge response from `sendFile()` o
 return Yii::$app->response->sendFile($authorizedAbsolutePath, 'report.pdf');
 ```
 
-Emit the returned PSR response before finalization or temporary-file cleanup. Ranged bodies use a bounded,
-read-only `RangeStream`; its offsets are relative to the selected range, `detach()` returns `null`, and metadata
-omits the underlying URI. Read through that stream instead of reopening its source. Avoid casting large bodies
-to strings: `getContents()` and a cast still allocate the returned content even though transport uses chunked reads.
+Emit the returned PSR response before finalization or temporary-file cleanup. Ranged bodies use a bounded, read-only
+`RangeStream`; its offsets are relative to the selected range, `detach()` returns `null`, and metadata omits the
+underlying URI. Read through that stream instead of reopening its source. Avoid casting large bodies to strings:
+`getContents()` and a cast still allocate the returned content even though transport uses chunked reads.
 
-`SapiEmitter` reads at most its positive buffer length per chunk (8192 bytes by default). For HEAD, pass `false`
-as its second argument; it sees a response rather than the originating request. It also suppresses bodies for its
-listed no-body status codes. Any output before emission can cause `HeadersAlreadySentException` or
+`SapiEmitter` reads at most its positive buffer length per chunk (8192 bytes by default). For HEAD, pass `false` as its
+second argument; it sees a response rather than the originating request. It also suppresses bodies for its listed
+no-body status codes. Any output before emission can cause `HeadersAlreadySentException` or
 `OutputAlreadySentException`.
 
 ## Low-level conversion
