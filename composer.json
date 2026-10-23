@@ -2,6 +2,7 @@
     "name": "yii2-extensions/psr-bridge",
     "type": "library",
     "description": "PSR-7 bridge for Yii2 with worker mode support",
+    "homepage": "https://yii2-framework.github.io/docs/extensions/psr-bridge/",
     "keywords": [
         "yii2-extension",
         "yii2",
@@ -16,6 +17,11 @@
         "worker-mode"
     ],
     "license": "BSD-3-Clause",
+    "support": {
+        "docs": "https://yii2-framework.github.io/docs/extensions/psr-bridge/",
+        "issues": "https://github.com/yii2-extensions/psr-bridge/issues",
+        "source": "https://github.com/yii2-extensions/psr-bridge"
+    },
     "authors": [
         {
             "name": "Wilmer Arambula",

@@ -30,8 +30,8 @@
     <em>Supporting traditional SAPI, RoadRunner, FrankenPHP, and worker-based architectures</em>
 </p>
 
-Run a Yii application with PSR-7 requests and responses, including long-running workers. The bridge provides a
-PSR-15 request handler, Yii request/response adapters, upload conversion, and a streaming SAPI emitter.
+Run a Yii application with PSR-7 requests and responses, including long-running workers. The bridge provides a PSR-15
+request handler, Yii request/response adapters, upload conversion, and a streaming SAPI emitter.
 
 ## Available deployment options
 
@@ -51,8 +51,8 @@ Long-running PHP workers for higher throughput and lower latency.
 
 ### Installation
 
-Requires the `filter` and `mbstring` PHP extensions. Install a PSR-7/PSR-17
-implementation alongside the bridge; the example uses HttpSoft:
+Requires the `filter` and `mbstring` PHP extensions. Install a PSR-7/PSR-17 implementation alongside the bridge; the
+example uses HttpSoft:
 
 ```bash
 composer require yii2-extensions/psr-bridge:^0.4 httpsoft/http-message
@@ -62,8 +62,8 @@ See [installation](docs/installation.md).
 
 ### Quick start
 
-In an existing Yii application, use this entry script in place of the usual `Application::run()`. The example
-assumes `web/index.php`, Composer dependencies, and the application's `config/web.php` with its routes and secret
+In an existing Yii application, use this entry script in place of the usual `Application::run()`. The example assumes
+`web/index.php`, Composer dependencies, and the application's `config/web.php` with its routes and secret
 `request.cookieValidationKey` already configured.
 
 ```php
@@ -103,14 +103,14 @@ try {
 }
 ```
 
-`Application` supplies the bridge request, response, and error handler by default. For a worker, create the
-application once and repeat `handle()`, runtime emission, then `finalize()` for each request. Keep file streams
-open until emission completes. A PSR-15 host must arrange this extra finalization step.
+`Application` supplies the bridge request, response, and error handler by default. For a worker, create the application
+once and repeat `handle()`, runtime emission, then `finalize()` for each request. Keep file streams open until emission
+completes. A PSR-15 host must arrange this extra finalization step.
 
 ### Worker lifecycle defaults
 
-`useSession=false` skips eager session opening around bootstrap; session IDs are still isolated on every request.
-Keep request-scoped components out of `persistentComponents`.
+`useSession=false` skips eager session opening around bootstrap; session IDs are still isolated on every request. Keep
+request-scoped components out of `persistentComponents`.
 
 ### Smart Body Parsing
 
@@ -118,8 +118,7 @@ See the configuration guide before changing lifecycle settings or handling JSON 
 
 ## Documentation
 
-Practical guides and complete examples for PSR-7 integration and the worker
-lifecycle.
+Practical guides and complete examples for PSR-7 integration and the worker lifecycle.
 
 - 📚 [Installation and Runtime Choices](docs/installation.md)
 - ⚙️ [Configuration and Request Isolation](docs/configuration.md)
@@ -127,18 +126,23 @@ lifecycle.
 - 🔄 [Upgrade Guide](UPGRADE.md) and [Migration Checks](docs/migration.md)
 - 🧪 [Testing Guide](docs/testing.md)
 
+The guides and the [API reference](https://yii2-framework.github.io/docs/extensions/psr-bridge/reference/) generated
+from the PHPDoc in `src/` are published at <https://yii2-framework.github.io/docs/extensions/psr-bridge/>.
+
 ## AI assistance
 
-AI agents: use the repository guides and source for the installed revision.
-For a [documentation deployment](https://yii2-framework.github.io/docs/) with
-`llms.txt`, read that index first. When Markdown export is enabled, append
-`index.md` to a page URL. For Yii conventions, install the `yii2-framework`
-skill from [`yii2-extensions/skill`](https://github.com/yii2-extensions/skill)
-through the [shared Composer setup](https://yii2-framework.github.io/docs/project/ai-agents/#composer-installation).
+AI agents: read the [documentation index](https://yii2-framework.github.io/docs/llms.txt) and fetch the Markdown version
+of a page by appending `index.md` to its URL. The
+[AI agents guide](https://yii2-framework.github.io/docs/project/ai-agents/) covers skill installation, client setup and
+verification.
 
-- 🤖 [yii2-psr-bridge-worker skill](docs/agents.md): installation for Claude Code, Codex, and OpenCode.
+- 🤖 [`yii2-psr-bridge-worker` skill](docs/agents.md): Worker lifecycle.
+- 🧭 [`yii2-framework` skill](https://yii2-framework.github.io/docs/guide/skills/yii2-framework/): Yii 22.0 application
+  conventions.
 
-If the hosted sources are unavailable, use the repository guides and locally available skills.
+The hosted documentation covers Yii 22.0. If it does not match the installed revision or is unavailable, use the
+[repository guides](#documentation), the [skill source](skills/yii2-psr-bridge-worker/SKILL.md), the source PHPDoc and
+the [changelog](CHANGELOG.md).
 
 ## Package information
 

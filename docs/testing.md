@@ -1,7 +1,7 @@
 # Testing
 
-This package provides a consistent set of [Composer](https://getcomposer.org/) scripts for local validation. Install
-the development dependencies from the chosen package revision, then run the scripts from the package root.
+This package provides a consistent set of [Composer](https://getcomposer.org/) scripts for local validation. Install the
+development dependencies from the chosen package revision, then run the scripts from the package root.
 
 Tool references:
 
@@ -75,9 +75,8 @@ Thresholds, thread count and memory options live in `infection.json5`. CI enforc
 
 ## Repository quality checks
 
-Make the CLI tools used by the shared quality workflow available on `PATH`:
-actionlint with its ShellCheck helper, codespell, EditorConfig Checker, markdownlint-cli2, Prettier and
-yamllint. Run all checks:
+Make the CLI tools used by the shared quality workflow available on `PATH`: actionlint with its ShellCheck helper,
+codespell, EditorConfig Checker, markdownlint-cli2, Prettier and yamllint. Run all checks:
 
 ```bash
 composer quality
@@ -115,8 +114,8 @@ composer tests
 
 ## Workflow security checks
 
-Make zizmor and Gitleaks available on `PATH`. Audit the current workflow files
-with the same pedantic persona used by the shared security workflow:
+Make zizmor and Gitleaks available on `PATH`. Audit the current workflow files with the same pedantic persona used by
+the shared security workflow:
 
 ```bash
 composer zizmor
@@ -128,22 +127,21 @@ Scan Git history for secrets with the repository's Gitleaks configuration:
 composer gitleaks
 ```
 
-Run both checks. Findings make the command fail; inspect them rather than
-disabling the checks.
+Run both checks. Findings make the command fail; inspect them rather than disabling the checks.
 
 ```bash
 composer security
 ```
 
-Zizmor needs GitHub API access for its online audits. If the tool runs offline,
-report that limit separately. To request an offline audit explicitly:
+Zizmor needs GitHub API access for its online audits. If the tool runs offline, report that limit separately. To request
+an offline audit explicitly:
 
 ```bash
 composer zizmor -- --offline
 ```
 
-Report hosted CI execution and its PHP/OS matrix separately from these local
-commands. Keep generated reports in ignored `internal/`.
+Report hosted CI execution and its PHP/OS matrix separately from these local commands. Keep generated reports in ignored
+`internal/`.
 
 ## Passing extra arguments
 
@@ -164,7 +162,8 @@ composer static -- --memory-limit=512M
 ## CI matrix and Yii resolution
 
 CI runs PHP 8.3, 8.4, and 8.5 separately with Yii `2.0.55` (the minimum supported release) and `22.0.x-dev`. To repeat
-either resolution locally, use separate disposable checkouts so their dependencies and lock files cannot affect each other:
+either resolution locally, use separate disposable checkouts so their dependencies and lock files cannot affect each
+other:
 
 ```bash
 composer update --with yiisoft/yii2:2.0.55 --with-all-dependencies
@@ -185,8 +184,8 @@ composer tests -- tests/http/stateless/ApplicationFinalizeTest.php
 
 ## Worker integration validation
 
-Validate the application's actual worker integration too: alternate two visitors, omit cookies on the next request,
-send malformed session cookie values, exercise an upload followed by no upload, and force emission failure. Confirm
+Validate the application's actual worker integration too: alternate two visitors, omit cookies on the next request, send
+malformed session cookie values, exercise an upload followed by no upload, and force emission failure. Confirm
 after-send runs only after successful emission. Repeat with `useSession=false` when using lazy sessions.
 
 Report the PHP version, resolved dependencies, passed checks, and unavailable coverage/runtime tests rather than
