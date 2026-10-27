@@ -15,6 +15,7 @@ use function array_key_exists;
 use function base64_decode;
 use function explode;
 use function filter_var;
+use function in_array;
 use function is_array;
 use function is_numeric;
 use function is_object;
@@ -23,6 +24,7 @@ use function mb_check_encoding;
 use function mb_substr;
 use function str_starts_with;
 use function strncasecmp;
+use function strtoupper;
 
 use const UPLOAD_ERR_OK;
 
@@ -603,6 +605,30 @@ class Request extends \yii\web\Request
         // @phpstan-ignore argument.type (Yii accepts null to reset automatic script URL resolution.)
         parent::setScriptUrl($value);
         $this->configuredScriptUrl = $value === null ? null : parent::getScriptUrl();
+    }
+
+    /**
+     * Validates CSRF protection against both the effective and original PSR transport methods.
+     *
+     * Header-only validation keeps browser-simple transport methods protected when a body parameter overrides the
+     * effective method.
+     *
+     * @param string|null $clientSuppliedToken Client-supplied CSRF token.
+     *
+     * @return bool Whether the CSRF token or header is valid.
+     */
+    public function validateCsrfToken($clientSuppliedToken = null)
+    {
+        if (
+            $this->adapter !== null
+            && $this->enableCsrfValidation
+            && $this->validateCsrfHeaderOnly
+            && in_array(strtoupper($this->getPsr7Request()->getMethod()), $this->csrfHeaderUnsafeMethods, true)
+        ) {
+            return $this->getHeaders()->has($this->csrfHeader);
+        }
+
+        return parent::validateCsrfToken($clientSuppliedToken);
     }
 
     /**
