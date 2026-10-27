@@ -489,6 +489,7 @@ final class ApplicationErrorHandlerTest extends TestCase
             'AUTH_TOKEN' => 'dummy-bearer-token',
             'DB_PASSWORD' => 'not-a-real-password',
             'HTTP_HOST' => 'example.com',
+            'INVALID_UTF8' => "before\x80after",
             'PHP_SELF' => '/index.php/<script>alert(1)</script>',
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/nonexistent-action',
@@ -552,6 +553,11 @@ final class ApplicationErrorHandlerTest extends TestCase
                 'example.com',
                 $body,
                 'Response body should contain HTTP_HOST value.',
+            );
+            self::assertStringContainsString(
+                "before\u{FFFD}after",
+                $body,
+                'Response body should substitute invalid byte sequences.',
             );
             self::assertStringNotContainsString(
                 '<script>alert(1)</script>',

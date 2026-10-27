@@ -241,7 +241,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
             );
             $serverVars = htmlspecialchars(
                 VarDumper::export($safeServerVars),
-                ENT_QUOTES,
+                ENT_QUOTES | ENT_SUBSTITUTE,
                 $response->charset,
             );
 
