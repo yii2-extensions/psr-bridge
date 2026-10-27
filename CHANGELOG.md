@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.4.2 Under development
 
 - fix(security): encode debug fallback server variables before rendering HTML.
+- fix(security): require the CSRF header for form POST transports even when a body parameter overrides the effective HTTP method.
 
 ## 0.4.1 October 23, 2026
 

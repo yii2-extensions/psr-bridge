@@ -15,6 +15,67 @@ use yii2\extensions\psrbridge\tests\support\TestCase;
  */
 final class RequestBoundaryTest extends TestCase
 {
+    #[TestWith(['DELETE'])]
+    #[TestWith(['PATCH'])]
+    #[TestWith(['PUT'])]
+    public function testCsrfHeaderValidationRetainsPostTransportMethodAfterBodyOverride(string $override): void
+    {
+        $request = new Request(
+            [
+                'enableCsrfValidation' => true,
+                'validateCsrfHeaderOnly' => true,
+            ],
+        );
+
+        $request->setPsr7Request(
+            new ServerRequest(
+                headers: ['Content-Type' => 'application/x-www-form-urlencoded'],
+                parsedBody: ['_method' => $override],
+                method: 'POST',
+                uri: 'http://example.test/',
+            ),
+        );
+
+        self::assertSame(
+            $override,
+            $request->getMethod(),
+            'The body override must remain the effective application method.',
+        );
+        self::assertFalse(
+            $request->validateCsrfToken(),
+            'A headerless form POST must not bypass header-only CSRF validation through a body method override.',
+        );
+
+        $request->headers->set(Request::CSRF_HEADER, '');
+
+        self::assertTrue(
+            $request->validateCsrfToken(),
+            'A form POST with the configured CSRF header must pass header-only validation.',
+        );
+
+        $request->setPsr7Request(new ServerRequest(method: $override, uri: 'http://example.test/'));
+
+        self::assertTrue(
+            $request->validateCsrfToken(),
+            'A direct preflighted transport method must retain the inherited header-only policy.',
+        );
+
+        $request->enableCsrfValidation = false;
+
+        $request->setPsr7Request(
+            new ServerRequest(
+                parsedBody: ['_method' => $override],
+                method: 'POST',
+                uri: 'http://example.test/',
+            ),
+        );
+
+        self::assertTrue(
+            $request->validateCsrfToken(),
+            'A body method override must not enable disabled CSRF validation.',
+        );
+    }
+
     #[TestWith(['https', null, true])]
     #[TestWith(['http', null, false])]
     #[TestWith(['http', 1, true])]
