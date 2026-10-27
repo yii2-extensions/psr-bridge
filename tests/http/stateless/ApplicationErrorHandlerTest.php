@@ -154,103 +154,6 @@ final class ApplicationErrorHandlerTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testSanitizesServerVariablesInFallbackExceptionMessage(): void
-    {
-        $_SERVER = [
-            'API_KEY' => 'not-a-secret-api-key',
-            'AUTH_TOKEN' => 'dummy-bearer-token',
-            'DB_PASSWORD' => 'not-a-real-password',
-            'HTTP_HOST' => 'example.com',
-            'PHP_SELF' => '/index.php/<script>alert(1)</script>',
-            'REQUEST_METHOD' => 'GET',
-            'REQUEST_URI' => 'site/nonexistent-action',
-            'SAFE_VARIABLE' => 'this-should-appear',
-            'SECRET_KEY' => 'not-a-real-secret-key',
-        ];
-
-        $app = ApplicationFactory::stateless(
-            [
-                'components' => [
-                    'errorHandler' => [
-                        'errorAction' => 'invalid/nonexistent-action',
-                    ],
-                ],
-            ],
-        );
-
-        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
-
-        self::assertSame(
-            500,
-            $response->getStatusCode(),
-            "Expected HTTP '500' for route 'site/nonexistent-action'.",
-        );
-        self::assertSame(
-            'text/html; charset=UTF-8',
-            $response->getHeaderLine('Content-Type'),
-            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/nonexistent-action'.",
-        );
-
-        $body = $response->getBody()->getContents();
-
-        self::assertStringContainsString(
-            'An Error occurred while handling another error:',
-            $body,
-            'Response body should contain fallback error message when ErrorHandler action is invalid.',
-        );
-
-        if (YII_DEBUG) {
-            self::assertStringContainsString(
-                '$_SERVER = [',
-                $body,
-                "Response body should contain '\$_SERVER = [' label.",
-            );
-            self::assertStringNotContainsString(
-                'not-a-secret-api-key',
-                $body,
-                'Response body should NOT contain API_KEY value.',
-            );
-            self::assertStringNotContainsString(
-                'dummy-bearer-token',
-                $body,
-                'Response body should NOT contain AUTH_TOKEN value.',
-            );
-            self::assertStringNotContainsString(
-                'not-a-real-password',
-                $body,
-                'Response body should NOT contain DB_PASSWORD value.',
-            );
-            self::assertStringContainsString(
-                'example.com',
-                $body,
-                'Response body should contain HTTP_HOST value.',
-            );
-            self::assertStringNotContainsString(
-                '<script>alert(1)</script>',
-                $body,
-                'Response body should not contain executable markup from server variables.',
-            );
-            self::assertStringContainsString(
-                '&lt;script&gt;alert(1)&lt;/script&gt;',
-                $body,
-                'Response body should HTML-encode markup from server variables.',
-            );
-            self::assertStringNotContainsString(
-                'not-a-real-secret-key',
-                $body,
-                'Response body should NOT contain SECRET_KEY value.',
-            );
-            self::assertStringContainsString(
-                'this-should-appear',
-                $body,
-                'Response body should contain SAFE_VARIABLE value.',
-            );
-        }
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testLogExceptionIsCalledWhenHandlingException(): void
     {
         $app = ApplicationFactory::stateless(
@@ -574,6 +477,103 @@ final class ApplicationErrorHandlerTest extends TestCase
             ),
             "Response body should contain error message about 'An Error occurred while handling another error'.",
         );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testSanitizesServerVariablesInFallbackExceptionMessage(): void
+    {
+        $_SERVER = [
+            'API_KEY' => 'not-a-secret-api-key',
+            'AUTH_TOKEN' => 'dummy-bearer-token',
+            'DB_PASSWORD' => 'not-a-real-password',
+            'HTTP_HOST' => 'example.com',
+            'PHP_SELF' => '/index.php/<script>alert(1)</script>',
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => 'site/nonexistent-action',
+            'SAFE_VARIABLE' => 'this-should-appear',
+            'SECRET_KEY' => 'not-a-real-secret-key',
+        ];
+
+        $app = ApplicationFactory::stateless(
+            [
+                'components' => [
+                    'errorHandler' => [
+                        'errorAction' => 'invalid/nonexistent-action',
+                    ],
+                ],
+            ],
+        );
+
+        $response = $app->handle(HelperFactory::createServerRequestCreator()->createFromGlobals());
+
+        self::assertSame(
+            500,
+            $response->getStatusCode(),
+            "Expected HTTP '500' for route 'site/nonexistent-action'.",
+        );
+        self::assertSame(
+            'text/html; charset=UTF-8',
+            $response->getHeaderLine('Content-Type'),
+            "Expected Content-Type 'text/html; charset=UTF-8' for route 'site/nonexistent-action'.",
+        );
+
+        $body = $response->getBody()->getContents();
+
+        self::assertStringContainsString(
+            'An Error occurred while handling another error:',
+            $body,
+            'Response body should contain fallback error message when ErrorHandler action is invalid.',
+        );
+
+        if (YII_DEBUG) {
+            self::assertStringContainsString(
+                '$_SERVER = [',
+                $body,
+                "Response body should contain '\$_SERVER = [' label.",
+            );
+            self::assertStringNotContainsString(
+                'not-a-secret-api-key',
+                $body,
+                'Response body should NOT contain API_KEY value.',
+            );
+            self::assertStringNotContainsString(
+                'dummy-bearer-token',
+                $body,
+                'Response body should NOT contain AUTH_TOKEN value.',
+            );
+            self::assertStringNotContainsString(
+                'not-a-real-password',
+                $body,
+                'Response body should NOT contain DB_PASSWORD value.',
+            );
+            self::assertStringContainsString(
+                'example.com',
+                $body,
+                'Response body should contain HTTP_HOST value.',
+            );
+            self::assertStringNotContainsString(
+                '<script>alert(1)</script>',
+                $body,
+                'Response body should not contain executable markup from server variables.',
+            );
+            self::assertStringContainsString(
+                '&lt;script&gt;alert(1)&lt;/script&gt;',
+                $body,
+                'Response body should HTML-encode markup from server variables.',
+            );
+            self::assertStringNotContainsString(
+                'not-a-real-secret-key',
+                $body,
+                'Response body should NOT contain SECRET_KEY value.',
+            );
+            self::assertStringContainsString(
+                'this-should-appear',
+                $body,
+                'Response body should contain SAFE_VARIABLE value.',
+            );
+        }
     }
 
     /**
