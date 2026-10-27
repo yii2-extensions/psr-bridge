@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.4.2 Under development
 
+- fix(security): encode debug fallback server variables before rendering HTML.
+
 ## 0.4.1 October 23, 2026
 
 - docs/ci: declare bundled skill source and sync trusted skills via Composer; pin workflows to `yii2-framework/actions` v2.0.1 release commit.

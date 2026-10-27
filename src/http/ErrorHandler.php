@@ -239,7 +239,13 @@ class ErrorHandler extends \yii\web\ErrorHandler
                     ],
                 ),
             );
-            $response->data .= "\n\$_SERVER = " . VarDumper::export($safeServerVars);
+            $serverVars = htmlspecialchars(
+                VarDumper::export($safeServerVars),
+                ENT_QUOTES,
+                $response->charset,
+            );
+
+            $response->data .= "\n\$_SERVER = {$serverVars}";
         }
 
         return $response;

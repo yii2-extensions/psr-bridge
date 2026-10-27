@@ -154,13 +154,14 @@ final class ApplicationErrorHandlerTest extends TestCase
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testFiltersSensitiveServerVariablesInFallbackExceptionMessage(): void
+    public function testSanitizesServerVariablesInFallbackExceptionMessage(): void
     {
         $_SERVER = [
             'API_KEY' => 'not-a-secret-api-key',
             'AUTH_TOKEN' => 'dummy-bearer-token',
             'DB_PASSWORD' => 'not-a-real-password',
             'HTTP_HOST' => 'example.com',
+            'PHP_SELF' => '/index.php/<script>alert(1)</script>',
             'REQUEST_METHOD' => 'GET',
             'REQUEST_URI' => 'site/nonexistent-action',
             'SAFE_VARIABLE' => 'this-should-appear',
@@ -223,6 +224,16 @@ final class ApplicationErrorHandlerTest extends TestCase
                 'example.com',
                 $body,
                 'Response body should contain HTTP_HOST value.',
+            );
+            self::assertStringNotContainsString(
+                '<script>alert(1)</script>',
+                $body,
+                'Response body should not contain executable markup from server variables.',
+            );
+            self::assertStringContainsString(
+                '&lt;script&gt;alert(1)&lt;/script&gt;',
+                $body,
+                'Response body should HTML-encode markup from server variables.',
             );
             self::assertStringNotContainsString(
                 'not-a-real-secret-key',
